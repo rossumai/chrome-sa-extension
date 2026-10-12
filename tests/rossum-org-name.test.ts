@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { rect } from './support/dom.js';
-import { currentOrg, orgLabel, pillMinWidth, pillSlot } from '../src/rossum/orgName.js';
+import {
+  currentOrg,
+  deploymentLocation,
+  orgLabel,
+  pillMinWidth,
+  pillSlot,
+} from '../src/rossum/orgName.js';
 
 describe('currentOrg', () => {
   it('names the organization, its id, and whether it is a sandbox', () => {
@@ -8,7 +14,31 @@ describe('currentOrg', () => {
       name: 'Acme HQ',
       id: 7,
       sandbox: true,
+      groupPath: null,
+      location: null,
     });
+  });
+
+  it('keeps the API path of its organization group, on this origin', () => {
+    const list = {
+      results: [
+        {
+          name: 'Acme HQ',
+          organization_group: 'https://acme.rossum.app/api/v1/organization_groups/12',
+        },
+      ],
+    };
+    expect(currentOrg(list)!.groupPath).toBe('/api/v1/organization_groups/12');
+  });
+
+  it('ignores a group URL that is not an organization group', () => {
+    const list = {
+      results: [{ name: 'Acme HQ', organization_group: 'https://acme.rossum.app/api/v1/users/1' }],
+    };
+    expect(currentOrg(list)!.groupPath).toBeNull();
+    expect(
+      currentOrg({ results: [{ name: 'Acme HQ', organization_group: 'nonsense' }] })!.groupPath,
+    ).toBeNull();
   });
 
   it('leaves the id out when the API gives none', () => {
@@ -55,8 +85,20 @@ describe('currentOrg, on what it names', () => {
   });
 });
 
+describe('deploymentLocation', () => {
+  it('reads where the organization group is deployed', () => {
+    expect(deploymentLocation({ id: 12, deployment_location: 'prod-eu2' })).toBe('prod-eu2');
+  });
+
+  it('is null when the group does not say', () => {
+    expect(deploymentLocation({ id: 12 })).toBeNull();
+    expect(deploymentLocation({ deployment_location: '' })).toBeNull();
+    expect(deploymentLocation(null)).toBeNull();
+  });
+});
+
 describe('orgLabel', () => {
-  const org = { name: 'Acme HQ', id: 7, sandbox: false };
+  const org = { name: 'Acme HQ', id: 7, sandbox: false, groupPath: null, location: null };
 
   it('names the organization and its id, header style by default', () => {
     expect(orgLabel(org)).toBe('Acme HQ: 7');
@@ -68,6 +110,14 @@ describe('orgLabel', () => {
 
   it('is the name alone when the API gave no id', () => {
     expect(orgLabel({ ...org, id: null })).toBe('Acme HQ');
+  });
+
+  it('ends with the deployment location in brackets', () => {
+    expect(orgLabel({ ...org, location: 'prod-eu2' })).toBe('Acme HQ: 7 [prod-eu2]');
+    expect(orgLabel({ ...org, location: 'prod-eu2' }, ' \u00b7 org: ')).toBe(
+      'Acme HQ \u00b7 org: 7 [prod-eu2]',
+    );
+    expect(orgLabel({ ...org, id: null, location: 'prod-eu2' })).toBe('Acme HQ [prod-eu2]');
   });
 });
 

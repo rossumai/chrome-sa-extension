@@ -1,5 +1,13 @@
 import { fetchRossumApiFresh } from '../api.js';
-import { CHIP_GAP, currentOrg, orgLabel, pillMinWidth, pillSlot, type Org } from '../orgName.js';
+import {
+  CHIP_GAP,
+  currentOrg,
+  deploymentLocation,
+  orgLabel,
+  pillMinWidth,
+  pillSlot,
+  type Org,
+} from '../orgName.js';
 import { trackOnce } from '../../usage/track.js';
 
 // The organization's name in the Rossum header, on every screen — organizations in one
@@ -264,6 +272,18 @@ async function resolve() {
   }
   if (gen !== generation) return;
   org = next;
+  renderAll();
+  // The deployment location follows in the name's label once the group is read; the name
+  // does not wait for it, and without the name nothing needs it.
+  if (!org?.groupPath || !showName) return;
+  let location: string | null = null;
+  try {
+    location = deploymentLocation(await fetchRossumApiFresh(org.groupPath, { ttlMs: 0 }));
+  } catch {
+    /* the label stays without it */
+  }
+  if (gen !== generation || !location) return;
+  org = { ...org, location };
   renderAll();
 }
 

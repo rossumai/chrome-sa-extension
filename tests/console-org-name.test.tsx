@@ -22,6 +22,41 @@ beforeEach(() => {
 });
 
 describe('resolveOrgLabel', () => {
+  it('ends with the deployment location of the organization group', async () => {
+    const get = vi.fn(async (path: string) =>
+      path === '/api/v1/organizations'
+        ? {
+            results: [
+              {
+                id: 7,
+                name: 'Acme Corporation',
+                organization_group:
+                  'https://partner-sandbox.rossum.app/api/v1/organization_groups/12',
+              },
+            ],
+          }
+        : { id: 12, deployment_location: 'prod-eu2' },
+    );
+    expect(await resolveOrgLabel(get)).toBe('Acme Corporation · org: 7 [prod-eu2]');
+    expect(get).toHaveBeenCalledWith('/api/v1/organization_groups/12');
+  });
+
+  it('names the organization without the location when the group cannot be read', async () => {
+    const get = async (path: string) => {
+      if (path !== '/api/v1/organizations') throw new Error('API error 403');
+      return {
+        results: [
+          {
+            id: 7,
+            name: 'Acme Corporation',
+            organization_group: 'https://partner-sandbox.rossum.app/api/v1/organization_groups/12',
+          },
+        ],
+      };
+    };
+    expect(await resolveOrgLabel(get)).toBe('Acme Corporation · org: 7');
+  });
+
   it('names the organization and its id', async () => {
     const get = async () => ({ results: [{ id: 7, name: 'Acme Corporation' }] });
     expect(await resolveOrgLabel(get)).toBe('Acme Corporation · org: 7');

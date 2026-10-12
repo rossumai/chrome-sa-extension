@@ -35,6 +35,8 @@ beforeEach(async () => {
     'tok-b': [{ id: 8, name: 'Acme HQ - PROD' }],
   };
   rossumApi.holdList = {};
+  rossumApi.groups = {};
+  rossumApi.holdGroup = {};
   stubRossumApi();
   sendMessage = vi.fn();
   globalThis.chrome = { runtime: { sendMessage } } as any;
@@ -136,6 +138,73 @@ describe('the name pill', () => {
     await flush();
 
     expect(shown(pill())).toBe(false);
+  });
+});
+
+describe('the deployment location', () => {
+  beforeEach(() => {
+    rossumApi.orgsByToken['tok-a'] = [{ id: 7, name: 'Acme HQ - TEST', group: 12 }];
+    rossumApi.orgsByToken['tok-b'] = [{ id: 8, name: 'Acme HQ - PROD', group: 13 }];
+    rossumApi.groups = {
+      12: { deployment_location: 'prod-eu2' },
+      13: { deployment_location: 'prod-us2' },
+    };
+  });
+
+  it('follows the id in brackets', async () => {
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [prod-eu2]');
+  });
+
+  it('is left out when the group cannot be read', async () => {
+    rossumApi.groups = {};
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7');
+  });
+
+  it('shows the name without waiting for the group', async () => {
+    let release!: () => void;
+    rossumApi.holdGroup[12] = new Promise<void>((r) => (release = r));
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7');
+
+    release();
+    await flush();
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [prod-eu2]');
+  });
+
+  it('is not asked for when the name is switched off', async () => {
+    documentsHeader();
+    badge.init({ intervalMs: 0, name: false, env: true });
+    await flush();
+
+    const paths = vi.mocked(fetch).mock.calls.map(([url]) => new URL(String(url)).pathname);
+    expect(paths).toEqual(['/api/v1/organizations']);
+  });
+
+  it('never lets a slow answer for the previous organization label the current one', async () => {
+    vi.useFakeTimers();
+    let release!: () => void;
+    rossumApi.holdGroup[12] = new Promise<void>((r) => (release = r));
+    documentsHeader();
+    badge.init({ intervalMs: 1500 });
+    await flush();
+
+    window.localStorage.setItem('secureToken', 'tok-b');
+    await vi.advanceTimersByTimeAsync(1500);
+    await flush();
+    release();
+    await flush();
+
+    expect(pill()!.textContent).toBe('Acme HQ - PROD: 8 [prod-us2]');
   });
 });
 

@@ -13,20 +13,53 @@
 // `sandbox` is `organization.sandbox === true` and nothing else: the flag marks usage
 // outside the fair-usage policy, so anything else, a missing flag included, is billed
 // as production.
-export type Org = { name: string; id: number | null; sandbox: boolean };
+export type Org = {
+  name: string;
+  id: number | null;
+  sandbox: boolean;
+  /** Its organization group's API path on this origin, to read the deployment location. */
+  groupPath: string | null;
+  /** Where the group is deployed (`prod-eu2`); null until read, or when it cannot be. */
+  location: string | null;
+};
 
 export function currentOrg(list: unknown): Org | null {
   const results = (list as { results?: unknown } | null)?.results;
   if (!Array.isArray(results) || results.length !== 1) return null;
-  const { name, id, sandbox } = results[0] ?? {};
+  const { name, id, sandbox, organization_group: group } = results[0] ?? {};
   if (typeof name !== 'string' || !name.trim()) return null;
-  return { name: name.trim(), id: typeof id === 'number' ? id : null, sandbox: sandbox === true };
+  return {
+    name: name.trim(),
+    id: typeof id === 'number' ? id : null,
+    sandbox: sandbox === true,
+    groupPath: groupPathOf(group),
+    location: null,
+  };
 }
 
-// How the organization is named on screen: its name, then its id when the API gave one —
-// `Acme: 7` in the header, `Acme · org: 7` in the Console's connection line.
+// Only the path is kept, and always requested on the page's own origin.
+function groupPathOf(url: unknown): string | null {
+  if (typeof url !== 'string') return null;
+  try {
+    const { pathname } = new URL(url);
+    return /^\/api\/v1\/organization_groups\/\d+$/.test(pathname) ? pathname : null;
+  } catch {
+    return null;
+  }
+}
+
+// The cell the organization group is deployed in, read off the group — every role tried
+// (admin, manager, annotator) can read it.
+export function deploymentLocation(group: unknown): string | null {
+  const location = (group as { deployment_location?: unknown } | null)?.deployment_location;
+  return typeof location === 'string' && location ? location : null;
+}
+
+// How the organization is named on screen: its name, its id, then its deployment location
+// when known — `Acme: 7 [prod-eu2]` in the header, `Acme · org: 7 [prod-eu2]` in the Console.
 export const orgLabel = (org: Org, separator = ': '): string =>
-  org.id === null ? org.name : `${org.name}${separator}${org.id}`;
+  (org.id === null ? org.name : `${org.name}${separator}${org.id}`) +
+  (org.location ? ` [${org.location}]` : '');
 
 // The feature's switch, and the ONE place its default lives. It is the one toggle that
 // defaults ON: an absent key means enabled and only an explicit `false` disables it.
