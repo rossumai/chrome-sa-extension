@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { rect } from './support/dom.js';
 import {
   cachedOrg,
+  orgCacheKey,
   currentOrg,
   deploymentLocation,
   orgLabel,
@@ -98,11 +99,32 @@ describe('cachedOrg', () => {
     expect(cachedOrg(entry(1_000), 1_000 + 24 * 3_600_000)).toBeNull();
   });
 
+  it('drops a cached group path that is not an organization group', () => {
+    // It decides where a token-bearing request goes, so it is checked like a fresh one.
+    expect(cachedOrg(entry(0, { ...org, groupPath: '/api/v1/users/1' }), 0)!.groupPath).toBeNull();
+    expect(
+      cachedOrg(entry(0, { ...org, groupPath: '/api/v1/organization_groups/12' }), 0)!.groupPath,
+    ).toBe('/api/v1/organization_groups/12');
+  });
+
   it('ignores anything it did not write', () => {
     expect(cachedOrg(null, 0)).toBeNull();
     expect(cachedOrg('not json', 0)).toBeNull();
     expect(cachedOrg(entry(0, { name: 'Acme HQ' }), 0)).toBeNull();
     expect(cachedOrg(entry(0, { ...org, name: '' }), 0)).toBeNull();
+  });
+});
+
+describe('orgCacheKey', () => {
+  it('is stable for a token and differs between tokens', () => {
+    expect(orgCacheKey('tok-a')).toBe(orgCacheKey('tok-a'));
+    expect(orgCacheKey('tok-a')).not.toBe(orgCacheKey('tok-b'));
+  });
+
+  it('never contains the token', () => {
+    const token = '0123456789abcdef0123456789abcdef01234567';
+    expect(orgCacheKey(token)).not.toContain(token.slice(0, 8));
+    expect(orgCacheKey(token)).toMatch(/^rossum-sa-extension-org:[0-9a-f]{1,8}$/);
   });
 });
 

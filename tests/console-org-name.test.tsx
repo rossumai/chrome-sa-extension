@@ -21,6 +21,13 @@ beforeEach(() => {
   auditStore.pageInfo.value = { ...auditStore.pageInfo.value, total: null } satisfies PageInfo;
 });
 
+// Every label the bar is given, in order.
+async function labels(get: (path: string) => Promise<unknown>) {
+  const shown: string[] = [];
+  await resolveOrgLabel(get, (label) => shown.push(label));
+  return shown;
+}
+
 describe('resolveOrgLabel', () => {
   it('ends with the deployment location of the organization group', async () => {
     const get = vi.fn(async (path: string) =>
@@ -37,7 +44,11 @@ describe('resolveOrgLabel', () => {
           }
         : { id: 12, deployment_location: 'prod-eu2' },
     );
-    expect(await resolveOrgLabel(get)).toBe('Acme Corporation · org: 7 [prod-eu2]');
+    // The name first, without waiting for the group; then the location.
+    expect(await labels(get)).toEqual([
+      'Acme Corporation · org: 7',
+      'Acme Corporation · org: 7 [prod-eu2]',
+    ]);
     expect(get).toHaveBeenCalledWith('/api/v1/organization_groups/12');
   });
 
@@ -54,36 +65,36 @@ describe('resolveOrgLabel', () => {
         ],
       };
     };
-    expect(await resolveOrgLabel(get)).toBe('Acme Corporation · org: 7');
+    expect(await labels(get)).toEqual(['Acme Corporation · org: 7']);
   });
 
   it('names the organization and its id', async () => {
     const get = async () => ({ results: [{ id: 7, name: 'Acme Corporation' }] });
-    expect(await resolveOrgLabel(get)).toBe('Acme Corporation · org: 7');
+    expect(await labels(get)).toEqual(['Acme Corporation · org: 7']);
   });
 
   it('reads the name of the one organization the token can see', async () => {
     const get = vi.fn(async (_path: string) => ({ results: [{ name: 'Acme Corporation' }] }));
 
-    expect(await resolveOrgLabel(get)).toBe('Acme Corporation');
+    expect(await labels(get)).toEqual(['Acme Corporation']);
     expect(get).toHaveBeenCalledWith('/api/v1/organizations');
   });
 
   it('names nothing when the token sees several organizations', async () => {
     // The same rule as the Rossum header, so the two can never name different ones.
     const get = async () => ({ results: [{ name: 'Acme Home' }, { name: 'Acme Corporation' }] });
-    expect(await resolveOrgLabel(get)).toBeNull();
+    expect(await labels(get)).toEqual([]);
   });
 
   it('names nothing when the body carries no organization', async () => {
-    expect(await resolveOrgLabel(async () => ({ results: [] }))).toBeNull();
+    expect(await labels(async () => ({ results: [] }))).toEqual([]);
   });
 
   it('names nothing when the request fails, so the bar keeps its old text', async () => {
     const get = async () => {
       throw new Error('Request timed out after 30s');
     };
-    expect(await resolveOrgLabel(get)).toBeNull();
+    expect(await labels(get)).toEqual([]);
   });
 });
 

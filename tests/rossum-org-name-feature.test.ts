@@ -271,6 +271,36 @@ describe('the session cache', () => {
     expect(fetch).toHaveBeenCalled();
   });
 
+  it('counts the day from the request, not from each reload', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const start = Date.now();
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    vi.setSystemTime(start + 20 * 60 * 60 * 1000);
+    await reload(); // served from the cache, and must not renew it
+    expect(fetch).not.toHaveBeenCalled();
+
+    vi.setSystemTime(start + 24 * 60 * 60 * 1000);
+    await reload();
+    expect(fetch).toHaveBeenCalled();
+  });
+
+  it('keeps one entry per tab, the current session’s', async () => {
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    window.localStorage.setItem('secureToken', 'tok-b');
+    await reload();
+
+    const keys = Object.keys(window.sessionStorage).filter((k) =>
+      k.startsWith('rossum-sa-extension-org:'),
+    );
+    expect(keys).toHaveLength(1);
+  });
+
   it('does not keep an organization whose name could not be read', async () => {
     window.localStorage.setItem('secureToken', 'tok-unknown');
     documentsHeader();

@@ -70,9 +70,20 @@ export function cachedOrg(raw: string | null, now: number): Org | null {
     name: org.name,
     id: typeof org.id === 'number' ? org.id : null,
     sandbox: org.sandbox,
-    groupPath: typeof org.groupPath === 'string' ? org.groupPath : null,
+    // It decides where a token-bearing request goes, so it is checked like a fresh one.
+    groupPath: groupPathOf(`https://x${org.groupPath ?? ''}`),
     location: typeof org.location === 'string' ? org.location : null,
   };
+}
+
+// Where cachedOrg's entry lives in the tab's sessionStorage: a hash of the session token,
+// never the token itself — FNV-1a, enough to tell a tab's few tokens apart, synchronous.
+export const ORG_CACHE_PREFIX = 'rossum-sa-extension-org:';
+
+export function orgCacheKey(token: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < token.length; i++) hash = Math.imul(hash ^ token.charCodeAt(i), 0x01000193);
+  return `${ORG_CACHE_PREFIX}${(hash >>> 0).toString(16)}`;
 }
 
 // The cell the organization group is deployed in, read off the group — every role tried

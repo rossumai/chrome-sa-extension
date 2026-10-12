@@ -1,6 +1,8 @@
 import { fetchRossumApiFresh } from '../api.js';
 import {
   cachedOrg,
+  orgCacheKey,
+  ORG_CACHE_PREFIX,
   CHIP_GAP,
   currentOrg,
   deploymentLocation,
@@ -34,7 +36,6 @@ const STYLE_ID = 'rossum-sa-extension-org-style';
 const PILL_CLASS = 'rossum-sa-extension-org-name';
 const TEXT_CLASS = 'rossum-sa-extension-org-name-text';
 const CHIP_CLASS = 'rossum-sa-extension-org-chip';
-const CACHE_PREFIX = 'rossum-sa-extension-org:';
 const BAND_CLASS = 'rossum-sa-extension-org-band';
 const POWERED_BY = '[data-sentry-component="PoweredBy"]';
 const MUI_CHIP = '.MuiChip-root';
@@ -258,17 +259,6 @@ function placeAll() {
   for (const header of headers()) place(header, pillOf(header)!);
 }
 
-// The tab's sessionStorage keeps the organization per session token, so a page reload
-// names it without asking (orgName.ts cachedOrg). The key is a hash of the token, never the
-// token itself: FNV-1a, enough to tell a tab's few tokens apart, and synchronous.
-function cacheKey(session: string): string {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < session.length; i++) {
-    hash = Math.imul(hash ^ session.charCodeAt(i), 0x01000193);
-  }
-  return `${CACHE_PREFIX}${(hash >>> 0).toString(16)}`;
-}
-
 function readCache(key: string): Org | null {
   try {
     return cachedOrg(window.sessionStorage.getItem(key), Date.now());
@@ -277,8 +267,13 @@ function readCache(key: string): Org | null {
   }
 }
 
+// One entry per tab: the current session's. A token switch leaves the old one behind, and
+// nothing else would ever remove it.
 function writeCache(key: string, value: Org) {
   try {
+    for (const old of Object.keys(window.sessionStorage)) {
+      if (old.startsWith(ORG_CACHE_PREFIX) && old !== key) window.sessionStorage.removeItem(old);
+    }
     window.sessionStorage.setItem(key, JSON.stringify({ at: Date.now(), org: value }));
   } catch {
     /* no cache, no harm */
@@ -293,8 +288,11 @@ async function resolve() {
   org = null;
   renderAll();
   if (!token) return;
-  const key = cacheKey(token);
+  const key = orgCacheKey(token);
   let next = readCache(key);
+  // Only an answer from the API is written back: rewriting a cached entry on every reload
+  // would restart its day, and a rename would never show in a tab reloaded daily.
+  const fresh = !next;
   if (!next) {
     try {
       next = currentOrg(await fetchRossumApiFresh('/api/v1/organizations', { ttlMs: 0 }));
@@ -320,7 +318,7 @@ async function resolve() {
       renderAll();
     }
   }
-  writeCache(key, org);
+  if (fresh) writeCache(key, org);
 }
 
 function tick() {
