@@ -238,9 +238,11 @@ readable. It never picks a gap in the header's left half, and it hides only when
 ground and inherits NO colour: the review screen's header is white but hands its children white
 text, so an inherited `color` drew the name white on white. "Powered by Rossum"
 (`[data-sentry-component="PoweredBy"]`, rendered inside the navbar's right-hand actions) is
-hidden while the pill is on screen and restored the moment it is not — with `visibility`, keeping
-its space: `display: none` let the buttons slide into it on a narrow header, and the two swapped
-on every tick. Anchors are `data-cy` hooks and the `<header>` holding `[data-cy="userpanel"]`; note `data-cy="file-name"` is NOT
+hidden while the pill is on screen and restored the moment it is not. Each placement first
+measures with it removed (`display: none`), closing its space; only when that leaves no room —
+on a narrow header the buttons follow the branding and slide into the gap — does it keep its
+space (`visibility: hidden`) under the pill. Measuring in the same order every time is what
+keeps it stable: deciding one mode by the other's outcome made the two swap on every tick. Anchors are `data-cy` hooks and the `<header>` holding `[data-cy="userpanel"]`; note `data-cy="file-name"` is NOT
 review-screen-only — the document list's rows carry it too. The token is re-read every 1.5s so
 an org switch re-resolves, with a generation counter against stale answers.
 

@@ -189,31 +189,47 @@ function naturalWidth(pill: HTMLElement): { whole: number; least: number } {
   return { whole: name + gap + chipWidth, least };
 }
 
-function place(header: HTMLElement, pill: HTMLElement) {
+function findSlot(header: HTMLElement, pill: HTMLElement) {
   const cluster = [...header.querySelectorAll(CLUSTER)]
     .map((b) => b.getBoundingClientRect())
     .filter((r) => r.width > 0);
+  if (!org || !(showName || showEnv) || !cluster.length) return null;
   const width = naturalWidth(pill);
-  const slot =
-    org && (showName || showEnv) && cluster.length
-      ? pillSlot({
-          header: header.getBoundingClientRect(),
-          clusterLeft: Math.min(...cluster.map((r) => r.left)),
-          obstacles: obstacles(header),
-          nameWidth: width.whole,
-          minWidth: width.least,
-        })
-      : null;
+  return pillSlot({
+    header: header.getBoundingClientRect(),
+    clusterLeft: Math.min(...cluster.map((r) => r.left)),
+    obstacles: obstacles(header),
+    nameWidth: width.whole,
+    minWidth: width.least,
+  });
+}
+
+// "Powered by Rossum" makes way only for a pill that is actually on screen. Each placement
+// first measures with the branding REMOVED (`display: none`), so its space closes and no
+// hole is left between Rossum's buttons. On a narrow header the buttons follow the
+// branding instead of sitting at the edge, and removing it slides them into the pill's
+// gap; when that leaves no room, the branding keeps its space (`visibility: hidden`) and
+// the pill covers it. Every placement measures in this same order, so the result is
+// stable — toggling one of the two by the other's outcome made them swap each tick.
+function place(header: HTMLElement, pill: HTMLElement) {
+  const brands = [...header.querySelectorAll<HTMLElement>(POWERED_BY)];
+  const style = (display: string, visibility: string) => {
+    for (const brand of brands) {
+      brand.style.display = display;
+      brand.style.visibility = visibility;
+    }
+  };
+  style('none', '');
+  let slot = findSlot(header, pill);
+  if (!slot && brands.length) {
+    style('', '');
+    slot = findSlot(header, pill);
+    if (slot) style('', 'hidden');
+  }
   pill.hidden = !slot;
   if (slot) {
     pill.style.right = `${slot.right}px`;
     pill.style.maxWidth = `${slot.maxWidth}px`;
-  }
-  // The branding makes way only for a pill that is actually on screen, and keeps its
-  // space: with `display: none` the right-hand buttons slid into it on a narrow header,
-  // closing the pill's gap, and the two swapped on every tick.
-  for (const brand of header.querySelectorAll<HTMLElement>(POWERED_BY)) {
-    brand.style.visibility = slot ? 'hidden' : '';
   }
   for (const chip of header.querySelectorAll<HTMLElement>(MUI_CHIP)) {
     if (isRossumSandboxChip(chip)) renderRossumChip(chip);

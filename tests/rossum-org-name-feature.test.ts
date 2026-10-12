@@ -12,6 +12,7 @@ import {
   rossumApi,
   stubRossumApi,
 } from './support/rossumHeader.js';
+import { rect } from './support/dom.js';
 
 const flush = async () => {
   for (let i = 0; i < 30; i++) await Promise.resolve();
@@ -139,28 +140,40 @@ describe('the name pill', () => {
 });
 
 describe('Rossum branding', () => {
-  it('gives "Powered by Rossum" room to the name once the name is known', async () => {
+  it('gives "Powered by Rossum" up to the name, closing its space', async () => {
     documentsHeader({ poweredBy: true });
     badge.init({ intervalMs: 0 });
     await flush();
 
-    expect(poweredBy().style.visibility).toBe('hidden');
-    // The pill takes the gap the branding occupied: right = 1705 - 1517 + 12, as on an
-    // unbranded header.
+    // Removed from the layout, so no hole is left between Rossum's buttons.
+    expect(poweredBy().style.display).toBe('none');
+    expect(poweredBy().style.visibility).toBe('');
+    // right = 1705 - 1517 + 12, as on an unbranded header.
     const name = pill()!;
     expect(name.style.right).toBe('200px');
     expect(name.style.maxWidth).toBe('708px');
   });
 
-  it('keeps the branding’s space, so nothing in Rossum’s header moves', async () => {
-    // With `display: none` the right-hand buttons slid into the freed space on a narrow
-    // header, closing the pill's gap; the next tick showed the branding again, for ever.
-    documentsHeader({ poweredBy: true });
-    badge.init({ intervalMs: 0 });
+  it('keeps the branding’s space when closing it would leave the name no room', async () => {
+    // On a narrow header the right-hand buttons follow the branding rather than sit at
+    // the edge: removing it slides them left, into the pill's gap. Measured that way there
+    // is no room, so the branding keeps its space and the pill covers it — every tick
+    // decides the same, where toggling `display` made the two swap each tick.
+    const header = documentsHeader({ poweredBy: true });
+    const brand = poweredBy();
+    const chat = header.querySelector<HTMLElement>('[data-cy="chat-open-button"]')!;
+    const collapsed = rect({ left: 790, top: 6, right: 826, bottom: 42 });
+    const open = rect({ left: 1517, top: 6, right: 1553, bottom: 42 });
+    chat.getBoundingClientRect = () => (brand.style.display === 'none' ? collapsed : open);
+    badge.init({ intervalMs: 1500 });
     await flush();
 
-    expect(poweredBy().style.visibility).toBe('hidden');
-    expect(poweredBy().style.display).toBe('');
+    for (let tick = 0; tick < 3; tick++) {
+      expect(shown(pill())).toBe(true);
+      expect(brand.style.display).toBe('');
+      expect(brand.style.visibility).toBe('hidden');
+      window.dispatchEvent(new Event('resize'));
+    }
   });
 
   it('keeps the branding when the name would not fit even in its place', async () => {
@@ -171,6 +184,7 @@ describe('Rossum branding', () => {
     await flush();
 
     expect(shown(pill())).toBe(false);
+    expect(poweredBy().style.display).toBe('');
     expect(poweredBy().style.visibility).toBe('');
   });
 
@@ -180,6 +194,7 @@ describe('Rossum branding', () => {
     badge.init({ intervalMs: 0 });
     await flush();
 
+    expect(poweredBy().style.display).toBe('');
     expect(poweredBy().style.visibility).toBe('');
   });
 
@@ -188,13 +203,13 @@ describe('Rossum branding', () => {
     documentsHeader({ poweredBy: true });
     badge.init({ intervalMs: 1500 });
     await flush();
-    expect(poweredBy().style.visibility).toBe('hidden');
+    expect(poweredBy().style.display).toBe('none');
 
     window.localStorage.setItem('secureToken', 'tok-unknown');
     await vi.advanceTimersByTimeAsync(1500);
     await flush();
 
-    expect(poweredBy().style.visibility).toBe('');
+    expect(poweredBy().style.display).toBe('');
     expect(shown(pill())).toBe(false);
   });
 
@@ -207,7 +222,7 @@ describe('Rossum branding', () => {
     header.append(brand);
     badge.handleNode(brand);
 
-    expect(brand.style.visibility).toBe('hidden');
+    expect(brand.style.display).toBe('none');
   });
 });
 
