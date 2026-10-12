@@ -13,13 +13,19 @@
 // `sandbox` is `organization.sandbox === true` and nothing else: the flag marks usage
 // outside the fair-usage policy, so anything else, a missing flag included, is billed
 // as production.
-export function currentOrg(list: unknown): { name: string; sandbox: boolean } | null {
+export type Org = { name: string; id: number | null; sandbox: boolean };
+
+export function currentOrg(list: unknown): Org | null {
   const results = (list as { results?: unknown } | null)?.results;
   if (!Array.isArray(results) || results.length !== 1) return null;
-  const { name, sandbox } = results[0] ?? {};
+  const { name, id, sandbox } = results[0] ?? {};
   if (typeof name !== 'string' || !name.trim()) return null;
-  return { name: name.trim(), sandbox: sandbox === true };
+  return { name: name.trim(), id: typeof id === 'number' ? id : null, sandbox: sandbox === true };
 }
+
+// How the organization is named on screen: its name, then its id when the API gave one.
+export const orgLabel = (org: Org): string =>
+  org.id === null ? org.name : `${org.name}: ${org.id}`;
 
 export const currentOrgName = (list: unknown): string | null => currentOrg(list)?.name ?? null;
 

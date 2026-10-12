@@ -56,8 +56,8 @@ describe('the name pill', () => {
     const name = pill()!;
     expect(name.parentElement).toBe(header);
     expect(shown(name)).toBe(true);
-    expect(name.textContent).toBe('Acme HQ - TEST');
-    expect(name.title).toBe('Acme HQ - TEST');
+    expect(name.textContent).toBe('Acme HQ - TEST: 7');
+    expect(name.title).toBe('Acme HQ - TEST: 7');
     // right = 1705 - 1517 + 12; maxWidth = (1517 - 12) - (785 + 12)
     expect(name.style.right).toBe('200px');
     expect(name.style.maxWidth).toBe('708px');
@@ -69,7 +69,7 @@ describe('the name pill', () => {
     badge.init({ intervalMs: 0 });
     await flush();
 
-    expect(pill()!.textContent).toBe('Acme HQ - TEST');
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7');
   });
 
   it('sits in the same place on the document review screen', async () => {
@@ -239,7 +239,7 @@ describe('lifecycle', () => {
 
     const name = pill()!;
     expect(name.parentElement).toBe(header);
-    expect(name.textContent).toBe('Acme HQ - TEST');
+    expect(name.textContent).toBe('Acme HQ - TEST: 7');
   });
 
   it('comes back when the header remounts', async () => {
@@ -299,13 +299,13 @@ describe('lifecycle', () => {
     documentsHeader();
     badge.init({ intervalMs: 1500 });
     await flush();
-    expect(pill()!.textContent).toBe('Acme HQ - TEST');
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7');
 
     window.localStorage.setItem('secureToken', 'tok-b');
     await vi.advanceTimersByTimeAsync(1500);
     await flush();
 
-    expect(pill()!.textContent).toBe('Acme HQ - PROD');
+    expect(pill()!.textContent).toBe('Acme HQ - PROD: 8');
   });
 
   it('never lets a slow answer for the previous organization overwrite the current one', async () => {
@@ -319,11 +319,11 @@ describe('lifecycle', () => {
     window.localStorage.setItem('secureToken', 'tok-b');
     await vi.advanceTimersByTimeAsync(1500);
     await flush();
-    expect(pill()!.textContent).toBe('Acme HQ - PROD');
+    expect(pill()!.textContent).toBe('Acme HQ - PROD: 8');
 
     release();
     await flush();
-    expect(pill()!.textContent).toBe('Acme HQ - PROD');
+    expect(pill()!.textContent).toBe('Acme HQ - PROD: 8');
   });
 
   it('draws nothing when the organization cannot be read', async () => {

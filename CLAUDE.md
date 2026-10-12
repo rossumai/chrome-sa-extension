@@ -219,7 +219,9 @@ feature's `init()` must sweep the current document — as `closable-tooltips` do
 already open — and when the sweep needs settings, `index.ts` calls it AFTER `observe()`, or
 anything rendered in between is missed by both. `org-name.ts` is the worked example.
 
-**The organization's name** (`org-name.ts`, key `orgNameEnabled`, event `sa_rossum_org_name`),
+**The organization's name and id** (`org-name.ts`, key `orgNameEnabled`, popup label "Org info",
+event `sa_rossum_org_name`; shown as `<name>: <id>` in the header, `<name> · org: <id>` in the
+Console),
 since orgs in one group share a hostname AND a white-labelled logo,
 so only the user menu (mounted by MUI only while open) said which one you are in.
 `org-name` shows it in a one-line pill on the right of the header, just left of its

@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { domain, loading, pageInfo } from '../store.js';
-import { orgName } from '../../console/store.js';
+import { orgLabel } from '../../console/store.js';
 
 export default function ConnectionBar({ connected }: { connected: boolean | null }) {
   if (!connected) {
@@ -15,7 +15,7 @@ export default function ConnectionBar({ connected }: { connected: boolean | null
     <div class="connection-bar">
       <span class={'connection-dot' + (loading.value ? ' busy' : '')}></span>
       Audit Logs · Connected to {prettyDomain(domain.value)}
-      {orgName.value ? ` \u00b7 ${orgName.value}` : ''}
+      {orgLabel.value ? ` \u00b7 ${orgLabel.value}` : ''}
       {pageInfo.value.total != null && (
         <span class="connection-meta">{pageInfo.value.total.toLocaleString()} records</span>
       )}

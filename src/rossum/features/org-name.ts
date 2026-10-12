@@ -1,5 +1,5 @@
 import { fetchRossumApiFresh } from '../api.js';
-import { currentOrg, pillSlot } from '../orgName.js';
+import { currentOrg, orgLabel, pillSlot, type Org } from '../orgName.js';
 import { trackOnce } from '../../usage/track.js';
 
 // The organization's name in the Rossum header, on every screen — organizations in one
@@ -36,8 +36,6 @@ const CLUSTER = ['chat-open-button', 'help-panel-button', 'beamer-selector', 'us
   .map((cy) => `[data-cy="${cy}"]`)
   .join(', ');
 const CONTROL = 'a, button, input, select, textarea, img, svg, [role="tab"], [role="button"]';
-
-type Org = { name: string; sandbox: boolean };
 
 let org: Org | null = null;
 let showName = true;
@@ -130,7 +128,7 @@ function renderHeader(header: HTMLElement) {
   const chip = pill.querySelector<HTMLElement>(`.${CHIP_CLASS}`)!;
   const env = org && showEnv ? (org.sandbox ? 'sandbox' : 'production') : null;
   text.hidden = !showName;
-  text.textContent = org && showName ? org.name : '';
+  text.textContent = org && showName ? orgLabel(org) : '';
   pill.title = text.textContent;
   chip.hidden = !env;
   chip.textContent = env === 'sandbox' ? 'Sandbox' : env ? 'Production' : '';

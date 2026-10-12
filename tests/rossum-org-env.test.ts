@@ -103,7 +103,7 @@ describe('the environment chip', () => {
     await flush();
 
     expect(shown(chip())).toBe(false);
-    expect(pill()!.textContent).toBe('Acme HQ - TEST');
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7');
     expect(shown(band())).toBe(false);
     expect(rossumChip('Sandbox').style.display).toBe('');
   });

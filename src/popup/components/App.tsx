@@ -423,7 +423,7 @@ export default function App({ tab }: { tab?: any }) {
                       was showing (measured 2026-09-27). */}
                   <Toggle
                     id="orgNameEnabled"
-                    label="Org name"
+                    label="Org info"
                     hint="Header & Console"
                     checked={storageValues.orgNameEnabled}
                     onChange={(v) => setStorageToggle('orgNameEnabled', v)}

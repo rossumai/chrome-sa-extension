@@ -3,11 +3,17 @@ import { rect } from './support/dom.js';
 import { currentOrg, currentOrgName, pillSlot } from '../src/rossum/orgName.js';
 
 describe('currentOrg', () => {
-  it('names the organization and whether it is a sandbox', () => {
+  it('names the organization, its id, and whether it is a sandbox', () => {
     expect(currentOrg({ results: [{ id: 7, name: 'Acme HQ', sandbox: true }] })).toEqual({
       name: 'Acme HQ',
+      id: 7,
       sandbox: true,
     });
+  });
+
+  it('leaves the id out when the API gives none', () => {
+    expect(currentOrg({ results: [{ id: '7', name: 'Acme HQ' }] })!.id).toBeNull();
+    expect(currentOrg({ results: [{ name: 'Acme HQ' }] })!.id).toBeNull();
   });
 
   it('counts only `sandbox: true` as a sandbox', () => {
