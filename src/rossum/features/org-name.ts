@@ -1,5 +1,6 @@
 import { fetchRossumApiFresh } from '../api.js';
 import {
+  cachedOrg,
   CHIP_GAP,
   currentOrg,
   deploymentLocation,
@@ -33,6 +34,7 @@ const STYLE_ID = 'rossum-sa-extension-org-style';
 const PILL_CLASS = 'rossum-sa-extension-org-name';
 const TEXT_CLASS = 'rossum-sa-extension-org-name-text';
 const CHIP_CLASS = 'rossum-sa-extension-org-chip';
+const CACHE_PREFIX = 'rossum-sa-extension-org:';
 const BAND_CLASS = 'rossum-sa-extension-org-band';
 const POWERED_BY = '[data-sentry-component="PoweredBy"]';
 const MUI_CHIP = '.MuiChip-root';
@@ -256,6 +258,33 @@ function placeAll() {
   for (const header of headers()) place(header, pillOf(header)!);
 }
 
+// The tab's sessionStorage keeps the organization per session token, so a page reload
+// names it without asking (orgName.ts cachedOrg). The key is a hash of the token, never the
+// token itself: FNV-1a, enough to tell a tab's few tokens apart, and synchronous.
+function cacheKey(session: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < session.length; i++) {
+    hash = Math.imul(hash ^ session.charCodeAt(i), 0x01000193);
+  }
+  return `${CACHE_PREFIX}${(hash >>> 0).toString(16)}`;
+}
+
+function readCache(key: string): Org | null {
+  try {
+    return cachedOrg(window.sessionStorage.getItem(key), Date.now());
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(key: string, value: Org) {
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify({ at: Date.now(), org: value }));
+  } catch {
+    /* no cache, no harm */
+  }
+}
+
 async function resolve() {
   token = readToken();
   const gen = ++generation;
@@ -264,27 +293,34 @@ async function resolve() {
   org = null;
   renderAll();
   if (!token) return;
-  let next: Org | null = null;
-  try {
-    next = currentOrg(await fetchRossumApiFresh('/api/v1/organizations', { ttlMs: 0 }));
-  } catch {
-    /* no organization, no pill */
+  const key = cacheKey(token);
+  let next = readCache(key);
+  if (!next) {
+    try {
+      next = currentOrg(await fetchRossumApiFresh('/api/v1/organizations', { ttlMs: 0 }));
+    } catch {
+      /* no organization, no pill */
+    }
   }
-  if (gen !== generation) return;
+  if (gen !== generation || !next) return;
   org = next;
   renderAll();
   // The deployment location follows in the name's label once the group is read; the name
   // does not wait for it, and without the name nothing needs it.
-  if (!org?.groupPath || !showName) return;
-  let location: string | null = null;
-  try {
-    location = deploymentLocation(await fetchRossumApiFresh(org.groupPath, { ttlMs: 0 }));
-  } catch {
-    /* the label stays without it */
+  if (!org.location && org.groupPath && showName) {
+    let location: string | null = null;
+    try {
+      location = deploymentLocation(await fetchRossumApiFresh(org.groupPath, { ttlMs: 0 }));
+    } catch {
+      /* the label stays without it */
+    }
+    if (gen !== generation) return;
+    if (location) {
+      org = { ...org, location };
+      renderAll();
+    }
   }
-  if (gen !== generation || !location) return;
-  org = { ...org, location };
-  renderAll();
+  writeCache(key, org);
 }
 
 function tick() {

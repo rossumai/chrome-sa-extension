@@ -48,6 +48,33 @@ function groupPathOf(url: unknown): string | null {
   }
 }
 
+// A cached organization, as features/org-name.ts keeps it in the tab's sessionStorage:
+// `{ at, org }`. The id never changes and the name and cell almost never do, so a page
+// reload need not ask again; a day bounds how long a rename goes unseen. Anything else —
+// expired, malformed, not ours — reads as no entry.
+export const ORG_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+export function cachedOrg(raw: string | null, now: number): Org | null {
+  if (!raw) return null;
+  let entry: { at?: unknown; org?: Partial<Org> } | null;
+  try {
+    entry = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  const org = entry?.org;
+  if (typeof entry?.at !== 'number' || now - entry.at >= ORG_CACHE_TTL_MS) return null;
+  if (!org || typeof org.name !== 'string' || !org.name) return null;
+  if (typeof org.sandbox !== 'boolean' || !('id' in org) || !('location' in org)) return null;
+  return {
+    name: org.name,
+    id: typeof org.id === 'number' ? org.id : null,
+    sandbox: org.sandbox,
+    groupPath: typeof org.groupPath === 'string' ? org.groupPath : null,
+    location: typeof org.location === 'string' ? org.location : null,
+  };
+}
+
 // The cell the organization group is deployed in, read off the group — every role tried
 // (admin, manager, annotator) can read it.
 export function deploymentLocation(group: unknown): string | null {

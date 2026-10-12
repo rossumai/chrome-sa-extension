@@ -29,6 +29,7 @@ beforeEach(async () => {
   document.head.innerHTML = '';
   document.body.innerHTML = '';
   window.localStorage.clear();
+  window.sessionStorage.clear();
   window.localStorage.setItem('secureToken', 'tok-a');
   rossumApi.orgsByToken = {
     'tok-a': [{ id: 7, name: 'Acme HQ - TEST' }],
@@ -205,6 +206,78 @@ describe('the deployment location', () => {
     await flush();
 
     expect(pill()!.textContent).toBe('Acme HQ - PROD: 8 [prod-us2]');
+  });
+});
+
+describe('the session cache', () => {
+  // A full page reload: a fresh content script on the same tab, so the same sessionStorage.
+  async function reload() {
+    vi.resetModules();
+    vi.mocked(fetch).mockClear();
+    document.body.innerHTML = '';
+    badge = await import('../src/rossum/features/org-name.js');
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+  }
+
+  beforeEach(() => {
+    rossumApi.orgsByToken['tok-a'] = [{ id: 7, name: 'Acme HQ - TEST', group: 12 }];
+    rossumApi.groups = { 12: { deployment_location: 'prod-eu2' } };
+  });
+
+  it('names the organization after a reload without asking the API again', async () => {
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    await reload();
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [prod-eu2]');
+  });
+
+  it('asks again for another session token', async () => {
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    window.localStorage.setItem('secureToken', 'tok-b');
+    await reload();
+
+    expect(fetch).toHaveBeenCalled();
+    expect(pill()!.textContent).toBe('Acme HQ - PROD: 8');
+  });
+
+  it('never keeps the token itself', async () => {
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    const stored = Object.entries(window.sessionStorage).flat().join(' ');
+    expect(stored).toContain('Acme HQ - TEST');
+    expect(stored).not.toContain('tok-a');
+  });
+
+  it('asks again after a day', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    vi.setSystemTime(Date.now() + 24 * 60 * 60 * 1000);
+    await reload();
+
+    expect(fetch).toHaveBeenCalled();
+  });
+
+  it('does not keep an organization whose name could not be read', async () => {
+    window.localStorage.setItem('secureToken', 'tok-unknown');
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    expect(window.sessionStorage.length).toBe(0);
   });
 });
 

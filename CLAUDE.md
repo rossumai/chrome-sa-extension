@@ -250,7 +250,10 @@ keeps it stable: deciding one mode by the other's outcome made the two swap on e
 Anchors are `data-cy` hooks and the `<header>` holding `[data-cy="userpanel"]`; note
 `data-cy="file-name"` is NOT review-screen-only — the document list's rows carry it too. The
 token is re-read every 1.5s so an org switch re-resolves, with a generation counter against
-stale answers.
+stale answers. The result is cached in the Rossum tab's `sessionStorage` under
+`rossum-sa-extension-org:<FNV-1a of the token>` for 24 hours (`cachedOrg`), so a page reload
+names the organization without a request — content scripts cannot read `chrome.storage.session`
+by default, hence the page's own storage.
 
 **The organization's environment** is a second, independent switch (`orgEnvEnabled`, DEFAULT
 OFF, event `sa_rossum_org_env`) drawn by the same feature: a "Sandbox" / "Production" chip before

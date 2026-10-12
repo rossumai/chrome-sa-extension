@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { rect } from './support/dom.js';
 import {
+  cachedOrg,
   currentOrg,
   deploymentLocation,
   orgLabel,
@@ -82,6 +83,26 @@ describe('currentOrg, on what it names', () => {
     expect(currentOrg({ results: [{ id: 7, name: '   ' }] })).toBeNull();
     expect(currentOrg({})).toBeNull();
     expect(currentOrg(null)).toBeNull();
+  });
+});
+
+describe('cachedOrg', () => {
+  const org = { name: 'Acme HQ', id: 7, sandbox: false, groupPath: null, location: 'prod-eu2' };
+  const entry = (at: number, value: unknown = org) => JSON.stringify({ at, org: value });
+
+  it('reads back an organization stored within the day', () => {
+    expect(cachedOrg(entry(1_000), 1_000 + 24 * 3_600_000 - 1)).toEqual(org);
+  });
+
+  it('forgets it after a day, so a rename still shows', () => {
+    expect(cachedOrg(entry(1_000), 1_000 + 24 * 3_600_000)).toBeNull();
+  });
+
+  it('ignores anything it did not write', () => {
+    expect(cachedOrg(null, 0)).toBeNull();
+    expect(cachedOrg('not json', 0)).toBeNull();
+    expect(cachedOrg(entry(0, { name: 'Acme HQ' }), 0)).toBeNull();
+    expect(cachedOrg(entry(0, { ...org, name: '' }), 0)).toBeNull();
   });
 });
 
