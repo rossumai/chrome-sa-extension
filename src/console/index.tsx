@@ -1,6 +1,6 @@
 import { h, render } from 'preact';
 import { effect } from '@preact/signals';
-import { activeApp, experimentalUnlocked, orgLabel } from './store.js';
+import { activeApp, experimentalUnlocked, connectedOrg } from './store.js';
 import { resolveOrgLabel } from './orgName.js';
 import { orgNameOn } from '../rossum/orgName.js';
 import {
@@ -202,7 +202,7 @@ async function boot() {
   // show the domain alone until (or unless) it resolves.
   if (orgNameOn(stored.orgNameEnabled)) {
     resolveOrgLabel(galaxyApi.get).then((label) => {
-      orgLabel.value = label;
+      connectedOrg.value = label;
     });
   }
   // Galaxy shows its own loading overlay (set below) instead of the shell's

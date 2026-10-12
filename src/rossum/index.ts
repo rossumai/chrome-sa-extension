@@ -14,7 +14,7 @@ import { init as initDatasetMgmtSuggest } from './features/dataset-mgmt-suggest.
 import { init as initTrackViewed } from './features/track-viewed.js';
 import { init as initTrainingQuest } from './features/training-quest.js';
 import { init as initOrgName, handleNode as handleOrgName } from './features/org-name.js';
-import { ORG_ENV_KEY, orgNameOn } from './orgName.js';
+import { orgNameOn } from './orgName.js';
 
 initClosableTooltips();
 initDatasetMgmtSuggest();
@@ -28,16 +28,17 @@ const SETTINGS_KEYS = [
   'scrollLockEnabled',
   'resourceIdsEnabled',
   'orgNameEnabled',
-  ORG_ENV_KEY,
+  'orgEnvEnabled',
 ];
 
 chrome.storage.local.get(SETTINGS_KEYS).then((settings) => {
   // The one feature that defaults ON (see orgNameOn): knowing which organization you
   // are in is the default, not a preference.
   const showOrgName = orgNameOn(settings.orgNameEnabled);
-  // The environment chip and line: its own switch, off by default, and drawn by the same
-  // feature whether or not the name is on.
-  const showOrgEnv = !!settings[ORG_ENV_KEY];
+  // The environment chip and line: its own switch, drawn by the same feature whether or
+  // not the name is on, and OFF by default like every other toggle — a test org without
+  // the sandbox flag shows Production, a call each user makes for themselves.
+  const showOrgEnv = !!settings.orgEnvEnabled;
   const handlers = [handleClosableTooltip];
   if (showOrgName || showOrgEnv) handlers.push(handleOrgName);
 

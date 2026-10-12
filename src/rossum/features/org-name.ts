@@ -1,5 +1,5 @@
 import { fetchRossumApiFresh } from '../api.js';
-import { currentOrg, orgLabel, pillSlot, type Org } from '../orgName.js';
+import { CHIP_GAP, currentOrg, orgLabel, pillMinWidth, pillSlot, type Org } from '../orgName.js';
 import { trackOnce } from '../../usage/track.js';
 
 // The organization's name in the Rossum header, on every screen — organizations in one
@@ -26,8 +26,6 @@ const PILL_CLASS = 'rossum-sa-extension-org-name';
 const TEXT_CLASS = 'rossum-sa-extension-org-name-text';
 const CHIP_CLASS = 'rossum-sa-extension-org-chip';
 const BAND_CLASS = 'rossum-sa-extension-org-band';
-const CHIP_GAP = 8;
-const MIN_NAME = 60;
 const POWERED_BY = '[data-sentry-component="PoweredBy"]';
 const MUI_CHIP = '.MuiChip-root';
 // The header's right-hand buttons. Not all of them exist for every user, so the
@@ -140,10 +138,11 @@ function renderHeader(header: HTMLElement) {
   place(header, pill);
 }
 
-// Rossum's own Sandbox chip: the MUI chip labelled "Sandbox", or in MUI's info colour
-// (the label is translated in other UI languages; Developer mode is `colorWarning`).
+// Rossum's own Sandbox chip: an MUI chip in the navbar's badge row — beside the nav tabs —
+// labelled "Sandbox", or in MUI's info colour, since the label is translated in other UI
+// languages (Developer mode is `colorWarning`). The row keeps other info chips out.
 function isRossumSandboxChip(node: Element): boolean {
-  if (node.closest(`.${PILL_CLASS}`)) return false;
+  if (!node.parentElement?.querySelector(':scope > .MuiTabs-root')) return false;
   const label = node.querySelector('.MuiChip-label')?.textContent?.trim();
   return label === 'Sandbox' || node.classList.contains('MuiChip-colorInfo');
 }
@@ -181,17 +180,15 @@ function naturalWidth(pill: HTMLElement): { whole: number; least: number } {
   const chip = pill.querySelector<HTMLElement>(`.${CHIP_CLASS}`)!;
   const chipWidth = chip.hidden ? 0 : chip.getBoundingClientRect().width;
   const name = text.hidden ? 0 : text.scrollWidth + (text.offsetWidth - text.clientWidth);
-  const gap = name && chipWidth ? CHIP_GAP : 0;
-  // The chip never truncates, so the least the pill needs is the chip plus a readable name.
-  const least = (text.hidden ? 0 : MIN_NAME) + gap + chipWidth || MIN_NAME;
-  return { whole: name + gap + chipWidth, least };
+  const whole = name + (name && chipWidth ? CHIP_GAP : 0) + chipWidth;
+  return { whole, least: pillMinWidth({ nameShown: !text.hidden, chipWidth, whole }) };
 }
 
 function findSlot(header: HTMLElement, pill: HTMLElement) {
   const cluster = [...header.querySelectorAll(CLUSTER)]
     .map((b) => b.getBoundingClientRect())
     .filter((r) => r.width > 0);
-  if (!org || !(showName || showEnv) || !cluster.length) return null;
+  if (!cluster.length) return null;
   const width = naturalWidth(pill);
   return pillSlot({
     header: header.getBoundingClientRect(),
@@ -217,9 +214,11 @@ function place(header: HTMLElement, pill: HTMLElement) {
       brand.style.visibility = visibility;
     }
   };
-  style('none', '');
-  let slot = findSlot(header, pill);
-  if (!slot && brands.length) {
+  // Nothing to show: no pill, and no layout to measure.
+  const shows = !!org && (showName || showEnv);
+  style(shows ? 'none' : '', '');
+  let slot = shows ? findSlot(header, pill) : null;
+  if (shows && !slot && brands.length) {
     style('', '');
     slot = findSlot(header, pill);
     if (slot) style('', 'hidden');
@@ -229,6 +228,7 @@ function place(header: HTMLElement, pill: HTMLElement) {
     pill.style.right = `${slot.right}px`;
     pill.style.maxWidth = `${slot.maxWidth}px`;
   }
+  if (!showEnv) return;
   for (const chip of header.querySelectorAll<HTMLElement>(MUI_CHIP)) {
     if (isRossumSandboxChip(chip)) renderRossumChip(chip);
   }
@@ -236,12 +236,12 @@ function place(header: HTMLElement, pill: HTMLElement) {
 
 function renderAll() {
   for (const header of headers()) renderHeader(header);
-  if (org && headers().some((h) => !pillOf(h)!.hidden)) {
-    // Once per page load, not per remount, and only when the pill actually showed. The
-    // events say which feature ran and nothing about the organization.
-    if (showName) trackOnce('sa_rossum_org_name');
-    if (showEnv) trackOnce('sa_rossum_org_env');
-  }
+  // Once per page load, not per remount, and only when something actually showed: the
+  // name in the pill, the environment in the chip or the line, which draws even when the
+  // pill has no room. The events say which feature ran and nothing about the organization.
+  if (!org || !headers().length) return;
+  if (showName && headers().some((h) => !pillOf(h)!.hidden)) trackOnce('sa_rossum_org_name');
+  if (showEnv) trackOnce('sa_rossum_org_env');
 }
 
 function placeAll() {
@@ -291,7 +291,7 @@ export function handleNode(node: HTMLElement): void {
     return;
   }
   // Both can render after the header: the settings behind them resolve late.
-  if (node.matches?.(MUI_CHIP) && isRossumSandboxChip(node)) {
+  if (showEnv && node.matches?.(MUI_CHIP) && node.closest('header') && isRossumSandboxChip(node)) {
     renderRossumChip(node);
     return;
   }

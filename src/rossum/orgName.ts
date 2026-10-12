@@ -23,11 +23,10 @@ export function currentOrg(list: unknown): Org | null {
   return { name: name.trim(), id: typeof id === 'number' ? id : null, sandbox: sandbox === true };
 }
 
-// How the organization is named on screen: its name, then its id when the API gave one.
-export const orgLabel = (org: Org): string =>
-  org.id === null ? org.name : `${org.name}: ${org.id}`;
-
-export const currentOrgName = (list: unknown): string | null => currentOrg(list)?.name ?? null;
+// How the organization is named on screen: its name, then its id when the API gave one —
+// `Acme: 7` in the header, `Acme · org: 7` in the Console's connection line.
+export const orgLabel = (org: Org, separator = ': '): string =>
+  org.id === null ? org.name : `${org.name}${separator}${org.id}`;
 
 // The feature's switch, and the ONE place its default lives. It is the one toggle that
 // defaults ON: an absent key means enabled and only an explicit `false` disables it.
@@ -37,14 +36,29 @@ export const currentOrgName = (list: unknown): string | null => currentOrg(list)
 export const ORG_NAME_KEY = 'orgNameEnabled';
 export const orgNameOn = (stored: unknown): boolean => stored !== false;
 
-// Its sibling, the environment chip and line, defaults OFF like every other toggle:
-// a non-sandbox test org shown as "Production" is a call each user makes for themselves.
-export const ORG_ENV_KEY = 'orgEnvEnabled';
-
 export type Box = { left: number; top: number; right: number; bottom: number };
 
 const GAP = 12;
 const MIN_WIDTH = 60;
+// Between the environment chip and the name inside the pill.
+export const CHIP_GAP = 8;
+
+// The narrowest the pill can be and still be read: a readable name, plus the chip beside
+// it (the chip never truncates). Never more than the whole pill, which may be shorter;
+// `whole` is 0 when nothing could be measured.
+export function pillMinWidth({
+  nameShown,
+  chipWidth,
+  whole,
+}: {
+  nameShown: boolean;
+  chipWidth: number;
+  whole: number;
+}): number {
+  const name = nameShown ? MIN_WIDTH + (chipWidth ? CHIP_GAP : 0) : 0;
+  const least = name + chipWidth || MIN_WIDTH;
+  return whole > 0 ? Math.min(whole, least) : least;
+}
 
 // The pill sits in a free gap of the header, right-aligned against whatever closes that
 // gap on the right: the header's right-hand buttons on a plain header (the gap after the
@@ -72,7 +86,7 @@ export function pillSlot({
   obstacles: Box[];
   /** The pill's natural width, the whole name shown; 0 when it could not be measured. */
   nameWidth?: number;
-  /** The narrowest the pill can be: 60px of readable name, or what a chip beside it needs. */
+  /** The narrowest the pill can be (pillMinWidth); 60px of readable name by default. */
   minWidth?: number;
 }): { right: number; maxWidth: number } | null {
   const blocks = obstacles

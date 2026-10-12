@@ -17,13 +17,13 @@ import {
 import { readAuthInfo, readPageFlag, togglePageFlag } from '../tab-readers.js';
 import { createUnlockCounter } from '../experimental.js';
 import { openPanelForTab } from '../../sidepanel/panelScope.js';
-import { ORG_ENV_KEY, ORG_NAME_KEY, orgNameOn } from '../../rossum/orgName.js';
+import { ORG_NAME_KEY, orgNameOn } from '../../rossum/orgName.js';
 
 const STORAGE_TOGGLES = [
   'schemaAnnotationsEnabled',
   'resourceIdsEnabled',
   'orgNameEnabled',
-  ORG_ENV_KEY,
+  'orgEnvEnabled',
   'expandFormulasEnabled',
   'expandReasoningFieldsEnabled',
   'scrollLockEnabled',
@@ -433,7 +433,7 @@ export default function App({ tab }: { tab?: any }) {
                     label="Org env"
                     hint="Sandbox / prod"
                     checked={storageValues.orgEnvEnabled}
-                    onChange={(v) => setStorageToggle(ORG_ENV_KEY, v)}
+                    onChange={(v) => setStorageToggle('orgEnvEnabled', v)}
                   />
                 </div>
 

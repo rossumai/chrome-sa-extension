@@ -72,8 +72,9 @@ describe('the environment chip', () => {
     feature.init({ intervalMs: 0, env: true });
     await flush();
 
-    expect(chip()!.textContent).toBe('Sandbox');
-    expect(chip()!.dataset.env).toBe('sandbox');
+    const env = chip()!;
+    expect(env.textContent).toBe('Sandbox');
+    expect(env.dataset.env).toBe('sandbox');
   });
 
   it('sits in the same place on the review screen', async () => {
@@ -113,6 +114,8 @@ describe('the environment chip', () => {
     documentsHeader({ chatLeft: 920 });
     feature.init({ intervalMs: 0, env: true });
     await flush();
+    // In a browser: a 150px name and a 90px chip. jsdom measures text as 0px.
+    Object.defineProperty(text()!, 'scrollWidth', { configurable: true, value: 150 });
     at(chip()!, [0, 0, 90, 24]);
     window.dispatchEvent(new Event('resize'));
 
@@ -233,6 +236,36 @@ describe('Rossum’s own Sandbox chip', () => {
     expect(rossumChip('Sandbox').style.display).toBe('');
   });
 
+  it('is told apart from other blue chips by sitting beside the nav tabs', async () => {
+    // A status chip on the review screen is MUI's info colour too.
+    const header = reviewHeader();
+    const status = el('div', [300, 12, 80, 24], { class: 'MuiChip-root MuiChip-colorInfo' });
+    status.innerHTML = '<span class="MuiChip-label">To review</span>';
+    header.querySelector('[data-cy="document-topbar-start"]')!.append(status);
+    feature.init({ intervalMs: 0, env: true });
+    feature.handleNode(status);
+    await flush();
+
+    expect(status.style.display).toBe('');
+  });
+
+  it('touches no chip at all while the environment is switched off', async () => {
+    // An inline style of Rossum's own must survive: writing `display` would replace it.
+    const header = documentsHeader({ chips: ['Sandbox'] });
+    const rossums = rossumChip('Sandbox');
+    rossums.style.display = 'inline-flex';
+    feature.init({ intervalMs: 0 });
+    await flush();
+    const late = el('div', [110, 12, 80, 24], { class: 'MuiChip-root MuiChip-colorInfo' });
+    late.innerHTML = '<span class="MuiChip-label">Sandbox</span>';
+    late.style.display = 'inline-flex';
+    header.querySelector('.badge-row')!.prepend(late);
+    feature.handleNode(late);
+
+    expect(rossums.style.display).toBe('inline-flex');
+    expect(late.style.display).toBe('inline-flex');
+  });
+
   it('is never hidden while ours says Production', async () => {
     window.localStorage.setItem('secureToken', 'tok-prod');
     documentsHeader({ chips: ['Sandbox'] });
@@ -270,6 +303,17 @@ describe('usage', () => {
 
     const events = sendMessage.mock.calls.map(([m]) => m);
     expect(events).toEqual([{ type: 'sa-usage', name: 'sa_rossum_org_env' }]);
+  });
+
+  it('reports the environment when only the line has room', async () => {
+    const header = documentsHeader({ chatLeft: 800 });
+    header.append(el('img', [0, 0, 290, 48]));
+    feature.init({ intervalMs: 0, env: true });
+    await flush();
+
+    expect(shown(pill())).toBe(false);
+    const names = sendMessage.mock.calls.map(([m]) => m.name);
+    expect(names).toEqual(['sa_rossum_org_env']);
   });
 
   it('reports each feature that showed', async () => {

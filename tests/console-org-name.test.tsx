@@ -6,7 +6,7 @@
 // exactly as before when no name resolves.
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { h, render } from 'preact';
-import { orgLabel } from '../src/console/store.js';
+import { connectedOrg } from '../src/console/store.js';
 import { resolveOrgLabel } from '../src/console/orgName.js';
 import MdhConnectionBar from '../src/mdh/components/ConnectionBar.jsx';
 import AuditConnectionBar from '../src/audit/components/ConnectionBar.jsx';
@@ -15,7 +15,7 @@ import * as auditStore from '../src/audit/store.js';
 import type { PageInfo } from '../src/audit/api.js';
 
 beforeEach(() => {
-  orgLabel.value = null;
+  connectedOrg.value = null;
   mdhStore.domain.value = 'https://partner-sandbox.rossum.app';
   auditStore.domain.value = 'https://partner-sandbox.rossum.app';
   auditStore.pageInfo.value = { ...auditStore.pageInfo.value, total: null } satisfies PageInfo;
@@ -54,7 +54,7 @@ describe('resolveOrgLabel', () => {
 
 describe('connection bars', () => {
   it('appends the name after the domain in Dataset Management', () => {
-    orgLabel.value = 'Acme Corporation';
+    connectedOrg.value = 'Acme Corporation';
     const root = document.createElement('div');
     render(<MdhConnectionBar connected={true} />, root);
     expect(root.querySelector('.connection-bar')!.textContent).toContain(
@@ -63,7 +63,7 @@ describe('connection bars', () => {
   });
 
   it('appends the name after the host in the Audit Log Viewer', () => {
-    orgLabel.value = 'Acme Corporation';
+    connectedOrg.value = 'Acme Corporation';
     const root = document.createElement('div');
     render(<AuditConnectionBar connected={true} />, root);
     expect(root.querySelector('.connection-bar')!.textContent).toContain(
@@ -72,7 +72,7 @@ describe('connection bars', () => {
   });
 
   it('shows the domain alone in both bars when no name resolved', () => {
-    orgLabel.value = null;
+    connectedOrg.value = null;
     const mdhRoot = document.createElement('div');
     render(<MdhConnectionBar connected={true} />, mdhRoot);
     expect(mdhRoot.querySelector('.connection-bar')!.textContent).toContain(
