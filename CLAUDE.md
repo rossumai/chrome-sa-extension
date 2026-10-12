@@ -241,9 +241,21 @@ text, so an inherited `color` drew the name white on white. "Powered by Rossum"
 hidden while the pill is on screen and restored the moment it is not. Anchors are `data-cy`
 hooks and the `<header>` holding `[data-cy="userpanel"]`; note `data-cy="file-name"` is NOT
 review-screen-only — the document list's rows carry it too. The token is re-read every 1.5s so
-an org switch re-resolves, with a generation counter against stale answers. Deliberately NOT
-here: any statement of the environment (sandbox or production) — the `sandbox` flag describes
-billing, not environment, and is left for its own change.
+an org switch re-resolves, with a generation counter against stale answers.
+
+**The organization's environment** is a second, independent switch (`orgEnvEnabled`, DEFAULT
+OFF, event `sa_rossum_org_env`) drawn by the same feature: a "Sandbox" / "Production" chip after
+the name inside the pill (or alone, with the name off), and a 2px line under the header in the
+chip's colour. Sandbox is `organization.sandbox === true` and nothing else (`currentOrg`); the
+flag marks usage outside the fair-usage policy, so a test org without it shows Production —
+which is why it is opt-in rather than shown to everyone. The chip copies Rossum's own Sandbox
+chip (`#d5edf2` in `#70cce1`; Production `#fde2e1` in `#f44336`) and takes over from it: Rossum
+draws "Sandbox" in the navbar's badge row and nothing for production, and while ours is on
+screen saying Sandbox that chip is hidden with `display: none` — never moved, React owns it —
+and comes back whenever ours is not. It is matched by its "Sandbox" label OR its
+`MuiChip-colorInfo` class, since the label is translated; "Developer mode" is not an
+environment and is left alone. The chip never truncates, so the pill shows only in a gap that
+holds the chip plus 60px of name. The line stays even when the pill has no room.
 
 **NetSuite** and **Coupa** are self-contained single files with no observer. Coupa uses two
 strategies: JSON from `#initial_full_react_data` (React pages), and DOM attributes with
@@ -415,7 +427,7 @@ Enforced by tests, not by convention. Do not weaken them.
 
 - **Feature toggles** — `schemaAnnotationsEnabled`, `expandFormulasEnabled`,
   `expandReasoningFieldsEnabled`, `scrollLockEnabled`, `resourceIdsEnabled`,
-  `netsuiteFieldNamesEnabled`, `coupaFieldNamesEnabled` — all DEFAULT OFF, since an absent key
+  `orgEnvEnabled`, `netsuiteFieldNamesEnabled`, `coupaFieldNamesEnabled` — all DEFAULT OFF, since an absent key
   reads as disabled. **`orgNameEnabled` is the one exception and defaults ON**: absent means
   enabled and only an explicit `false` disables it, so it is read as `!== false` in
   `src/rossum/index.ts`, `src/console/index.tsx` and the popup — all through ONE helper,

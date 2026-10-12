@@ -1,6 +1,28 @@
 import { describe, it, expect } from 'vitest';
 import { rect } from './support/dom.js';
-import { currentOrgName, pillSlot } from '../src/rossum/orgName.js';
+import { currentOrg, currentOrgName, pillSlot } from '../src/rossum/orgName.js';
+
+describe('currentOrg', () => {
+  it('names the organization and whether it is a sandbox', () => {
+    expect(currentOrg({ results: [{ id: 7, name: 'Acme HQ', sandbox: true }] })).toEqual({
+      name: 'Acme HQ',
+      sandbox: true,
+    });
+  });
+
+  it('counts only `sandbox: true` as a sandbox', () => {
+    // The flag marks usage outside the fair-usage policy; anything else is billed.
+    for (const sandbox of [false, undefined, 'yes', 1]) {
+      expect(currentOrg({ results: [{ name: 'Acme HQ', sandbox }] })!.sandbox).toBe(false);
+    }
+  });
+
+  it('names nothing by the same rules as currentOrgName', () => {
+    expect(currentOrg({ results: [{ name: 'A' }, { name: 'B' }] })).toBeNull();
+    expect(currentOrg({ results: [{ name: '  ' }] })).toBeNull();
+    expect(currentOrg(null)).toBeNull();
+  });
+});
 
 describe('currentOrgName', () => {
   it('names the one organization the session can see', () => {
@@ -205,6 +227,16 @@ describe('pillSlot', () => {
       nameWidth: 90,
     });
     expect(slot).toEqual({ right: 112, maxWidth: 96 });
+  });
+
+  it('takes a larger minimum when the pill carries a chip as well', () => {
+    const args = {
+      header: box([0, 0, 1000, 48]),
+      clusterLeft: 900,
+      obstacles: [box([0, 0, 700, 48])], // leaves (900 - 12) - (700 + 12) = 176px
+    };
+    expect(pillSlot({ ...args, minWidth: 176 })).toEqual({ right: 112, maxWidth: 176 });
+    expect(pillSlot({ ...args, minWidth: 177 })).toBeNull();
   });
 
   it('gives up when no gap is wide enough to read a name', () => {

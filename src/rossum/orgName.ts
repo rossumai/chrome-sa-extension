@@ -1,5 +1,5 @@
-// Pure half of the org name (features/org-name.ts is the DOM half): which organization
-// the session is in, whether the feature is on, and where in the header the name fits.
+// Pure half of the org name and env (features/org-name.ts is the DOM half): which
+// organization the session is in, whether the features are on, and where the pill fits.
 // No DOM, no network — the feature measures and fetches, this decides.
 
 // The organization the session is in, from `GET /organizations`. That list holds what
@@ -9,12 +9,19 @@
 // cannot even read (404, measured on a dedicated cell 2026-09-23). More than one
 // organization, or none, names nothing: which is current cannot be told, and a wrong
 // name is worse than no name.
-export function currentOrgName(list: unknown): string | null {
+//
+// `sandbox` is `organization.sandbox === true` and nothing else: the flag marks usage
+// outside the fair-usage policy, so anything else, a missing flag included, is billed
+// as production.
+export function currentOrg(list: unknown): { name: string; sandbox: boolean } | null {
   const results = (list as { results?: unknown } | null)?.results;
   if (!Array.isArray(results) || results.length !== 1) return null;
-  const name = results[0]?.name;
-  return typeof name === 'string' && name.trim() ? name.trim() : null;
+  const { name, sandbox } = results[0] ?? {};
+  if (typeof name !== 'string' || !name.trim()) return null;
+  return { name: name.trim(), sandbox: sandbox === true };
 }
+
+export const currentOrgName = (list: unknown): string | null => currentOrg(list)?.name ?? null;
 
 // The feature's switch, and the ONE place its default lives. It is the one toggle that
 // defaults ON: an absent key means enabled and only an explicit `false` disables it.
@@ -23,6 +30,10 @@ export function currentOrgName(list: unknown): string | null {
 // the popup's switch off while the feature runs.
 export const ORG_NAME_KEY = 'orgNameEnabled';
 export const orgNameOn = (stored: unknown): boolean => stored !== false;
+
+// Its sibling, the environment chip and line, defaults OFF like every other toggle:
+// a non-sandbox test org shown as "Production" is a call each user makes for themselves.
+export const ORG_ENV_KEY = 'orgEnvEnabled';
 
 export type Box = { left: number; top: number; right: number; bottom: number };
 
@@ -48,12 +59,15 @@ export function pillSlot({
   clusterLeft,
   obstacles,
   nameWidth = 0,
+  minWidth = MIN_WIDTH,
 }: {
   header: Box;
   clusterLeft: number;
   obstacles: Box[];
   /** The pill's natural width, the whole name shown; 0 when it could not be measured. */
   nameWidth?: number;
+  /** The narrowest the pill can be: 60px of readable name, or what a chip beside it needs. */
+  minWidth?: number;
 }): { right: number; maxWidth: number } | null {
   const blocks = obstacles
     .filter((o) => o.right > o.left && o.bottom > o.top && o.right <= clusterLeft)
@@ -75,7 +89,7 @@ export function pillSlot({
       right: header.right - end + GAP,
       maxWidth: end - GAP - (start + GAP),
     }))
-    .filter((slot) => slot.maxWidth >= MIN_WIDTH)
+    .filter((slot) => slot.maxWidth >= minWidth)
     .reverse(); // rightmost first
   return slots.find((slot) => slot.maxWidth >= nameWidth) ?? slots[0] ?? null;
 }
