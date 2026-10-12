@@ -9,7 +9,7 @@ import { trackOnce } from '../../usage/track.js';
 // colour: the review screen's header is white but hands its children white text.
 //
 // The environment is a second, independent switch drawn by the same pill: a Sandbox /
-// Production chip after the name (or alone, with the name off), and a 2px line under the
+// Production chip before the name (or alone, with the name off), and a 2px line under the
 // header in the chip's colour. Rossum draws its own Sandbox chip in the navbar's badge row
 // and nothing for production; while ours says Sandbox, Rossum's is hidden — never moved,
 // React owns that node — and it comes back whenever ours is not on screen.
@@ -112,7 +112,7 @@ function decorateHeader(header: HTMLElement) {
     text.className = TEXT_CLASS;
     const chip = document.createElement('span');
     chip.className = CHIP_CLASS;
-    pill.append(text, chip);
+    pill.append(chip, text);
 
     const band = document.createElement('div');
     band.className = BAND_CLASS;
@@ -209,9 +209,11 @@ function place(header: HTMLElement, pill: HTMLElement) {
     pill.style.right = `${slot.right}px`;
     pill.style.maxWidth = `${slot.maxWidth}px`;
   }
-  // The branding makes way only for a pill that is actually on screen.
+  // The branding makes way only for a pill that is actually on screen, and keeps its
+  // space: with `display: none` the right-hand buttons slid into it on a narrow header,
+  // closing the pill's gap, and the two swapped on every tick.
   for (const brand of header.querySelectorAll<HTMLElement>(POWERED_BY)) {
-    brand.style.display = slot ? 'none' : '';
+    brand.style.visibility = slot ? 'hidden' : '';
   }
   for (const chip of header.querySelectorAll<HTMLElement>(MUI_CHIP)) {
     if (isRossumSandboxChip(chip)) renderRossumChip(chip);

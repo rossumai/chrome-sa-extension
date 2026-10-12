@@ -52,7 +52,7 @@ afterEach(() => {
 });
 
 describe('the environment chip', () => {
-  it('says Production right after the name, inside the pill', async () => {
+  it('says Production right before the name, inside the pill', async () => {
     window.localStorage.setItem('secureToken', 'tok-prod');
     documentsHeader();
     feature.init({ intervalMs: 0, env: true });
@@ -60,7 +60,8 @@ describe('the environment chip', () => {
 
     const env = chip()!;
     expect(env.parentElement).toBe(pill());
-    expect(text()!.nextElementSibling).toBe(env);
+    // The name stays next to the header's buttons, where the user menu names it too.
+    expect(env.nextElementSibling).toBe(text());
     expect(shown(env)).toBe(true);
     expect(env.textContent).toBe('Production');
     expect(env.dataset.env).toBe('production');

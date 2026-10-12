@@ -238,13 +238,14 @@ readable. It never picks a gap in the header's left half, and it hides only when
 ground and inherits NO colour: the review screen's header is white but hands its children white
 text, so an inherited `color` drew the name white on white. "Powered by Rossum"
 (`[data-sentry-component="PoweredBy"]`, rendered inside the navbar's right-hand actions) is
-hidden while the pill is on screen and restored the moment it is not. Anchors are `data-cy`
-hooks and the `<header>` holding `[data-cy="userpanel"]`; note `data-cy="file-name"` is NOT
+hidden while the pill is on screen and restored the moment it is not — with `visibility`, keeping
+its space: `display: none` let the buttons slide into it on a narrow header, and the two swapped
+on every tick. Anchors are `data-cy` hooks and the `<header>` holding `[data-cy="userpanel"]`; note `data-cy="file-name"` is NOT
 review-screen-only — the document list's rows carry it too. The token is re-read every 1.5s so
 an org switch re-resolves, with a generation counter against stale answers.
 
 **The organization's environment** is a second, independent switch (`orgEnvEnabled`, DEFAULT
-OFF, event `sa_rossum_org_env`) drawn by the same feature: a "Sandbox" / "Production" chip after
+OFF, event `sa_rossum_org_env`) drawn by the same feature: a "Sandbox" / "Production" chip before
 the name inside the pill (or alone, with the name off), and a 2px line under the header in the
 chip's colour. Sandbox is `organization.sandbox === true` and nothing else (`currentOrg`); the
 flag marks usage outside the fair-usage policy, so a test org without it shows Production —

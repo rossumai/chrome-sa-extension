@@ -144,12 +144,23 @@ describe('Rossum branding', () => {
     badge.init({ intervalMs: 0 });
     await flush();
 
-    expect(poweredBy().style.display).toBe('none');
+    expect(poweredBy().style.visibility).toBe('hidden');
     // The pill takes the gap the branding occupied: right = 1705 - 1517 + 12, as on an
     // unbranded header.
     const name = pill()!;
     expect(name.style.right).toBe('200px');
     expect(name.style.maxWidth).toBe('708px');
+  });
+
+  it('keeps the branding’s space, so nothing in Rossum’s header moves', async () => {
+    // With `display: none` the right-hand buttons slid into the freed space on a narrow
+    // header, closing the pill's gap; the next tick showed the branding again, for ever.
+    documentsHeader({ poweredBy: true });
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    expect(poweredBy().style.visibility).toBe('hidden');
+    expect(poweredBy().style.display).toBe('');
   });
 
   it('keeps the branding when the name would not fit even in its place', async () => {
@@ -160,7 +171,7 @@ describe('Rossum branding', () => {
     await flush();
 
     expect(shown(pill())).toBe(false);
-    expect(poweredBy().style.display).toBe('');
+    expect(poweredBy().style.visibility).toBe('');
   });
 
   it('leaves the branding alone while there is no name to replace it with', async () => {
@@ -169,7 +180,7 @@ describe('Rossum branding', () => {
     badge.init({ intervalMs: 0 });
     await flush();
 
-    expect(poweredBy().style.display).toBe('');
+    expect(poweredBy().style.visibility).toBe('');
   });
 
   it('gives the branding back when the name is lost', async () => {
@@ -177,13 +188,13 @@ describe('Rossum branding', () => {
     documentsHeader({ poweredBy: true });
     badge.init({ intervalMs: 1500 });
     await flush();
-    expect(poweredBy().style.display).toBe('none');
+    expect(poweredBy().style.visibility).toBe('hidden');
 
     window.localStorage.setItem('secureToken', 'tok-unknown');
     await vi.advanceTimersByTimeAsync(1500);
     await flush();
 
-    expect(poweredBy().style.display).toBe('');
+    expect(poweredBy().style.visibility).toBe('');
     expect(shown(pill())).toBe(false);
   });
 
@@ -196,7 +207,7 @@ describe('Rossum branding', () => {
     header.append(brand);
     badge.handleNode(brand);
 
-    expect(brand.style.display).toBe('none');
+    expect(brand.style.visibility).toBe('hidden');
   });
 });
 
