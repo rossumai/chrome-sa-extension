@@ -1,16 +1,7 @@
 import { fetchRossumApiFresh } from '../api.js';
-import {
-  cachedOrg,
-  orgCacheKey,
-  ORG_CACHE_PREFIX,
-  CHIP_GAP,
-  currentOrg,
-  deploymentLocation,
-  orgLabel,
-  pillMinWidth,
-  pillSlot,
-  type Org,
-} from '../orgName.js';
+import { orgLabel, type Org } from '../orgName.js';
+import { loadOrg } from '../orgSource.js';
+import { CHIP_GAP, pillMinWidth, pillSlot } from '../orgPillSlot.js';
 import { trackOnce } from '../../usage/track.js';
 
 // The organization's name in the Rossum header, on every screen — organizations in one
@@ -259,27 +250,6 @@ function placeAll() {
   for (const header of headers()) place(header, pillOf(header)!);
 }
 
-function readCache(key: string): Org | null {
-  try {
-    return cachedOrg(window.sessionStorage.getItem(key), Date.now());
-  } catch {
-    return null;
-  }
-}
-
-// One entry per tab: the current session's. A token switch leaves the old one behind, and
-// nothing else would ever remove it.
-function writeCache(key: string, value: Org) {
-  try {
-    for (const old of Object.keys(window.sessionStorage)) {
-      if (old.startsWith(ORG_CACHE_PREFIX) && old !== key) window.sessionStorage.removeItem(old);
-    }
-    window.sessionStorage.setItem(key, JSON.stringify({ at: Date.now(), org: value }));
-  } catch {
-    /* no cache, no harm */
-  }
-}
-
 async function resolve() {
   token = readToken();
   const gen = ++generation;
@@ -288,37 +258,17 @@ async function resolve() {
   org = null;
   renderAll();
   if (!token) return;
-  const key = orgCacheKey(token);
-  let next = readCache(key);
-  // Only an answer from the API is written back: rewriting a cached entry on every reload
-  // would restart its day, and a rename would never show in a tab reloaded daily.
-  const fresh = !next;
-  if (!next) {
-    try {
-      next = currentOrg(await fetchRossumApiFresh('/api/v1/organizations', { ttlMs: 0 }));
-    } catch {
-      /* no organization, no pill */
-    }
-  }
-  if (gen !== generation || !next) return;
-  org = next;
-  renderAll();
-  // The deployment location follows in the name's label once the group is read; the name
-  // does not wait for it, and without the name nothing needs it.
-  if (!org.location && org.groupPath && showName) {
-    let location: string | null = null;
-    try {
-      location = deploymentLocation(await fetchRossumApiFresh(org.groupPath, { ttlMs: 0 }));
-    } catch {
-      /* the label stays without it */
-    }
-    if (gen !== generation) return;
-    if (location) {
-      org = { ...org, location };
+  // The location only appears in the name's label, so without the name it is not read.
+  await loadOrg({
+    get: (path) => fetchRossumApiFresh(path, { ttlMs: 0 }),
+    cacheToken: token,
+    withLocation: showName,
+    show: (next) => {
+      if (gen !== generation) return false;
+      org = next;
       renderAll();
-    }
-  }
-  if (fresh) writeCache(key, org);
+    },
+  });
 }
 
 function tick() {
