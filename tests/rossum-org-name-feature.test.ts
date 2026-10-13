@@ -301,6 +301,50 @@ describe('the session cache', () => {
     expect(keys).toHaveLength(1);
   });
 
+  it('reads the cell once when the cache was written without it', async () => {
+    // Cached while only the environment was on, which does not need the cell.
+    documentsHeader();
+    badge.init({ intervalMs: 0, name: false, env: true });
+    await flush();
+
+    await reload(); // the name is on now: the group is read, once
+    expect(vi.mocked(fetch).mock.calls.map(([u]) => new URL(String(u)).pathname)).toEqual([
+      '/api/v1/organization_groups/12',
+    ]);
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [prod-eu2]');
+
+    await reload();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('does not ask again for a group that has no location', async () => {
+    rossumApi.groups = { 12: {} };
+    documentsHeader();
+    badge.init({ intervalMs: 0 });
+    await flush();
+
+    await reload();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7');
+  });
+
+  it('keeps the day of the first request when the cell is added later', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const start = Date.now();
+    documentsHeader();
+    badge.init({ intervalMs: 0, name: false, env: true });
+    await flush();
+
+    vi.setSystemTime(start + 20 * 60 * 60 * 1000);
+    await reload(); // adds the cell, and must not restart the day
+
+    vi.setSystemTime(start + 24 * 60 * 60 * 1000);
+    await reload();
+    expect(vi.mocked(fetch).mock.calls.map(([u]) => new URL(String(u)).pathname)).toContain(
+      '/api/v1/organizations',
+    );
+  });
+
   it('does not keep an organization whose name could not be read', async () => {
     window.localStorage.setItem('secureToken', 'tok-unknown');
     documentsHeader();
