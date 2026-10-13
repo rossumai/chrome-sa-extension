@@ -19,7 +19,7 @@ export type Org = {
   sandbox: boolean;
   /** Its organization group's API path on this origin, to read the deployment location. */
   groupPath: string | null;
-  /** Where the group is deployed (`prod-eu2`); null until read, or when it cannot be. */
+  /** Where the group is deployed (`eu2`, from `prod-eu2`); null until read, or when it cannot be. */
   location: string | null;
 };
 
@@ -86,15 +86,18 @@ export function orgCacheKey(token: string): string {
   return `${ORG_CACHE_PREFIX}${(hash >>> 0).toString(16)}`;
 }
 
-// The cell the organization group is deployed in, read off the group — every role tried
-// (admin, manager, annotator) can read it.
+// The cell the organization group is deployed in (`eu2` for `prod-eu2`), read off the
+// group — every role tried (admin, manager, annotator) can read it.
 export function deploymentLocation(group: unknown): string | null {
   const location = (group as { deployment_location?: unknown } | null)?.deployment_location;
-  return typeof location === 'string' && location ? location : null;
+  if (typeof location !== 'string' || !location) return null;
+  // Every cell a client or SA ever sees is a production one, and "prod" beside a sandbox
+  // chip reads as a contradiction; any other prefix stays, so a non-production one stands out.
+  return location.replace(/^prod-/, '');
 }
 
 // How the organization is named on screen: its name, its id, then its deployment location
-// when known — `Acme: 7 [prod-eu2]` in the header, `Acme · org: 7 [prod-eu2]` in the Console.
+// when known — `Acme: 7 [eu2]` in the header, `Acme · org: 7 [eu2]` in the Console.
 export const orgLabel = (org: Org, separator = ': '): string =>
   (org.id === null ? org.name : `${org.name}${separator}${org.id}`) +
   (org.location ? ` [${org.location}]` : '');

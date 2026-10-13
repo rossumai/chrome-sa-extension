@@ -47,7 +47,7 @@ describe('resolveOrgLabel', () => {
     // The name first, without waiting for the group; then the location.
     expect(await labels(get)).toEqual([
       'Acme Corporation · org: 7',
-      'Acme Corporation · org: 7 [prod-eu2]',
+      'Acme Corporation · org: 7 [eu2]',
     ]);
     expect(get).toHaveBeenCalledWith('/api/v1/organization_groups/12');
   });

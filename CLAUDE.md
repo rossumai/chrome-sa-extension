@@ -221,7 +221,9 @@ anything rendered in between is missed by both. `org-name.ts` is the worked exam
 
 **The organization's name and id** (`org-name.ts`, key `orgNameEnabled`, popup label "Org info",
 event `sa_rossum_org_name`; shown as `<name>: <id> [<cell>]` in the header, `<name> · org: <id>
-[<cell>]` in the Console — the cell is the organization GROUP's `deployment_location`, one more
+[<cell>]` in the Console — the cell is the organization GROUP's `deployment_location` without
+its `prod-` prefix (clients and SAs only ever see production cells, and "prod" beside a Sandbox
+chip read as a contradiction; any other prefix is kept), one more
 GET after the organization, readable by admin, manager and annotator alike (measured 2026-10-12);
 the name shows without waiting for it), since orgs in one group share a hostname AND a
 white-labelled logo, so only the user menu (mounted by MUI only while open) said which one you are

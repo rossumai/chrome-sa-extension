@@ -127,7 +127,12 @@ describe('orgCacheKey', () => {
 
 describe('deploymentLocation', () => {
   it('reads where the organization group is deployed', () => {
-    expect(deploymentLocation({ id: 12, deployment_location: 'prod-eu2' })).toBe('prod-eu2');
+    expect(deploymentLocation({ id: 12, deployment_location: 'prod-eu2' })).toBe('eu2');
+  });
+
+  it('keeps any other prefix, so a non-production deployment stands out', () => {
+    expect(deploymentLocation({ deployment_location: 'stage-eu1' })).toBe('stage-eu1');
+    expect(deploymentLocation({ deployment_location: 'eu2' })).toBe('eu2');
   });
 
   it('is null when the group does not say', () => {
@@ -153,10 +158,10 @@ describe('orgLabel', () => {
   });
 
   it('ends with the deployment location in brackets', () => {
-    expect(orgLabel({ ...org, location: 'prod-eu2' })).toBe('Acme HQ: 7 [prod-eu2]');
-    expect(orgLabel({ ...org, location: 'prod-eu2' }, ' \u00b7 org: ')).toBe(
-      'Acme HQ \u00b7 org: 7 [prod-eu2]',
+    expect(orgLabel({ ...org, location: 'eu2' })).toBe('Acme HQ: 7 [eu2]');
+    expect(orgLabel({ ...org, location: 'eu2' }, ' \u00b7 org: ')).toBe(
+      'Acme HQ \u00b7 org: 7 [eu2]',
     );
-    expect(orgLabel({ ...org, id: null, location: 'prod-eu2' })).toBe('Acme HQ [prod-eu2]');
+    expect(orgLabel({ ...org, id: null, location: 'eu2' })).toBe('Acme HQ [eu2]');
   });
 });

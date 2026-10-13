@@ -157,7 +157,7 @@ describe('the deployment location', () => {
     badge.init({ intervalMs: 0 });
     await flush();
 
-    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [prod-eu2]');
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [eu2]');
   });
 
   it('is left out when the group cannot be read', async () => {
@@ -179,7 +179,7 @@ describe('the deployment location', () => {
 
     release();
     await flush();
-    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [prod-eu2]');
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [eu2]');
   });
 
   it('is not asked for when the name is switched off', async () => {
@@ -205,7 +205,7 @@ describe('the deployment location', () => {
     release();
     await flush();
 
-    expect(pill()!.textContent).toBe('Acme HQ - PROD: 8 [prod-us2]');
+    expect(pill()!.textContent).toBe('Acme HQ - PROD: 8 [us2]');
   });
 });
 
@@ -234,7 +234,7 @@ describe('the session cache', () => {
     await reload();
 
     expect(fetch).not.toHaveBeenCalled();
-    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [prod-eu2]');
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [eu2]');
   });
 
   it('asks again for another session token', async () => {
@@ -311,7 +311,7 @@ describe('the session cache', () => {
     expect(vi.mocked(fetch).mock.calls.map(([u]) => new URL(String(u)).pathname)).toEqual([
       '/api/v1/organization_groups/12',
     ]);
-    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [prod-eu2]');
+    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7 [eu2]');
 
     await reload();
     expect(fetch).not.toHaveBeenCalled();
