@@ -29,7 +29,8 @@ export async function apiPatch(url: string, token: string, body: any): Promise<a
     },
     body: JSON.stringify(body),
   });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  if (resp.status === 429) throw rateLimitError(resp, 'HTTP 429');
+  if (!resp.ok) throw Object.assign(new Error(`HTTP ${resp.status}`), { status: resp.status });
   return resp.json();
 }
 

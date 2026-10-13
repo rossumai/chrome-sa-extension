@@ -25,6 +25,15 @@ describe('initGalaxy', () => {
     expect(store.error.value).toMatch(/session expired/i);
     expect(apiMock.fetchOrgResources).not.toHaveBeenCalled();
   });
+  it('a 429 on the session check shows the rate-limit message, with no Retry', async () => {
+    apiMock.whoami.mockRejectedValue(
+      Object.assign(new Error('Request was throttled.'), { status: 429, retryAfter: 8 }),
+    );
+    await initGalaxy();
+    expect(store.connected.value).toBe(false);
+    expect(store.error.value).toBe('Rossum is rate-limiting requests. Try again in 8 s.');
+    expect(store.retryable.value).toBe(false);
+  });
   it('connects after the probe, then loads + builds the graph asynchronously', async () => {
     apiMock.whoami.mockResolvedValue({ id: 1 });
     apiMock.fetchOrgResources.mockResolvedValue({

@@ -12,7 +12,9 @@ export async function initGalaxy() {
   try {
     await api.whoami();
   } catch (err: any) {
-    store.error.value = err.message || 'Failed to verify session';
+    store.error.value = isRateLimited(err)
+      ? rateLimitMessage(err)
+      : err.message || 'Failed to verify session';
     store.connected.value = false;
     store.loading.value = false;
     return;

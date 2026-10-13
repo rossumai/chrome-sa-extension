@@ -4,7 +4,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import * as inspectorApi from '../src/inspector/api.js';
 import * as galaxyApi from '../src/galaxy/api.js';
-import { fetchJson } from '../src/popup/mdh-provenance.js';
+import { fetchJson, apiPatch } from '../src/popup/mdh-provenance.js';
 
 const throttled = (retryAfter: string | null) => ({
   ok: false,
@@ -74,5 +74,60 @@ describe('a 429 from each transport', () => {
       status: 500,
       message: 'HTTP 500',
     });
+  });
+});
+
+describe('popup apiPatch', () => {
+  it('rejects with status 429 and retryAfter', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => throttled('6')),
+    );
+    await expect(
+      apiPatch('https://x.rossum.ai/api/v1/annotations/5', 't', {}),
+    ).rejects.toMatchObject({
+      status: 429,
+      retryAfter: 6,
+    });
+  });
+
+  it('carries status on other errors', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false, status: 500 })),
+    );
+    await expect(
+      apiPatch('https://x.rossum.ai/api/v1/annotations/5', 't', {}),
+    ).rejects.toMatchObject({
+      status: 500,
+      message: 'HTTP 500',
+    });
+  });
+});
+
+describe('429 message fallback', () => {
+  const messageOnly = {
+    ok: false,
+    status: 429,
+    headers: { get: () => null },
+    json: async () => ({ message: 'Slow down.' }),
+  };
+  it('inspector get falls back to data.message', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => messageOnly),
+    );
+    inspectorApi.init('https://x.rossum.ai', 't');
+    await expect(inspectorApi.get('/api/v1/hooks')).rejects.toMatchObject({
+      message: 'Slow down.',
+    });
+  });
+  it('galaxy get falls back to data.message', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => messageOnly),
+    );
+    galaxyApi.init('https://x.rossum.ai', 't');
+    await expect(galaxyApi.get('/api/v1/hooks/')).rejects.toMatchObject({ message: 'Slow down.' });
   });
 });

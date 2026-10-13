@@ -137,6 +137,15 @@ describe('MDH card — queue with no MDH hook', () => {
     expect(count('/annotations/5?fields=queue')).toBe(1);
   });
 
+  it('Refresh bypasses the caches and refetches the hooks list and the schema', async () => {
+    await open();
+    await open();
+    urls = [];
+    const btn = root.querySelector<HTMLButtonElement>('button.mdh-refresh-btn[title^="Refresh"]')!;
+    btn.click();
+    await waitFor(() => count('/api/v1/hooks?') >= 1 && count('?fields=schema') >= 1);
+  });
+
   it('an edit to the annotation that keeps its queue refetches nothing', async () => {
     await open();
     urls = [];

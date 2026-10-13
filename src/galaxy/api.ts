@@ -83,7 +83,8 @@ export async function get(
   }
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    if (res.status === 429) throw rateLimitError(res, data?.detail || 'API error 429');
+    if (res.status === 429)
+      throw rateLimitError(res, data?.detail || data?.message || 'API error 429');
     const err = apiError(data?.detail || data?.message || `API error ${res.status}`, res.status);
     if (res.status === 403) err.featureUnavailable = true;
     throw err;

@@ -9,7 +9,7 @@ import { orchestrateAttributions } from './orchestrate.js';
 import { buildEvidence } from './evidence.js';
 import { runSynthesis, continueSynthesis } from './synthesize.js';
 import { createRequestScope } from './requestScope.js';
-import { isRateLimited } from '../net/rateLimit.js';
+import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 
 let loadId = 0;
 // One request per list per annotation load (spec 2026-10-13 §4.2); replaced with loadId.
@@ -175,7 +175,9 @@ export async function initInspector() {
   try {
     await api.whoami();
   } catch (err: any) {
-    store.error.value = err.message || 'Failed to verify session';
+    store.error.value = isRateLimited(err)
+      ? rateLimitMessage(err)
+      : err.message || 'Failed to verify session';
     store.connected.value = false;
     return;
   }
@@ -237,7 +239,10 @@ export async function loadAnnotation(id: any) {
     prefetchAndOrchestrate().catch(() => {}); // not awaited; swallow (attribution is best-effort)
     loadPagePreviews().catch(() => {}); // not awaited; decoration, not an investigation source
   } catch (err: any) {
-    if (myId === loadId) store.error.value = err.message || 'Failed to load annotation';
+    if (myId === loadId)
+      store.error.value = isRateLimited(err)
+        ? rateLimitMessage(err)
+        : err.message || 'Failed to load annotation';
   } finally {
     if (myId === loadId) store.loading.value = false;
   }

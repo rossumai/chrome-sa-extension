@@ -55,6 +55,26 @@ describe('Inspector under a 429', () => {
     expect(store.data.value.resolved._rulesLoaded).not.toBe(true);
   });
 
+  it('leaves the label context unwritten when rules are throttled', async () => {
+    vi.mocked(api.listRules).mockRejectedValue(throttled(2));
+    await openAnnotation();
+    await settled();
+    expect(store.data.value.resolved.labelsById).toBeUndefined();
+  });
+
+  it('leaves the label context unwritten when labels are throttled', async () => {
+    vi.mocked(api.listLabels).mockRejectedValue(throttled(2));
+    await openAnnotation();
+    await settled();
+    expect(store.data.value.resolved.labelsById).toBeUndefined();
+  });
+
+  it('shows the rate-limit message when the annotation itself is throttled', async () => {
+    vi.mocked(api.getAnnotation).mockRejectedValue(throttled(5));
+    await openAnnotation();
+    expect(store.error.value).toBe('Rossum is rate-limiting requests. Try again in 5 s.');
+  });
+
   it('a throttled hook-log load is unavailable, not an empty list', async () => {
     vi.mocked(api.listHookLogs).mockRejectedValueOnce(throttled(7));
     await openAnnotation();

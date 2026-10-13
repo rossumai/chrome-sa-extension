@@ -2,6 +2,7 @@
 
 **Date:** 2026-10-13
 **Status:** designed, not built. Live probe done (§2c); the design below already reflects it.
+Built 2026-10-13; §4.4 updated to match two review rulings.
 **Scope:** new `src/net/rateLimit.ts`; `src/inspector/` (request scope, 429); `src/galaxy/`
 (429); `src/popup/` (`cache.ts`, `mdh-provenance.ts`, `components/MdhProvenancePanel.tsx`).
 One PR.
@@ -149,11 +150,14 @@ design uses each check only where it answers the question.
 - **Hooks, non-empty entry:** unchanged — trusted for 5 minutes, then the full fetch. An SA who
   edits an MDH configuration still presses Refresh, as today.
 - **Hooks, no MDH hook attached (`hadHooks: false`):** now cached, with `hookIds` — the ids of
-  the queue's attached hooks as the full fetch saw them — and no trust window. Every open renders the cached
-  message at once and, in the background, sends `GET /queues/X?fields=hooks`. Same set → keep.
+  the queue's attached hooks as the full fetch saw them. Every open renders the cached message
+  at once and, in the background, sends `GET /queues/X?fields=hooks`. Same set → keep.
   Different set → full fetch and re-render, through the existing `refreshNonce` path the
   annotation freshness check already uses. This is what keeps the first MDH hook an SA attaches
-  visible on the next open.
+  visible on the next open. The entry also expires after 5 minutes as a backstop: within the
+  window it is shown and the attachment check runs; after it, the full fetch runs. The
+  attachment check cannot see an attached inactive MDH hook being activated, so without the
+  backstop that change would stay hidden.
 - **Hooks attached but no configuration applies (`hadHooks: true`, empty entries):** cached with
   the 5-minute window of a non-empty entry. What would change it is an edit to a configuration's
   `queue_ids`, which the attachment check cannot see.
@@ -161,13 +165,15 @@ design uses each check only where it answers the question.
   `GET /schemas?queue=X` compares `id` + `modified_at` with the entry's `sig`. Unchanged → the
   window restarts. Changed → full fetch and re-render. This replaces the blocking queue GET plus
   full schema GET.
-- **Annotation entry:** written on the empty path too (`modifiedAt`, `queueId`), and the existing
-  background `modified_at` check runs there as on the loaded path.
+- **Annotation entry:** written on the empty path too (`modifiedAt`, `queueId`). On the empty
+  path the background annotation check asks `GET /annotations/X?fields=queue` and refreshes only
+  when the queue changed, so an edit to the annotation no longer forces a full refetch. The
+  loaded path keeps the `modified_at` check.
 - New keys (`hadHooks`, `hookIds`, the schema's `sig`) are additive. An old entry without them
   behaves as today, so no prefix bump.
 - Effect per open. Empty queue: the full hooks list (16,649 bytes for four hooks on the probe
   org) becomes a ~250-byte check, and both requests leave the critical path; the request count
-  stays at two. After the schema window: two requests (queue + full schema) become one
+  stays at two (the attachment check and the small annotation `?fields=queue` check). After the schema window: two requests (queue + full schema) become one
   372-byte request.
 
 **429.** A foreground 429 shows `rateLimitMessage` instead of `Failed: HTTP 429`. The schema
