@@ -52,6 +52,7 @@ beforeEach(() => {
   store.loading.value = false;
   store.loadedCount.value = 0;
   store.error.value = null;
+  store.retryable.value = false;
   store.hoveredNodeId.value = null;
   store.selectedNodeId.value = null;
   store.visibleTypes.value = {
@@ -148,5 +149,18 @@ describe('Galaxy App', () => {
     await vi.waitFor(() => {
       expect(sceneCalls.lastData.nodes.some((n: any) => n.id === 'queue:2')).toBe(true);
     });
+  });
+
+  it('shows a Retry button for a retryable error', () => {
+    store.error.value = 'Rossum is rate-limiting requests. Try again shortly.';
+    store.retryable.value = true;
+    const root = mount(true);
+    expect(root.querySelector('.galaxy-error button')!.textContent).toBe('Retry');
+  });
+
+  it('shows no Retry button for other errors', () => {
+    store.error.value = 'Boom';
+    const root = mount(true);
+    expect(root.querySelector('.galaxy-error button')).toBeNull();
   });
 });

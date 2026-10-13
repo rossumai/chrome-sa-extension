@@ -1,6 +1,7 @@
 import * as api from './api.js';
 import * as store from './store.js';
 import { buildGraph } from './graph.js';
+import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 
 // Probe the session, then kick off the (potentially slow) graph load WITHOUT
 // awaiting it. This lets the console shell paint the rail + the loading overlay
@@ -23,6 +24,8 @@ export async function initGalaxy() {
 export async function loadGraph() {
   store.loading.value = true;
   store.loadedCount.value = 0;
+  store.error.value = null;
+  store.retryable.value = false;
   try {
     const raw = await api.fetchOrgResources({
       onProgress: (n) => {
@@ -31,7 +34,12 @@ export async function loadGraph() {
     });
     store.graph.value = buildGraph(raw);
   } catch (err: any) {
-    store.error.value = err.message || 'Failed to load the organization';
+    if (isRateLimited(err)) {
+      store.error.value = rateLimitMessage(err);
+      store.retryable.value = true; // never retried automatically (spec 2026-10-13 §4.3)
+    } else {
+      store.error.value = err.message || 'Failed to load the organization';
+    }
   } finally {
     store.loading.value = false;
   }

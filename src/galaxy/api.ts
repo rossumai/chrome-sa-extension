@@ -140,12 +140,22 @@ export async function fetchOrgResources({
     total += n;
     if (onProgress) onProgress(total);
   };
+  // The first failure stops every sibling list (spec 2026-10-13 §4.3): after a 429 the
+  // other four would otherwise keep paging into the same limit. A 403/404 is not a
+  // failure here — safeListAll degrades it to [].
+  const stop = new AbortController();
+  const listSignal = signal ? AbortSignal.any([signal, stop.signal]) : stop.signal;
+  const list = (path: string) =>
+    safeListAll(path, { signal: listSignal, onPage }).catch((err) => {
+      stop.abort();
+      throw err;
+    });
   const [orgs, workspaces, queues, hooks, engines] = await Promise.all([
-    safeListAll(`/api/v1/organizations/?${q}`, { signal, onPage }),
-    safeListAll(`/api/v1/workspaces/?${q}`, { signal, onPage }),
-    safeListAll(`/api/v1/queues/?${q}`, { signal, onPage }),
-    safeListAll(`/api/v1/hooks/?${q}`, { signal, onPage }),
-    safeListAll(`/api/v1/engines/?${q}`, { signal, onPage }),
+    list(`/api/v1/organizations/?${q}`),
+    list(`/api/v1/workspaces/?${q}`),
+    list(`/api/v1/queues/?${q}`),
+    list(`/api/v1/hooks/?${q}`),
+    list(`/api/v1/engines/?${q}`),
   ]);
   return {
     organization: orgs[0] || null,

@@ -150,4 +150,30 @@ describe('fetchOrgResources', () => {
     const raw = await api.fetchOrgResources({});
     expect(raw.engines).toEqual([]);
   });
+
+  it('a 429 on one collection stops the others from paging any further', async () => {
+    const requested: string[] = [];
+    fetchMock.mockImplementation(async (url: string, opts: any) => {
+      if (opts?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+      requested.push(url);
+      if (url.includes('/hooks/'))
+        return {
+          ok: false,
+          status: 429,
+          headers: { get: () => '5' },
+          json: () => Promise.resolve({}),
+        };
+      if (url.includes('/workspaces/?')) {
+        await new Promise((r) => setTimeout(r, 20));
+        return jsonRes({
+          results: [{ id: 1 }],
+          pagination: { next: 'https://x.rossum.ai/api/v1/workspaces/?page=2' },
+        });
+      }
+      return jsonRes({ results: [] });
+    });
+    await expect(api.fetchOrgResources()).rejects.toMatchObject({ status: 429, retryAfter: 5 });
+    await new Promise((r) => setTimeout(r, 40));
+    expect(requested.some((u) => u.includes('page=2'))).toBe(false);
+  });
 });

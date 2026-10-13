@@ -5,10 +5,12 @@ import {
   loading,
   loadedCount,
   error,
+  retryable,
   selectedNodeId,
   hoveredNodeId,
   visibleTypes,
 } from '../store.js';
+import { loadGraph } from '../index.jsx';
 import { createScene } from '../scene.js';
 import Legend from './Legend.jsx';
 import NavGuide from './NavGuide.jsx';
@@ -73,7 +75,16 @@ export default function App({ connected }: { connected: boolean | null }) {
             )}
           </div>
         )}
-        {error.value && <div class="galaxy-error">{error.value}</div>}
+        {error.value && (
+          <div class="galaxy-error">
+            <span>{error.value}</span>
+            {retryable.value && (
+              <button type="button" class="btn" onClick={() => loadGraph()}>
+                Retry
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
