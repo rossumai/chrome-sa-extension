@@ -8,8 +8,16 @@ import * as agentApi from '../agent/agentApi.js';
 import { orchestrateAttributions } from './orchestrate.js';
 import { buildEvidence } from './evidence.js';
 import { runSynthesis, continueSynthesis } from './synthesize.js';
+import { createRequestScope } from './requestScope.js';
 
 let loadId = 0;
+// One request per list per annotation load (spec 2026-10-13 §4.2); replaced with loadId.
+let scope = createRequestScope();
+const listHooksOnce = (queueId: string) =>
+  scope.get(`hooks:${queueId}`, () => api.listHooks(queueId));
+const listRulesOnce = (queueId: string) =>
+  scope.get(`rules:${queueId}`, () => api.listRules(queueId));
+const listLabelsOnce = () => scope.get('labels', () => api.listLabels());
 const safe = (fn: any) =>
   Promise.resolve()
     .then(fn)
@@ -87,7 +95,9 @@ async function prefetchAndOrchestrate() {
     if (signal.aborted) return;
   }
   store.setInvestigation({ stage: 'attributing' });
-  await orchestrateAttributions({ store, api, agentApi, signal });
+  // The attribution fallback lists hooks too (attributionContext.ts): give it the load's list.
+  const scopedApi = { ...api, listHooks: (queueId: string) => listHooksOnce(String(queueId)) };
+  await orchestrateAttributions({ store, api: scopedApi, agentApi, signal });
   if (signal.aborted) return;
   recomputeEvidence();
   if (!store.aiAvailable.value) {
@@ -176,6 +186,7 @@ export async function initInspector() {
 
 export async function loadAnnotation(id: any) {
   const myId = ++loadId;
+  scope = createRequestScope();
   if (attrController) attrController.abort();
   store.loading.value = true;
   store.error.value = null;
@@ -314,7 +325,7 @@ export async function loadQueueHooks() {
   const d = store.data.value;
   if (!d || !d.annotation.queue || d.resolved._hooksLoaded) return;
   const myId = loadId;
-  const hooks = (await safe(() => api.listHooks(idFromUrl(d.annotation.queue) as string))) || [];
+  const hooks = (await safe(() => listHooksOnce(idFromUrl(d.annotation.queue) as string))) || [];
   const hooksById: Record<string, any> = {};
   for (const hk of hooks as any[]) hooksById[hk.id] = hk;
   const cur = store.data.value;
@@ -330,9 +341,9 @@ export async function loadLabelContext() {
   const myId = loadId;
   const queueId = idFromUrl(d.annotation.queue);
   const [labels, rules, hooks] = await Promise.all([
-    safe(() => api.listLabels()),
-    queueId ? safe(() => api.listRules(queueId)) : Promise.resolve(null),
-    queueId ? safe(() => api.listHooks(queueId)) : Promise.resolve(null),
+    safe(() => listLabelsOnce()),
+    queueId ? safe(() => listRulesOnce(queueId)) : Promise.resolve(null),
+    queueId ? safe(() => listHooksOnce(queueId)) : Promise.resolve(null),
   ]);
   const labelsById: Record<string, any> = {};
   for (const l of (labels || []) as any[])
@@ -360,7 +371,7 @@ export async function loadQueueRules() {
   const d = store.data.value;
   if (!d || !d.annotation.queue || d.resolved._rulesLoaded) return;
   const myId = loadId;
-  const rules = (await safe(() => api.listRules(idFromUrl(d.annotation.queue) as string))) || [];
+  const rules = (await safe(() => listRulesOnce(idFromUrl(d.annotation.queue) as string))) || [];
   const cur = store.data.value;
   if (!cur || myId !== loadId) return; // superseded → skip stale write
   store.data.value = { ...cur, resolved: { ...cur.resolved, rules, _rulesLoaded: true } };
@@ -440,6 +451,7 @@ export function recomputeEvidence() {
 // bump loadId so in-flight loaders no-op, abort streams, clear the annotation.
 export function closeAnnotation() {
   loadId++;
+  scope = createRequestScope();
   if (attrController) attrController.abort();
   store.setAnnotationId(null);
   loadRecents()
