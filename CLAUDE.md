@@ -410,9 +410,10 @@ Enforced by tests, not by convention. Do not weaken them.
 - Guard Chrome-only APIs for jsdom (`CSS.escape`, `scrollIntoView`), and use the repo's own tween
   (`src/mdh/smoothScroll.ts`) for navigation jumps rather than `behavior: 'smooth'`, whose
   duration scales with distance (measured ≥1481ms vs 198ms).
-- **A 429 is never "empty" and never retried automatically.** Every transport that talks to the
-  Rossum API throws `rateLimitError` from `src/net/rateLimit.ts`, and code that maps an error to
-  an empty result (`safe()` in the Inspector, `loadSchemaForQueue` in the popup) must let a 429
+- **A 429 is never "empty" and never retried automatically.** The Inspector, Galaxy and
+  popup-provenance transports throw `rateLimitError` from `src/net/rateLimit.ts` (the DevTools,
+  Dataset Management, Audit, changelog, Academy and content-script transports do not yet), and
+  code that maps an error to an empty result (`safe()` in the Inspector, `loadSchemaForQueue` in the popup) must let a 429
   through or record it. The user retries — Refresh, reopen, Retry. The API ignores `fields=` on
   list endpoints (measured 2026-10-13), so a "cheap" list check downloads every full object;
   `/queues/{id}?fields=hooks` and `/schemas?queue={id}` are the small ones.

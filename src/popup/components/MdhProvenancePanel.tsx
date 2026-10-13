@@ -215,15 +215,17 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
         // Background checks, after the view renders: confirm a stale hook or schema entry,
         // and the annotation's modified_at when its values came from the cache. A change
         // refetches through refreshNonce; a failure, a 429 included, keeps the view.
-        const revalidate = (annFromCache: boolean) => {
+        const revalidate = (annCheck: 'modified' | 'queue' | null) => {
           (async () => {
             try {
               const [hookIdsNow, sigNow, ann] = await Promise.all([
                 staleHookIds ? fetchQueueHookIds(ctx.domain, ctx.token, queueId) : null,
                 staleSchema ? fetchSchemaSig(ctx.domain, ctx.token, queueId) : null,
-                annFromCache
+                annCheck
                   ? fetchJson(
-                      `${ctx.domain}/api/v1/annotations/${ctx.annotationId}?fields=modified_at`,
+                      `${ctx.domain}/api/v1/annotations/${ctx.annotationId}?fields=${
+                        annCheck === 'queue' ? 'queue' : 'modified_at'
+                      }`,
                       ctx.token,
                     )
                   : null,
@@ -232,7 +234,11 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
               const hooksChanged =
                 !!staleHookIds && !!hookIdsNow && !sameIds(hookIdsNow, staleHookIds);
               const schemaChanged = !!staleSchema && sigNow !== staleSchema.sig;
-              const annChanged = !!ann?.modified_at && ann.modified_at !== annotationModifiedAt;
+              // The empty path holds no values, so only a move to another queue matters.
+              const annChanged =
+                annCheck === 'queue'
+                  ? !!ann?.queue && extractIdFromUrl(ann.queue) !== String(queueId)
+                  : !!ann?.modified_at && ann.modified_at !== annotationModifiedAt;
               if (staleSchema && !schemaChanged) {
                 // Unchanged: the schema's 5-minute window starts again.
                 const { types, lookups, order, sig } = staleSchema;
@@ -273,7 +279,7 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
               ? 'No MDH configurations apply to this queue.'
               : 'No MDH matching on this queue.',
           });
-          revalidate(!!annCache);
+          revalidate(annCache ? 'queue' : null);
           return;
         }
         const lookupIds = new Set<string>(lookupCfgs.map((c: any) => c.target));
@@ -387,7 +393,7 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
         });
         setRowByTable({});
 
-        revalidate(annValuesFromCache);
+        revalidate(annValuesFromCache ? 'modified' : null);
       } catch (e: any) {
         if (cancelled) return;
         if (isRateLimited(e)) {

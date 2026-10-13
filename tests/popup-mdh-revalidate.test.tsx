@@ -38,6 +38,9 @@ let urls: string[];
 let hooksList: any[];
 let attached: string[];
 let route: (url: string) => any; // per-test override, checked first
+let annQueue: number;
+let annModified: string;
+let schemaModified: string;
 
 async function waitFor(cond: () => boolean, timeout = 3000) {
   const start = Date.now();
@@ -60,6 +63,9 @@ beforeEach(() => {
   hooksList = [OTHER_HOOK];
   attached = ['60'];
   route = () => undefined;
+  annQueue = 42;
+  annModified = 'm1';
+  schemaModified = 's1';
   root = document.createElement('div');
   document.body.appendChild(root);
   vi.stubGlobal('chrome', {
@@ -92,15 +98,18 @@ beforeEach(() => {
       if (special) return special;
       const body = (() => {
         if (url.includes('/annotations/5?fields=url,queue,modified_at'))
-          return { queue: `${DOMAIN}/api/v1/queues/42`, modified_at: 'm1' };
-        if (url.includes('/annotations/5?fields=modified_at')) return { modified_at: 'm1' };
+          return { queue: `${DOMAIN}/api/v1/queues/${annQueue}`, modified_at: annModified };
+        if (url.includes('/annotations/5?fields=queue'))
+          return { queue: `${DOMAIN}/api/v1/queues/${annQueue}` };
+        if (url.includes('/annotations/5?fields=modified_at')) return { modified_at: annModified };
         if (url.includes('/annotations/5/content')) return { content: [] };
         if (url.includes('/api/v1/hooks?')) return { results: hooksList };
         if (url.includes('/queues/42?fields=hooks'))
           return { hooks: attached.map((id) => `${DOMAIN}/api/v1/hooks/${id}`) };
         if (url.includes('/queues/42?fields=schema')) return { schema: SCHEMA_URL };
-        if (url.includes('/schemas?queue=42')) return { results: [{ id: 9, modified_at: 's1' }] };
-        if (url.startsWith(SCHEMA_URL)) return { id: 9, modified_at: 's1', content: [] };
+        if (url.includes('/schemas?queue=42'))
+          return { results: [{ id: 9, modified_at: schemaModified }] };
+        if (url.startsWith(SCHEMA_URL)) return { id: 9, modified_at: schemaModified, content: [] };
         return {};
       })();
       return { ok: true, status: 200, json: async () => body };
@@ -125,7 +134,28 @@ describe('MDH card — queue with no MDH hook', () => {
     expect(message()).toBe('No MDH matching on this queue.');
     expect(count('/api/v1/hooks?')).toBe(0);
     expect(count('/annotations/5?fields=url,queue,modified_at')).toBe(0);
-    expect(count('/annotations/5?fields=modified_at')).toBe(1);
+    expect(count('/annotations/5?fields=queue')).toBe(1);
+  });
+
+  it('an edit to the annotation that keeps its queue refetches nothing', async () => {
+    await open();
+    urls = [];
+    annModified = 'm2';
+    await open();
+    await waitFor(() => count('/annotations/5?fields=queue') === 1);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(message()).toBe('No MDH matching on this queue.');
+    expect(count('/api/v1/hooks?')).toBe(0);
+    expect(count('?fields=schema')).toBe(0);
+  });
+
+  it('an annotation moved to another queue triggers the full fetch', async () => {
+    await open();
+    urls = [];
+    annQueue = 43;
+    render(null, root);
+    render(<MdhProvenancePanel tab={TAB} />, root);
+    await waitFor(() => count('/annotations/5?fields=url,queue,modified_at') === 1);
   });
 
   it('a newly attached hook triggers the full fetch', async () => {
@@ -180,6 +210,20 @@ describe('MDH card — schema past its window', () => {
     await waitFor(() => session[key].fetchedAt > old); // the window restarts
     expect(count('/queues/42?fields=schema')).toBe(0);
     expect(count('/schemas/9')).toBe(0);
+  });
+});
+
+describe('MDH card — schema signature changed', () => {
+  it('fetches the schema again when the schemas list reports a new modified_at', async () => {
+    await open();
+    const key = `mdhProv:schema:v2:${DOMAIN}#42`;
+    session[key].fetchedAt = Date.now() - 6 * 60 * 1000;
+    urls = [];
+    schemaModified = 's2';
+    render(null, root);
+    render(<MdhProvenancePanel tab={TAB} />, root);
+    await waitFor(() => count('/schemas?queue=42') === 1);
+    await waitFor(() => count('/schemas/9') === 1);
   });
 });
 

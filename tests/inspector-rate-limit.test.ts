@@ -55,6 +55,14 @@ describe('Inspector under a 429', () => {
     expect(store.data.value.resolved._rulesLoaded).not.toBe(true);
   });
 
+  it('a throttled hook-log load is unavailable, not an empty list', async () => {
+    vi.mocked(api.listHookLogs).mockRejectedValueOnce(throttled(7));
+    await openAnnotation();
+    await settled();
+    expect(store.enrichment.value.hookLogs).toBe('unavailable');
+    expect(store.rateLimited.value).toEqual({ retryAfter: 7 });
+  });
+
   it('keeps today’s behaviour for a non-429 failure', async () => {
     vi.mocked(api.listHooks).mockRejectedValue(
       Object.assign(new Error('API error 500'), { status: 500 }),
