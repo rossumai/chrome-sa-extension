@@ -327,13 +327,13 @@ export async function loadEnrichment(
     store.enrichment.value = { ...store.enrichment.value, [kind]: v };
   } catch (err: any) {
     if (myId !== loadId) return;
-    // A 429 is not "no logs": record it, and mark the kind unavailable so no panel
-    // concludes from it or refetches it.
+    // A 429 is not "no logs" and not a 403: record it, and mark the kind rate-limited so
+    // no panel concludes from it or refetches it.
     const limited = isRateLimited(err);
     if (limited) store.rateLimited.value = { retryAfter: err.retryAfter };
     store.enrichment.value = {
       ...store.enrichment.value,
-      [kind]: err.featureUnavailable || limited ? 'unavailable' : [],
+      [kind]: limited ? 'rate-limited' : err.featureUnavailable ? 'unavailable' : [],
     };
   }
 }

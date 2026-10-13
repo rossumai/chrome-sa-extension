@@ -33,7 +33,7 @@ export default function Report() {
   const pipelineStatus =
     logs === null || !d.resolved?._hooksLoaded
       ? 'pending'
-      : logs === 'unavailable'
+      : logs === 'unavailable' || logs === 'rate-limited'
         ? 'unavailable'
         : 'sparse';
   const labelsStatus =

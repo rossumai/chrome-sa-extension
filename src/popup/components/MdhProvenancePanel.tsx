@@ -214,11 +214,12 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
 
         // Background checks, after the view renders: confirm a stale hook or schema entry,
         // and the annotation's modified_at when its values came from the cache. A change
-        // refetches through refreshNonce; a failure, a 429 included, keeps the view.
+        // refetches through refreshNonce; a failed check, a 429 included, counts as "no
+        // change" for its own item only, so it cannot discard another check's result.
         const revalidate = (annCheck: 'modified' | 'queue' | null) => {
           (async () => {
             try {
-              const [hookIdsNow, sigNow, ann] = await Promise.all([
+              const settled = await Promise.allSettled([
                 staleHookIds ? fetchQueueHookIds(ctx.domain, ctx.token, queueId) : null,
                 staleSchema ? fetchSchemaSig(ctx.domain, ctx.token, queueId) : null,
                 annCheck
@@ -230,16 +231,21 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
                     )
                   : null,
               ]);
+              const [hookIdsNow, sigNow, ann] = settled.map((r) =>
+                r.status === 'fulfilled' ? r.value : null,
+              );
               if (cancelled) return;
               const hooksChanged =
                 !!staleHookIds && !!hookIdsNow && !sameIds(hookIdsNow, staleHookIds);
-              const schemaChanged = !!staleSchema && sigNow !== staleSchema.sig;
+              // A null signature (empty list, no modified_at, a failed check) is unknown,
+              // not changed: it neither refetches nor restarts the window.
+              const schemaChanged = !!staleSchema && sigNow !== null && sigNow !== staleSchema.sig;
               // The empty path holds no values, so only a move to another queue matters.
               const annChanged =
                 annCheck === 'queue'
                   ? !!ann?.queue && extractIdFromUrl(ann.queue) !== String(queueId)
                   : !!ann?.modified_at && ann.modified_at !== annotationModifiedAt;
-              if (staleSchema && !schemaChanged) {
+              if (staleSchema && sigNow === staleSchema.sig) {
                 // Unchanged: the schema's 5-minute window starts again.
                 const { types, lookups, order, sig } = staleSchema;
                 setCachedSchema(ctx.domain, queueId, { types, lookups, order, sig }).catch(

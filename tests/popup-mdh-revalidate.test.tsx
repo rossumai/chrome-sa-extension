@@ -222,6 +222,41 @@ describe('MDH card — schema past its window', () => {
   });
 });
 
+describe('MDH card — schema signature unknown', () => {
+  it('an empty schemas list is not a change: no schema refetch, and the window does not restart', async () => {
+    await open();
+    const key = `mdhProv:schema:v2:${DOMAIN}#42`;
+    const old = Date.now() - 6 * 60 * 1000;
+    session[key].fetchedAt = old;
+    urls = [];
+    route = (url) =>
+      url.includes('/schemas?queue=42')
+        ? { ok: true, status: 200, json: async () => ({ results: [] }) }
+        : undefined;
+    await open();
+    await waitFor(() => count('/schemas?queue=42') === 1);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(count('/schemas/9')).toBe(0);
+    expect(count('/api/v1/hooks?')).toBe(0);
+    expect(session[key].fetchedAt).toBe(old);
+  });
+});
+
+describe('MDH card — one background check fails', () => {
+  it('a throttled schema check does not discard the annotation check that saw a change', async () => {
+    await open();
+    const key = `mdhProv:schema:v2:${DOMAIN}#42`;
+    session[key].fetchedAt = Date.now() - 6 * 60 * 1000;
+    urls = [];
+    annQueue = 43; // the annotation moved: its check reports a change
+    route = (url) => (url.includes('/schemas?queue=42') ? throttled(null) : undefined);
+    render(null, root);
+    render(<MdhProvenancePanel tab={TAB} />, root);
+    await waitFor(() => count('/schemas?queue=42') === 1);
+    await waitFor(() => count('/annotations/5?fields=url,queue,modified_at') === 1);
+  });
+});
+
 describe('MDH card — schema signature changed', () => {
   it('fetches the schema again when the schemas list reports a new modified_at', async () => {
     await open();

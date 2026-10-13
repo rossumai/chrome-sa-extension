@@ -36,14 +36,21 @@ const REQUEST_TIMEOUT = 30_000;
 function combinedSignal(externalSignal?: AbortSignal | null) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+  const onAbort = () => clearTimeout(timer);
   if (externalSignal) {
     if (externalSignal.aborted) clearTimeout(timer);
-    else externalSignal.addEventListener('abort', () => clearTimeout(timer), { once: true });
+    else externalSignal.addEventListener('abort', onAbort, { once: true });
   }
   const signal = externalSignal
     ? AbortSignal.any([externalSignal, controller.signal])
     : controller.signal;
-  return { signal, timer, externalSignal };
+  // Called once the request settles: stops the timer and drops the listener, so a signal
+  // shared by many requests (paging) does not collect one listener per request.
+  const release = () => {
+    clearTimeout(timer);
+    externalSignal?.removeEventListener('abort', onAbort);
+  };
+  return { signal, release, externalSignal };
 }
 
 function apiError(message: string, status: number): ApiError {
@@ -62,7 +69,7 @@ export async function get(
   pathOrUrl: string,
   { signal: externalSignal }: RequestOpts = {},
 ): Promise<any> {
-  const { signal, timer, externalSignal: ext } = combinedSignal(externalSignal);
+  const { signal, release, externalSignal: ext } = combinedSignal(externalSignal);
   let res: Response;
   try {
     res = await fetch(toUrl(pathOrUrl), {
@@ -70,14 +77,14 @@ export async function get(
       signal,
     });
   } catch (err) {
-    clearTimeout(timer);
+    release();
     if ((err as Error).name === 'AbortError') {
       if (ext?.aborted) throw err;
       throw apiError('Request timed out after 30s', 0);
     }
     throw err;
   }
-  clearTimeout(timer);
+  release();
   if (res.status === 401) {
     throw apiError('Session expired. Open a Rossum page and click Galaxy again to reconnect.', 401);
   }

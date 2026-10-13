@@ -9,12 +9,17 @@ import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 // whole org graph has been fetched.
 export async function initGalaxy() {
   store.loading.value = true;
+  store.error.value = null;
+  store.retryable.value = false;
   try {
     await api.whoami();
   } catch (err: any) {
-    store.error.value = isRateLimited(err)
-      ? rateLimitMessage(err)
-      : err.message || 'Failed to verify session';
+    if (isRateLimited(err)) {
+      store.error.value = rateLimitMessage(err);
+      store.retryable.value = true; // the user retries the session check (spec 2026-10-13 §4.3)
+    } else {
+      store.error.value = err.message || 'Failed to verify session';
+    }
     store.connected.value = false;
     store.loading.value = false;
     return;

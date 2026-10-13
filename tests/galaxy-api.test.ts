@@ -177,3 +177,29 @@ describe('fetchOrgResources', () => {
     expect(requested.some((u) => u.includes('page=2'))).toBe(false);
   });
 });
+
+describe('abort listeners', () => {
+  function spyAbort(signal: AbortSignal) {
+    const add = vi.spyOn(signal, 'addEventListener');
+    const remove = vi.spyOn(signal, 'removeEventListener');
+    const handlers = (calls: any[][]) => calls.filter((c) => c[0] === 'abort').map((c) => c[1]);
+    return { added: () => handlers(add.mock.calls), removed: () => handlers(remove.mock.calls) };
+  }
+  it('removes its abort listener from an external signal once each request settles', async () => {
+    fetchMock.mockResolvedValue(jsonRes({}));
+    const ctrl = new AbortController();
+    const spy = spyAbort(ctrl.signal);
+    await api.get('/a', { signal: ctrl.signal });
+    await api.get('/b', { signal: ctrl.signal });
+    expect(spy.added()).toHaveLength(2);
+    expect(spy.removed()).toEqual(spy.added());
+  });
+  it('removes its abort listener when the request fails', async () => {
+    fetchMock.mockRejectedValue(new Error('offline'));
+    const ctrl = new AbortController();
+    const spy = spyAbort(ctrl.signal);
+    await expect(api.get('/a', { signal: ctrl.signal })).rejects.toThrow('offline');
+    expect(spy.added()).toHaveLength(1);
+    expect(spy.removed()).toEqual(spy.added());
+  });
+});

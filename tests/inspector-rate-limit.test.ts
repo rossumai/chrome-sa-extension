@@ -75,11 +75,11 @@ describe('Inspector under a 429', () => {
     expect(store.error.value).toBe('Rossum is rate-limiting requests. Try again in 5 s.');
   });
 
-  it('a throttled hook-log load is unavailable, not an empty list', async () => {
+  it('a throttled hook-log load is rate-limited, not an empty list or a 403', async () => {
     vi.mocked(api.listHookLogs).mockRejectedValueOnce(throttled(7));
     await openAnnotation();
     await settled();
-    expect(store.enrichment.value.hookLogs).toBe('unavailable');
+    expect(store.enrichment.value.hookLogs).toBe('rate-limited');
     expect(store.rateLimited.value).toEqual({ retryAfter: 7 });
   });
 

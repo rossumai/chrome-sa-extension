@@ -92,6 +92,13 @@ describe('Report', () => {
     expect(section!.querySelector('.inspector-sst-sparse')).toBeTruthy();
   });
 
+  it('Extension runs section reports unavailable when hook logs were rate-limited', () => {
+    store.data.value = baseAnnotation();
+    store.enrichment.value = { ...store.enrichment.value, hookLogs: 'rate-limited' };
+    const section = mount().querySelector('[data-evidence-section="pipeline"]');
+    expect(section!.querySelector('.inspector-sst-unavailable')).toBeTruthy();
+  });
+
   it('Labels section is pending while labelsById is undefined', () => {
     store.data.value = baseAnnotation();
     store.data.value.resolved.labelsById = undefined;

@@ -25,14 +25,28 @@ describe('initGalaxy', () => {
     expect(store.error.value).toMatch(/session expired/i);
     expect(apiMock.fetchOrgResources).not.toHaveBeenCalled();
   });
-  it('a 429 on the session check shows the rate-limit message, with no Retry', async () => {
+  it('a 429 on the session check shows the rate-limit message and is retryable', async () => {
     apiMock.whoami.mockRejectedValue(
       Object.assign(new Error('Request was throttled.'), { status: 429, retryAfter: 8 }),
     );
     await initGalaxy();
     expect(store.connected.value).toBe(false);
     expect(store.error.value).toBe('Rossum is rate-limiting requests. Try again in 8 s.');
+    expect(store.retryable.value).toBe(true);
+  });
+  it('a later session check that succeeds clears the 429 error and Retry', async () => {
+    apiMock.whoami.mockRejectedValueOnce(
+      Object.assign(new Error('Request was throttled.'), { status: 429, retryAfter: 8 }),
+    );
+    await initGalaxy();
+    // A deferred graph load keeps loadGraph from clearing the flags itself: initGalaxy must.
+    apiMock.whoami.mockResolvedValueOnce({ id: 1 });
+    apiMock.fetchOrgResources.mockReturnValueOnce(new Promise(() => {}));
+    const pending = initGalaxy();
+    expect(store.error.value).toBeNull();
     expect(store.retryable.value).toBe(false);
+    await pending;
+    expect(store.connected.value).toBe(true);
   });
   it('connects after the probe, then loads + builds the graph asynchronously', async () => {
     apiMock.whoami.mockResolvedValue({ id: 1 });

@@ -12,9 +12,11 @@ export const annotationId = signal<string | null>(null);
 export const data = signal<any>(null); // { annotation, blocker, content, resolved }
 /**
  * One lazily-loaded enrichment source: `null` until it is requested, then the loaded rows,
- * or the string 'unavailable' when the feature is off for this org (index.tsx:201).
+ * the string 'unavailable' when the feature is off for this org (a 403/404, see
+ * `loadEnrichment` in index.tsx), or 'rate-limited' when the read got a 429. Neither string
+ * is "no rows": readers must not conclude anything from either.
  */
-export type EnrichmentSource = any[] | 'unavailable' | null;
+export type EnrichmentSource = any[] | 'unavailable' | 'rate-limited' | null;
 
 export type Enrichment = {
   audit: EnrichmentSource;
