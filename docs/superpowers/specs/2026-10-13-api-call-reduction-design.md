@@ -114,8 +114,10 @@ must not do so for a 429; Refresh (or reload) bypasses every cache and check.
 ### 4.2 Inspector
 
 **Request scope.** New `src/inspector/requestScope.ts`: `createRequestScope()` returns
-`{ get(key, fn), clear() }`. A successful promise is kept for the scope's life; a failed one is
-dropped at once, so a 429 is never served from it; concurrent callers share one request.
+`{ get(key, fn) }`, a promise memo. Every promise — fulfilled or rejected — is kept for the
+scope's life, so concurrent and later callers in one load share one request, and nobody in that
+load retries a failure (a 429 included). The next load starts a new scope, which is what
+"reload fetches again" means.
 
 `loadAnnotation` creates one scope per load, next to `loadId`, and replaces it on the next
 load. Every hooks, rules and labels list in the load path goes through it — the three loaders,
@@ -146,8 +148,8 @@ design uses each check only where it answers the question.
 
 - **Hooks, non-empty entry:** unchanged — trusted for 5 minutes, then the full fetch. An SA who
   edits an MDH configuration still presses Refresh, as today.
-- **Hooks, no MDH hook attached (`hadHooks: false`):** now cached, with `hookUrls` — the queue's
-  attached hooks as the full fetch saw them — and no trust window. Every open renders the cached
+- **Hooks, no MDH hook attached (`hadHooks: false`):** now cached, with `hookIds` — the ids of
+  the queue's attached hooks as the full fetch saw them — and no trust window. Every open renders the cached
   message at once and, in the background, sends `GET /queues/X?fields=hooks`. Same set → keep.
   Different set → full fetch and re-render, through the existing `refreshNonce` path the
   annotation freshness check already uses. This is what keeps the first MDH hook an SA attaches
@@ -161,14 +163,16 @@ design uses each check only where it answers the question.
   full schema GET.
 - **Annotation entry:** written on the empty path too (`modifiedAt`, `queueId`), and the existing
   background `modified_at` check runs there as on the loaded path.
-- New keys (`hadHooks`, `hookUrls`, the schema's `sig`) are additive. An old entry without them
+- New keys (`hadHooks`, `hookIds`, the schema's `sig`) are additive. An old entry without them
   behaves as today, so no prefix bump.
 - Effect per open. Empty queue: the full hooks list (16,649 bytes for four hooks on the probe
   org) becomes a ~250-byte check, and both requests leave the critical path; the request count
   stays at two. After the schema window: two requests (queue + full schema) become one
   372-byte request.
 
-**429.** A foreground 429 shows `rateLimitMessage` instead of `Failed: HTTP 429`. A 429 from a
+**429.** A foreground 429 shows `rateLimitMessage` instead of `Failed: HTTP 429`. The schema
+load and the annotation-values load, which today swallow every error into empty data, let a 429
+through, so it can neither become "No MDH matching on this queue" nor be cached as empty values. A 429 from a
 background check keeps the cached view and changes nothing. The lock banner is unchanged: it
 already returns `null` on any failure.
 
@@ -185,8 +189,8 @@ already returns `null` on any failure.
 Test-first; mutation-check every new guard (the repo rule).
 
 - `rateLimit`: seconds parsed; absent, non-numeric and HTTP-date → `null`; both messages.
-- `requestScope`: concurrent calls share one run; a success is reused; a failure is dropped and
-  the next call runs again; `clear()` empties it.
+- `requestScope`: concurrent calls share one run; a success is reused; a failure is reused too
+  (no second run); separate scopes do not share.
 - Inspector: one annotation load with every panel mounted → `listHooks` once, `listRules` once,
   `listLabels` once; a 429 on hooks → the notice shows, `_hooksLoaded` is false, no "no hooks"
   conclusion; a new load uses a new scope.
