@@ -1,10 +1,10 @@
 # API call reduction and 429 handling — design
 
 **Date:** 2026-10-13
-**Status:** designed, not built. Step 1 of the plan is a live probe (§2c); two parts depend on it.
+**Status:** designed, not built. Live probe done (§2c); the design below already reflects it.
 **Scope:** new `src/net/rateLimit.ts`; `src/inspector/` (request scope, 429); `src/galaxy/`
-(429, hook fields); `src/popup/` (`cache.ts`, `mdh-provenance.ts`,
-`components/MdhProvenancePanel.tsx`). One PR.
+(429); `src/popup/` (`cache.ts`, `mdh-provenance.ts`, `components/MdhProvenancePanel.tsx`).
+One PR.
 
 ## 1. Why
 
@@ -57,13 +57,21 @@ Goals, weighted equally by the owner: less pressure toward 429, repo hygiene, a 
 - `fields=` is not documented on list endpoints. The repo uses it on detail routes and on the
   annotations list.
 
-### c. Open — the live probe (plan step 1, read-only, on a sandbox org)
+### c. Live probe (2026-10-13, read-only GETs with `curl` on a sandbox org)
 
-1. Does `fields=id,modified_at` trim `/hooks?queue=X` and `/schemas?queue=X` responses?
-2. Does `/schemas?queue=X` return only that queue's schema?
-3. Does a 429 carry `Retry-After`? Observe only if one occurs; never provoke one.
-
-If 1 or 2 fails, §4.3 and §4.4's revalidation fall back as described in §5.
+1. **`fields=` is ignored on the `/hooks` list.** `?page_size=100` and
+   `?page_size=100&fields=id,modified_at` returned the same 79,877 bytes of full hook objects
+   (seven hooks, function-hook code included). It works on detail routes:
+   `/queues/X?fields=schema,modified_at` returned 106 bytes. So no cheap per-hook
+   `modified_at` check exists, and Galaxy cannot trim its hooks list.
+2. **`/schemas?queue=X` filters and is small without `fields=`.** It returned one schema in
+   372 bytes (`id`, `name`, `url`, `queues`, `metadata`, `modified_at`, `modified_by` — the
+   list never carries `content`); an unknown queue id returned zero results.
+3. **`/queues/X?fields=hooks,modified_at` lists the attached hooks** as URLs (251 bytes), the
+   same four the `/hooks?queue=X` list returned. Attaching or detaching a hook changes it;
+   editing a hook's settings does not.
+4. **No rate-limit headers** on normal responses (no `X-RateLimit-*`). Whether a 429 carries
+   `Retry-After` was not observed — none occurred, and none was provoked. §4.1 handles both.
 
 ## 3. Non-goals
 
@@ -127,43 +135,50 @@ annotation fetches them again.
   failure of any list aborts the others; the abort errors of the siblings are not reported.
 - A 429 shows `rateLimitMessage` with a **Retry** button that calls `loadGraph()`. No automatic
   retry. Other errors keep today's message.
-- **Probe-dependent:** the hooks list requests
-  `fields=id,url,name,type,active,events,queues,run_after,description`, the fields `graph.ts`
-  reads. A test asserts the list stays in step with what `graph.ts` reads.
+- Not done: trimming the hooks list to the fields `graph.ts` reads. The API ignores `fields=` on
+  lists (§2c.1).
 
 ### 4.4 Popup and side panel (`MdhProvenancePanel`)
 
-**Trust window, then revalidate** (probe-dependent):
+The probe found no cheap way to see that a hook's settings changed (§2c.1), but cheap ways to
+see that the queue's attached hooks changed (§2c.3) and that its schema changed (§2c.2). The
+design uses each check only where it answers the question.
 
-- The hook cache entry gains `hadHooks` and `sig`, the sorted `(id, modified_at)` pairs of
-  every hook the queue lists; the schema entry gains `sig` from
-  `/schemas?queue=X&fields=id,modified_at`. Additive keys: an entry without `sig` takes the
-  full fetch after its window, so no prefix bump.
-- **Non-empty entries:** trusted for 5 minutes, as today — no calls. After that the cached view
-  renders at once and a background check fetches the signature. Unchanged → the window
-  restarts. Changed → full fetch and re-render, through the existing `refreshNonce` path the
-  annotation freshness check already uses.
-- **Empty result (no hook applies, or no hooks at all):** cached with `hadHooks`, but with no
-  window — every open renders the cached message at once and runs the background check. This
-  is what keeps the first MDH hook an SA adds visible on the next open. The annotation entry is
-  written on this path too (`modifiedAt`, `queueId`), and the existing `modified_at` check runs
-  in the background as on the loaded path.
-- Effect per open: an empty queue still sends two requests, now small and off the critical
-  path; after the window a non-empty queue sends two small checks instead of the hooks, queue
-  and schema fetches.
+- **Hooks, non-empty entry:** unchanged — trusted for 5 minutes, then the full fetch. An SA who
+  edits an MDH configuration still presses Refresh, as today.
+- **Hooks, no MDH hook attached (`hadHooks: false`):** now cached, with `hookUrls` — the queue's
+  attached hooks as the full fetch saw them — and no trust window. Every open renders the cached
+  message at once and, in the background, sends `GET /queues/X?fields=hooks`. Same set → keep.
+  Different set → full fetch and re-render, through the existing `refreshNonce` path the
+  annotation freshness check already uses. This is what keeps the first MDH hook an SA attaches
+  visible on the next open.
+- **Hooks attached but no configuration applies (`hadHooks: true`, empty entries):** cached with
+  the 5-minute window of a non-empty entry. What would change it is an edit to a configuration's
+  `queue_ids`, which the attachment check cannot see.
+- **Schema:** after its 5-minute window, the cached view renders at once and a background
+  `GET /schemas?queue=X` compares `id` + `modified_at` with the entry's `sig`. Unchanged → the
+  window restarts. Changed → full fetch and re-render. This replaces the blocking queue GET plus
+  full schema GET.
+- **Annotation entry:** written on the empty path too (`modifiedAt`, `queueId`), and the existing
+  background `modified_at` check runs there as on the loaded path.
+- New keys (`hadHooks`, `hookUrls`, the schema's `sig`) are additive. An old entry without them
+  behaves as today, so no prefix bump.
+- Effect per open. Empty queue: the full hooks list (16,649 bytes for four hooks on the probe
+  org) becomes a ~250-byte check, and both requests leave the critical path; the request count
+  stays at two. After the schema window: two requests (queue + full schema) become one
+  372-byte request.
 
 **429.** A foreground 429 shows `rateLimitMessage` instead of `Failed: HTTP 429`. A 429 from a
 background check keeps the cached view and changes nothing. The lock banner is unchanged: it
 already returns `null` on any failure.
 
-## 5. Fallbacks if the probe fails
+## 5. Ruled out by the probe
 
-- `fields=` does not trim lists → the popup keeps today's 5-minute TTL plus full refetch, but
-  still caches the empty result with `hadHooks` (with the 5-minute window — the risk that a
-  first hook stays hidden until Refresh is then accepted and stated in the PR); Galaxy keeps
-  full hook objects. §4.1-4.3's 429 work and §4.2's dedupe are unaffected.
-- `/schemas?queue=X` does not filter → the schema check uses
-  `GET /queues/X?fields=schema` then `GET <schema>?fields=modified_at`.
+- **A per-hook `(id, modified_at)` signature** for the popup's hook cache — the list ignores
+  `fields=`, so the "cheap" check would download every full hook object.
+- **Trimming Galaxy's hooks list** — same reason.
+- **Undocumented list filters** (for example a `modified_at` lower bound) were not tried: the
+  design relies only on documented parameters.
 
 ## 6. Testing
 
@@ -176,11 +191,14 @@ Test-first; mutation-check every new guard (the repo rule).
   `listLabels` once; a 429 on hooks → the notice shows, `_hooksLoaded` is false, no "no hooks"
   conclusion; a new load uses a new scope.
 - Galaxy: a 429 on one list aborts the others (no further page requests); the Retry button
-  reloads; a 403 still degrades to `[]`; the requested hook fields cover what `graph.ts` reads.
-- Popup: an empty queue's second open renders without waiting and sends only the checks, with
-  the right message for `hadHooks` true and false; within the window no hook or schema request;
-  after it, an unchanged `sig` → no full fetch, a changed one → full fetch and re-render;
-  Refresh bypasses all; a foreground 429 shows the message; a background 429 keeps the view.
+  reloads; a 403 still degrades to `[]`.
+- Popup: a queue with no MDH hook — the second open renders without waiting and sends only the
+  annotation and attachment checks; an unchanged attachment set → no full fetch; a new hook
+  URL → full fetch and re-render. `hadHooks: true` with nothing applying → the right message,
+  no check inside the window. Non-empty hooks → today's behaviour. Schema: no request inside
+  the window; after it, an unchanged `sig` → no full fetch, a changed one → full fetch and
+  re-render. An old entry without the new keys behaves as today. Refresh bypasses all; a
+  foreground 429 shows the message; a background 429 keeps the view.
 - `npm run typecheck`, `npm test` (with `NODE_OPTIONS=--no-experimental-webstorage` on
   Node 26), `npm run format:check`, `npm run build`.
 
