@@ -37,10 +37,11 @@ export async function getCachedHookEntries(
   // Entries written before 2026-10-13 were never empty, so a missing flag means hooks.
   const hadHooks = entry.hadHooks !== false;
   const hookIds = Array.isArray(entry.hookIds) ? entry.hookIds : null;
-  // No MDH hook attached: no trust window. The panel shows the entry and confirms it
-  // against the queue's attached hooks on every open (spec 2026-10-13 §4.4).
-  if (!hadHooks && hookIds) return { entries: entry.entries, hadHooks, hookIds, stale: true };
   if (Date.now() - entry.fetchedAt > TTL_MS) return null;
+  // No MDH hook attached: the panel shows the entry and confirms it against the queue's
+  // attached hooks on every open (spec 2026-10-13 §4.4). The 5-minute window is a backstop
+  // for changes that check cannot see, such as activating an attached inactive MDH hook.
+  if (!hadHooks && hookIds) return { entries: entry.entries, hadHooks, hookIds, stale: true };
   return { entries: entry.entries, hadHooks, hookIds, stale: false };
 }
 

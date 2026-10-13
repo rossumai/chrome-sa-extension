@@ -70,15 +70,20 @@ describe('popup cache — hook entries that can be confirmed', () => {
     vi.useRealTimers();
   });
 
-  it('a queue with no MDH hook is always returned, stale, with its hook ids', async () => {
+  it('a queue with no MDH hook is returned stale, with its hook ids, inside the window', async () => {
     await setCachedHookEntries('https://d', '42', [], { hadHooks: false, hookIds: ['60'] });
-    vi.setSystemTime(Date.now() + SIX_MINUTES);
     expect(await getCachedHookEntries('https://d', '42')).toEqual({
       entries: [],
       hadHooks: false,
       hookIds: ['60'],
       stale: true,
     });
+  });
+
+  it('a queue with no MDH hook expires after 5 minutes too', async () => {
+    await setCachedHookEntries('https://d', '42', [], { hadHooks: false, hookIds: ['60'] });
+    vi.setSystemTime(Date.now() + SIX_MINUTES);
+    expect(await getCachedHookEntries('https://d', '42')).toBeNull();
   });
 
   it('hooks that exist but do not apply keep the 5-minute window', async () => {
