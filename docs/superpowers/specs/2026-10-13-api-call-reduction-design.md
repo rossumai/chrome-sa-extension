@@ -1,8 +1,7 @@
 # API call reduction and 429 handling — design
 
 **Date:** 2026-10-13
-**Status:** designed, not built. Live probe done (§2c); the design below already reflects it.
-Built 2026-10-13; §4.4 updated to match two review rulings.
+**Status:** built 2026-10-13. §4.4 was updated to match two review rulings (the 5-minute backstop for a queue with no MDH hook, and the queue-only annotation check on the empty path).
 **Scope:** new `src/net/rateLimit.ts`; `src/inspector/` (request scope, 429); `src/galaxy/`
 (429); `src/popup/` (`cache.ts`, `mdh-provenance.ts`, `components/MdhProvenancePanel.tsx`).
 One PR.
