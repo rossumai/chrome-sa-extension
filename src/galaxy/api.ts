@@ -2,6 +2,9 @@
 // timeout, 401 -> session expired, 403 -> featureUnavailable) and adds full
 // collection enumeration (listAll) plus a per-resource bundle fetch that
 // degrades a forbidden collection to [] (a "partial galaxy", never a hard fail).
+
+import { rateLimitError } from '../net/rateLimit.js';
+
 /** Same shape as audit/api's; the duplication is deliberate (see the header). */
 export type ApiError = Error & { status: number; featureUnavailable?: boolean };
 
@@ -80,6 +83,7 @@ export async function get(
   }
   const data = await res.json().catch(() => null);
   if (!res.ok) {
+    if (res.status === 429) throw rateLimitError(res, data?.detail || 'API error 429');
     const err = apiError(data?.detail || data?.message || `API error ${res.status}`, res.status);
     if (res.status === 403) err.featureUnavailable = true;
     throw err;

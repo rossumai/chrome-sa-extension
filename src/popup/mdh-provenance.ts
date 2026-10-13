@@ -3,6 +3,7 @@
 
 import { evalCondition } from './actionCondition.js';
 import { reEscape } from '../mdh/reEscape.js';
+import { rateLimitError } from '../net/rateLimit.js';
 import { VAR_RE, VAR_RE_G, lookupVarName } from '../mdh/placeholderSyntax.js';
 
 // ── API ─────────────────────────────────────────────
@@ -11,7 +12,8 @@ export async function fetchJson(url: string, token: string): Promise<any> {
   const resp = await fetch(url, {
     headers: { Authorization: `token ${token}`, Accept: 'application/json' },
   });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  if (resp.status === 429) throw rateLimitError(resp, 'HTTP 429');
+  if (!resp.ok) throw Object.assign(new Error(`HTTP ${resp.status}`), { status: resp.status });
   return resp.json();
 }
 
