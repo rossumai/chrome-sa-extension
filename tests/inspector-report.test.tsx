@@ -126,4 +126,20 @@ describe('Report', () => {
     const section = el.querySelector('[data-evidence-section="rejection"]');
     expect(section!.querySelector('.inspector-sst-na')).toBeTruthy();
   });
+
+  it('shows one rate-limit notice when the load was rate-limited', () => {
+    store.data.value = baseAnnotation();
+    store.rateLimited.value = { retryAfter: 20 };
+    const el = mount();
+    expect(el.querySelector('.inspector-ratelimit')!.textContent).toContain(
+      'Rossum is rate-limiting requests. Try again in 20 s.',
+    );
+    store.rateLimited.value = null;
+  });
+
+  it('shows no notice otherwise', () => {
+    store.data.value = baseAnnotation();
+    store.rateLimited.value = null;
+    expect(mount().querySelector('.inspector-ratelimit')).toBeNull();
+  });
 });

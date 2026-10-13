@@ -85,6 +85,8 @@ export const recents = signal<any[]>([]);
 
 export const loading = signal(false);
 export const error = signal<string | null>(null);
+// Set when a request of the CURRENT annotation load got a 429 (spec 2026-10-13 §4.2).
+export const rateLimited = signal<{ retryAfter: number | null } | null>(null);
 
 function emptyEnrichment(): Enrichment {
   return { audit: null, hookLogs: null, ruleLogs: null, workflow: null, notes: null };
@@ -101,6 +103,7 @@ export function setAnnotationId(id: string | null) {
   evidence.value = null;
   clearPagePreviews();
   error.value = null;
+  rateLimited.value = null;
 }
 
 export function reset() {
@@ -115,5 +118,6 @@ export function reset() {
   clearPagePreviews();
   loading.value = false;
   error.value = null;
+  rateLimited.value = null;
   connected.value = null;
 }

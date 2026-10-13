@@ -9,6 +9,7 @@ import { orchestrateAttributions } from './orchestrate.js';
 import { buildEvidence } from './evidence.js';
 import { runSynthesis, continueSynthesis } from './synthesize.js';
 import { createRequestScope } from './requestScope.js';
+import { isRateLimited } from '../net/rateLimit.js';
 
 let loadId = 0;
 // One request per list per annotation load (spec 2026-10-13 §4.2); replaced with loadId.
@@ -18,10 +19,18 @@ const listHooksOnce = (queueId: string) =>
 const listRulesOnce = (queueId: string) =>
   scope.get(`rules:${queueId}`, () => api.listRules(queueId));
 const listLabelsOnce = () => scope.get('labels', () => api.listLabels());
-const safe = (fn: any) =>
-  Promise.resolve()
+// Best-effort: any failure reads as null. A 429 is also recorded on the load it belongs
+// to, so the report says "rate-limited" instead of reading missing lists as empty.
+const safe = (fn: any) => {
+  const myId = loadId;
+  return Promise.resolve()
     .then(fn)
-    .catch(() => null);
+    .catch((err) => {
+      if (isRateLimited(err) && myId === loadId)
+        store.rateLimited.value = { retryAfter: err.retryAfter };
+      return null;
+    });
+};
 function idFromUrl(url: any) {
   const m = String(url || '').match(/\/(\d+)\/?$/);
   return m ? m[1] : null;
@@ -325,11 +334,13 @@ export async function loadQueueHooks() {
   const d = store.data.value;
   if (!d || !d.annotation.queue || d.resolved._hooksLoaded) return;
   const myId = loadId;
-  const hooks = (await safe(() => listHooksOnce(idFromUrl(d.annotation.queue) as string))) || [];
-  const hooksById: Record<string, any> = {};
-  for (const hk of hooks as any[]) hooksById[hk.id] = hk;
+  const hooks = await safe(() => listHooksOnce(idFromUrl(d.annotation.queue) as string));
   const cur = store.data.value;
   if (!cur || myId !== loadId) return; // superseded by a newer annotation → don't contaminate it
+  // Rate-limited is not "this queue has no hooks": leave them unloaded (spec 2026-10-13 §4.2).
+  if (hooks === null && store.rateLimited.value) return;
+  const hooksById: Record<string, any> = {};
+  for (const hk of (hooks || []) as any[]) hooksById[hk.id] = hk;
   store.data.value = { ...cur, resolved: { ...cur.resolved, hooksById, _hooksLoaded: true } };
 }
 
@@ -353,6 +364,8 @@ export async function loadLabelContext() {
   for (const hk of (hooks || []) as any[]) hooksById[hk.id] = hk;
   const cur = store.data.value;
   if (!cur || myId !== loadId) return; // superseded → don't merge stale label context into another annotation
+  const failed = labels === null || (!!queueId && (rules === null || hooks === null));
+  if (failed && store.rateLimited.value) return; // rate-limited: no half-empty label context
   store.data.value = {
     ...cur,
     resolved: {
@@ -371,10 +384,14 @@ export async function loadQueueRules() {
   const d = store.data.value;
   if (!d || !d.annotation.queue || d.resolved._rulesLoaded) return;
   const myId = loadId;
-  const rules = (await safe(() => listRulesOnce(idFromUrl(d.annotation.queue) as string))) || [];
+  const rules = await safe(() => listRulesOnce(idFromUrl(d.annotation.queue) as string));
   const cur = store.data.value;
   if (!cur || myId !== loadId) return; // superseded → skip stale write
-  store.data.value = { ...cur, resolved: { ...cur.resolved, rules, _rulesLoaded: true } };
+  if (rules === null && store.rateLimited.value) return; // rate-limited, not "no rules"
+  store.data.value = {
+    ...cur,
+    resolved: { ...cur.resolved, rules: rules || [], _rulesLoaded: true },
+  };
 }
 
 // Intake context: parent document, duplicate relations, source email — all best-effort.
