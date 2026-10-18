@@ -16,7 +16,7 @@ export type SaveResult =
 export type SaveDeps = {
   getSchema: (id: number) => Promise<any>;
   validateSchema: (id: number, content: any[]) => Promise<any>;
-  patchSchema: (id: number, content: any[]) => Promise<any>;
+  patchSchema: (id: number, content: any[], name?: string) => Promise<any>;
 };
 
 function liveKids(n: Node | undefined): Node[] {
@@ -101,11 +101,24 @@ export async function saveSchema(
     baseModifiedAt,
     work,
     force,
-  }: { schemaId: number; baseModifiedAt: string | null; work: Node[]; force: boolean },
+    name,
+    baseName,
+  }: {
+    schemaId: number;
+    baseModifiedAt: string | null;
+    work: Node[];
+    force: boolean;
+    name?: string;
+    baseName?: string;
+  },
   deps: SaveDeps,
 ): Promise<SaveResult> {
+  if (name !== undefined && !name.trim()) {
+    return { ok: false, stage: 'local', errors: [{ key: null, message: 'Schema name is empty' }] };
+  }
   const local = localErrors(work);
   if (local.length) return { ok: false, stage: 'local', errors: local };
+  const renamed = name !== undefined && name !== baseName;
 
   const current = await deps.getSchema(schemaId);
   if (!force && current?.modified_at !== baseModifiedAt) {
@@ -126,7 +139,9 @@ export async function saveSchema(
 
   let patched: any;
   try {
-    patched = await deps.patchSchema(schemaId, content);
+    patched = renamed
+      ? await deps.patchSchema(schemaId, content, name)
+      : await deps.patchSchema(schemaId, content);
   } catch (err: any) {
     if (isRateLimited(err)) throw err;
     return {
@@ -149,5 +164,7 @@ export async function saveSchema(
       warnings: [`Saved, but the schema could not be re-read to check it (${why}).`],
     };
   }
-  return { ok: true, schema, warnings: landedDiff(content, schema?.content || []) };
+  const warnings = landedDiff(content, schema?.content || []);
+  if (renamed && schema?.name !== name) warnings.unshift('name');
+  return { ok: true, schema, warnings };
 }

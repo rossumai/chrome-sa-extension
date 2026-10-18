@@ -6,16 +6,78 @@
   background: var(--bg-base);
 }
 
-.queues {
+.nav {
   flex: none;
-  width: 220px;
-  overflow-y: auto;
+  width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   padding: 10px;
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border);
+  min-height: 0;
+}
+
+.navScroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.navCols {
+  display: grid;
+  grid-template-columns: 1fr 36px 1fr;
+  align-items: start;
+}
+
+.schemaCol,
+.queueCol {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.schemaItem {
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schemaItem:hover {
+  background: var(--bg-hover);
+}
+
+.renamedItem {
+  box-shadow: inset 2px 0 var(--warning);
+  background: var(--warning-bg);
+}
+
+.unused {
+  color: var(--text-secondary);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.lines {
+  display: block;
+  overflow: visible;
+}
+
+.line {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+
+.lineOn {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
 }
 
 .wsName {

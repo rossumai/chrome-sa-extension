@@ -179,4 +179,40 @@ describe('saveSchema', () => {
       expect(r.warnings[0]).toContain('could not be re-read');
     }
   });
+
+  it('sends a staged rename with the content, and omits the name when unchanged', async () => {
+    const work = withKeys(fixture());
+    const d = deps();
+    await saveSchema(
+      { schemaId: 7, baseModifiedAt: 't0', work, force: false, name: 'Renamed', baseName: 'Old' },
+      d,
+    );
+    expect(d.patchSchema).toHaveBeenCalledWith(7, stripForSave(work), 'Renamed');
+    const d2 = deps();
+    await saveSchema(
+      { schemaId: 7, baseModifiedAt: 't0', work, force: false, name: 'Old', baseName: 'Old' },
+      d2,
+    );
+    expect(d2.patchSchema).toHaveBeenCalledWith(7, stripForSave(work));
+  });
+
+  it('refuses an empty schema name', async () => {
+    const d = deps();
+    const r = await saveSchema(
+      {
+        schemaId: 7,
+        baseModifiedAt: 't0',
+        work: withKeys(fixture()),
+        force: false,
+        name: '  ',
+        baseName: 'Old',
+      },
+      d,
+    );
+    expect(r).toEqual({
+      ok: false,
+      stage: 'local',
+      errors: [{ key: null, message: 'Schema name is empty' }],
+    });
+  });
 });

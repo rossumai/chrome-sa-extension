@@ -10,7 +10,7 @@ import {
   queues,
 } from '../store.js';
 import { undoChange, redoChange, loadQueues, openQueue } from '../index.jsx';
-import QueueList from './QueueList.jsx';
+import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
 import Grid from './Grid.jsx';
 import Inspector from './Inspector.jsx';
@@ -61,7 +61,7 @@ export default function App({ connected }: { connected: boolean | null }) {
 
   return (
     <div class={'app-root ' + s.root}>
-      <QueueList />
+      <Navigator />
       <main class={s.main}>
         {error.value && (
           <div class={s.banner}>

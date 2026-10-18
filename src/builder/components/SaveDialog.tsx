@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { summary, saving, sharedCount } from '../store.js';
+import { summary, saving, sharedCount, renamed } from '../store.js';
 import { save } from '../index.jsx';
 import type { SaveResult } from '../save.js';
 import { summaryText } from './Toolbar.jsx';
@@ -27,7 +27,7 @@ export default function SaveDialog({ onClose }: { onClose: () => void }) {
         <h3 class={s.dialogTitle}>Save schema</h3>
         {!result && (
           <div>
-            <p>{summaryText(summary.value)}</p>
+            <p>{summaryText(summary.value, renamed.value)}</p>
             {sharedCount.value > 1 && (
               <p class={s.warn}>
                 This schema is used by {sharedCount.value} queues. All of them change.

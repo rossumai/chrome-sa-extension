@@ -103,6 +103,10 @@ export function listQueues(): Promise<RawResource[]> {
   return listAll('/api/v1/queues/?page_size=100');
 }
 
+export function listSchemas(): Promise<RawResource[]> {
+  return listAll('/api/v1/schemas/?page_size=100');
+}
+
 export function getSchema(id: number): Promise<any> {
   return get(`/api/v1/schemas/${id}`);
 }
@@ -123,6 +127,10 @@ export function validateSchema(id: number, content: any[]): Promise<any> {
   return request('POST', '/api/v1/schemas/validate', { id, content });
 }
 
-export function patchSchema(id: number, content: any[]): Promise<any> {
-  return request('PATCH', `/api/v1/schemas/${id}`, { content });
+export function patchSchema(id: number, content: any[], name?: string): Promise<any> {
+  return request(
+    'PATCH',
+    `/api/v1/schemas/${id}`,
+    name === undefined ? { content } : { content, name },
+  );
 }

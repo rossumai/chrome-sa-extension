@@ -71,4 +71,16 @@ describe('builder api', () => {
     await api.getAnnotationContent(5);
     expect(fetchMock.mock.calls[0][0]).toBe('https://x.rossum.ai/api/v1/annotations/5/content');
   });
+
+  it('patchSchema sends the name only when given', async () => {
+    fetchMock.mockResolvedValue(jsonRes({ id: 7 }));
+    await api.patchSchema(7, [], 'New name');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ content: [], name: 'New name' });
+  });
+
+  it('listSchemas pages through all schemas', async () => {
+    fetchMock.mockResolvedValue(jsonRes({ results: [{ id: 1 }], pagination: { next: null } }));
+    await api.listSchemas();
+    expect(fetchMock.mock.calls[0][0]).toBe('https://x.rossum.ai/api/v1/schemas/?page_size=100');
+  });
 });

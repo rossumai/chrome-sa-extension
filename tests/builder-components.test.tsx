@@ -5,7 +5,6 @@ import { act } from 'preact/test-utils';
 import App from '../src/builder/components/App.jsx';
 import * as store from '../src/builder/store.js';
 import { withKeys, flatten } from '../src/builder/model.js';
-import { initHistory } from '../src/builder/history.js';
 import { annotationValues } from '../src/builder/values.js';
 
 function content(): any[] {
@@ -72,10 +71,12 @@ beforeEach(() => {
     },
   ];
   store.selectedQueueId.value = 1;
-  store.schema.value = { id: 7, modified_at: 't0', content: content() };
-  const keyed = withKeys(content());
-  store.base.value = keyed;
-  store.history.value = initHistory(keyed);
+  store.schema.value = { id: 7, name: 'Invoice schema', modified_at: 't0', content: content() };
+  store.schemas.value = [
+    { id: 7, url: 'https://x/api/v1/schemas/7', name: 'Invoice schema' },
+    { id: 8, url: 'https://x/api/v1/schemas/8', name: 'Unused schema' },
+  ];
+  store.startDraft('Invoice schema', withKeys(content()));
   store.selectedKey.value = null;
   store.rowErrors.value = new Map();
   store.annotationId.value = null;
@@ -279,5 +280,33 @@ describe('Builder annotation values', () => {
     expect(store.annotationId.value).toBeNull();
     expect(root.querySelector('th[data-col="value"]')).toBeNull();
     expect(root.querySelector('[data-action="clear-annotation"]')).toBeNull();
+  });
+});
+
+describe('Builder schema list', () => {
+  it('lists schemas with one link line per queue that uses them', () => {
+    const items = [...root.querySelectorAll('[data-schema-id]')].map((e) =>
+      e.getAttribute('data-schema-id'),
+    );
+    expect(items).toEqual(['7', '8']);
+    expect(root.querySelectorAll('[data-link]').length).toBe(1);
+    expect(root.querySelector('[data-schema-id="7"]')!.getAttribute('aria-current')).toBe('true');
+  });
+
+  it('renaming the open schema is staged and undoable', () => {
+    act(() => {
+      (root.querySelector('[data-schema-id="7"] [data-edit]') as HTMLElement).click();
+    });
+    const input = root.querySelector('[data-schema-id="7"] input') as HTMLInputElement;
+    act(() => {
+      input.value = 'Invoice schema v2';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+    expect(store.draftName.value).toBe('Invoice schema v2');
+    expect(root.textContent).toContain('renamed');
+    act(() => {
+      (root.querySelector('[data-action="undo"]') as HTMLElement).click();
+    });
+    expect(store.draftName.value).toBe('Invoice schema');
   });
 });

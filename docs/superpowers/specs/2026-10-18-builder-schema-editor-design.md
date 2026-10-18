@@ -79,6 +79,19 @@ to them.
 Visual state per row: edited cells are highlighted (yellow in the mockups), new rows are marked
 NEW (green), deleted rows stay in place struck through until Save, with a one-click restore.
 
+### Schemas and their queues (added 2026-10-19)
+
+The left panel has two columns that scroll together: every schema in the org
+(`GET /schemas`, names kept, content dropped), then the queues grouped by workspace. A line
+joins each queue to the schema it uses, so a shared schema shows its fan-out; the open
+schema's lines are highlighted. Schemas are ordered by their first visible queue to keep
+lines from crossing; schemas no visible queue uses come last, dimmed. Clicking a schema
+opens it through its first queue.
+
+The open schema's name is editable in that column. A rename is staged like any other edit:
+the undo stack holds `{name, content}`, the toolbar counter says "renamed", and Save sends
+`{content, name}` in the same PATCH (name only when it changed). An empty name blocks Save.
+
 ### Annotation values (added 2026-10-19)
 
 A bar under the toolbar picks one annotation: a dropdown of the queue's 20 newest

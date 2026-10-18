@@ -8,18 +8,19 @@ import {
   workspaces,
   sharedCount,
   saving,
+  renamed,
+  draftName,
 } from '../store.js';
 import { undoChange, redoChange, discard } from '../index.jsx';
 import { canUndo, canRedo } from '../history.js';
 import s from './Builder.module.css';
 
-export function summaryText(x: {
-  added: number;
-  edited: number;
-  deleted: number;
-  moved: number;
-}): string {
+export function summaryText(
+  x: { added: number; edited: number; deleted: number; moved: number },
+  renamed = false,
+): string {
   return [
+    renamed && 'renamed',
     x.edited && `${x.edited} edited`,
     x.added && `${x.added} new`,
     x.deleted && `${x.deleted} deleted`,
@@ -32,12 +33,17 @@ export function summaryText(x: {
 export default function Toolbar({ onSave }: { onSave: () => void }) {
   const q = selectedQueue.value;
   const ws = workspaces.value.find((w) => w.url === q?.workspace);
-  const text = summaryText(summary.value);
+  const text = summaryText(summary.value, renamed.value);
   return (
     <div class={s.toolbar}>
       <span class={s.crumb}>
         {ws?.name || 'Workspace'} › <b>{q?.name}</b>
-        {schema.value && <span class={s.dim}> · schema #{schema.value.id}</span>}
+        {schema.value && (
+          <span class={s.dim}>
+            {' · '}
+            {draftName.value} #{schema.value.id}
+          </span>
+        )}
       </span>
       {sharedCount.value > 1 && (
         <span class={s.shared} title="Editing this schema changes every queue that uses it">

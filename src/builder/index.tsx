@@ -3,7 +3,7 @@
 // the history actions the screen calls, and Save.
 import * as api from './api.js';
 import * as store from './store.js';
-import { initHistory, push, undo, redo } from './history.js';
+import { push, undo, redo } from './history.js';
 import { withKeys, type Node } from './model.js';
 import { saveSchema, type SaveResult } from './save.js';
 import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
@@ -35,6 +35,18 @@ export async function initBuilder() {
     });
   }
   loadQueues();
+  loadSchemas();
+}
+
+// Names for the schema column. Separate from the queue list so a slow or failed schema
+// list never holds back the queues.
+export async function loadSchemas() {
+  try {
+    const all = await api.listSchemas();
+    store.schemas.value = all.map((x) => ({ id: x.id, url: x.url, name: x.name }));
+  } catch {
+    store.schemas.value = [];
+  }
 }
 
 export async function loadQueues() {
@@ -58,10 +70,8 @@ function idFromUrl(url: unknown): number | null {
 }
 
 function setBase(schema: any) {
-  const keyed = withKeys(schema?.content || []);
   store.schema.value = schema;
-  store.base.value = keyed;
-  store.history.value = initHistory(keyed);
+  store.startDraft(schema?.name ?? '', withKeys(schema?.content || []));
   store.rowErrors.value = new Map();
   store.generalErrors.value = [];
 }
@@ -101,7 +111,16 @@ export async function openQueue(id: number) {
 /** One user action = one history entry. */
 export function apply(next: Node[]) {
   if (next === store.work.value) return;
-  store.history.value = push(store.history.value, next);
+  store.history.value = push(store.history.value, {
+    ...store.history.value.present,
+    content: next,
+  });
+}
+
+/** Stage a new name for the open schema; it is sent with the next Save. */
+export function renameSchema(name: string) {
+  if (name === store.draftName.value) return;
+  store.history.value = push(store.history.value, { ...store.history.value.present, name });
 }
 
 export function undoChange() {
@@ -113,7 +132,7 @@ export function redoChange() {
 }
 
 export function discard() {
-  store.history.value = initHistory(store.base.value);
+  store.startDraft(store.baseName.value, store.base.value);
   store.rowErrors.value = new Map();
   store.generalErrors.value = [];
 }
@@ -131,6 +150,8 @@ export async function save(force = false): Promise<SaveResult | null> {
         baseModifiedAt: schema.modified_at ?? null,
         work: store.work.value,
         force,
+        name: store.draftName.value,
+        baseName: store.baseName.value,
       },
       api,
     );
@@ -143,6 +164,9 @@ export async function save(force = false): Promise<SaveResult | null> {
       }
     } else {
       setBase(r.schema);
+      store.schemas.value = store.schemas.value.map((x) =>
+        x.id === r.schema?.id ? { ...x, name: r.schema.name ?? x.name } : x,
+      );
       if (r.warnings.length) general.push(`Did not land as sent: ${r.warnings.join(', ')}`);
     }
     store.rowErrors.value = byRow;
