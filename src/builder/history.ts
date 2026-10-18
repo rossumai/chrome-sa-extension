@@ -14,7 +14,11 @@ export function push<T>(h: History<T>, v: T): History<T> {
 
 export function undo<T>(h: History<T>): History<T> {
   if (!h.past.length) return h;
-  return { past: h.past.slice(0, -1), present: h.past[h.past.length - 1], future: [h.present, ...h.future] };
+  return {
+    past: h.past.slice(0, -1),
+    present: h.past[h.past.length - 1],
+    future: [h.present, ...h.future],
+  };
 }
 
 export function redo<T>(h: History<T>): History<T> {

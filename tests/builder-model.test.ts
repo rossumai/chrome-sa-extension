@@ -58,7 +58,12 @@ function fixture(): any[] {
             id: 'line_item',
             label: 'Line item',
             children: [
-              { category: 'datapoint', id: 'item_description', label: 'Description', type: 'string' },
+              {
+                category: 'datapoint',
+                id: 'item_description',
+                label: 'Description',
+                type: 'string',
+              },
               { category: 'datapoint', id: 'item_amount', label: 'Amount', type: 'number' },
             ],
           },
@@ -148,7 +153,12 @@ describe('add / delete / move', () => {
     t = addField(t, keyOf(t, 'basic_info_section'), newDatapoint(nextKey(t), 'po', 'PO', 'string'));
     t = addField(t, keyOf(t, 'line_item'), newDatapoint(nextKey(t), 'qty', 'Qty', 'number'));
     const out = stripForSave(t);
-    expect(out[0].children.map((c: any) => c.id)).toEqual(['document_id', 'amount_check', 'gl_hint', 'po']);
+    expect(out[0].children.map((c: any) => c.id)).toEqual([
+      'document_id',
+      'amount_check',
+      'gl_hint',
+      'po',
+    ]);
     expect(out[1].children[0].children.children.map((c: any) => c.id)).toEqual([
       'item_description',
       'item_amount',
@@ -167,7 +177,12 @@ describe('add / delete / move', () => {
   it('adds a section at the end', () => {
     const t = withKeys(fixture());
     const out = stripForSave(addSection(t, newSection(nextKey(t), 'extra_section', 'Extra')));
-    expect(out[2]).toEqual({ category: 'section', id: 'extra_section', label: 'Extra', children: [] });
+    expect(out[2]).toEqual({
+      category: 'section',
+      id: 'extra_section',
+      label: 'Extra',
+      children: [],
+    });
   });
 
   it('soft-deleting a section marks every descendant deleted and drops it on save', () => {
@@ -182,9 +197,9 @@ describe('add / delete / move', () => {
       'item_amount',
     ]);
     expect(stripForSave(next).map((s: any) => s.id)).toEqual(['basic_info_section']);
-    expect(flatten(setDeleted(next, keyOf(t, 'line_items_section'), false)).some((r) => r.deleted)).toBe(
-      false,
-    );
+    expect(
+      flatten(setDeleted(next, keyOf(t, 'line_items_section'), false)).some((r) => r.deleted),
+    ).toBe(false);
   });
 
   it('moves a field to another section and a section to the top', () => {
@@ -215,7 +230,9 @@ describe('localErrors', () => {
 
   it('reports an empty id and an empty schema', () => {
     const t = withKeys(fixture());
-    expect(localErrors(setAttr(t, keyOf(t, 'document_id'), ['id'], ''))[0].key).toBe(keyOf(t, 'document_id'));
+    expect(localErrors(setAttr(t, keyOf(t, 'document_id'), ['id'], ''))[0].key).toBe(
+      keyOf(t, 'document_id'),
+    );
     let empty = setDeleted(t, keyOf(t, 'basic_info_section'), true);
     empty = setDeleted(empty, keyOf(t, 'line_items_section'), true);
     expect(localErrors(empty)).toEqual([{ key: null, message: 'The schema would be empty' }]);
@@ -225,7 +242,11 @@ describe('localErrors', () => {
 describe('rowStatus / changeSummary', () => {
   it('marks new, edited and deleted rows', () => {
     const base = withKeys(fixture());
-    let work = addField(base, keyOf(base, 'basic_info_section'), newDatapoint(nextKey(base), 'po', 'PO', 'string'));
+    let work = addField(
+      base,
+      keyOf(base, 'basic_info_section'),
+      newDatapoint(nextKey(base), 'po', 'PO', 'string'),
+    );
     const newKey = keyOf(work, 'po');
     work = setAttr(work, keyOf(base, 'document_id'), ['label'], 'Doc no.');
     work = setDeleted(work, keyOf(base, 'item_amount'), true);

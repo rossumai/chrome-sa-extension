@@ -128,7 +128,11 @@ export async function saveSchema(
     await deps.patchSchema(schemaId, content);
   } catch (err: any) {
     if (isRateLimited(err)) throw err;
-    return { ok: false, stage: 'patch', errors: [{ key: null, message: err?.message || 'Save failed' }] };
+    return {
+      ok: false,
+      stage: 'patch',
+      errors: [{ key: null, message: err?.message || 'Save failed' }],
+    };
   }
 
   const schema = await deps.getSchema(schemaId);

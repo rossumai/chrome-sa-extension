@@ -113,7 +113,12 @@ export async function save(force = false): Promise<SaveResult | null> {
   store.retryable.value = false;
   try {
     const r = await saveSchema(
-      { schemaId: schema.id, baseModifiedAt: schema.modified_at ?? null, work: store.work.value, force },
+      {
+        schemaId: schema.id,
+        baseModifiedAt: schema.modified_at ?? null,
+        work: store.work.value,
+        force,
+      },
       api,
     );
     const byRow = new Map<string, string[]>();

@@ -60,7 +60,10 @@ async function request(
     clearTimeout(timer);
   }
   if (res.status === 401) {
-    throw apiError('Session expired. Open a Rossum page and open the Console again to reconnect.', 401);
+    throw apiError(
+      'Session expired. Open a Rossum page and open the Console again to reconnect.',
+      401,
+    );
   }
   const data = await res.json().catch(() => null);
   if (!res.ok) {

@@ -49,7 +49,9 @@ describe('builder api', () => {
 
   it('listQueues follows pagination', async () => {
     fetchMock
-      .mockResolvedValueOnce(jsonRes({ results: [{ id: 1 }], pagination: { next: 'https://x.rossum.ai/p2' } }))
+      .mockResolvedValueOnce(
+        jsonRes({ results: [{ id: 1 }], pagination: { next: 'https://x.rossum.ai/p2' } }),
+      )
       .mockResolvedValueOnce(jsonRes({ results: [{ id: 2 }], pagination: { next: null } }));
     expect((await api.listQueues()).map((q) => q.id)).toEqual([1, 2]);
     expect(fetchMock.mock.calls[0][0]).toBe('https://x.rossum.ai/api/v1/queues/?page_size=100');

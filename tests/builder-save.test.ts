@@ -35,7 +35,10 @@ function deps(over: Record<string, any> = {}) {
 describe('mapValidateErrors', () => {
   it('maps a positional error to the right node', () => {
     const work = withKeys(fixture());
-    const errs = mapValidateErrors({ content: [{}, { children: { '1': { label: ['bad'] } } }] }, work);
+    const errs = mapValidateErrors(
+      { content: [{}, { children: { '1': { label: ['bad'] } } }] },
+      work,
+    );
     expect(errs).toEqual([{ key: keyOf(work, 'z'), message: 'label: bad' }]);
   });
 
@@ -55,14 +58,22 @@ describe('mapValidateErrors', () => {
           {
             category: 'multivalue',
             id: 'm',
-            children: { category: 'tuple', id: 't', children: [{ category: 'datapoint', id: 'c' }] },
+            children: {
+              category: 'tuple',
+              id: 't',
+              children: [{ category: 'datapoint', id: 'c' }],
+            },
           },
         ],
       },
     ]);
     const tree = {
       content: [
-        { children: { '0': { children: { children: { '0': { constraints: { required: ['nope'] } } } } } } },
+        {
+          children: {
+            '0': { children: { children: { '0': { constraints: { required: ['nope'] } } } } },
+          },
+        },
       ],
     };
     expect(mapValidateErrors(tree, work)).toEqual([
@@ -80,7 +91,14 @@ describe('mapValidateErrors', () => {
 describe('landedDiff', () => {
   it('ignores defaults the API injects but reports a dropped key', () => {
     const sent = [{ category: 'section', id: 's', children: [{ id: 'x', labell: 'typo' }] }];
-    const got = [{ category: 'section', id: 's', icon: null, children: [{ id: 'x', rir_field_names: [], default_value: null }] }];
+    const got = [
+      {
+        category: 'section',
+        id: 's',
+        icon: null,
+        children: [{ id: 'x', rir_field_names: [], default_value: null }],
+      },
+    ];
     expect(landedDiff(sent, got)).toEqual(['[0].children[0].labell']);
   });
 });
@@ -98,16 +116,24 @@ describe('saveSchema', () => {
   it('stops on validate errors without patching', async () => {
     const work = withKeys(fixture());
     const d = deps({
-      validateSchema: vi.fn(async () => ({ content: [{}, { children: { '1': { label: ['bad'] } } }] })),
+      validateSchema: vi.fn(async () => ({
+        content: [{}, { children: { '1': { label: ['bad'] } } }],
+      })),
     });
     const r = await saveSchema({ schemaId: 7, baseModifiedAt: 't0', work, force: false }, d);
-    expect(r).toEqual({ ok: false, stage: 'validate', errors: [{ key: keyOf(work, 'z'), message: 'label: bad' }] });
+    expect(r).toEqual({
+      ok: false,
+      stage: 'validate',
+      errors: [{ key: keyOf(work, 'z'), message: 'label: bad' }],
+    });
     expect(d.patchSchema).not.toHaveBeenCalled();
   });
 
   it('reports a stale schema unless forced', async () => {
     const work = withKeys(fixture());
-    const d = deps({ getSchema: vi.fn(async () => ({ id: 7, modified_at: 't1', content: fixture() })) });
+    const d = deps({
+      getSchema: vi.fn(async () => ({ id: 7, modified_at: 't1', content: fixture() })),
+    });
     const r = await saveSchema({ schemaId: 7, baseModifiedAt: 't0', work, force: false }, d);
     expect(r).toMatchObject({ ok: false, stage: 'stale' });
     const forced = await saveSchema({ schemaId: 7, baseModifiedAt: 't0', work, force: true }, d);
