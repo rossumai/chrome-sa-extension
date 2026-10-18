@@ -28,6 +28,14 @@ describe('queueGroups', () => {
   });
 });
 
+describe('queueGroups with empty workspaces', () => {
+  it('keeps an empty workspace unless a filter is set', () => {
+    const more = [...ws, { id: 3, url: 'w/3', name: 'New' }];
+    expect(queueGroups(more, qs, '').map((g) => g.ws.name)).toEqual(['AP', 'PO', 'New']);
+    expect(queueGroups(more, qs, 'orders').map((g) => g.ws.name)).toEqual(['PO']);
+  });
+});
+
 describe('orphanSchemas', () => {
   it('lists the schemas no queue uses, filtered by name', () => {
     expect(orphanSchemas(schemas, qs, '').map((x) => x.id)).toEqual([103]);

@@ -134,3 +134,24 @@ export function patchSchema(id: number, content: any[], name?: string): Promise<
     name === undefined ? { content } : { content, name },
   );
 }
+
+export function createWorkspace(name: string, organization: string): Promise<any> {
+  return request('POST', '/api/v1/workspaces/', { name, organization });
+}
+
+export function createSchema(name: string, content: any[]): Promise<any> {
+  return request('POST', '/api/v1/schemas/', { name, content });
+}
+
+export function createQueue(name: string, workspace: string, schema: string): Promise<any> {
+  return request('POST', '/api/v1/queues/', { name, workspace, schema });
+}
+
+/** Immediate and permanent: `delete_after=0` skips the API's default 24 h grace period. */
+export function deleteQueue(id: number): Promise<any> {
+  return request('DELETE', `/api/v1/queues/${id}?delete_after=0`);
+}
+
+export function deleteSchema(id: number): Promise<any> {
+  return request('DELETE', `/api/v1/schemas/${id}`);
+}

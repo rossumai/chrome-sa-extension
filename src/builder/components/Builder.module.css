@@ -7,8 +7,8 @@
 }
 
 .nav {
+  position: relative;
   flex: none;
-  width: 260px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -25,6 +25,9 @@
 }
 
 .groupTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin: 12px 0 2px;
   font-size: 11px;
   font-weight: 700;
@@ -46,7 +49,49 @@
   border-radius: 3px;
 }
 
+.navResizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 2;
+}
+
+.navResizer:hover {
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+}
+
+.navRow:hover {
+  background: var(--bg-hover);
+}
+
+.navRow .queue {
+  flex: 1;
+  min-width: 0;
+  background: none;
+}
+
+.rowDelete {
+  visibility: hidden;
+}
+
+.navRow:hover .rowDelete {
+  visibility: visible;
+}
+
 .wsName {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin: 10px 0 3px;
   font-size: 10px;
   font-weight: 600;
@@ -79,6 +124,19 @@
   background: var(--info-bg);
   color: var(--info-fg);
   font-weight: 600;
+}
+
+.queueOn .queue {
+  color: var(--info-fg);
+  font-weight: 600;
+}
+
+.wsName .linkBtn,
+.groupTitle .linkBtn {
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .main {

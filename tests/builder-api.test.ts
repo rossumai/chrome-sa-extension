@@ -83,4 +83,40 @@ describe('builder api', () => {
     await api.listSchemas();
     expect(fetchMock.mock.calls[0][0]).toBe('https://x.rossum.ai/api/v1/schemas/?page_size=100');
   });
+
+  it('creates a workspace, a schema and a queue with the right bodies', async () => {
+    fetchMock.mockResolvedValue(jsonRes({ id: 1, url: 'u' }));
+    await api.createWorkspace('AP', 'https://x.rossum.ai/api/v1/organizations/3');
+    await api.createSchema('Invoices', [{ id: 's' }]);
+    await api.createQueue('Invoices', 'w/1', 's/2');
+    const calls = fetchMock.mock.calls.map(([url, o]: any) => [url, o.method, JSON.parse(o.body)]);
+    expect(calls).toEqual([
+      [
+        'https://x.rossum.ai/api/v1/workspaces/',
+        'POST',
+        { name: 'AP', organization: 'https://x.rossum.ai/api/v1/organizations/3' },
+      ],
+      ['https://x.rossum.ai/api/v1/schemas/', 'POST', { name: 'Invoices', content: [{ id: 's' }] }],
+      [
+        'https://x.rossum.ai/api/v1/queues/',
+        'POST',
+        { name: 'Invoices', workspace: 'w/1', schema: 's/2' },
+      ],
+    ]);
+  });
+
+  it('deletes a queue immediately and a schema, accepting an empty 204 body', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 204,
+      headers: new Headers(),
+      json: () => Promise.reject(new Error('no body')),
+    });
+    await api.deleteQueue(4);
+    await api.deleteSchema(5);
+    expect(fetchMock.mock.calls.map(([url, o]: any) => [url, o.method])).toEqual([
+      ['https://x.rossum.ai/api/v1/queues/4?delete_after=0', 'DELETE'],
+      ['https://x.rossum.ai/api/v1/schemas/5', 'DELETE'],
+    ]);
+  });
 });

@@ -5,14 +5,17 @@ export type QueueGroup = { ws: any; qs: any[] };
 
 export function queueGroups(workspaces: any[], queues: any[], filter: string): QueueGroup[] {
   const f = filter.trim().toLowerCase();
-  return workspaces
-    .map((ws) => ({
-      ws,
-      qs: queues.filter(
-        (q) => q.workspace === ws.url && (!f || String(q.name).toLowerCase().includes(f)),
-      ),
-    }))
-    .filter((g) => g.qs.length);
+  return (
+    workspaces
+      .map((ws) => ({
+        ws,
+        qs: queues.filter(
+          (q) => q.workspace === ws.url && (!f || String(q.name).toLowerCase().includes(f)),
+        ),
+      }))
+      // An empty workspace stays visible (a new one has no queues yet) unless filtering.
+      .filter((g) => g.qs.length || !f)
+  );
 }
 
 /** Schemas that no queue uses (across ALL queues, not only the listed ones), by name. */

@@ -9,11 +9,24 @@ vi.mock('../src/builder/api.js', () => ({
   patchSchema: vi.fn(),
   getAnnotationContent: vi.fn(),
   listAnnotations: vi.fn(),
+  listWorkspaces: vi.fn(async () => []),
+  listQueues: vi.fn(async () => []),
+  listSchemas: vi.fn(async () => []),
+  createWorkspace: vi.fn(),
+  createSchema: vi.fn(),
+  createQueue: vi.fn(),
+  deleteQueue: vi.fn(),
+  deleteSchema: vi.fn(),
+  get: vi.fn(),
 }));
 import * as api from '../src/builder/api.js';
 import {
   openQueue,
   openSchema,
+  createWorkspace,
+  createQueue,
+  deleteQueue,
+  deleteSchema,
   save,
   pickAnnotation,
   renameSchema,
@@ -137,5 +150,76 @@ describe('openSchema / annotation labels', () => {
       'invoice.pdf (5) · to_review',
       'annotation (6) · exported',
     ]);
+  });
+});
+
+describe('create and delete', () => {
+  beforeEach(() => {
+    for (const f of [
+      'createWorkspace',
+      'createSchema',
+      'createQueue',
+      'deleteQueue',
+      'deleteSchema',
+    ] as const) {
+      vi.mocked(api[f]).mockReset();
+    }
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 99, content: section('x') });
+    store.workspaces.value = [{ id: 10, url: 'w/10', name: 'AP', organization: 'o/1' }];
+  });
+
+  it('creates a workspace in the organization of the existing ones', async () => {
+    vi.mocked(api.createWorkspace).mockResolvedValue({ id: 11 });
+    await createWorkspace('PO');
+    expect(api.createWorkspace).toHaveBeenCalledWith('PO', 'o/1');
+  });
+
+  it('a queue with a copied schema creates the schema from the SAVED content first', async () => {
+    store.schema.value = { id: 7, name: 'Inv', url: 's/7', content: section('saved') };
+    store.startDraft('Inv', withKeys(section('saved')));
+    vi.mocked(api.createSchema).mockResolvedValue({ id: 70, url: 's/70' });
+    vi.mocked(api.createQueue).mockResolvedValue({ id: 5, schema: 's/70' });
+    await createQueue({ name: 'Inv 2', workspaceUrl: 'w/10', mode: 'copy' });
+    expect(api.createSchema).toHaveBeenCalledWith('Inv 2', section('saved'));
+    expect(api.createQueue).toHaveBeenCalledWith('Inv 2', 'w/10', 's/70');
+  });
+
+  it('a queue sharing a schema creates no schema', async () => {
+    vi.mocked(api.createQueue).mockResolvedValue({ id: 5, schema: 's/7' });
+    await createQueue({ name: 'Inv 3', workspaceUrl: 'w/10', mode: 'share', schemaUrl: 's/7' });
+    expect(api.createSchema).not.toHaveBeenCalled();
+    expect(api.createQueue).toHaveBeenCalledWith('Inv 3', 'w/10', 's/7');
+  });
+
+  it('a queue with an empty schema gets one empty section', async () => {
+    vi.mocked(api.createSchema).mockResolvedValue({ id: 71, url: 's/71' });
+    vi.mocked(api.createQueue).mockResolvedValue({ id: 6, schema: 's/71' });
+    await createQueue({ name: 'Fresh', workspaceUrl: 'w/10', mode: 'empty' });
+    expect(api.createSchema).toHaveBeenCalledWith('Fresh', [
+      { category: 'section', id: 'basic_info_section', label: 'Basic information', children: [] },
+    ]);
+  });
+
+  it('deleting a queue asks first, then deletes and clears it when it was open', async () => {
+    store.queues.value = [{ id: 1, name: 'A', schema: 's/7' }];
+    store.selectedQueueId.value = 1;
+    const ask = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
+    await deleteQueue(1);
+    expect(api.deleteQueue).not.toHaveBeenCalled();
+    ask.mockReturnValueOnce(true);
+    await deleteQueue(1);
+    expect(ask.mock.calls[1][0]).toContain('A (1)');
+    expect(api.deleteQueue).toHaveBeenCalledWith(1);
+    expect(store.selectedQueueId.value).toBeNull();
+    ask.mockRestore();
+  });
+
+  it('deleting a schema asks first and calls the API', async () => {
+    store.schemas.value = [{ id: 8, url: 's/8', name: 'Old' }];
+    const ask = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    await deleteSchema(8);
+    expect(ask.mock.calls[0][0]).toContain('Old (8)');
+    expect(api.deleteSchema).toHaveBeenCalledWith(8);
+    ask.mockRestore();
   });
 });

@@ -337,3 +337,35 @@ describe('Builder schema rename', () => {
     expect(store.draftName.value).toBe('Invoice schema');
   });
 });
+
+describe('Builder panel width', () => {
+  it('dragging the panel edge resizes it and remembers the width', () => {
+    const nav = root.querySelector('nav') as HTMLElement;
+    const before = parseInt(nav.style.width, 10);
+    const handle = root.querySelector('[data-resize="nav"]') as HTMLElement;
+    act(() => {
+      handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 200, bubbles: true }));
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 280 }));
+      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 280 }));
+    });
+    expect(parseInt(nav.style.width, 10)).toBe(before + 80);
+    expect(chromeSet).toHaveBeenCalledWith({ builderNavWidth: before + 80 });
+  });
+
+  it('has create buttons for workspaces and queues, and delete buttons', () => {
+    expect(root.querySelector('[data-action="new-workspace"]')).not.toBeNull();
+    expect(root.querySelector('[data-action="new-queue"]')).not.toBeNull();
+    expect(root.querySelector('[data-action="delete-queue"][data-queue="1"]')).not.toBeNull();
+    expect(root.querySelector('[data-action="delete-schema"][data-schema="8"]')).not.toBeNull();
+  });
+
+  it('+ Queue opens a dialog with the three schema choices', () => {
+    act(() => {
+      (root.querySelector('[data-action="new-queue"]') as HTMLElement).click();
+    });
+    const modes = [...root.querySelectorAll('[role="dialog"] input[name="schema-mode"]')].map(
+      (e) => (e as HTMLInputElement).value,
+    );
+    expect(modes).toEqual(['copy', 'share', 'empty']);
+  });
+});

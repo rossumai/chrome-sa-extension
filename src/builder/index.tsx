@@ -243,3 +243,117 @@ export async function pickAnnotation(input: string) {
       : err?.message || 'Failed to load the annotation';
   }
 }
+
+// ---- Creating and deleting workspaces, queues and schemas -------------------------------
+// These act at once, after a confirmation for deletes: they are not staged with Save.
+
+async function refreshLists() {
+  await Promise.all([loadQueues(), loadSchemas()]);
+}
+
+// The organization a new workspace belongs to: the one the existing workspaces are in, or
+// the org list's only entry. auth/user's organization is the user's HOME org, which can
+// differ (see src/rossum/orgName.ts), so it is not used.
+async function organizationUrl(): Promise<string> {
+  const known = store.workspaces.value.find((w) => w.organization)?.organization;
+  if (known) return known;
+  const page = await api.get('/api/v1/organizations/');
+  const orgs = page?.results || [];
+  if (orgs.length === 1) return orgs[0].url;
+  throw new Error('Could not tell which organization to create the workspace in');
+}
+
+export async function createWorkspace(name: string): Promise<boolean> {
+  try {
+    await api.createWorkspace(name, await organizationUrl());
+    await refreshLists();
+    return true;
+  } catch (err: any) {
+    fail(err, 'Failed to create the workspace');
+    return false;
+  }
+}
+
+export type NewQueue = {
+  name: string;
+  workspaceUrl: string;
+  mode: 'copy' | 'share' | 'empty';
+  schemaUrl?: string;
+};
+
+export function emptySchemaContent(): any[] {
+  return [
+    { category: 'section', id: 'basic_info_section', label: 'Basic information', children: [] },
+  ];
+}
+
+/** Copy = the open schema as last SAVED (staged edits are not copied). */
+export async function createQueue(p: NewQueue): Promise<boolean> {
+  let created: any = null;
+  try {
+    let schemaUrl = p.schemaUrl;
+    if (p.mode === 'copy') {
+      const content = store.schema.value?.content;
+      if (!content) throw new Error('Open a schema first to copy it');
+      created = await api.createSchema(p.name, content);
+      schemaUrl = created.url;
+    } else if (p.mode === 'empty') {
+      created = await api.createSchema(p.name, emptySchemaContent());
+      schemaUrl = created.url;
+    }
+    if (!schemaUrl) throw new Error('Pick a schema for the new queue');
+    let queue: any;
+    try {
+      queue = await api.createQueue(p.name, p.workspaceUrl, schemaUrl);
+    } catch (err: any) {
+      if (created) {
+        err.message = `${err.message} — the schema "${p.name}" (${created.id}) was created and is now listed without a queue`;
+      }
+      throw err;
+    }
+    await refreshLists();
+    if (queue?.id != null) await openQueue(queue.id);
+    return true;
+  } catch (err: any) {
+    await refreshLists().catch(() => {});
+    fail(err, 'Failed to create the queue');
+    return false;
+  }
+}
+
+function closeEditor() {
+  openSeq++;
+  store.selectedQueueId.value = null;
+  store.selectedSchemaId.value = null;
+  store.schema.value = null;
+  store.startDraft('', []);
+  clearAnnotation();
+}
+
+export async function deleteQueue(id: number) {
+  const q = store.queues.value.find((x) => x.id === id);
+  const open = store.selectedQueueId.value === id;
+  const lose = open && store.dirty.value ? ' Your staged schema changes are lost.' : '';
+  const msg = `Delete queue ${q?.name ?? 'queue'} (${id}) now? This cannot be undone. Its schema is kept.${lose}`;
+  if (!confirm(msg)) return;
+  try {
+    await api.deleteQueue(id);
+    if (open) closeEditor();
+    await refreshLists();
+  } catch (err: any) {
+    fail(err, 'Failed to delete the queue');
+  }
+}
+
+export async function deleteSchema(id: number) {
+  const x = store.schemas.value.find((y) => y.id === id);
+  const open = store.selectedSchemaId.value === id;
+  if (!confirm(`Delete schema ${x?.name ?? 'schema'} (${id}) now? This cannot be undone.`)) return;
+  try {
+    await api.deleteSchema(id);
+    if (open) closeEditor();
+    await refreshLists();
+  } catch (err: any) {
+    fail(err, 'Failed to delete the schema');
+  }
+}
