@@ -528,7 +528,8 @@
 .value {
   font-family: ui-monospace, Menlo, monospace;
   font-size: 12px;
-  color: var(--text-code);
+  color: var(--success);
+  border-left: 1px solid var(--border);
 }
 
 .stepper {

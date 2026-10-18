@@ -238,11 +238,7 @@ function Row({
       <td data-col="label">
         <EditableCell value={String(node.label ?? '')} onCommit={(v) => edit(key, ['label'], v)} />
       </td>
-      {values.value && (
-        <td data-col="value" class={s.value}>
-          <ValueCell node={node} tableId={tableId} />
-        </td>
-      )}
+      <td data-col="source">{dp ? <SourceCell node={node} /> : null}</td>
       <td data-col="type">
         {dp ? (
           <TypeCell node={node} />
@@ -252,7 +248,6 @@ function Row({
           </span>
         )}
       </td>
-      <td data-col="source">{dp ? <SourceCell node={node} /> : null}</td>
       <td data-col="flags">
         <span class={s.flags}>
           <span data-col="required" title="Required">
@@ -306,6 +301,11 @@ function Row({
           </button>
         ) : null}
       </td>
+      {values.value && (
+        <td data-col="value" class={s.value}>
+          <ValueCell node={node} tableId={tableId} />
+        </td>
+      )}
     </tr>
   );
 }
@@ -365,7 +365,7 @@ function renderNode(
 }
 
 const WIDTHS_KEY = 'builderColumnWidths';
-const ALL_COLS = ['id', 'label', 'value', 'type', 'source', 'flags'];
+const COLS = ['id', 'label', 'source', 'type', 'flags'];
 const DEFAULT_WIDTHS: Record<string, number> = {
   id: 220,
   label: 200,
@@ -426,31 +426,31 @@ const HEAD: Record<string, any> = {
 export default function Grid() {
   useEffect(loadWidths, []);
   const w = widths.value;
-  const cols = ALL_COLS.filter((c) => c !== 'value' || values.value);
+  // The annotation's values go after every editing column, the row actions included.
+  const cols = values.value ? [...COLS, 'value'] : COLS;
   const total = 22 + 60 + cols.reduce((sum, c) => sum + w[c], 0);
+  const head = (c: string) => (
+    <th data-col={c} class={s.resizable}>
+      {HEAD[c]}
+      <span class={s.resizer} data-resize="" onMouseDown={(e) => startResize(c, e as MouseEvent)} />
+    </th>
+  );
   return (
     <table class={s.grid} style={{ width: `${total}px` }}>
       <colgroup>
         <col style={{ width: '22px' }} />
-        {cols.map((c) => (
+        {COLS.map((c) => (
           <col data-col={c} style={{ width: `${w[c]}px` }} />
         ))}
         <col style={{ width: '60px' }} />
+        {values.value && <col data-col="value" style={{ width: `${w.value}px` }} />}
       </colgroup>
       <thead>
         <tr>
           <th />
-          {cols.map((c) => (
-            <th data-col={c} class={s.resizable}>
-              {HEAD[c]}
-              <span
-                class={s.resizer}
-                data-resize=""
-                onMouseDown={(e) => startResize(c, e as MouseEvent)}
-              />
-            </th>
-          ))}
+          {COLS.map(head)}
           <th />
+          {values.value && head('value')}
         </tr>
       </thead>
       <tbody>

@@ -92,7 +92,7 @@ describe('Builder screen', () => {
     const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
       th.getAttribute('data-col'),
     );
-    expect(heads).toEqual(['id', 'label', 'type', 'source', 'flags']);
+    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags']);
     const flags = row('doc_id').querySelector('td[data-col="flags"]')!;
     expect(
       [...flags.querySelectorAll('[data-col]')].map((e) => e.getAttribute('data-col')),
@@ -243,7 +243,7 @@ describe('Builder annotation values', () => {
     const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
       th.getAttribute('data-col'),
     );
-    expect(heads).toEqual(['id', 'label', 'value', 'type', 'source', 'flags']);
+    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'value']);
   });
 
   it('shows header values, a row count on the table, and steps through table rows', () => {
@@ -256,5 +256,21 @@ describe('Builder annotation values', () => {
       (row('items').querySelector('[data-action="next-row"]') as HTMLElement).click();
     });
     expect(value('item_desc')).toBe('Nuts');
+  });
+
+  it('puts the value cell last in the row', () => {
+    pick();
+    const cells = [...row('doc_id').children];
+    expect(cells[cells.length - 1].getAttribute('data-col')).toBe('value');
+  });
+
+  it('the x button clears the picked annotation', () => {
+    pick();
+    act(() => {
+      (root.querySelector('[data-action="clear-annotation"]') as HTMLElement).click();
+    });
+    expect(store.annotationId.value).toBeNull();
+    expect(root.querySelector('th[data-col="value"]')).toBeNull();
+    expect(root.querySelector('[data-action="clear-annotation"]')).toBeNull();
   });
 });

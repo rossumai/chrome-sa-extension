@@ -38,6 +38,17 @@ export default function AnnotationPicker() {
         }}
       />
       {id != null && !listed && <span>annotation {id}</span>}
+      {id != null && (
+        <button
+          type="button"
+          class={s.iconBtn}
+          data-action="clear-annotation"
+          title="Stop showing annotation values"
+          onClick={clearAnnotation}
+        >
+          ✕
+        </button>
+      )}
       {id != null && !values.value && !annotationError.value && <span class={s.dim}>Loading…</span>}
       {annotationError.value && <span class={s.warn}>{annotationError.value}</span>}
     </div>
