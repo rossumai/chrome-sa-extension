@@ -1,7 +1,7 @@
 import { h } from 'preact';
 import { signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
-import { work, status, rowErrors, selectedKey } from '../store.js';
+import { work, status, rowErrors, selectedKey, values, lineRow } from '../store.js';
 import { apply } from '../index.jsx';
 import {
   setAttr,
@@ -122,7 +122,64 @@ function TypeCell({ node }: { node: Node }) {
   );
 }
 
-function Row({ node, depth, deleted }: { node: Node; depth: number; deleted: boolean }) {
+// The picked annotation's value for this row. A table column shows the row the table's
+// stepper points at; the table row itself shows its row count and the stepper.
+function ValueCell({ node, tableId }: { node: Node; tableId: string | null }) {
+  const v = values.value!;
+  if (node.category === 'multivalue') {
+    const n = v.rows.get(node.id) ?? 0;
+    const at = Math.min(lineRow.value[node.id] ?? 0, Math.max(0, n - 1));
+    const go = (d: number) => (e: Event) => {
+      e.stopPropagation();
+      lineRow.value = { ...lineRow.value, [node.id]: at + d };
+    };
+    return (
+      <span class={s.stepper}>
+        {n} rows
+        {n > 1 && (
+          <span>
+            <button
+              type="button"
+              class={s.iconBtn}
+              data-action="prev-row"
+              disabled={at === 0}
+              onClick={go(-1)}
+            >
+              ‹
+            </button>
+            {at + 1}/{n}
+            <button
+              type="button"
+              class={s.iconBtn}
+              data-action="next-row"
+              disabled={at >= n - 1}
+              onClick={go(1)}
+            >
+              ›
+            </button>
+          </span>
+        )}
+      </span>
+    );
+  }
+  if (node.category !== 'datapoint') return null;
+  const list = v.values.get(node.id);
+  const val = list?.[tableId ? (lineRow.value[tableId] ?? 0) : 0];
+  if (val === undefined) return <span class={s.dim}>—</span>;
+  return <span title={val}>{val}</span>;
+}
+
+function Row({
+  node,
+  depth,
+  deleted,
+  tableId,
+}: {
+  node: Node;
+  depth: number;
+  deleted: boolean;
+  tableId: string | null;
+}) {
   const key = node.__key;
   const st = status.value.get(key);
   const errs = rowErrors.value.get(key);
@@ -181,6 +238,11 @@ function Row({ node, depth, deleted }: { node: Node; depth: number; deleted: boo
       <td data-col="label">
         <EditableCell value={String(node.label ?? '')} onCommit={(v) => edit(key, ['label'], v)} />
       </td>
+      {values.value && (
+        <td data-col="value" class={s.value}>
+          <ValueCell node={node} tableId={tableId} />
+        </td>
+      )}
       <td data-col="type">
         {dp ? (
           <TypeCell node={node} />
@@ -252,7 +314,7 @@ function AddRow({ parentKey, depth, label }: { parentKey: string; depth: number;
   return (
     <tr class={s.addRow}>
       <td />
-      <td colSpan={6} style={{ paddingLeft: `${6 + depth * 16}px` }}>
+      <td colSpan={values.value ? 7 : 6} style={{ paddingLeft: `${6 + depth * 16}px` }}>
         <button
           type="button"
           class={s.linkBtn}
@@ -267,10 +329,18 @@ function AddRow({ parentKey, depth, label }: { parentKey: string; depth: number;
   );
 }
 
-function renderNode(node: Node, depth: number, parentDeleted: boolean): any[] {
+function renderNode(
+  node: Node,
+  depth: number,
+  parentDeleted: boolean,
+  tableId: string | null = null,
+): any[] {
   const deleted = parentDeleted || !!node.__deleted;
-  const out: any[] = [<Row key={node.__key} node={node} depth={depth} deleted={deleted} />];
-  for (const c of kids(node)) out.push(...renderNode(c, depth + 1, deleted));
+  const out: any[] = [
+    <Row key={node.__key} node={node} depth={depth} deleted={deleted} tableId={tableId} />,
+  ];
+  const childTable = node.category === 'multivalue' ? node.id : tableId;
+  for (const c of kids(node)) out.push(...renderNode(c, depth + 1, deleted, childTable));
   if (!deleted && node.category === 'section') {
     out.push(
       <AddRow
@@ -295,13 +365,14 @@ function renderNode(node: Node, depth: number, parentDeleted: boolean): any[] {
 }
 
 const WIDTHS_KEY = 'builderColumnWidths';
-const RESIZABLE = ['id', 'label', 'type', 'source', 'flags'] as const;
+const ALL_COLS = ['id', 'label', 'value', 'type', 'source', 'flags'];
 const DEFAULT_WIDTHS: Record<string, number> = {
   id: 220,
   label: 200,
   type: 90,
   source: 110,
   flags: 110,
+  value: 180,
 };
 const MIN_WIDTH = 50;
 const widths = signal<Record<string, number>>({ ...DEFAULT_WIDTHS });
@@ -340,6 +411,7 @@ function startResize(col: string, e: MouseEvent) {
 const HEAD: Record<string, any> = {
   id: 'ID',
   label: 'Label',
+  value: 'Value',
   type: 'Type',
   source: 'Source',
   flags: (
@@ -354,12 +426,13 @@ const HEAD: Record<string, any> = {
 export default function Grid() {
   useEffect(loadWidths, []);
   const w = widths.value;
-  const total = 22 + 60 + RESIZABLE.reduce((sum, c) => sum + w[c], 0);
+  const cols = ALL_COLS.filter((c) => c !== 'value' || values.value);
+  const total = 22 + 60 + cols.reduce((sum, c) => sum + w[c], 0);
   return (
     <table class={s.grid} style={{ width: `${total}px` }}>
       <colgroup>
         <col style={{ width: '22px' }} />
-        {RESIZABLE.map((c) => (
+        {cols.map((c) => (
           <col data-col={c} style={{ width: `${w[c]}px` }} />
         ))}
         <col style={{ width: '60px' }} />
@@ -367,7 +440,7 @@ export default function Grid() {
       <thead>
         <tr>
           <th />
-          {RESIZABLE.map((c) => (
+          {cols.map((c) => (
             <th data-col={c} class={s.resizable}>
               {HEAD[c]}
               <span
@@ -383,7 +456,7 @@ export default function Grid() {
       <tbody>
         {work.value.flatMap((n) => renderNode(n, 0, false))}
         <tr class={s.addSectionRow}>
-          <td colSpan={7}>
+          <td colSpan={cols.length + 2}>
             <button
               type="button"
               class={s.linkBtn}

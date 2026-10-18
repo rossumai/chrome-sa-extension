@@ -15,6 +15,7 @@ import Toolbar from './Toolbar.jsx';
 import Grid from './Grid.jsx';
 import Inspector from './Inspector.jsx';
 import SaveDialog from './SaveDialog.jsx';
+import AnnotationPicker from './AnnotationPicker.jsx';
 import s from './Builder.module.css';
 
 function inField(t: EventTarget | null): boolean {
@@ -88,6 +89,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         ) : (
           <div class={s.editor}>
             <Toolbar onSave={() => setSaveOpen(true)} />
+            <AnnotationPicker />
             <div class={s.body}>
               <div class={s.gridWrap}>
                 <Grid />

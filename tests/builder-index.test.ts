@@ -8,9 +8,10 @@ vi.mock('../src/builder/api.js', () => ({
   getSchema: vi.fn(),
   validateSchema: vi.fn(),
   patchSchema: vi.fn(),
+  getAnnotationContent: vi.fn(),
 }));
 import * as api from '../src/builder/api.js';
-import { openQueue, save } from '../src/builder/index.jsx';
+import { openQueue, save, pickAnnotation } from '../src/builder/index.jsx';
 
 const section = (id: string) => [{ category: 'section', id, label: id, children: [] }];
 
@@ -60,5 +61,24 @@ describe('save', () => {
     vi.mocked(api.patchSchema).mockResolvedValue({});
     await save();
     expect(store.generalErrors.value.join(' ')).toContain('[0].label');
+  });
+});
+
+describe('pickAnnotation', () => {
+  it('reads the id out of a pasted Rossum URL and loads its values', async () => {
+    vi.mocked(api.getAnnotationContent).mockResolvedValue({
+      content: [{ category: 'datapoint', schema_id: 'doc_id', content: { value: 'INV-9' } }],
+    });
+    await pickAnnotation('https://example.rossum.app/document/4242');
+    expect(api.getAnnotationContent).toHaveBeenCalledWith(4242);
+    expect(store.annotationId.value).toBe(4242);
+    expect(store.values.value!.values.get('doc_id')).toEqual(['INV-9']);
+  });
+
+  it('rejects input that is not an annotation id or URL', async () => {
+    vi.mocked(api.getAnnotationContent).mockClear();
+    await pickAnnotation('hello');
+    expect(store.annotationError.value).toBe('Not an annotation ID or URL');
+    expect(api.getAnnotationContent).not.toHaveBeenCalled();
   });
 });

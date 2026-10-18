@@ -107,6 +107,17 @@ export function getSchema(id: number): Promise<any> {
   return get(`/api/v1/schemas/${id}`);
 }
 
+/** One page: the queue's 20 newest annotations, with their documents sideloaded for names. */
+export function listAnnotations(queueId: number): Promise<any> {
+  return get(
+    `/api/v1/annotations/?queue=${queueId}&ordering=-created_at&page_size=20&sideload=documents`,
+  );
+}
+
+export function getAnnotationContent(id: number): Promise<any> {
+  return get(`/api/v1/annotations/${id}/content`);
+}
+
 /** Returns the body as is: `{}` means valid. The endpoint answers 200 either way. */
 export function validateSchema(id: number, content: any[]): Promise<any> {
   return request('POST', '/api/v1/schemas/validate', { id, content });

@@ -56,4 +56,19 @@ describe('builder api', () => {
     expect((await api.listQueues()).map((q) => q.id)).toEqual([1, 2]);
     expect(fetchMock.mock.calls[0][0]).toBe('https://x.rossum.ai/api/v1/queues/?page_size=100');
   });
+
+  it('listAnnotations asks for the 20 newest in the queue with their documents', async () => {
+    fetchMock.mockResolvedValue(jsonRes({ results: [{ id: 5 }], documents: [{ id: 9 }] }));
+    const out = await api.listAnnotations(3);
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://x.rossum.ai/api/v1/annotations/?queue=3&ordering=-created_at&page_size=20&sideload=documents',
+    );
+    expect(out).toEqual({ results: [{ id: 5 }], documents: [{ id: 9 }] });
+  });
+
+  it('getAnnotationContent reads the content sub-resource', async () => {
+    fetchMock.mockResolvedValue(jsonRes({ content: [] }));
+    await api.getAnnotationContent(5);
+    expect(fetchMock.mock.calls[0][0]).toBe('https://x.rossum.ai/api/v1/annotations/5/content');
+  });
 });

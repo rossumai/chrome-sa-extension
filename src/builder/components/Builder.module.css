@@ -524,3 +524,32 @@
 .warn {
   color: var(--warning-fg);
 }
+
+.value {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+  color: var(--text-code);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+
+.pickBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.pickBar .select,
+.pickBar .input {
+  width: auto;
+  max-width: 360px;
+}

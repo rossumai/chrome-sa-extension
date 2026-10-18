@@ -79,6 +79,17 @@ to them.
 Visual state per row: edited cells are highlighted (yellow in the mockups), new rows are marked
 NEW (green), deleted rows stay in place struck through until Save, with a one-click restore.
 
+### Annotation values (added 2026-10-19)
+
+A bar under the toolbar picks one annotation: a dropdown of the queue's 20 newest
+(`GET /annotations?queue=…&ordering=-created_at&page_size=20&sideload=documents`), or any
+pasted annotation ID or URL (parsed by `src/rossum/annotationUrl.ts`). Picking one adds a
+read-only **Value** column after Label, filled from `GET /annotations/{id}/content`:
+header fields show their value, a table row shows "N rows" with a ‹ › stepper, and each
+table column shows its value in the stepped-to row. A field with no value in that
+annotation (e.g. one just added) shows "—". The column is absent until an annotation is
+picked.
+
 ### Adding and removing
 
 - Each section ends with a **+ Add field** row. It inserts an empty row in place; the user types

@@ -6,6 +6,7 @@ import App from '../src/builder/components/App.jsx';
 import * as store from '../src/builder/store.js';
 import { withKeys, flatten } from '../src/builder/model.js';
 import { initHistory } from '../src/builder/history.js';
+import { annotationValues } from '../src/builder/values.js';
 
 function content(): any[] {
   return [
@@ -77,6 +78,9 @@ beforeEach(() => {
   store.history.value = initHistory(keyed);
   store.selectedKey.value = null;
   store.rowErrors.value = new Map();
+  store.annotationId.value = null;
+  store.values.value = null;
+  store.lineRow.value = {};
   act(() => {
     render(<App connected={true} />, root);
   });
@@ -198,5 +202,59 @@ describe('Builder keyboard and dialog', () => {
     });
     expect(root.querySelector('[role="dialog"]')).not.toBeNull();
     store.saving.value = false;
+  });
+});
+
+describe('Builder annotation values', () => {
+  function pick() {
+    act(() => {
+      store.annotationId.value = 55;
+      store.values.value = annotationValues([
+        {
+          category: 'section',
+          schema_id: 'basic_section',
+          children: [{ category: 'datapoint', schema_id: 'doc_id', content: { value: 'INV-1' } }],
+        },
+        {
+          category: 'section',
+          schema_id: 'items_section',
+          children: [
+            {
+              category: 'multivalue',
+              schema_id: 'items',
+              children: ['Bolts', 'Nuts'].map((v) => ({
+                category: 'tuple',
+                schema_id: 'item',
+                children: [
+                  { category: 'datapoint', schema_id: 'item_desc', content: { value: v } },
+                ],
+              })),
+            },
+          ],
+        },
+      ]);
+    });
+  }
+  const value = (id: string) => row(id).querySelector('td[data-col="value"]')!.textContent;
+
+  it('has no Value column until an annotation is picked', () => {
+    expect(root.querySelector('th[data-col="value"]')).toBeNull();
+    pick();
+    const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
+      th.getAttribute('data-col'),
+    );
+    expect(heads).toEqual(['id', 'label', 'value', 'type', 'source', 'flags']);
+  });
+
+  it('shows header values, a row count on the table, and steps through table rows', () => {
+    pick();
+    expect(value('doc_id')).toBe('INV-1');
+    expect(value('vendor')).toBe('—');
+    expect(row('items').querySelector('td[data-col="value"]')!.textContent).toContain('2 rows');
+    expect(value('item_desc')).toBe('Bolts');
+    act(() => {
+      (row('items').querySelector('[data-action="next-row"]') as HTMLElement).click();
+    });
+    expect(value('item_desc')).toBe('Nuts');
   });
 });

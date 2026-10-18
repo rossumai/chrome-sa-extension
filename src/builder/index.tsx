@@ -7,6 +7,8 @@ import { initHistory, push, undo, redo } from './history.js';
 import { withKeys, type Node } from './model.js';
 import { saveSchema, type SaveResult } from './save.js';
 import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
+import { annotationIdFromInput } from '../rossum/annotationUrl.js';
+import { annotationValues } from './values.js';
 
 function fail(err: any, fallback: string) {
   store.error.value = isRateLimited(err) ? rateLimitMessage(err) : err?.message || fallback;
@@ -72,6 +74,8 @@ export async function openQueue(id: number) {
   if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
   const seq = ++openSeq;
   store.selectedQueueId.value = id;
+  clearAnnotation();
+  store.annotations.value = [];
   store.selectedKey.value = null;
   store.schema.value = null;
   store.loading.value = true;
@@ -84,6 +88,7 @@ export async function openQueue(id: number) {
     const schema = await api.getSchema(schemaId);
     if (seq !== openSeq) return;
     setBase(schema);
+    loadAnnotations(id);
   } catch (err: any) {
     if (seq !== openSeq) return;
     setBase(null);
@@ -148,5 +153,60 @@ export async function save(force = false): Promise<SaveResult | null> {
     return null;
   } finally {
     store.saving.value = false;
+  }
+}
+
+function annotationLabel(a: any, docs: Map<string, any>): string {
+  const name = docs.get(a.document)?.original_file_name;
+  return `${a.id}${name ? ` · ${name}` : ''} · ${a.status}`;
+}
+
+// Fills the picker. A failure leaves it empty; pasting an ID still works.
+async function loadAnnotations(queueId: number) {
+  try {
+    const page = await api.listAnnotations(queueId);
+    if (store.selectedQueueId.value !== queueId) return;
+    const docs = new Map<string, any>((page?.documents || []).map((d: any) => [d.url, d]));
+    store.annotations.value = (page?.results || []).map((a: any) => ({
+      id: a.id,
+      label: annotationLabel(a, docs),
+    }));
+  } catch {
+    store.annotations.value = [];
+  }
+}
+
+let pickSeq = 0;
+
+export function clearAnnotation() {
+  pickSeq++;
+  store.annotationId.value = null;
+  store.values.value = null;
+  store.lineRow.value = {};
+  store.annotationError.value = null;
+}
+
+/** Accepts an annotation id, a Rossum annotation/document URL, or an API URL. */
+export async function pickAnnotation(input: string) {
+  const raw = annotationIdFromInput(input);
+  if (!raw) {
+    store.annotationError.value = 'Not an annotation ID or URL';
+    return;
+  }
+  const id = Number(raw);
+  const seq = ++pickSeq;
+  store.annotationId.value = id;
+  store.annotationError.value = null;
+  store.lineRow.value = {};
+  try {
+    const data = await api.getAnnotationContent(id);
+    if (seq !== pickSeq) return;
+    store.values.value = annotationValues(data?.content || []);
+  } catch (err: any) {
+    if (seq !== pickSeq) return;
+    store.values.value = null;
+    store.annotationError.value = isRateLimited(err)
+      ? rateLimitMessage(err)
+      : err?.message || 'Failed to load the annotation';
   }
 }
