@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { signal } from '@preact/signals';
+import { useEffect } from 'preact/hooks';
 import { work, status, rowErrors, selectedKey } from '../store.js';
 import { apply } from '../index.jsx';
 import {
@@ -190,26 +191,30 @@ function Row({ node, depth, deleted }: { node: Node; depth: number; deleted: boo
         )}
       </td>
       <td data-col="source">{dp ? <SourceCell node={node} /> : null}</td>
-      <td data-col="required" class={s.center}>
-        {dp && (
-          <Switch
-            checked={!!node.constraints?.required}
-            onChange={(v) => edit(key, ['constraints', 'required'], v)}
-          />
-        )}
-      </td>
-      <td data-col="visible" class={s.center}>
-        {(dp || kind === 'multivalue') && (
-          <Switch checked={!node.hidden} onChange={(v) => edit(key, ['hidden'], !v)} />
-        )}
-      </td>
-      <td data-col="export" class={s.center}>
-        {dp && (
-          <Switch
-            checked={node.can_export !== false}
-            onChange={(v) => edit(key, ['can_export'], v)}
-          />
-        )}
+      <td data-col="flags">
+        <span class={s.flags}>
+          <span data-col="required" title="Required">
+            {dp && (
+              <Switch
+                checked={!!node.constraints?.required}
+                onChange={(v) => edit(key, ['constraints', 'required'], v)}
+              />
+            )}
+          </span>
+          <span data-col="visible" title="Visible">
+            {(dp || kind === 'multivalue') && (
+              <Switch checked={!node.hidden} onChange={(v) => edit(key, ['hidden'], !v)} />
+            )}
+          </span>
+          <span data-col="export" title="Export">
+            {dp && (
+              <Switch
+                checked={node.can_export !== false}
+                onChange={(v) => edit(key, ['can_export'], v)}
+              />
+            )}
+          </span>
+        </span>
       </td>
       <td class={s.actions}>
         {node.__deleted ? (
@@ -247,7 +252,7 @@ function AddRow({ parentKey, depth, label }: { parentKey: string; depth: number;
   return (
     <tr class={s.addRow}>
       <td />
-      <td colSpan={8} style={{ paddingLeft: `${6 + depth * 16}px` }}>
+      <td colSpan={6} style={{ paddingLeft: `${6 + depth * 16}px` }}>
         <button
           type="button"
           class={s.linkBtn}
@@ -289,32 +294,96 @@ function renderNode(node: Node, depth: number, parentDeleted: boolean): any[] {
   return out;
 }
 
+const WIDTHS_KEY = 'builderColumnWidths';
+const RESIZABLE = ['id', 'label', 'type', 'source', 'flags'] as const;
+const DEFAULT_WIDTHS: Record<string, number> = {
+  id: 220,
+  label: 200,
+  type: 90,
+  source: 110,
+  flags: 110,
+};
+const MIN_WIDTH = 50;
+const widths = signal<Record<string, number>>({ ...DEFAULT_WIDTHS });
+let widthsLoaded = false;
+
+function loadWidths() {
+  if (widthsLoaded) return;
+  widthsLoaded = true;
+  globalThis.chrome?.storage?.local
+    ?.get([WIDTHS_KEY])
+    .then((v) => {
+      const saved = v?.[WIDTHS_KEY];
+      if (saved && typeof saved === 'object') widths.value = { ...DEFAULT_WIDTHS, ...saved };
+    })
+    .catch(() => {});
+}
+
+// Drag a header's right edge; the width is saved when the drag ends.
+function startResize(col: string, e: MouseEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+  const startX = e.clientX;
+  const startW = widths.value[col];
+  const onMove = (m: MouseEvent) => {
+    widths.value = { ...widths.value, [col]: Math.max(MIN_WIDTH, startW + m.clientX - startX) };
+  };
+  const onUp = () => {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    globalThis.chrome?.storage?.local?.set({ [WIDTHS_KEY]: widths.value })?.catch(() => {});
+  };
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+}
+
+const HEAD: Record<string, any> = {
+  id: 'ID',
+  label: 'Label',
+  type: 'Type',
+  source: 'Source',
+  flags: (
+    <span class={s.flags}>
+      <span title="Required">Req</span>
+      <span title="Visible">Vis</span>
+      <span title="Export">Exp</span>
+    </span>
+  ),
+};
+
 export default function Grid() {
+  useEffect(loadWidths, []);
+  const w = widths.value;
+  const total = 22 + 60 + RESIZABLE.reduce((sum, c) => sum + w[c], 0);
   return (
-    <table class={s.grid}>
+    <table class={s.grid} style={{ width: `${total}px` }}>
+      <colgroup>
+        <col style={{ width: '22px' }} />
+        {RESIZABLE.map((c) => (
+          <col data-col={c} style={{ width: `${w[c]}px` }} />
+        ))}
+        <col style={{ width: '60px' }} />
+      </colgroup>
       <thead>
         <tr>
           <th />
-          <th data-col="id">ID</th>
-          <th data-col="label">Label</th>
-          <th data-col="type">Type</th>
-          <th data-col="source">Source</th>
-          <th data-col="required" class={s.center}>
-            Required
-          </th>
-          <th data-col="visible" class={s.center}>
-            Visible
-          </th>
-          <th data-col="export" class={s.center}>
-            Export
-          </th>
+          {RESIZABLE.map((c) => (
+            <th data-col={c} class={s.resizable}>
+              {HEAD[c]}
+              <span
+                class={s.resizer}
+                data-resize=""
+                onMouseDown={(e) => startResize(c, e as MouseEvent)}
+              />
+            </th>
+          ))}
           <th />
         </tr>
       </thead>
       <tbody>
         {work.value.flatMap((n) => renderNode(n, 0, false))}
         <tr class={s.addSectionRow}>
-          <td colSpan={9}>
+          <td colSpan={7}>
             <button
               type="button"
               class={s.linkBtn}

@@ -143,7 +143,7 @@
 }
 
 .grid {
-  width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
@@ -166,6 +166,41 @@
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resizable {
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  user-select: none;
+}
+
+.resizer:hover {
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+.flags {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.flags > span {
+  display: inline-flex;
+  justify-content: center;
+  width: 26px;
 }
 
 .row {
@@ -219,10 +254,6 @@
   color: var(--text-secondary);
 }
 
-.center {
-  text-align: center;
-}
-
 .mono {
   font-family: ui-monospace, Menlo, monospace;
   font-size: 12px;
@@ -246,7 +277,6 @@
 
 .cellInput {
   width: 100%;
-  min-width: 140px;
   box-sizing: border-box;
   padding: 1px 4px;
   border: 1px solid var(--accent);
@@ -257,6 +287,7 @@
 }
 
 .select {
+  max-width: 100%;
   padding: 1px 2px;
   border: 1px solid var(--border);
   border-radius: 3px;

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import App from '../src/builder/components/App.jsx';
@@ -52,6 +52,8 @@ function content(): any[] {
 }
 
 let root: HTMLElement;
+const chromeSet = vi.fn(async (_v: any) => {});
+vi.stubGlobal('chrome', { storage: { local: { get: vi.fn(async () => ({})), set: chromeSet } } });
 const keyOf = (id: string) => flatten(store.work.value).find((r) => r.node.id === id)!.key;
 const row = (id: string) => root.querySelector(`[data-row-key="${keyOf(id)}"]`) as HTMLElement;
 
@@ -81,10 +83,31 @@ beforeEach(() => {
 });
 
 describe('Builder screen', () => {
-  it('renders one row per schema node with the seven columns in order', () => {
+  it('renders one row per schema node, with the three flags sharing one column', () => {
     expect(root.querySelectorAll('[data-row-key]').length).toBe(flatten(store.work.value).length);
-    const heads = [...root.querySelectorAll('th[data-col]')].map((th) => th.textContent);
-    expect(heads).toEqual(['ID', 'Label', 'Type', 'Source', 'Required', 'Visible', 'Export']);
+    const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
+      th.getAttribute('data-col'),
+    );
+    expect(heads).toEqual(['id', 'label', 'type', 'source', 'flags']);
+    const flags = row('doc_id').querySelector('td[data-col="flags"]')!;
+    expect(
+      [...flags.querySelectorAll('[data-col]')].map((e) => e.getAttribute('data-col')),
+    ).toEqual(['required', 'visible', 'export']);
+  });
+
+  it('dragging a header edge resizes that column and remembers the width', () => {
+    const col = () => root.querySelector('col[data-col="label"]') as HTMLElement;
+    const before = parseInt(col().style.width, 10);
+    const handle = root.querySelector('th[data-col="label"] [data-resize]') as HTMLElement;
+    act(() => {
+      handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, bubbles: true }));
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 160 }));
+      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 160 }));
+    });
+    expect(parseInt(col().style.width, 10)).toBe(before + 60);
+    expect(chromeSet).toHaveBeenCalledWith({
+      builderColumnWidths: expect.objectContaining({ label: before + 60 }),
+    });
   });
 
   it('a label edit is one history entry, marks the row edited, and undoes', () => {

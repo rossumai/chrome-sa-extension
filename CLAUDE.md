@@ -438,7 +438,7 @@ Enforced by tests, not by convention. Do not weaken them.
   `mdhOverviewChartsScale`, `mdhResultsView`, `mdhStages*`, `mdhStatsMode`,
   `mdhShowHiddenCollections`, `mdhProvenanceFilter`, `fabrySidebarWidth`,
   `fabryArchDocView`, `fabryArchRailOpen`, `fabryArchRailWidth`, `fabryArchPdfOptions`,
-  `devtoolsLineWrap`.
+  `devtoolsLineWrap`, `builderColumnWidths`.
 - **Per-tab navigation**, read session-first from `sessionStorage` with a `chrome.storage.local`
   seed (`src/console/tabState.ts`), all content-free — `consoleActiveApp`, `mdhActiveView`,
   `mdhSelectedCollection`, `mdhActivePanel`, `mdhOpsSearch`, `fabryActiveChat`, `fabryMode`,

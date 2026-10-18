@@ -61,9 +61,11 @@ Top bar: breadcrumb (workspace › queue · schema id), a staged-change counter,
 | Label | `label` | click to edit inline |
 | Type | `type` (string, number, date, enum, button) | dropdown |
 | Source | `ui_configuration.type` (captured, data, manual, formula, reasoning) | dropdown |
-| Required | `constraints.required` | switch |
-| Visible | `hidden`, **inverted** — on means the reviewer sees the field | switch |
-| Export | `can_export` | switch |
+| Req · Vis · Exp | `constraints.required`, `hidden` **inverted** (on = the reviewer sees the field), `can_export` | three switches side by side in ONE column |
+
+Every column except the drag handle and the row actions is resizable by dragging its
+header's right edge. Widths persist per browser in `chrome.storage.local`
+(`builderColumnWidths`).
 
 Any other Source is shown **read-only**: MDH lookup fields (`ui_configuration.type: "lookup"`,
 with a `matching` config on the datapoint — see `src/popup/mdh-provenance.ts`) and datapoints
