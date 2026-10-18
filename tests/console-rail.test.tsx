@@ -22,7 +22,7 @@ describe('Rail', () => {
 
   it('renders one button per app', () => {
     const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(5);
+    expect(root.querySelectorAll('.app-rail-item').length).toBe(6);
   });
 
   it('renders the Inspector app button and switches to it on click', () => {
@@ -131,7 +131,7 @@ describe('Rail — academy (experimental) gate', () => {
   it('hides Academy while the gate is locked', () => {
     experimentalUnlocked.value = false;
     const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(5);
+    expect(root.querySelectorAll('.app-rail-item').length).toBe(6);
     expect(
       [...root.querySelectorAll('.app-rail-item')].some(
         (b) => b.getAttribute('title') === ACADEMY_TITLE,

@@ -12,6 +12,7 @@ describe('isValidApp', () => {
     expect(isValidApp('mdh')).toBe(true);
     expect(isValidApp('audit')).toBe(true);
     expect(isValidApp('galaxy')).toBe(true);
+    expect(isValidApp('builder')).toBe(true);
     expect(isValidApp('nope')).toBe(false);
     expect(isValidApp(undefined)).toBe(false);
   });
