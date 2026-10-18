@@ -308,6 +308,101 @@
   color: var(--text-secondary);
 }
 
+.flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.flag:hover {
+  background: var(--bg-hover);
+  opacity: 1;
+}
+
+.flagOn {
+  color: var(--success);
+  opacity: 1;
+}
+
+.actions {
+  opacity: 1;
+  text-decoration: none;
+}
+
+.grip {
+  width: 14px;
+  color: var(--text-secondary);
+  cursor: grab;
+  user-select: none;
+}
+
+.caret {
+  color: var(--text-secondary);
+}
+
+.mono {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+}
+
+.dim {
+  color: var(--text-secondary);
+}
+
+.editable {
+  display: inline-block;
+  min-width: 40px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  cursor: text;
+}
+
+.editable:hover {
+  outline: 1px dashed var(--border);
+}
+
+.cellInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1px 4px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.select {
+  max-width: 100%;
+  padding: 1px 2px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+}
+
+.readonly {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.kind {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
 .switch {
   position: relative;
   display: inline-block;

@@ -95,8 +95,15 @@ describe('Builder screen', () => {
     expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags']);
     const flags = row('doc_id').querySelector('td[data-col="flags"]')!;
     expect(
-      [...flags.querySelectorAll('[data-col]')].map((e) => e.getAttribute('data-col')),
-    ).toEqual(['required', 'visible', 'export']);
+      [...flags.querySelectorAll('button[data-col]')].map((e) => e.getAttribute('data-col')),
+    ).toEqual(['visible', 'export', 'required']);
+    const pressed = (c: string) =>
+      flags.querySelector(`button[data-col="${c}"]`)!.getAttribute('aria-pressed');
+    expect([pressed('visible'), pressed('export'), pressed('required')]).toEqual([
+      'true',
+      'true',
+      'false',
+    ]);
   });
 
   it('dragging a header edge resizes that column and remembers the width', () => {
@@ -169,7 +176,7 @@ describe('Builder screen', () => {
 
   it('flipping Visible sets hidden on the field', () => {
     act(() => {
-      (row('doc_id').querySelector('[data-col="visible"] input') as HTMLInputElement).click();
+      (row('doc_id').querySelector('button[data-col="visible"]') as HTMLButtonElement).click();
     });
     expect(flatten(store.work.value).find((r) => r.node.id === 'doc_id')!.node.hidden).toBe(true);
   });
@@ -177,7 +184,7 @@ describe('Builder screen', () => {
 
 describe('Builder keyboard and dialog', () => {
   it('⌘Z undoes right after a switch was flipped (focus still on the switch)', () => {
-    const input = row('doc_id').querySelector('[data-col="visible"] input') as HTMLInputElement;
+    const input = row('doc_id').querySelector('button[data-col="visible"]') as HTMLButtonElement;
     act(() => {
       input.focus();
       input.click();
@@ -191,7 +198,7 @@ describe('Builder keyboard and dialog', () => {
 
   it('the save dialog does not close on an overlay click while saving', () => {
     act(() => {
-      (row('doc_id').querySelector('[data-col="visible"] input') as HTMLInputElement).click();
+      (row('doc_id').querySelector('button[data-col="visible"]') as HTMLButtonElement).click();
     });
     act(() => {
       (root.querySelector('[data-action="save"]') as HTMLElement).click();
