@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { work, selectedKey } from '../store.js';
 import { apply } from '../index.jsx';
 import { setAttr, findByKey, type Node } from '../model.js';
+import CodeEditor from './CodeEditor.jsx';
 import s from './Builder.module.css';
 
 function get(node: Node, path: string[]): any {
@@ -291,7 +292,17 @@ export default function Inspector() {
               <Bool node={node} path={['can_obtain_token']} label="Can obtain token" />
             </div>
           )}
-          {src === 'formula' && <Text node={node} path={['formula']} label="Formula" multiline />}
+          {src === 'formula' && (
+            <div class={s.field}>
+              <span class={s.fieldLabel}>Formula</span>
+              <CodeEditor
+                key={node.__key + ':formula:' + String(node.formula ?? '')}
+                name="formula"
+                value={String(node.formula ?? '')}
+                onCommit={(v) => edit(node, ['formula'], v === '' ? undefined : v)}
+              />
+            </div>
+          )}
           {src === 'reasoning' && (
             <div>
               <Text node={node} path={['prompt']} label="Prompt" multiline />

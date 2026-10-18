@@ -538,6 +538,13 @@ and all their classes are prefixed `rossum-sa-extension-*`.
 - **json5** — lenient parsing for the pipeline editor (trailing commas, unquoted keys)
 - **beautiful-mermaid** — diagrams; one flat ~1.5MB module, so it ships as its own lazy entry
 - **three** + **d3-force-3d** — Galaxy (~360KB)
+- **@codemirror/lang-python** — Python highlighting in the Builder's formula editor
+- **@astral-sh/ruff-wasm-web** — the Builder's Format button: Ruff's Python formatter as
+  WebAssembly (~11MB `ruff.wasm`), its own lazy bundle `console/ruff` (`src/builder/ruffEntry.ts`),
+  script-injected on first use. `build.js` copies the `.wasm` to `dist/console/ruff.wasm`. Its
+  glue has no `eval`/`new Function`; instantiating WebAssembly relies on the default MV3
+  extension-page CSP allowing `'wasm-unsafe-eval'` — not yet confirmed in a live Console
+  (2026-10-19); Ruff itself was smoke-tested in Node.
 - **@types/node** (dev) — for the tests program only; see Two programs under TypeScript. Pin it
   to the major of the Node in use, or it types APIs the runtime does not have.
 - **typescript** (dev) — type-checking only; esbuild does the building. After a major bump,

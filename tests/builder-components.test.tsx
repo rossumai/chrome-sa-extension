@@ -379,3 +379,53 @@ describe('Builder panel width', () => {
     expect(modes).toEqual(['copy', 'empty']);
   });
 });
+
+describe('Builder formula editor', () => {
+  function openFormula() {
+    act(() => {
+      store.startDraft(
+        'Invoice schema',
+        withKeys([
+          {
+            category: 'section',
+            id: 's',
+            label: 'S',
+            children: [
+              {
+                category: 'datapoint',
+                id: 'total_check',
+                label: 'Check',
+                type: 'number',
+                ui_configuration: { type: 'formula' },
+                formula: 'field.a+field.b',
+              },
+            ],
+          },
+        ]),
+      );
+      store.selectedKey.value = flatten(store.work.value).find(
+        (r) => r.node.id === 'total_check',
+      )!.key;
+    });
+  }
+
+  it('shows the formula in a Python code editor', () => {
+    openFormula();
+    const box = root.querySelector('[data-code="formula"]')!;
+    expect(box.querySelector('.cm-editor')).not.toBeNull();
+    expect(box.querySelector('.cm-content')!.textContent).toBe('field.a+field.b');
+  });
+
+  it('Format replaces the formula with the formatted code as one undoable edit', async () => {
+    openFormula();
+    (window as any).__builderRuffFormat = async (src: string) => src.replace('+', ' + ') + '\n';
+    await act(async () => {
+      (root.querySelector('[data-action="format-formula"]') as HTMLElement).click();
+    });
+    const formula = () =>
+      flatten(store.work.value).find((r) => r.node.id === 'total_check')!.node.formula;
+    await vi.waitFor(() => expect(formula()).toBe('field.a + field.b'));
+    expect(store.history.value.past.length).toBe(1);
+    delete (window as any).__builderRuffFormat;
+  });
+});

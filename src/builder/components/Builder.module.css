@@ -735,3 +735,10 @@
   width: auto;
   max-width: 360px;
 }
+
+.codeBar {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-top: 3px;
+}
