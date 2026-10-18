@@ -1,14 +1,17 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { schema, schemas, saving } from '../store.js';
-import { createWorkspace, createQueue, type NewQueue } from '../index.jsx';
+import { createWorkspace, createQueue, createUnlinkedSchema, type NewQueue } from '../index.jsx';
 import s from './Builder.module.css';
 
 export type CreateTarget =
-  { kind: 'workspace' } | { kind: 'queue'; workspaceUrl: string; workspaceName: string };
+  | { kind: 'workspace' }
+  | { kind: 'schema' }
+  | { kind: 'queue'; workspaceUrl: string; workspaceName: string };
 
-// One small form for "+ Workspace" and "+ Queue". A new queue's schema is a copy of the open
-// schema (as saved), an existing schema it will share, or a new schema with one empty section.
+// One small form for "+ Workspace", "+ Queue" and "+ Schema". A new queue's schema is a copy
+// of the open schema (as saved), an existing schema it will share, or a new schema with one
+// empty section; a new schema with no queue is a copy or empty.
 export default function CreateDialog({
   target,
   onClose,
@@ -26,15 +29,18 @@ export default function CreateDialog({
     e.preventDefault();
     if (!name.trim() || busy) return;
     setBusy(true);
+    const n = name.trim();
     const ok =
       target.kind === 'workspace'
-        ? await createWorkspace(name.trim())
-        : await createQueue({
-            name: name.trim(),
-            workspaceUrl: target.workspaceUrl,
-            mode,
-            schemaUrl: mode === 'share' ? shareUrl : undefined,
-          });
+        ? await createWorkspace(n)
+        : target.kind === 'schema'
+          ? await createUnlinkedSchema(n, mode === 'copy' ? 'copy' : 'empty')
+          : await createQueue({
+              name: n,
+              workspaceUrl: target.workspaceUrl,
+              mode,
+              schemaUrl: mode === 'share' ? shareUrl : undefined,
+            });
     setBusy(false);
     if (ok) onClose();
   };
@@ -58,7 +64,11 @@ export default function CreateDialog({
       <div class={s.dialog} onClick={(e) => e.stopPropagation()} role="dialog">
         <form onSubmit={submit}>
           <h3 class={s.dialogTitle}>
-            {target.kind === 'workspace' ? 'New workspace' : `New queue in ${target.workspaceName}`}
+            {target.kind === 'workspace'
+              ? 'New workspace'
+              : target.kind === 'schema'
+                ? 'New schema (no queue)'
+                : `New queue in ${target.workspaceName}`}
           </h3>
           <label class={s.field}>
             <span class={s.fieldLabel}>Name</span>
@@ -69,7 +79,7 @@ export default function CreateDialog({
               onInput={(e) => setName((e.currentTarget as HTMLInputElement).value)}
             />
           </label>
-          {target.kind === 'queue' && (
+          {target.kind !== 'workspace' && (
             <div class={s.field}>
               <span class={s.fieldLabel}>Schema</span>
               {radio(
@@ -79,8 +89,9 @@ export default function CreateDialog({
                   : 'Copy of the open schema (none open)',
                 !open,
               )}
-              {radio('share', 'Share an existing schema', !schemas.value.length)}
-              {mode === 'share' && (
+              {target.kind === 'queue' &&
+                radio('share', 'Share an existing schema', !schemas.value.length)}
+              {target.kind === 'queue' && mode === 'share' && (
                 <select
                   class={s.select}
                   value={shareUrl}

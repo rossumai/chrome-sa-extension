@@ -27,6 +27,7 @@ import {
   createQueue,
   deleteQueue,
   deleteSchema,
+  createUnlinkedSchema,
   save,
   pickAnnotation,
   renameSchema,
@@ -221,5 +222,23 @@ describe('create and delete', () => {
     expect(ask.mock.calls[0][0]).toContain('Old (8)');
     expect(api.deleteSchema).toHaveBeenCalledWith(8);
     ask.mockRestore();
+  });
+
+  it('creates a schema with no queue, from the saved open schema or empty, and opens it', async () => {
+    store.schema.value = { id: 7, name: 'Inv', url: 's/7', content: section('saved') };
+    vi.mocked(api.createSchema).mockResolvedValue({ id: 80, url: 's/80' });
+    vi.mocked(api.getSchema).mockResolvedValue({
+      id: 80,
+      name: 'Spare',
+      content: section('saved'),
+    });
+    await createUnlinkedSchema('Spare', 'copy');
+    expect(api.createSchema).toHaveBeenLastCalledWith('Spare', section('saved'));
+    expect(store.selectedSchemaId.value).toBe(80);
+    expect(store.selectedQueueId.value).toBeNull();
+    await createUnlinkedSchema('Blank', 'empty');
+    expect(api.createSchema).toHaveBeenLastCalledWith('Blank', [
+      { category: 'section', id: 'basic_info_section', label: 'Basic information', children: [] },
+    ]);
   });
 });

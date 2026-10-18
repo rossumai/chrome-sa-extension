@@ -321,6 +321,24 @@ export async function createQueue(p: NewQueue): Promise<boolean> {
   }
 }
 
+/** A schema no queue uses yet: a copy of the open schema as saved, or one empty section. */
+export async function createUnlinkedSchema(name: string, mode: 'copy' | 'empty'): Promise<boolean> {
+  try {
+    let content = emptySchemaContent();
+    if (mode === 'copy') {
+      if (!store.schema.value?.content) throw new Error('Open a schema first to copy it');
+      content = store.schema.value.content;
+    }
+    const created = await api.createSchema(name, content);
+    await refreshLists();
+    if (created?.id != null) await openSchema(created.id);
+    return true;
+  } catch (err: any) {
+    fail(err, 'Failed to create the schema');
+    return false;
+  }
+}
+
 function closeEditor() {
   openSeq++;
   store.selectedQueueId.value = null;

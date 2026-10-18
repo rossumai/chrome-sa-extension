@@ -368,4 +368,14 @@ describe('Builder panel width', () => {
     );
     expect(modes).toEqual(['copy', 'share', 'empty']);
   });
+
+  it('+ Schema opens a dialog offering a copy or an empty schema', () => {
+    act(() => {
+      (root.querySelector('[data-action="new-schema"]') as HTMLElement).click();
+    });
+    const modes = [...root.querySelectorAll('[role="dialog"] input[name="schema-mode"]')].map(
+      (e) => (e as HTMLInputElement).value,
+    );
+    expect(modes).toEqual(['copy', 'empty']);
+  });
 });

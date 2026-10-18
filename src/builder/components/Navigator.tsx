@@ -152,36 +152,44 @@ export default function Navigator() {
             })}
           </div>
         ))}
-        {orphans.length > 0 && (
-          <div>
-            <div class={s.groupTitle}>Schemas without a queue</div>
-            {orphans.map((x) => (
-              <div
-                key={x.id}
-                class={
-                  s.navRow +
-                  (selectedQueueId.value == null && selectedSchemaId.value === x.id
-                    ? ' ' + s.queueOn
-                    : '')
-                }
-              >
-                <button
-                  type="button"
-                  data-schema-id={String(x.id)}
-                  class={s.queue}
-                  onClick={() => openSchema(x.id)}
-                >
-                  {x.name} ({x.id})
-                </button>
-                <DeleteBtn
-                  action="delete-schema"
-                  data={{ 'data-schema': String(x.id) }}
-                  onClick={() => deleteSchema(x.id)}
-                />
-              </div>
-            ))}
+        <div>
+          <div class={s.groupTitle}>
+            Schemas without a queue
+            <button
+              type="button"
+              class={s.linkBtn}
+              data-action="new-schema"
+              onClick={() => setCreating({ kind: 'schema' })}
+            >
+              + Schema
+            </button>
           </div>
-        )}
+          {orphans.map((x) => (
+            <div
+              key={x.id}
+              class={
+                s.navRow +
+                (selectedQueueId.value == null && selectedSchemaId.value === x.id
+                  ? ' ' + s.queueOn
+                  : '')
+              }
+            >
+              <button
+                type="button"
+                data-schema-id={String(x.id)}
+                class={s.queue}
+                onClick={() => openSchema(x.id)}
+              >
+                {x.name} ({x.id})
+              </button>
+              <DeleteBtn
+                action="delete-schema"
+                data={{ 'data-schema': String(x.id) }}
+                onClick={() => deleteSchema(x.id)}
+              />
+            </div>
+          ))}
+        </div>
       </div>
       <div
         class={s.navResizer}
