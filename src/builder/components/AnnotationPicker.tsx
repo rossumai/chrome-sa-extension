@@ -37,7 +37,7 @@ export default function AnnotationPicker() {
           el.value = '';
         }}
       />
-      {id != null && !listed && <span>annotation {id}</span>}
+      {id != null && !listed && <span>annotation ({id})</span>}
       {id != null && (
         <button
           type="button"

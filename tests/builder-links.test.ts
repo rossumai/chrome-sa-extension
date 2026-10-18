@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { queueGroups, schemaItems } from '../src/builder/links.js';
+import { queueGroups, orphanSchemas } from '../src/builder/links.js';
 
 const ws = [
   { id: 1, url: 'w/1', name: 'AP' },
@@ -28,20 +28,9 @@ describe('queueGroups', () => {
   });
 });
 
-describe('schemaItems', () => {
-  it('orders schemas by their first visible queue and puts the rest last', () => {
-    const items = schemaItems(schemas, queueGroups(ws, qs, ''));
-    expect(items.map((s) => [s.id, s.queueIds])).toEqual([
-      [100, [10, 11]],
-      [101, [12]],
-      [102, [20]],
-      [103, []],
-    ]);
-  });
-
-  it('lists only visible queues as links when the queue list is filtered', () => {
-    const items = schemaItems(schemas, queueGroups(ws, qs, 'orders'));
-    expect(items[0]).toMatchObject({ id: 102, queueIds: [20] });
-    expect(items.slice(1).every((s) => s.queueIds.length === 0)).toBe(true);
+describe('orphanSchemas', () => {
+  it('lists the schemas no queue uses, filtered by name', () => {
+    expect(orphanSchemas(schemas, qs, '').map((x) => x.id)).toEqual([103]);
+    expect(orphanSchemas(schemas, qs, 'nope')).toEqual([]);
   });
 });

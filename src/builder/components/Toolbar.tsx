@@ -11,7 +11,8 @@ import {
   renamed,
   draftName,
 } from '../store.js';
-import { undoChange, redoChange, discard } from '../index.jsx';
+import { undoChange, redoChange, discard, renameSchema } from '../index.jsx';
+import EditableCell from './EditableCell.jsx';
 import { canUndo, canRedo } from '../history.js';
 import s from './Builder.module.css';
 
@@ -37,11 +38,15 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
   return (
     <div class={s.toolbar}>
       <span class={s.crumb}>
-        {ws?.name || 'Workspace'} › <b>{q?.name}</b>
+        {ws ? `${ws.name} › ` : ''}
+        <b>{q ? `${q.name} (${q.id})` : 'No queue'}</b>
         {schema.value && (
-          <span class={s.dim}>
-            {' · '}
-            {draftName.value} #{schema.value.id}
+          <span class={s.schemaCrumb + (renamed.value ? ' ' + s.renamedItem : '')}>
+            {' · schema '}
+            <span data-action="rename-schema" title="Click to rename this schema">
+              <EditableCell value={draftName.value} onCommit={(v) => renameSchema(v.trim())} />
+            </span>{' '}
+            ({schema.value.id})
           </span>
         )}
       </span>

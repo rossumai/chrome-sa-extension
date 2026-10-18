@@ -69,9 +69,28 @@ beforeEach(() => {
       workspace: 'https://x/api/v1/workspaces/10',
       schema: 'https://x/api/v1/schemas/7',
     },
+    {
+      id: 2,
+      name: 'Invoices US',
+      workspace: 'https://x/api/v1/workspaces/10',
+      schema: 'https://x/api/v1/schemas/7',
+    },
+    {
+      id: 3,
+      name: 'Orders',
+      workspace: 'https://x/api/v1/workspaces/10',
+      schema: 'https://x/api/v1/schemas/9',
+    },
   ];
   store.selectedQueueId.value = 1;
-  store.schema.value = { id: 7, name: 'Invoice schema', modified_at: 't0', content: content() };
+  store.selectedSchemaId.value = 7;
+  store.schema.value = {
+    id: 7,
+    url: 'https://x/api/v1/schemas/7',
+    name: 'Invoice schema',
+    modified_at: 't0',
+    content: content(),
+  };
   store.schemas.value = [
     { id: 7, url: 'https://x/api/v1/schemas/7', name: 'Invoice schema' },
     { id: 8, url: 'https://x/api/v1/schemas/8', name: 'Unused schema' },
@@ -283,21 +302,29 @@ describe('Builder annotation values', () => {
   });
 });
 
-describe('Builder schema list', () => {
-  it('lists schemas with one link line per queue that uses them', () => {
-    const items = [...root.querySelectorAll('[data-schema-id]')].map((e) =>
-      e.getAttribute('data-schema-id'),
-    );
-    expect(items).toEqual(['7', '8']);
-    expect(root.querySelectorAll('[data-link]').length).toBe(1);
-    expect(root.querySelector('[data-schema-id="7"]')!.getAttribute('aria-current')).toBe('true');
+describe('Builder left panel', () => {
+  it('lists queues with their ids, then schemas no queue uses', () => {
+    const queues = [...root.querySelectorAll('[data-queue-id]')].map((e) => e.textContent);
+    expect(queues).toEqual(['Invoices (1)', 'Invoices US (2)', 'Orders (3)']);
+    const orphans = [...root.querySelectorAll('[data-schema-id]')].map((e) => e.textContent);
+    expect(orphans).toEqual(['Unused schema (8)']);
   });
 
-  it('renaming the open schema is staged and undoable', () => {
+  it('highlights every other queue that shares the open schema', () => {
+    const shared = (id: number) =>
+      root.querySelector(`[data-queue-id="${id}"]`)!.getAttribute('data-shared');
+    expect([shared(1), shared(2), shared(3)]).toEqual([null, 'true', null]);
+  });
+});
+
+describe('Builder schema rename', () => {
+  it('the breadcrumb shows the schema id and its name is a staged, undoable edit', () => {
+    const crumb = root.querySelector('[data-action="rename-schema"]')!;
+    expect(crumb.parentElement!.textContent).toContain('(7)');
     act(() => {
-      (root.querySelector('[data-schema-id="7"] [data-edit]') as HTMLElement).click();
+      (crumb.querySelector('[data-edit]') as HTMLElement).click();
     });
-    const input = root.querySelector('[data-schema-id="7"] input') as HTMLInputElement;
+    const input = crumb.querySelector('input') as HTMLInputElement;
     act(() => {
       input.value = 'Invoice schema v2';
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));

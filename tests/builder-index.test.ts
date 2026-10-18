@@ -8,10 +8,12 @@ vi.mock('../src/builder/api.js', () => ({
   validateSchema: vi.fn(),
   patchSchema: vi.fn(),
   getAnnotationContent: vi.fn(),
+  listAnnotations: vi.fn(),
 }));
 import * as api from '../src/builder/api.js';
 import {
   openQueue,
+  openSchema,
   save,
   pickAnnotation,
   renameSchema,
@@ -107,5 +109,33 @@ describe('renameSchema', () => {
     expect(api.patchSchema).toHaveBeenLastCalledWith(7, content, 'Invoices v2');
     expect(store.schemas.value[0].name).toBe('Invoices v2');
     expect(store.dirty.value).toBe(false);
+  });
+});
+
+describe('openSchema / annotation labels', () => {
+  it('opens a schema no queue uses', async () => {
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 33, name: 'Orphan', content: section('s') });
+    await openSchema(33);
+    expect(api.getSchema).toHaveBeenCalledWith(33);
+    expect(store.selectedQueueId.value).toBeNull();
+    expect(store.selectedSchemaId.value).toBe(33);
+    expect(store.draftName.value).toBe('Orphan');
+  });
+
+  it('labels annotations as file name (id) · status', async () => {
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: section('b') });
+    vi.mocked(api.listAnnotations).mockResolvedValue({
+      results: [
+        { id: 5, status: 'to_review', document: 'd/1' },
+        { id: 6, status: 'exported', document: 'd/2' },
+      ],
+      documents: [{ url: 'd/1', original_file_name: 'invoice.pdf' }],
+    });
+    await openQueue(2);
+    await vi.waitFor(() => expect(store.annotations.value.length).toBe(2));
+    expect(store.annotations.value.map((a) => a.label)).toEqual([
+      'invoice.pdf (5) · to_review',
+      'annotation (6) · exported',
+    ]);
   });
 });

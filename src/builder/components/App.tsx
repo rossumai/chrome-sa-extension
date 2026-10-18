@@ -6,10 +6,11 @@ import {
   loading,
   schema,
   selectedQueueId,
+  selectedSchemaId,
   generalErrors,
   queues,
 } from '../store.js';
-import { undoChange, redoChange, loadQueues, openQueue } from '../index.jsx';
+import { undoChange, redoChange, loadQueues, openQueue, openSchema } from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
 import Grid from './Grid.jsx';
@@ -56,6 +57,7 @@ export default function App({ connected }: { connected: boolean | null }) {
   const retry = () => {
     if (!queues.value.length) loadQueues();
     else if (selectedQueueId.value != null && !schema.value) openQueue(selectedQueueId.value);
+    else if (selectedSchemaId.value != null && !schema.value) openSchema(selectedSchemaId.value);
     else error.value = null;
   };
 
@@ -80,7 +82,7 @@ export default function App({ connected }: { connected: boolean | null }) {
             ))}
           </div>
         )}
-        {selectedQueueId.value == null ? (
+        {selectedQueueId.value == null && selectedSchemaId.value == null ? (
           <div class="empty-state">
             {loading.value ? 'Loading queues…' : 'Pick a queue to edit its schema.'}
           </div>

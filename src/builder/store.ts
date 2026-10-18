@@ -16,6 +16,8 @@ export const error = signal<string | null>(null);
 export const retryable = signal(false); // the last failure was a 429; the user retries
 
 export const selectedQueueId = signal<number | null>(null);
+// The open schema: the selected queue's, or one opened directly because no queue uses it.
+export const selectedSchemaId = signal<number | null>(null);
 export const schema = signal<any | null>(null); // the schema as last loaded or saved
 export const base = signal<Node[]>([]);
 // One undo stack for everything staged: the schema's name and its content.
@@ -51,12 +53,15 @@ export const selectedQueue = computed(
   () => queues.value.find((q) => q.id === selectedQueueId.value) || null,
 );
 
-// Queues that share the selected queue's schema: editing it changes all of them.
-export const sharedCount = computed(() => {
-  const q = selectedQueue.value;
-  if (!q?.schema) return 0;
-  return queues.value.filter((x) => x.schema === q.schema).length;
+// The URL of the open schema, from the loaded schema or else from the selected queue.
+const openSchemaUrl = computed(() => schema.value?.url ?? selectedQueue.value?.schema ?? null);
+
+// Queues that use the open schema: editing it changes all of them.
+export const sharedQueueIds = computed(() => {
+  const url = openSchemaUrl.value;
+  return new Set(url ? queues.value.filter((q) => q.schema === url).map((q) => q.id) : []);
 });
+export const sharedCount = computed(() => sharedQueueIds.value.size);
 
 /** Make (name, content) the saved state and clear the undo stack. */
 export function startDraft(name: string, content: Node[]) {

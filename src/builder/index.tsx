@@ -81,9 +81,20 @@ function setBase(schema: any) {
 let openSeq = 0;
 
 export async function openQueue(id: number) {
+  const q = store.queues.value.find((x) => x.id === id);
+  return load(id, idFromUrl(q?.schema));
+}
+
+/** Open a schema directly — the way in for a schema no queue uses. */
+export async function openSchema(schemaId: number) {
+  return load(null, schemaId);
+}
+
+async function load(queueId: number | null, schemaId: number | null) {
   if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
   const seq = ++openSeq;
-  store.selectedQueueId.value = id;
+  store.selectedQueueId.value = queueId;
+  store.selectedSchemaId.value = schemaId;
   clearAnnotation();
   store.annotations.value = [];
   store.selectedKey.value = null;
@@ -92,13 +103,11 @@ export async function openQueue(id: number) {
   store.error.value = null;
   store.retryable.value = false;
   try {
-    const q = store.queues.value.find((x) => x.id === id);
-    const schemaId = idFromUrl(q?.schema);
     if (schemaId == null) throw new Error('This queue has no schema');
     const schema = await api.getSchema(schemaId);
     if (seq !== openSeq) return;
     setBase(schema);
-    loadAnnotations(id);
+    if (queueId != null) loadAnnotations(queueId);
   } catch (err: any) {
     if (seq !== openSeq) return;
     setBase(null);
@@ -182,7 +191,7 @@ export async function save(force = false): Promise<SaveResult | null> {
 
 function annotationLabel(a: any, docs: Map<string, any>): string {
   const name = docs.get(a.document)?.original_file_name;
-  return `${a.id}${name ? ` · ${name}` : ''} · ${a.status}`;
+  return `${name || 'annotation'} (${a.id}) · ${a.status}`;
 }
 
 // Fills the picker. A failure leaves it empty; pasting an ID still works.
