@@ -181,6 +181,25 @@ describe('Builder screen', () => {
     expect(row('doc_id').querySelector('[data-col="source"] select')).not.toBeNull();
   });
 
+  it('+ Table adds a table with one row type and one column; + List adds a one-value list', () => {
+    const section = keyOf('basic_section');
+    const before = root.querySelectorAll('[data-row-key]').length;
+    act(() => {
+      (
+        root.querySelector(`[data-action="add-table"][data-parent="${section}"]`) as HTMLElement
+      ).click();
+    });
+    expect(root.querySelectorAll('[data-row-key]').length).toBe(before + 3);
+    act(() => {
+      (
+        root.querySelector(`[data-action="add-list"][data-parent="${section}"]`) as HTMLElement
+      ).click();
+    });
+    expect(root.querySelectorAll('[data-row-key]').length).toBe(before + 5);
+    expect(root.querySelectorAll('[data-status="new"]').length).toBe(5);
+    expect(store.history.value.past.length).toBe(2);
+  });
+
   it('+ Add field appends a new row to the section', () => {
     const before = root.querySelectorAll('[data-row-key]').length;
     act(() => {

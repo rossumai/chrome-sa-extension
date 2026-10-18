@@ -195,6 +195,40 @@ export function newSection(key: string, id: string, label: string): Node {
   return { __key: key, category: 'section', id, label, children: [] };
 }
 
+/** A list: a multivalue whose one child is a datapoint (e.g. several PO numbers). */
+export function newList([mk, ck]: string[], id: string, label: string): Node {
+  return {
+    __key: mk,
+    category: 'multivalue',
+    id,
+    label,
+    children: newDatapoint(ck, `${id}_value`, label, 'string'),
+  };
+}
+
+/** A table: a multivalue whose child is a tuple (the row) with one starter column. */
+export function newTable([mk, tk, ck]: string[], id: string, label: string): Node {
+  return {
+    __key: mk,
+    category: 'multivalue',
+    id,
+    label,
+    children: {
+      __key: tk,
+      category: 'tuple',
+      id: `${id}_row`,
+      label: `${label} row`,
+      children: [newDatapoint(ck, `${id}_column`, 'Column', 'string')],
+    },
+  };
+}
+
+/** `n` keys not used in the tree, for a node built with several keyed parts. */
+export function freshKeys(nodes: Node[], n: number): string[] {
+  const first = Number(nextKey(nodes).slice(1));
+  return Array.from({ length: n }, (_, i) => `k${first + i}`);
+}
+
 export function nextKey(nodes: Node[]): string {
   let max = 0;
   for (const r of flatten(nodes)) {

@@ -785,3 +785,8 @@
 .codeHost :global(.cm-editor) {
   height: 100%;
 }
+
+.addLinks {
+  display: inline-flex;
+  gap: 14px;
+}

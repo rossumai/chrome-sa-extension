@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
 import { signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import { work, status, rowErrors, selectedKey, values, lineRow } from '../store.js';
@@ -12,6 +12,9 @@ import {
   dropTarget,
   newDatapoint,
   newSection,
+  newList,
+  newTable,
+  freshKeys,
   nextKey,
   flatten,
   type Node,
@@ -48,6 +51,20 @@ function addFieldTo(parentKey: string) {
   );
   pendingEdit.value = k;
   selectedKey.value = k;
+}
+
+function addListTo(parentKey: string) {
+  const keys = freshKeys(work.value, 2);
+  apply(addField(work.value, parentKey, newList(keys, uniqueId('new_list'), 'New list')));
+  pendingEdit.value = keys[0];
+  selectedKey.value = keys[0];
+}
+
+function addTableTo(parentKey: string) {
+  const keys = freshKeys(work.value, 3);
+  apply(addField(work.value, parentKey, newTable(keys, uniqueId('new_table'), 'New table')));
+  pendingEdit.value = keys[0];
+  selectedKey.value = keys[0];
 }
 
 function addNewSection() {
@@ -357,20 +374,42 @@ function Row({
   );
 }
 
-function AddRow({ parentKey, depth, label }: { parentKey: string; depth: number; label: string }) {
+// A section ends with three one-click adds; a table's row type ends with "+ Add column".
+function AddRow({
+  parentKey,
+  depth,
+  section,
+}: {
+  parentKey: string;
+  depth: number;
+  section: boolean;
+}) {
+  const link = (action: string, label: string, onClick: () => void) => (
+    <button
+      type="button"
+      class={s.linkBtn}
+      data-action={action}
+      data-parent={parentKey}
+      onClick={onClick}
+    >
+      + {label}
+    </button>
+  );
   return (
     <tr class={s.addRow}>
       <td />
       <td colSpan={values.value ? 7 : 6} style={{ paddingLeft: `${6 + depth * 16}px` }}>
-        <button
-          type="button"
-          class={s.linkBtn}
-          data-action="add-field"
-          data-parent={parentKey}
-          onClick={() => addFieldTo(parentKey)}
-        >
-          + {label}
-        </button>
+        <span class={s.addLinks}>
+          {section ? (
+            <Fragment>
+              {link('add-field', 'Field', () => addFieldTo(parentKey))}
+              {link('add-list', 'List', () => addListTo(parentKey))}
+              {link('add-table', 'Table', () => addTableTo(parentKey))}
+            </Fragment>
+          ) : (
+            link('add-field', 'Add column', () => addFieldTo(parentKey))
+          )}
+        </span>
       </td>
     </tr>
   );
@@ -389,23 +428,11 @@ function renderNode(
   const childTable = node.category === 'multivalue' ? node.id : tableId;
   for (const c of kids(node)) out.push(...renderNode(c, depth + 1, deleted, childTable));
   if (!deleted && node.category === 'section') {
-    out.push(
-      <AddRow
-        key={node.__key + ':add'}
-        parentKey={node.__key}
-        depth={depth + 1}
-        label="Add field"
-      />,
-    );
+    out.push(<AddRow key={node.__key + ':add'} parentKey={node.__key} depth={depth + 1} section />);
   }
   if (!deleted && node.category === 'tuple') {
     out.push(
-      <AddRow
-        key={node.__key + ':add'}
-        parentKey={node.__key}
-        depth={depth + 1}
-        label="Add column"
-      />,
+      <AddRow key={node.__key + ':add'} parentKey={node.__key} depth={depth + 1} section={false} />,
     );
   }
   return out;

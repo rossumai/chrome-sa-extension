@@ -12,6 +12,9 @@ import {
   dropTarget,
   newDatapoint,
   newSection,
+  newList,
+  newTable,
+  freshKeys,
   nextKey,
   localErrors,
   rowStatus,
@@ -300,5 +303,41 @@ describe('dropTarget', () => {
     );
     expect(dropTarget(t, keyOf(t, 'document_id'), keyOf(t, 'line_items_section'))).toBeNull();
     expect(dropTarget(t, keyOf(t, 'document_id'), keyOf(t, 'line_items'))).toBeNull();
+  });
+});
+
+describe('newList / newTable', () => {
+  it('builds a list (multivalue of one datapoint) and a table (multivalue of a tuple)', () => {
+    const t = withKeys(fixture());
+    const [a, b] = freshKeys(t, 2);
+    const list = newList([a, b], 'po_numbers', 'PO numbers');
+    const [c, d, e] = freshKeys(t, 3);
+    const table = newTable([c, d, e], 'items', 'Items');
+    let next = addField(t, keyOf(t, 'basic_info_section'), list);
+    next = addField(next, keyOf(t, 'basic_info_section'), table);
+    const out = stripForSave(next)[0].children;
+    expect(out[3]).toMatchObject({
+      category: 'multivalue',
+      id: 'po_numbers',
+      children: { category: 'datapoint', id: 'po_numbers_value', type: 'string' },
+    });
+    expect(out[4]).toMatchObject({
+      category: 'multivalue',
+      id: 'items',
+      children: {
+        category: 'tuple',
+        id: 'items_row',
+        children: [{ category: 'datapoint', id: 'items_column', type: 'string' }],
+      },
+    });
+    expect(Array.isArray(out[3].children)).toBe(false);
+  });
+
+  it('freshKeys returns keys unused in the tree and unique among themselves', () => {
+    const t = withKeys(fixture());
+    const ks = freshKeys(t, 3);
+    const used = new Set(flatten(t).map((r) => r.key));
+    expect(new Set(ks).size).toBe(3);
+    expect(ks.some((k) => used.has(k))).toBe(false);
   });
 });
