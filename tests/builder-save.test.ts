@@ -161,4 +161,22 @@ describe('saveSchema', () => {
       saveSchema({ schemaId: 7, baseModifiedAt: 't0', work: withKeys(fixture()), force: false }, d),
     ).rejects.toBe(err);
   });
+
+  it('a failed re-fetch after a successful PATCH still reports success', async () => {
+    const getSchema = vi
+      .fn()
+      .mockResolvedValueOnce({ id: 7, modified_at: 't0', content: fixture() })
+      .mockRejectedValueOnce(new Error('network'));
+    const patched = { id: 7, modified_at: 't2', content: fixture() };
+    const d = deps({ getSchema, patchSchema: vi.fn(async () => patched) });
+    const r = await saveSchema(
+      { schemaId: 7, baseModifiedAt: 't0', work: withKeys(fixture()), force: false },
+      d,
+    );
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.schema).toBe(patched);
+      expect(r.warnings[0]).toContain('could not be re-read');
+    }
+  });
 });

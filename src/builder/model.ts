@@ -48,6 +48,9 @@ export function withKeys(content: any[]): Node[] {
 export function cleanAttrs(node: Node): Node {
   if (node.category !== 'datapoint') return node;
   const src = node.ui_configuration?.type;
+  // No Source set: leave the field exactly as loaded — an untouched row must not lose
+  // a formula or prompt just because it never carried ui_configuration.
+  if (src === undefined) return node;
   const out = { ...node };
   if (src !== 'formula') delete out.formula;
   if (src !== 'reasoning') {
@@ -282,4 +285,38 @@ export function changeSummary(
   const ib = positions(base, stayers);
   for (const [k, i] of positions(work, stayers)) if (ib.get(k) !== i) s.moved++;
   return s;
+}
+
+/**
+ * Where a drag of `draggedKey` dropped on `targetKey` lands, or null when the drop is not
+ * allowed. Sections reorder among sections; header fields and tables move within or across
+ * sections; table columns move within or across tables. A deleted row is never a target —
+ * a field dropped into a deleted section would vanish on Save with no Restore of its own.
+ */
+export function dropTarget(
+  nodes: Node[],
+  draggedKey: string,
+  targetKey: string,
+): { parent: string | null; index: number } | null {
+  const rows = flatten(nodes);
+  const tr = rows.find((r) => r.key === targetKey);
+  const dr = rows.find((r) => r.key === draggedKey);
+  if (!tr || !dr || tr.key === dr.key || tr.deleted || dr.deleted) return null;
+  const indexIn = (parent: string | null, key: string) => {
+    const list = parent === null ? nodes : kids(findByKey(nodes, parent)!);
+    return list.findIndex((n) => n.__key === key);
+  };
+  if (dr.kind === 'section') {
+    return tr.kind === 'section' ? { parent: null, index: indexIn(null, tr.key) } : null;
+  }
+  if (dr.depth === 1) {
+    if (tr.kind === 'section') return { parent: tr.key, index: 0 };
+    if (tr.depth === 1) return { parent: tr.parentKey, index: indexIn(tr.parentKey, tr.key) };
+    return null;
+  }
+  if (dr.depth === 3) {
+    if (tr.kind === 'tuple') return { parent: tr.key, index: 0 };
+    if (tr.depth === 3) return { parent: tr.parentKey, index: indexIn(tr.parentKey, tr.key) };
+  }
+  return null;
 }

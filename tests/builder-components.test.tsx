@@ -147,3 +147,33 @@ describe('Builder screen', () => {
     expect(flatten(store.work.value).find((r) => r.node.id === 'doc_id')!.node.hidden).toBe(true);
   });
 });
+
+describe('Builder keyboard and dialog', () => {
+  it('⌘Z undoes right after a switch was flipped (focus still on the switch)', () => {
+    const input = row('doc_id').querySelector('[data-col="visible"] input') as HTMLInputElement;
+    act(() => {
+      input.focus();
+      input.click();
+    });
+    expect(store.history.value.past.length).toBe(1);
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', metaKey: true, bubbles: true }));
+    });
+    expect(store.history.value.past.length).toBe(0);
+  });
+
+  it('the save dialog does not close on an overlay click while saving', () => {
+    act(() => {
+      (row('doc_id').querySelector('[data-col="visible"] input') as HTMLInputElement).click();
+    });
+    act(() => {
+      (root.querySelector('[data-action="save"]') as HTMLElement).click();
+    });
+    store.saving.value = true;
+    act(() => {
+      (root.querySelector('[role="dialog"]')!.parentElement as HTMLElement).click();
+    });
+    expect(root.querySelector('[role="dialog"]')).not.toBeNull();
+    store.saving.value = false;
+  });
+});

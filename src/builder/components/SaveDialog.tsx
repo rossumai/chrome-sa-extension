@@ -17,7 +17,7 @@ export default function SaveDialog({ onClose }: { onClose: () => void }) {
     setResult(r);
   };
   return (
-    <div class={s.overlay} onClick={onClose}>
+    <div class={s.overlay} onClick={() => !saving.value && onClose()}>
       <div
         class={s.dialog}
         onClick={(e) => e.stopPropagation()}

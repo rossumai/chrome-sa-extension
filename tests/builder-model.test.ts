@@ -9,6 +9,7 @@ import {
   addSection,
   setDeleted,
   move,
+  dropTarget,
   newDatapoint,
   newSection,
   nextKey,
@@ -131,6 +132,17 @@ describe('setAttr', () => {
 });
 
 describe('stripForSave cleanup', () => {
+  it('keeps formula and prompt on a field whose source is not set', () => {
+    const src = [
+      {
+        category: 'section',
+        id: 's',
+        children: [{ category: 'datapoint', id: 'f', formula: 'x', prompt: 'p', context: [] }],
+      },
+    ];
+    expect(stripForSave(withKeys(src))).toEqual(src);
+  });
+
   it('drops formula when the source is no longer formula', () => {
     const t = withKeys(fixture());
     const k = keyOf(t, 'amount_check');
@@ -268,5 +280,25 @@ describe('rowStatus / changeSummary', () => {
   it('reports no changes for an untouched tree', () => {
     const base = withKeys(fixture());
     expect(changeSummary(base, base)).toEqual({ added: 0, edited: 0, deleted: 0, moved: 0 });
+  });
+});
+
+describe('dropTarget', () => {
+  it('places a field dropped on a header field next to it', () => {
+    const t = withKeys(fixture());
+    expect(dropTarget(t, keyOf(t, 'gl_hint'), keyOf(t, 'document_id'))).toEqual({
+      parent: keyOf(t, 'basic_info_section'),
+      index: 0,
+    });
+  });
+
+  it('refuses a drop onto a deleted row', () => {
+    const t = setDeleted(
+      withKeys(fixture()),
+      keyOf(withKeys(fixture()), 'line_items_section'),
+      true,
+    );
+    expect(dropTarget(t, keyOf(t, 'document_id'), keyOf(t, 'line_items_section'))).toBeNull();
+    expect(dropTarget(t, keyOf(t, 'document_id'), keyOf(t, 'line_items'))).toBeNull();
   });
 });

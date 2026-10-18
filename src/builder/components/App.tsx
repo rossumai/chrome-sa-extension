@@ -19,7 +19,10 @@ import s from './Builder.module.css';
 
 function inField(t: EventTarget | null): boolean {
   const el = t as HTMLElement | null;
-  return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT');
+  // Text entry only: a focused switch or select must not swallow ⌘Z after a change.
+  if (!el) return false;
+  if (el.tagName === 'TEXTAREA') return true;
+  return el.tagName === 'INPUT' && (el as HTMLInputElement).type !== 'checkbox';
 }
 
 export default function App({ connected }: { connected: boolean | null }) {

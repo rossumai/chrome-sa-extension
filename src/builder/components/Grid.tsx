@@ -8,10 +8,10 @@ import {
   addField,
   addSection,
   move,
+  dropTarget,
   newDatapoint,
   newSection,
   nextKey,
-  findByKey,
   flatten,
   type Node,
 } from '../model.js';
@@ -54,32 +54,6 @@ function addNewSection() {
   apply(addSection(work.value, newSection(k, uniqueId('new_section'), 'New section')));
   pendingEdit.value = k;
   selectedKey.value = k;
-}
-
-// Drag and drop: sections reorder among sections; header fields and tables move within
-// or across sections; table columns move within or across tables.
-function dropTarget(dragged: Node, target: Node): { parent: string | null; index: number } | null {
-  const rows = flatten(work.value);
-  const tr = rows.find((r) => r.key === target.__key);
-  const dr = rows.find((r) => r.key === dragged.__key);
-  if (!tr || !dr || tr.key === dr.key) return null;
-  const indexIn = (parent: string | null, key: string) => {
-    const list = parent === null ? work.value : kids(findByKey(work.value, parent)!);
-    return list.findIndex((n) => n.__key === key);
-  };
-  if (dr.kind === 'section') {
-    return tr.kind === 'section' ? { parent: null, index: indexIn(null, tr.key) } : null;
-  }
-  if (dr.depth === 1) {
-    if (tr.kind === 'section') return { parent: tr.key, index: 0 };
-    if (tr.depth === 1) return { parent: tr.parentKey, index: indexIn(tr.parentKey, tr.key) };
-    return null;
-  }
-  if (dr.depth === 3) {
-    if (tr.kind === 'tuple') return { parent: tr.key, index: 0 };
-    if (tr.depth === 3) return { parent: tr.parentKey, index: indexIn(tr.parentKey, tr.key) };
-  }
-  return null;
 }
 
 function Switch({
@@ -172,9 +146,8 @@ function Row({ node, depth, deleted }: { node: Node; depth: number; deleted: boo
       onDrop={(e) => {
         e.preventDefault();
         const from = e.dataTransfer?.getData('text/plain');
-        const dragged = from ? findByKey(work.value, from) : null;
-        const t = dragged && dropTarget(dragged, node);
-        if (dragged && t) apply(move(work.value, dragged.__key, t.parent, t.index));
+        const t = from ? dropTarget(work.value, from, key) : null;
+        if (from && t) apply(move(work.value, from, t.parent, t.index));
       }}
     >
       <td

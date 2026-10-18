@@ -64,8 +64,13 @@ function setBase(schema: any) {
   store.generalErrors.value = [];
 }
 
+// Bumped on every openQueue: a response for a queue that is no longer the current one is
+// dropped, or queue A's schema would show (and save) under queue B.
+let openSeq = 0;
+
 export async function openQueue(id: number) {
   if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
+  const seq = ++openSeq;
   store.selectedQueueId.value = id;
   store.selectedKey.value = null;
   store.schema.value = null;
@@ -76,12 +81,15 @@ export async function openQueue(id: number) {
     const q = store.queues.value.find((x) => x.id === id);
     const schemaId = idFromUrl(q?.schema);
     if (schemaId == null) throw new Error('This queue has no schema');
-    setBase(await api.getSchema(schemaId));
+    const schema = await api.getSchema(schemaId);
+    if (seq !== openSeq) return;
+    setBase(schema);
   } catch (err: any) {
+    if (seq !== openSeq) return;
     setBase(null);
     fail(err, 'Failed to load the schema');
   } finally {
-    store.loading.value = false;
+    if (seq === openSeq) store.loading.value = false;
   }
 }
 
@@ -130,6 +138,7 @@ export async function save(force = false): Promise<SaveResult | null> {
       }
     } else {
       setBase(r.schema);
+      if (r.warnings.length) general.push(`Did not land as sent: ${r.warnings.join(', ')}`);
     }
     store.rowErrors.value = byRow;
     store.generalErrors.value = general;

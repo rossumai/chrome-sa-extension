@@ -124,8 +124,9 @@ export async function saveSchema(
     return { ok: false, stage: 'validate', errors };
   }
 
+  let patched: any;
   try {
-    await deps.patchSchema(schemaId, content);
+    patched = await deps.patchSchema(schemaId, content);
   } catch (err: any) {
     if (isRateLimited(err)) throw err;
     return {
@@ -135,6 +136,18 @@ export async function saveSchema(
     };
   }
 
-  const schema = await deps.getSchema(schemaId);
+  // The PATCH landed. A failed re-read must not turn that into "Save failed": fall back
+  // to the PATCH response so the new base matches what the server now holds.
+  let schema: any;
+  try {
+    schema = await deps.getSchema(schemaId);
+  } catch (err: any) {
+    const why = err?.message || 'unknown error';
+    return {
+      ok: true,
+      schema: patched,
+      warnings: [`Saved, but the schema could not be re-read to check it (${why}).`],
+    };
+  }
   return { ok: true, schema, warnings: landedDiff(content, schema?.content || []) };
 }
