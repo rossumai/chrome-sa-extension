@@ -1,6 +1,5 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { signal } from '@preact/signals';
 import {
   queues,
   workspaces,
@@ -12,42 +11,10 @@ import {
 import { openQueue, openSchema, deleteQueue, deleteSchema } from '../index.jsx';
 import { queueGroups, orphanSchemas } from '../links.js';
 import CreateDialog, { type CreateTarget } from './CreateDialog.jsx';
+import { widthPref } from './widthPref.js';
 import s from './Builder.module.css';
 
-const WIDTH_KEY = 'builderNavWidth';
-const MIN_WIDTH = 180;
-const MAX_WIDTH = 640;
-const navWidth = signal(260);
-let widthLoaded = false;
-
-function loadWidth() {
-  if (widthLoaded) return;
-  widthLoaded = true;
-  globalThis.chrome?.storage?.local
-    ?.get([WIDTH_KEY])
-    .then((v) => {
-      const w = Number(v?.[WIDTH_KEY]);
-      if (w >= MIN_WIDTH && w <= MAX_WIDTH) navWidth.value = w;
-    })
-    .catch(() => {});
-}
-
-// Drag the panel's right edge; the width is saved when the drag ends.
-function startResize(e: MouseEvent) {
-  e.preventDefault();
-  const startX = e.clientX;
-  const startW = navWidth.value;
-  const onMove = (m: MouseEvent) => {
-    navWidth.value = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startW + m.clientX - startX));
-  };
-  const onUp = () => {
-    window.removeEventListener('mousemove', onMove);
-    window.removeEventListener('mouseup', onUp);
-    globalThis.chrome?.storage?.local?.set({ [WIDTH_KEY]: navWidth.value })?.catch(() => {});
-  };
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('mouseup', onUp);
-}
+const nav = widthPref('builderNavWidth', 260, 180, 640);
 
 function DeleteBtn({
   onClick,
@@ -78,14 +45,14 @@ function DeleteBtn({
 // Left panel: queues by workspace, then the schemas no queue uses. Every queue that shares
 // the open schema is highlighted, so it is plain which queues an edit changes.
 export default function Navigator() {
-  useEffect(loadWidth, []);
+  useEffect(nav.load, []);
   const [filter, setFilter] = useState('');
   const [creating, setCreating] = useState<CreateTarget | null>(null);
   const groups = queueGroups(workspaces.value, queues.value, filter);
   const orphans = orphanSchemas(schemas.value, queues.value, filter);
   const shared = sharedQueueIds.value;
   return (
-    <nav class={s.nav} style={{ width: `${navWidth.value}px` }}>
+    <nav class={s.nav} style={{ width: `${nav.width.value}px` }}>
       <input
         class={s.input}
         placeholder="Filter queues and schemas"
@@ -195,7 +162,7 @@ export default function Navigator() {
         class={s.navResizer}
         data-resize="nav"
         title="Drag to resize"
-        onMouseDown={(e) => startResize(e as MouseEvent)}
+        onMouseDown={(e) => nav.start(e as MouseEvent)}
       />
       {creating && <CreateDialog target={creating} onClose={() => setCreating(null)} />}
     </nav>

@@ -428,4 +428,35 @@ describe('Builder formula editor', () => {
     expect(store.history.value.past.length).toBe(1);
     delete (window as any).__builderRuffFormat;
   });
+
+  it('Expand makes the formula editor fill the inspector, and collapses back', () => {
+    openFormula();
+    const aside = () => root.querySelector('aside') as HTMLElement;
+    expect(aside().textContent).toContain('Description');
+    act(() => {
+      (root.querySelector('[data-action="expand-formula"]') as HTMLElement).click();
+    });
+    expect(aside().dataset.expanded).toBe('true');
+    expect(aside().textContent).not.toContain('Description');
+    expect(aside().querySelector('.cm-editor')).not.toBeNull();
+    act(() => {
+      (root.querySelector('[data-action="expand-formula"]') as HTMLElement).click();
+    });
+    expect(aside().dataset.expanded).toBeUndefined();
+  });
+});
+
+describe('Builder inspector width', () => {
+  it('dragging the inspector edge left widens it and remembers the width', () => {
+    const aside = root.querySelector('aside') as HTMLElement;
+    const before = parseInt(aside.style.width, 10);
+    const handle = root.querySelector('[data-resize="inspector"]') as HTMLElement;
+    act(() => {
+      handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 500, bubbles: true }));
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 420 }));
+      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 420 }));
+    });
+    expect(parseInt(aside.style.width, 10)).toBe(before + 80);
+    expect(chromeSet).toHaveBeenCalledWith({ builderInspectorWidth: before + 80 });
+  });
 });

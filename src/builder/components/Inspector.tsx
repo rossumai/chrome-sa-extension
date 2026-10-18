@@ -1,8 +1,10 @@
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { work, selectedKey } from '../store.js';
 import { apply } from '../index.jsx';
 import { setAttr, findByKey, type Node } from '../model.js';
 import CodeEditor from './CodeEditor.jsx';
+import { widthPref } from './widthPref.js';
 import s from './Builder.module.css';
 
 function get(node: Node, path: string[]): any {
@@ -231,19 +233,57 @@ function ReadOnlyJson({ label, value }: { label: string; value: unknown }) {
   );
 }
 
+const panel = widthPref('builderInspectorWidth', 300, 240, 900);
+
 export default function Inspector() {
-  const node = selectedKey.value ? findByKey(work.value, selectedKey.value) : null;
-  if (!node)
-    return (
-      <aside class={s.inspector}>
-        <div class={s.dim}>Select a row to see all its settings.</div>
-      </aside>
-    );
+  useEffect(panel.load, []);
+  const [expanded, setExpanded] = useState(false);
+  const key = selectedKey.value;
+  useEffect(() => setExpanded(false), [key]); // a new selection starts collapsed
+  const node = key ? findByKey(work.value, key) : null;
+  const shell = (children: any, fill = false) => (
+    <aside
+      class={s.inspector + (fill ? ' ' + s.inspectorFill : '')}
+      style={{ width: `${panel.width.value}px` }}
+      data-expanded={fill ? 'true' : undefined}
+    >
+      <div
+        class={s.inspectorResizer}
+        data-resize="inspector"
+        title="Drag to resize"
+        onMouseDown={(e) => panel.start(e as MouseEvent, -1)}
+      />
+      {children}
+    </aside>
+  );
+  if (!node) return shell(<div class={s.dim}>Select a row to see all its settings.</div>);
   const kind = node.category;
   const src = node.ui_configuration?.type;
   const type = node.type;
-  return (
-    <aside class={s.inspector}>
+  const formulaEditor = (fill: boolean) => (
+    <div class={s.field + (fill ? ' ' + s.grow : '')}>
+      <span class={s.fieldLabel}>Formula</span>
+      <CodeEditor
+        key={node.__key + ':formula:' + String(node.formula ?? '')}
+        name="formula"
+        value={String(node.formula ?? '')}
+        onCommit={(v) => edit(node, ['formula'], v === '' ? undefined : v)}
+        expanded={fill}
+        onToggleExpand={() => setExpanded(!fill)}
+      />
+    </div>
+  );
+  if (expanded && src === 'formula') {
+    return shell(
+      <Fragment>
+        <h4 class={s.mono + ' ' + s.inspTitle}>{node.id}</h4>
+        {formulaEditor(true)}
+      </Fragment>,
+      true,
+    );
+  }
+  return shell(
+    <Fragment>
       <h4 class={s.mono + ' ' + s.inspTitle}>{node.id}</h4>
       <div class={s.dim}>
         {kind}
@@ -292,17 +332,7 @@ export default function Inspector() {
               <Bool node={node} path={['can_obtain_token']} label="Can obtain token" />
             </div>
           )}
-          {src === 'formula' && (
-            <div class={s.field}>
-              <span class={s.fieldLabel}>Formula</span>
-              <CodeEditor
-                key={node.__key + ':formula:' + String(node.formula ?? '')}
-                name="formula"
-                value={String(node.formula ?? '')}
-                onCommit={(v) => edit(node, ['formula'], v === '' ? undefined : v)}
-              />
-            </div>
-          )}
+          {src === 'formula' && formulaEditor(false)}
           {src === 'reasoning' && (
             <div>
               <Text node={node} path={['prompt']} label="Prompt" multiline />
@@ -322,6 +352,6 @@ export default function Inspector() {
         </div>
       )}
       <div class={s.later}>Rules and hooks for this field (later)</div>
-    </aside>
+    </Fragment>,
   );
 }

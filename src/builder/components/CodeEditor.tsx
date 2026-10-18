@@ -17,8 +17,10 @@ function prefersDark() {
 
 const surface = EditorView.theme({
   '&': { fontSize: '12px', border: '1px solid var(--border)', borderRadius: '4px' },
-  '.cm-scroller': { fontFamily: 'ui-monospace, Menlo, monospace', maxHeight: '320px' },
+  '.cm-scroller': { fontFamily: 'ui-monospace, Menlo, monospace' },
 });
+// Collapsed, the editor stops growing at 320px and scrolls; expanded, it fills its panel.
+const collapsed = EditorView.theme({ '.cm-scroller': { maxHeight: '320px' } });
 
 // A Python editor for a formula. Commits on blur (one finished edit = one history entry) and
 // after Format. The parent remounts it by key when the value changes from outside (undo).
@@ -26,10 +28,14 @@ export default function CodeEditor({
   value,
   onCommit,
   name,
+  expanded = false,
+  onToggleExpand,
 }: {
   value: string;
   onCommit: (v: string) => void;
   name: string;
+  expanded?: boolean;
+  onToggleExpand?: () => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -46,6 +52,7 @@ export default function CodeEditor({
           basicSetup,
           python(),
           surface,
+          ...(expanded ? [] : [collapsed]),
           ...(prefersDark() ? [oneDark] : []),
           EditorView.domEventHandlers({
             blur: (_e, ed) => {
@@ -78,8 +85,8 @@ export default function CodeEditor({
   };
 
   return (
-    <div data-code={name}>
-      <div ref={host} />
+    <div data-code={name} class={expanded ? s.codeFill : undefined}>
+      <div ref={host} class={expanded ? s.codeHost : undefined} />
       <div class={s.codeBar}>
         <button
           type="button"
@@ -91,6 +98,16 @@ export default function CodeEditor({
         >
           {busy ? 'Formatting…' : 'Format'}
         </button>
+        {onToggleExpand && (
+          <button
+            type="button"
+            class={s.linkBtn}
+            data-action={`expand-${name}`}
+            onClick={onToggleExpand}
+          >
+            {expanded ? 'Collapse' : 'Expand'}
+          </button>
+        )}
         {error && <span class={s.rowError}>{error}</span>}
       </div>
     </div>
