@@ -297,8 +297,12 @@
   background: var(--bg-hover);
 }
 
+/* A section row reads as a header: one step darker than the rows, a rule above, a bit taller. */
 .sectionRow td {
-  background: var(--bg-sidebar);
+  background: var(--bg-base);
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+  padding-bottom: 6px;
   font-weight: 600;
 }
 
