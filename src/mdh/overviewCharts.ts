@@ -1,11 +1,12 @@
-// Pure layout/scale math for the Overview "Charts" panel (storage treemap +
-// docs×avg-size scatter). No DOM, no Preact — everything here is a pure
-// function so it can be unit-tested directly (see tests/mdh-overview-charts.test.js).
+// Pure layout/scale math for the Overview "Storage map" treemap. No DOM, no
+// Preact — everything here is a pure function so it can be unit-tested directly
+// (see tests/mdh-overview-charts.test.ts).
 //
 // Inputs are the same per-collection `rows` the OverviewPanel already builds:
 //   { name, count, size, storageSize, avgObjSize, nindexes, totalIndexSize, error? }
-// Treemap area encodes on-disk storage (storageSize); tile/dot color encodes
-// index overhead (totalIndexSize / storageSize). The scatter is log–log.
+// Treemap area encodes the on-disk footprint (storageSize + totalIndexSize —
+// MongoDB's `storageSize` excludes indexes, and its `totalSize` is exactly this
+// sum); tile color encodes index overhead (totalIndexSize / storageSize).
 
 export const TOP_N = 14;
 export const SCALE_MODES = ['linear', 'sqrt', 'log'];
@@ -65,6 +66,14 @@ export function indexOverhead(row: any): number {
   return i / s;
 }
 
+// On-disk footprint: document storage plus every regular index. Atlas Search
+// indexes are not in $collStats, so they are not counted.
+export function footprint(row: any): number {
+  const s = typeof row?.storageSize === 'number' ? row.storageSize : 0;
+  const i = typeof row?.totalIndexSize === 'number' ? row.totalIndexSize : 0;
+  return s + i;
+}
+
 // Area transform for the treemap. Linear is honest (area = share); sqrt/log
 // compress so small collections stay visible when one collection dominates.
 export function scaleArea(bytes: number, mode: string): number {
@@ -74,19 +83,22 @@ export function scaleArea(bytes: number, mode: string): number {
   return b;
 }
 
-// rows → treemap items: the top `topN` collections by storage, plus a single
-// aggregated "Other (k)" item folding the long tail (or none if it fits).
+// rows → treemap items: the top `topN` collections by footprint, plus a single
+// aggregated "Other (k)" item folding the long tail (or none if it fits). The
+// Other item keeps its `members`, largest first, so the tile can name them and
+// be area-scaled member by member.
 export function treemapItems(rows: any[], topN = TOP_N): any[] {
   const valid = (rows || []).filter(
-    (r) => r && !r.error && typeof r.storageSize === 'number' && r.storageSize > 0,
+    (r) => r && !r.error && typeof r.storageSize === 'number' && footprint(r) > 0,
   );
-  const sorted = valid.slice().sort((a, b) => b.storageSize - a.storageSize);
+  const sorted = valid.slice().sort((a, b) => footprint(b) - footprint(a));
   const head = sorted.slice(0, topN);
   const tail = sorted.slice(topN);
   const items: any[] = head.map((r) => ({
     name: r.name,
     storageSize: r.storageSize,
     totalIndexSize: r.totalIndexSize,
+    footprint: footprint(r),
     overhead: indexOverhead(r),
     isOther: false,
     row: r,
@@ -98,9 +110,11 @@ export function treemapItems(rows: any[], topN = TOP_N): any[] {
       name: `Other (${tail.length})`,
       storageSize,
       totalIndexSize,
+      footprint: storageSize + totalIndexSize,
       overhead: storageSize > 0 ? totalIndexSize / storageSize : 0,
       isOther: true,
       memberCount: tail.length,
+      members: tail.map((r) => ({ name: r.name, footprint: footprint(r) })),
     });
   }
   return items;
@@ -179,6 +193,11 @@ export function squarify(items: any[], width: number, height: number): any[] {
 }
 
 // Full treemap: items → scaled value → squarified rects → color attached.
+// "Other" is scaled member by member and then summed: sqrt and log are
+// concave, so scaling the summed bytes would shrink the tail below the area its
+// members get as separate tiles. Other stays last even when its area is larger
+// than some named tiles: squarify ends its final strip in the bottom-right
+// corner, so that is always where Other lands.
 export function buildTreemap(
   rows: any[],
   {
@@ -190,91 +209,13 @@ export function buildTreemap(
 ) {
   const items = treemapItems(rows, topN).map((it) => ({
     ...it,
-    value: scaleArea(it.storageSize, mode),
+    value: it.isOther
+      ? it.members.reduce((s: number, m: any) => s + scaleArea(m.footprint, mode), 0)
+      : scaleArea(it.footprint, mode),
   }));
   return squarify(items, width, height).map((t) => ({
     ...t,
     color: t.isOther ? null : overheadColor(t.overhead),
     textColor: t.isOther ? null : overheadTextColor(t.overhead),
   }));
-}
-
-// ~4 "nice" round tick values from 0..max, used for the linear/sqrt axes.
-function niceLinearTicks(max: number, count = 4): number[] {
-  if (!(max > 0)) return [0];
-  const raw = max / count;
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  const norm = raw / mag;
-  const step = (norm >= 5 ? 5 : norm >= 2 ? 2 : 1) * mag;
-  const ticks = [];
-  for (let v = 0; v <= max + step * 1e-9; v += step) ticks.push(v);
-  return ticks;
-}
-
-// Axis scale for the scatter in the requested mode. Maps a value to a pixel
-// position between pxLo (value-minimum end) and pxHi (value-maximum end); also
-// returns tick marks {v, p}. mode is shared with the treemap area scale.
-function axisScale(values: number[], mode: string, pxLo: number, pxHi: number) {
-  const max = Math.max(...values);
-  if (mode === 'log') {
-    const min = Math.min(...values);
-    let lo = Math.floor(Math.log10(min));
-    let hi = Math.ceil(Math.log10(max));
-    if (hi === lo) hi = lo + 1;
-    const pos = (v: number) => pxLo + ((Math.log10(v) - lo) / (hi - lo)) * (pxHi - pxLo);
-    const ticks = [];
-    for (let k = lo; k <= hi; k++) ticks.push({ v: 10 ** k, p: pos(10 ** k) });
-    return { pos, ticks };
-  }
-  const tf = mode === 'sqrt' ? Math.sqrt : (x: number) => x;
-  const domMax = tf(max) || 1;
-  const pos = (v: number) => pxLo + (tf(v) / domMax) * (pxHi - pxLo);
-  const ticks = niceLinearTicks(max).map((v) => ({ v, p: pos(v) }));
-  return { pos, ticks };
-}
-
-// Scatter layout: x = documents (count), y = avg doc size (avgObjSize), in the
-// shared scale `mode` (linear / sqrt / log) so both charts move together.
-// Returns positioned points, tick marks and plot geometry.
-export function buildScatter(
-  rows: any[],
-  { width, height, mode = 'log' }: { width: number; height: number; mode?: string } = {} as any,
-) {
-  const M = { l: 40, r: 10, t: 8, b: 24 };
-  const pw = Math.max(1, (width || 0) - M.l - M.r);
-  const ph = Math.max(1, (height || 0) - M.t - M.b);
-  const plot = { ...M, pw, ph, width: width || 0, height: height || 0 };
-
-  const pts = (rows || []).filter((r) => r && !r.error && r.count > 0 && r.avgObjSize > 0);
-  if (pts.length === 0 || !width || !height) return { points: [], xTicks: [], yTicks: [], plot };
-
-  const xScale = axisScale(
-    pts.map((r) => r.count),
-    mode,
-    M.l,
-    M.l + pw,
-  );
-  const yScale = axisScale(
-    pts.map((r) => r.avgObjSize),
-    mode,
-    M.t + ph,
-    M.t,
-  ); // y grows upward
-
-  const points = pts.map((r) => {
-    const overhead = indexOverhead(r);
-    return {
-      name: r.name,
-      cx: xScale.pos(r.count),
-      cy: yScale.pos(r.avgObjSize),
-      color: overheadColor(overhead),
-      count: r.count,
-      avgObjSize: r.avgObjSize,
-      storageSize: r.storageSize,
-      overhead,
-    };
-  });
-  const xTicks = xScale.ticks.map((t) => ({ v: t.v, x: t.p }));
-  const yTicks = yScale.ticks.map((t) => ({ v: t.v, y: t.p }));
-  return { points, xTicks, yTicks, plot };
 }
