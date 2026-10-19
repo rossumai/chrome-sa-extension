@@ -101,6 +101,7 @@ beforeEach(() => {
   store.annotationId.value = null;
   store.values.value = null;
   store.lineRow.value = {};
+  store.fieldFilter.value = '';
   act(() => {
     render(<App connected={true} />, root);
   });
@@ -477,5 +478,27 @@ describe('Builder inspector width', () => {
     });
     expect(parseInt(aside.style.width, 10)).toBe(before + 80);
     expect(chromeSet).toHaveBeenCalledWith({ builderInspectorWidth: before + 80 });
+  });
+});
+
+describe('Builder field filter', () => {
+  it('typing narrows the grid to matches and their parents, and hides the add links', () => {
+    const input = root.querySelector('input[data-filter="fields"]') as HTMLInputElement;
+    act(() => {
+      input.value = 'desc';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const shown = [...root.querySelectorAll('[data-row-key]')].map(
+      (r) =>
+        flatten(store.work.value).find((x) => x.key === r.getAttribute('data-row-key'))!.node.id,
+    );
+    expect(shown).toEqual(['items_section', 'items', 'item', 'item_desc']);
+    expect(root.querySelector('[data-action="add-field"]')).toBeNull();
+    expect(root.textContent).toContain('1 match');
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+    expect(store.fieldFilter.value).toBe('');
+    expect(root.querySelectorAll('[data-row-key]').length).toBe(flatten(store.work.value).length);
   });
 });

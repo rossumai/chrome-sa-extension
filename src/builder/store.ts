@@ -27,6 +27,8 @@ export const history = signal<History<Draft>>(initHistory({ name: '', content: [
 // Every schema in the org, names only (the list call returns full objects; content is dropped).
 export const schemas = signal<{ id: number; url: string; name: string }[]>([]);
 export const selectedKey = signal<string | null>(null);
+// The grid's id/label filter (see fieldFilter.ts); '' shows every row.
+export const fieldFilter = signal('');
 export const rowErrors = signal<Map<string, string[]>>(new Map());
 export const generalErrors = signal<string[]>([]); // save errors not tied to a row
 export const saving = signal(false);

@@ -1,7 +1,8 @@
 import { h, Fragment } from 'preact';
 import { signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
-import { work, status, rowErrors, selectedKey, values, lineRow } from '../store.js';
+import { work, status, rowErrors, selectedKey, values, lineRow, fieldFilter } from '../store.js';
+import { visibleKeys } from '../fieldFilter.js';
 import { apply } from '../index.jsx';
 import {
   setAttr,
@@ -420,13 +421,17 @@ function renderNode(
   depth: number,
   parentDeleted: boolean,
   tableId: string | null = null,
+  show: Set<string> | null = null,
 ): any[] {
+  if (show && !show.has(node.__key)) return [];
   const deleted = parentDeleted || !!node.__deleted;
   const out: any[] = [
     <Row key={node.__key} node={node} depth={depth} deleted={deleted} tableId={tableId} />,
   ];
   const childTable = node.category === 'multivalue' ? node.id : tableId;
-  for (const c of kids(node)) out.push(...renderNode(c, depth + 1, deleted, childTable));
+  for (const c of kids(node)) out.push(...renderNode(c, depth + 1, deleted, childTable, show));
+  // Adding while filtered would put a row the filter then hides; the links wait.
+  if (show) return out;
   if (!deleted && node.category === 'section') {
     out.push(<AddRow key={node.__key + ':add'} parentKey={node.__key} depth={depth + 1} section />);
   }
@@ -500,6 +505,7 @@ const HEAD: Record<string, any> = {
 export default function Grid() {
   useEffect(loadWidths, []);
   const w = widths.value;
+  const show = visibleKeys(work.value, fieldFilter.value);
   // The annotation's values go after every editing column, the row actions included.
   const cols = values.value ? [...COLS, 'value'] : COLS;
   const total = 22 + 60 + cols.reduce((sum, c) => sum + w[c], 0);
@@ -528,19 +534,21 @@ export default function Grid() {
         </tr>
       </thead>
       <tbody>
-        {work.value.flatMap((n) => renderNode(n, 0, false))}
-        <tr class={s.addSectionRow}>
-          <td colSpan={cols.length + 2}>
-            <button
-              type="button"
-              class={s.linkBtn}
-              data-action="add-section"
-              onClick={addNewSection}
-            >
-              + Add section
-            </button>
-          </td>
-        </tr>
+        {work.value.flatMap((n) => renderNode(n, 0, false, null, show))}
+        {!show && (
+          <tr class={s.addSectionRow}>
+            <td colSpan={cols.length + 2}>
+              <button
+                type="button"
+                class={s.linkBtn}
+                data-action="add-section"
+                onClick={addNewSection}
+              >
+                + Add section
+              </button>
+            </td>
+          </tr>
+        )}
       </tbody>
     </table>
   );

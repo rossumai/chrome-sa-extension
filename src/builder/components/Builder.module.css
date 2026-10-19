@@ -790,3 +790,14 @@
   display: inline-flex;
   gap: 14px;
 }
+
+.pickBar .fieldFilter {
+  width: 240px;
+}
+
+.barGap {
+  width: 1px;
+  align-self: stretch;
+  margin: 0 6px;
+  background: var(--border);
+}
