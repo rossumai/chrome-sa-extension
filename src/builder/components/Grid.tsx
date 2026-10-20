@@ -13,6 +13,7 @@ import {
   fieldRules,
   ruleFilterIds,
   ruleMarks,
+  ruleGlobalMarks,
 } from '../store.js';
 import { visibleKeys } from '../fieldFilter.js';
 import { apply, openRuleEditor } from '../index.jsx';
@@ -34,6 +35,7 @@ import {
 } from '../model.js';
 import EditableCell from './EditableCell.jsx';
 import Icon, { type IconName } from './icons.jsx';
+import type { ActionMark } from '../rules.js';
 import s from './Builder.module.css';
 
 export const TYPES = ['string', 'number', 'date', 'enum', 'button'];
@@ -283,12 +285,12 @@ const MARK_ICONS: Record<string, { icon: IconName; label: string }> = {
   info: { icon: 'info', label: 'Info message' },
   show_hide: { icon: 'eye', label: 'Show/hide' },
   blocker: { icon: 'ban', label: 'Automation blocker' },
+  send_email: { icon: 'mail', label: 'Send email' },
 };
 
-// One icon per action the open rule anchors on this field (Rossum's icon style, colored by kind).
-function ActionMarks({ fieldId }: { fieldId: string }) {
-  const marks = ruleMarks.value?.get(fieldId);
-  if (!marks) return null;
+// One icon per action (Rossum's icon style, colored by kind); text and event on hover.
+function MarkIcons({ marks }: { marks: ActionMark[] }) {
+  if (!marks.length) return null;
   return (
     <span class={s.marks}>
       {marks.map((m) => {
@@ -297,9 +299,9 @@ function ActionMarks({ fieldId }: { fieldId: string }) {
           <span
             class={s.mark + ' ' + (s[`mark_${m.kind}`] || '')}
             data-mark={m.kind}
-            title={`${k?.label ?? m.kind}${m.text ? `: ${m.text}` : ''} (${m.event})`}
+            title={`${k?.label ?? m.kind}${m.text && m.text !== m.event ? `: ${m.text}` : ''} (${m.event})`}
           >
-            {k ? <Icon name={k.icon} size={14} /> : '•'}
+            <Icon name={k?.icon ?? 'zap'} size={14} />
           </span>
         );
       })}
@@ -359,12 +361,6 @@ function Row({
       </td>
       <td data-col="id" style={{ paddingLeft: `${6 + depth * 16}px` }}>
         {kind === 'section' && <span class={s.caret}>▾ </span>}
-        {role === 'condition' || role === 'both' ? (
-          <span class={s.ruleBadge} data-mark="if" title="The rule condition reads this field">
-            if
-          </span>
-        ) : null}
-        <ActionMarks fieldId={String(node.id ?? '')} />
         <EditableCell
           mono
           value={String(node.id ?? '')}
@@ -459,6 +455,18 @@ function Row({
           </button>
         ) : null}
       </td>
+      {ruleMarks.value && (
+        <td data-col="rule">
+          {role === 'condition' || role === 'both' ? (
+            <span class={s.ruleBadge} data-mark="if" title="The rule condition reads this field">
+              if
+            </span>
+          ) : null}
+          {kind !== 'section' && (
+            <MarkIcons marks={ruleMarks.value.get(String(node.id ?? '')) || []} />
+          )}
+        </td>
+      )}
       {values.value && (
         <td data-col="value" class={s.value}>
           <ValueCell node={node} tableId={tableId} />
@@ -492,7 +500,10 @@ function AddRow({
   return (
     <tr class={s.addRow}>
       <td />
-      <td colSpan={values.value ? 8 : 7} style={{ paddingLeft: `${6 + depth * 16}px` }}>
+      <td
+        colSpan={7 + (ruleMarks.value ? 1 : 0) + (values.value ? 1 : 0)}
+        style={{ paddingLeft: `${6 + depth * 16}px` }}
+      >
         <span class={s.addLinks}>
           {section ? (
             <Fragment>
@@ -546,6 +557,7 @@ const DEFAULT_WIDTHS: Record<string, number> = {
   flags: 110,
   rules: 64,
   value: 180,
+  rule: 110,
 };
 const MIN_WIDTH = 50;
 const widths = signal<Record<string, number>>({ ...DEFAULT_WIDTHS });
@@ -586,6 +598,7 @@ const HEAD: Record<string, any> = {
   label: 'Label',
   rules: 'Rules',
   value: 'Value',
+  rule: 'Rule',
   type: 'Type',
   source: 'Source',
   flags: (
@@ -602,7 +615,8 @@ export default function Grid() {
   const w = widths.value;
   const show = visibleKeys(work.value, fieldFilter.value, ruleFilterIds.value, 'or');
   // The annotation's values go after every editing column, the row actions included.
-  const cols = values.value ? [...COLS, 'value'] : COLS;
+  const ruleOn = !!ruleMarks.value;
+  const cols = [...COLS, ...(ruleOn ? ['rule'] : []), ...(values.value ? ['value'] : [])];
   const total = 22 + 60 + cols.reduce((sum, c) => sum + w[c], 0);
   const head = (c: string) => (
     <th data-col={c} class={s.resizable}>
@@ -618,6 +632,7 @@ export default function Grid() {
           <col data-col={c} style={{ width: `${w[c]}px` }} />
         ))}
         <col style={{ width: '60px' }} />
+        {ruleOn && <col data-col="rule" style={{ width: `${w.rule}px` }} />}
         {values.value && <col data-col="value" style={{ width: `${w.value}px` }} />}
       </colgroup>
       <thead>
@@ -625,10 +640,21 @@ export default function Grid() {
           <th />
           {COLS.map(head)}
           <th />
+          {ruleOn && head('rule')}
           {values.value && head('value')}
         </tr>
       </thead>
       <tbody>
+        {ruleOn && (
+          <tr class={s.row + ' ' + s.sectionRow + ' ' + s.docRow} data-doc-row="">
+            <td />
+            <td colSpan={COLS.length + 1}>Whole document</td>
+            <td data-col="rule">
+              <MarkIcons marks={ruleGlobalMarks.value || []} />
+            </td>
+            {values.value && <td />}
+          </tr>
+        )}
         {work.value.flatMap((n) => renderNode(n, 0, false, null, show))}
         {!show && (
           <tr class={s.addSectionRow}>

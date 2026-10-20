@@ -3,7 +3,13 @@ import { signal, computed } from '@preact/signals';
 import { initHistory, type History } from './history.js';
 import { changeSummary, rowStatus, type Node } from './model.js';
 import type { AnnotationValues } from './values.js';
-import { ruleFieldRefs, ruleRoles, rulesByField, fieldActionMarks } from './rules.js';
+import {
+  ruleFieldRefs,
+  ruleRoles,
+  rulesByField,
+  fieldActionMarks,
+  globalActionMarks,
+} from './rules.js';
 import { sameDraft, type RuleDraft } from './ruleDraft.js';
 
 export const domain = signal('');
@@ -111,4 +117,9 @@ export const ruleFilterIds = computed(() => {
 // The open rule's actions per field, for the grid's icons.
 export const ruleMarks = computed(() =>
   ruleEditor.value ? fieldActionMarks(ruleEditor.value.draft) : null,
+);
+
+// The open rule's actions that anchor on no field (document messages and blockers, emails…).
+export const ruleGlobalMarks = computed(() =>
+  ruleEditor.value ? globalActionMarks(ruleEditor.value.draft) : null,
 );

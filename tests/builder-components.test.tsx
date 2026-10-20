@@ -791,6 +791,9 @@ describe('Builder rule action icons', () => {
       },
     ]);
     expect(marks('doc_id')).toEqual(['if', 'warning']);
+    // the marks live in the rule column, not next to the field name
+    expect(row('doc_id').querySelector('td[data-col="id"] [data-mark]')).toBeNull();
+    expect(row('doc_id').querySelector('td[data-col="rule"] [data-mark="warning"]')).not.toBeNull();
     expect(marks('item_desc')).toEqual(['error', 'blocker']);
     expect(marks('vendor')).toEqual(['show_hide']);
     expect(row('doc_id').querySelector('[data-mark="warning"]')!.getAttribute('title')).toContain(
@@ -813,5 +816,46 @@ describe('Builder rule action icons', () => {
     });
     expect(store.ruleEditor.value!.draft.trigger_condition).toBe(before);
     expect(root.querySelector('[data-insert]')).toBeNull();
+  });
+});
+
+describe('Builder rule column and whole-document row', () => {
+  const heads = () =>
+    [...root.querySelectorAll('th[data-col]')].map((th) => th.getAttribute('data-col'));
+
+  it('the rule column appears only while a rule is open, before Value', () => {
+    expect(heads()).not.toContain('rule');
+    act(() => {
+      store.rules.value = [
+        {
+          id: 60,
+          name: 'Global',
+          enabled: true,
+          trigger_condition: 'field.doc_id',
+          actions: [
+            {
+              id: 'a',
+              type: 'add_automation_blocker',
+              event: 'validation',
+              payload: { content: 'Stop' },
+            },
+            { id: 'b', type: 'send_email', event: 'annotation_exported', payload: {} },
+            { id: 'c', type: 'change_queue', event: 'annotation_confirmed', payload: {} },
+          ],
+        },
+      ];
+    });
+    pickRule('60');
+    expect(heads()).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules', 'rule']);
+    const doc = root.querySelector('[data-doc-row]') as HTMLElement;
+    expect(doc.textContent).toContain('Whole document');
+    expect(
+      [...doc.querySelectorAll('[data-mark]')].map((e) => e.getAttribute('data-mark')),
+    ).toEqual(['blocker', 'send_email', 'change_queue']);
+    act(() => {
+      (root.querySelector('[data-action="clear-rule"]') as HTMLElement).click();
+    });
+    expect(heads()).not.toContain('rule');
+    expect(root.querySelector('[data-doc-row]')).toBeNull();
   });
 });

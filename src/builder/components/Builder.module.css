@@ -960,3 +960,7 @@
 .mark_blocker {
   color: var(--danger);
 }
+
+.docRow td {
+  font-style: italic;
+}
