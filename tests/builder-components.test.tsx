@@ -119,7 +119,6 @@ beforeEach(() => {
   store.fieldFilter.value = '';
   store.ruleId.value = null;
   store.ruleEditor.value = null;
-  store.insertTarget.value = null;
   store.rules.value = [
     {
       id: 40,
@@ -633,36 +632,6 @@ describe('Builder rule mode', () => {
     expect(root.querySelector('aside[data-panel="field"]')).toBeNull();
   });
 
-  it('clicking a field after focusing the condition inserts field.<id> at the end, spaced', () => {
-    act(() => {
-      (row('vendor').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
-    });
-    act(() => {
-      content().dispatchEvent(new FocusEvent('focus'));
-    });
-    expect(row('doc_id')).toBeNull(); // only the rule's own field shows...
-    typeFilter('doc');
-    act(() => {
-      row('doc_id').click(); // ...until the text filter brings another one in
-    });
-    expect(condition()).toBe('field.vendor field.doc_id');
-    expect(store.selectedKey.value).toBeNull();
-  });
-
-  it("clicking a field after focusing an action's field box puts the bare id there", () => {
-    act(() => {
-      (row('vendor').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
-    });
-    act(() => {
-      (root.querySelector('input[data-insert="schema_id"]') as HTMLInputElement).focus();
-    });
-    typeFilter('desc');
-    act(() => {
-      row('item_desc').click();
-    });
-    expect(store.ruleEditor.value!.draft.actions[0].payload.schema_id).toBe('item_desc');
-  });
-
   it('picking a rule opens it in the rule editor; the bar has no Edit button', () => {
     pickRule('40');
     expect(store.ruleEditor.value!.ruleId).toBe(40);
@@ -779,5 +748,70 @@ describe('Builder rule filter', () => {
     ];
     expect(order[0].getAttribute('data-filter')).toBe('fields');
     expect(order[1].getAttribute('data-picker')).toBe('rule');
+  });
+});
+
+describe('Builder rule action icons', () => {
+  function openRule(actions: any[], condition = 'field.doc_id') {
+    act(() => {
+      store.rules.value = [
+        { id: 50, name: 'Icons', enabled: true, trigger_condition: condition, actions },
+      ];
+    });
+    pickRule('50');
+  }
+  const marks = (id: string) =>
+    [...row(id).querySelectorAll('[data-mark]')].map((e) => e.getAttribute('data-mark'));
+
+  it('shows an icon per action kind on the field it targets, and "if" for condition reads', () => {
+    openRule([
+      {
+        id: 'a',
+        type: 'show_message',
+        event: 'validation',
+        payload: { type: 'warning', content: 'Check', schema_id: 'doc_id' },
+      },
+      {
+        id: 'b',
+        type: 'show_message',
+        event: 'validation',
+        payload: { type: 'error', content: 'Bad', schema_id: 'item_desc' },
+      },
+      {
+        id: 'c',
+        type: 'show_hide_field',
+        event: 'validation',
+        payload: { schema_ids: ['vendor'] },
+      },
+      {
+        id: 'd',
+        type: 'add_automation_blocker',
+        event: 'validation',
+        payload: { content: 'Stop', schema_id: 'item_desc' },
+      },
+    ]);
+    expect(marks('doc_id')).toEqual(['if', 'warning']);
+    expect(marks('item_desc')).toEqual(['error', 'blocker']);
+    expect(marks('vendor')).toEqual(['show_hide']);
+    expect(row('doc_id').querySelector('[data-mark="warning"]')!.getAttribute('title')).toContain(
+      'Check',
+    );
+  });
+
+  it('a click on a row in rule mode no longer inserts anything into the rule', () => {
+    openRule([
+      {
+        id: 'a',
+        type: 'show_message',
+        event: 'validation',
+        payload: { type: 'info', content: 'x', schema_id: 'doc_id' },
+      },
+    ]);
+    const before = store.ruleEditor.value!.draft.trigger_condition;
+    act(() => {
+      row('doc_id').click();
+    });
+    expect(store.ruleEditor.value!.draft.trigger_condition).toBe(before);
+    expect(root.querySelector('[data-insert]')).toBeNull();
   });
 });

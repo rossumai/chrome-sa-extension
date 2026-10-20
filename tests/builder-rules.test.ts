@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { ruleFieldRefs, ruleRoles, rulesByField } from '../src/builder/rules.js';
+import {
+  ruleFieldRefs,
+  ruleRoles,
+  rulesByField,
+  fieldActionMarks,
+  globalActionMarks,
+} from '../src/builder/rules.js';
 
 const rule = {
   id: 1,
@@ -46,5 +52,57 @@ describe('rulesByField', () => {
       [2, 'condition'],
     ]);
     expect(map.has('nothing')).toBe(false);
+  });
+});
+
+describe('action marks', () => {
+  const r = {
+    actions: [
+      {
+        type: 'show_message',
+        event: 'validation',
+        payload: { type: 'info', content: 'Hi', schema_id: 'a' },
+      },
+      {
+        type: 'show_message',
+        event: 'validation',
+        payload: { content: 'No type', schema_id: 'a' },
+      },
+      {
+        type: 'show_hide_field',
+        event: 'validation',
+        payload: { schema_id: 'b', schema_ids: ['b', 'c'] },
+      },
+      {
+        type: 'add_automation_blocker',
+        event: 'validation',
+        payload: { content: 'Stop', schema_id: 'c' },
+      },
+      { type: 'add_automation_blocker', event: 'validation', payload: { content: 'Global stop' } },
+      {
+        type: 'show_message',
+        event: 'validation',
+        payload: { type: 'warning', content: 'Global' },
+      },
+      { type: 'send_email', event: 'annotation_exported', payload: { to: 'x@example.com' } },
+    ],
+  };
+
+  it('marks each anchored field by kind; a message with no type counts as an error', () => {
+    const m = fieldActionMarks(r);
+    expect(m.get('a')!.map((x) => [x.kind, x.text])).toEqual([
+      ['info', 'Hi'],
+      ['error', 'No type'],
+    ]);
+    expect(m.get('b')!.map((x) => x.kind)).toEqual(['show_hide']);
+    expect(m.get('c')!.map((x) => x.kind)).toEqual(['show_hide', 'blocker']);
+  });
+
+  it('collects the actions with no field anchor as global ones', () => {
+    expect(globalActionMarks(r).map((x) => [x.kind, x.text])).toEqual([
+      ['blocker', 'Global stop'],
+      ['warning', 'Global'],
+      ['send_email', 'annotation_exported'],
+    ]);
   });
 });

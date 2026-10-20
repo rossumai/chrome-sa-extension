@@ -846,11 +846,6 @@
   background: var(--mdh-special-bidi);
 }
 
-/* Rule mode: rows are click-to-insert targets. */
-.pickable td {
-  cursor: copy;
-}
-
 .ruleHead {
   display: flex;
   justify-content: space-between;
@@ -932,4 +927,36 @@
 
 .row:hover .rulesAdd {
   visibility: visible;
+}
+
+.marks {
+  display: inline-flex;
+  gap: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.mark {
+  display: inline-flex;
+  color: var(--text-secondary);
+}
+
+.mark_error {
+  color: var(--danger);
+}
+
+.mark_warning {
+  color: var(--warning);
+}
+
+.mark_info {
+  color: var(--accent);
+}
+
+.mark_show_hide {
+  color: var(--mdh-special-bidi);
+}
+
+.mark_blocker {
+  color: var(--danger);
 }

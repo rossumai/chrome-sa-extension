@@ -95,7 +95,6 @@ async function load(queueId: number | null, schemaId: number | null) {
   if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   store.ruleEditor.value = null;
-  store.insertTarget.value = null;
   const seq = ++openSeq;
   store.selectedQueueId.value = queueId;
   store.selectedSchemaId.value = schemaId;
@@ -407,7 +406,6 @@ export function openRuleEditor(id: number | null, fieldId?: string) {
   const draft = rule ? draftFromRule(rule) : emptyDraft(fieldId);
   store.ruleEditor.value = { ruleId: rule ? rule.id : null, base: draft, draft };
   store.ruleErrors.value = [];
-  store.insertTarget.value = null;
   store.selectedKey.value = null;
   if (rule) store.ruleId.value = rule.id;
 }
@@ -421,7 +419,6 @@ export function updateRuleDraft(patch: Partial<RuleDraft>) {
 export function closeRuleEditor() {
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   store.ruleEditor.value = null;
-  store.insertTarget.value = null;
   store.ruleErrors.value = [];
   store.ruleId.value = null;
 }

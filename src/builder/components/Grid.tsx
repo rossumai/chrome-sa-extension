@@ -10,10 +10,9 @@ import {
   lineRow,
   fieldFilter,
   ruleRoleById,
-  ruleEditor,
-  insertTarget,
   fieldRules,
   ruleFilterIds,
+  ruleMarks,
 } from '../store.js';
 import { visibleKeys } from '../fieldFilter.js';
 import { apply, openRuleEditor } from '../index.jsx';
@@ -34,6 +33,7 @@ import {
   type Node,
 } from '../model.js';
 import EditableCell from './EditableCell.jsx';
+import Icon, { type IconName } from './icons.jsx';
 import s from './Builder.module.css';
 
 export const TYPES = ['string', 'number', 'date', 'enum', 'button'];
@@ -90,28 +90,7 @@ function addNewSection() {
 
 // The three flags as icon toggles in Rossum's own style: green when on, grey and struck
 // through when off.
-const ICON_PATHS: Record<'visible' | 'export' | 'required', any> = {
-  visible: (
-    <g>
-      <path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0" />
-      <circle cx="12" cy="12" r="3" />
-    </g>
-  ),
-  export: (
-    <g>
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </g>
-  ),
-  required: (
-    <g>
-      <path d="M12 6v12" />
-      <path d="M17.2 9 6.8 15" />
-      <path d="m6.8 9 10.4 6" />
-    </g>
-  ),
-};
+const FLAG_ICONS = { visible: 'eye', export: 'export', required: 'asterisk' } as const;
 const FLAG_TITLES = { visible: 'Visible', export: 'Export', required: 'Required' };
 
 function FlagButton({
@@ -135,19 +114,7 @@ function FlagButton({
         onToggle(!on);
       }}
     >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        {ICON_PATHS[flag]}
-        {!on && <path d="m3 3 18 18" />}
-      </svg>
+      <Icon name={FLAG_ICONS[flag]} slashed={!on} />
     </button>
   );
 }
@@ -310,6 +277,36 @@ function RulesCell({ fieldId }: { fieldId: string }) {
   );
 }
 
+const MARK_ICONS: Record<string, { icon: IconName; label: string }> = {
+  error: { icon: 'error', label: 'Error message' },
+  warning: { icon: 'warning', label: 'Warning message' },
+  info: { icon: 'info', label: 'Info message' },
+  show_hide: { icon: 'eye', label: 'Show/hide' },
+  blocker: { icon: 'ban', label: 'Automation blocker' },
+};
+
+// One icon per action the open rule anchors on this field (Rossum's icon style, colored by kind).
+function ActionMarks({ fieldId }: { fieldId: string }) {
+  const marks = ruleMarks.value?.get(fieldId);
+  if (!marks) return null;
+  return (
+    <span class={s.marks}>
+      {marks.map((m) => {
+        const k = MARK_ICONS[m.kind];
+        return (
+          <span
+            class={s.mark + ' ' + (s[`mark_${m.kind}`] || '')}
+            data-mark={m.kind}
+            title={`${k?.label ?? m.kind}${m.text ? `: ${m.text}` : ''} (${m.event})`}
+          >
+            {k ? <Icon name={k.icon} size={14} /> : '•'}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 function Row({
   node,
   depth,
@@ -330,7 +327,6 @@ function Row({
   const cls = [
     s.row,
     role ? s.ruleHit : '',
-    ruleEditor.value ? s.pickable : '',
     kind === 'section' ? s.sectionRow : '',
     selectedKey.value === key ? s.selected : '',
     st === 'new' ? s.isNew : '',
@@ -344,16 +340,6 @@ function Row({
       data-status={st === 'deleted' ? undefined : st}
       data-deleted={deleted ? 'true' : undefined}
       data-rule={role}
-      onClickCapture={(e) => {
-        // Rule mode: a click inserts this field's id into the rule input focused last, and
-        // nothing in the row (ID edit, flags, delete) reacts — one click does one thing.
-        if (!ruleEditor.value) return;
-        // The Rules cell keeps working, to jump from one rule to another.
-        if ((e.target as Element).closest('[data-col="rules"]')) return;
-        e.stopPropagation();
-        e.preventDefault();
-        if (kind !== 'section' && node.id) insertTarget.value?.(String(node.id));
-      }}
       onClick={() => (selectedKey.value = key)}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
@@ -373,20 +359,12 @@ function Row({
       </td>
       <td data-col="id" style={{ paddingLeft: `${6 + depth * 16}px` }}>
         {kind === 'section' && <span class={s.caret}>▾ </span>}
-        {role && (
-          <span
-            class={s.ruleBadge}
-            title={
-              role === 'both'
-                ? 'The rule reads this field and acts on it'
-                : role === 'condition'
-                  ? 'The rule condition reads this field'
-                  : 'A rule action targets this field'
-            }
-          >
-            {role === 'condition' ? 'if' : role === 'action' ? '→' : 'if →'}
+        {role === 'condition' || role === 'both' ? (
+          <span class={s.ruleBadge} data-mark="if" title="The rule condition reads this field">
+            if
           </span>
-        )}
+        ) : null}
+        <ActionMarks fieldId={String(node.id ?? '')} />
         <EditableCell
           mono
           value={String(node.id ?? '')}

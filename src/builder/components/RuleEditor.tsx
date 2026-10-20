@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { ruleEditor, ruleDirty, ruleErrors, ruleSaving, insertTarget } from '../store.js';
+import { ruleEditor, ruleDirty, ruleErrors, ruleSaving } from '../store.js';
 import { updateRuleDraft, closeRuleEditor, saveRule } from '../index.jsx';
 import { ACTION_TYPES, ACTION_EVENTS, newAction, withActionType } from '../ruleDraft.js';
 import CodeEditor from './CodeEditor.jsx';
@@ -23,12 +23,10 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
   const known = ACTION_TYPES.includes(action.type);
   const anchor = (
     <label class={s.field}>
-      <span class={s.fieldLabel}>Field (click one in the grid)</span>
+      <span class={s.fieldLabel}>Field</span>
       <input
         class={s.input + ' ' + s.mono}
-        data-insert="schema_id"
         value={p.schema_id ?? ''}
-        onFocus={() => (insertTarget.value = (id) => setPayload(i, 'schema_id', id))}
         onInput={(e) => setPayload(i, 'schema_id', (e.currentTarget as HTMLInputElement).value)}
       />
     </label>
@@ -119,17 +117,10 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
       )}
       {action.type === 'show_hide_field' && (
         <label class={s.field}>
-          <span class={s.fieldLabel}>Fields shown when the rule fires (click to add)</span>
+          <span class={s.fieldLabel}>Fields shown when the rule fires</span>
           <input
             class={s.input + ' ' + s.mono}
-            data-insert="schema_ids"
             value={(p.schema_ids || []).join(', ')}
-            onFocus={() =>
-              (insertTarget.value = (id) => {
-                const cur: string[] = ruleEditor.value!.draft.actions[i].payload?.schema_ids || [];
-                if (!cur.includes(id)) setPayload(i, 'schema_ids', [...cur, id]);
-              })
-            }
             onChange={(e) =>
               setPayload(
                 i,
@@ -168,8 +159,7 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
   );
 }
 
-// Rule mode's right panel. A click on a field in the grid inserts its id into whichever
-// rule input was focused last: `field.<id>` into the condition, the bare id into a field box.
+// Rule mode's right panel: the open rule's name, condition and actions, with its own Save.
 export default function RuleEditor() {
   useEffect(rightPanel.load, []);
   const ed = ruleEditor.value!;
@@ -193,7 +183,6 @@ export default function RuleEditor() {
           ✕
         </button>
       </div>
-      <div class={s.dim}>Click a field in the grid to insert its ID where you were typing.</div>
       <label class={s.field}>
         <span class={s.fieldLabel}>Name</span>
         <input
@@ -229,7 +218,6 @@ export default function RuleEditor() {
           name="condition"
           value={d.trigger_condition}
           onCommit={(v) => updateRuleDraft({ trigger_condition: v })}
-          onFocusInsert={(insert) => (insertTarget.value = (id) => insert(`field.${id}`))}
         />
       </div>
       <div class={s.field}>
