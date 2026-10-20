@@ -10,6 +10,8 @@ vi.mock('../src/builder/api.js', () => ({
   getAnnotationContent: vi.fn(),
   listAnnotations: vi.fn(),
   listRules: vi.fn(async () => []),
+  createRule: vi.fn(),
+  patchRule: vi.fn(),
   listWorkspaces: vi.fn(async () => []),
   listQueues: vi.fn(async () => []),
   listSchemas: vi.fn(async () => []),
@@ -29,6 +31,10 @@ import {
   deleteQueue,
   deleteSchema,
   createUnlinkedSchema,
+  openRuleEditor,
+  updateRuleDraft,
+  saveRule,
+  closeRuleEditor,
   save,
   pickAnnotation,
   renameSchema,
@@ -255,5 +261,76 @@ describe('rules', () => {
     expect(store.ruleId.value).toBeNull();
     await vi.waitFor(() => expect(store.rules.value.map((r) => r.id)).toEqual([4]));
     expect(api.listRules).toHaveBeenCalledWith(2);
+  });
+});
+
+describe('rule editor', () => {
+  beforeEach(() => {
+    vi.mocked(api.createRule).mockReset();
+    vi.mocked(api.patchRule).mockReset();
+    store.ruleEditor.value = null;
+    store.queues.value = [{ id: 1, name: 'A', url: 'q/1', schema: 's/7' }];
+    store.selectedQueueId.value = 1;
+    store.workspaces.value = [{ id: 10, url: 'w/10', name: 'AP', organization: 'o/1' }];
+    store.rules.value = [
+      { id: 4, name: 'R', enabled: true, trigger_condition: 'field.a', actions: [] },
+    ];
+  });
+
+  it('a new rule is created on the open queue, then reopens as the saved rule', async () => {
+    openRuleEditor(null);
+    updateRuleDraft({ name: 'New', trigger_condition: 'field.x > 0' });
+    vi.mocked(api.createRule).mockResolvedValue({
+      id: 9,
+      name: 'New',
+      trigger_condition: 'field.x > 0',
+      actions: [],
+    });
+    vi.mocked(api.listRules).mockResolvedValue([{ id: 9, name: 'New' }]);
+    await saveRule();
+    const body = vi.mocked(api.createRule).mock.calls[0][0];
+    expect(body).toMatchObject({
+      name: 'New',
+      trigger_condition: 'field.x > 0',
+      queues: ['q/1'],
+      organization: 'o/1',
+    });
+    expect(store.ruleEditor.value!.ruleId).toBe(9);
+    expect(store.ruleDirty.value).toBe(false);
+    expect(store.ruleId.value).toBe(9);
+  });
+
+  it('an existing rule is patched', async () => {
+    openRuleEditor(4);
+    updateRuleDraft({ trigger_condition: 'field.a > 2' });
+    vi.mocked(api.patchRule).mockResolvedValue({
+      id: 4,
+      name: 'R',
+      trigger_condition: 'field.a > 2',
+      actions: [],
+    });
+    await saveRule();
+    expect(api.patchRule).toHaveBeenCalledWith(4, {
+      name: 'R',
+      description: '',
+      enabled: true,
+      trigger_condition: 'field.a > 2',
+      actions: [],
+    });
+  });
+
+  it('refuses to save a rule without a name, and asks before closing with unsaved edits', async () => {
+    openRuleEditor(null);
+    await saveRule();
+    expect(api.createRule).not.toHaveBeenCalled();
+    expect(store.ruleErrors.value).toContain('The rule needs a name');
+    updateRuleDraft({ name: 'x' });
+    const ask = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    closeRuleEditor();
+    expect(store.ruleEditor.value).not.toBeNull();
+    ask.mockReturnValue(true);
+    closeRuleEditor();
+    expect(store.ruleEditor.value).toBeNull();
+    ask.mockRestore();
   });
 });

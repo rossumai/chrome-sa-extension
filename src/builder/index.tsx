@@ -9,6 +9,7 @@ import { saveSchema, type SaveResult } from './save.js';
 import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { annotationValues } from './values.js';
+import { draftFromRule, emptyDraft, draftBody, draftErrors, type RuleDraft } from './ruleDraft.js';
 
 function fail(err: any, fallback: string) {
   store.error.value = isRateLimited(err) ? rateLimitMessage(err) : err?.message || fallback;
@@ -92,6 +93,9 @@ export async function openSchema(schemaId: number) {
 
 async function load(queueId: number | null, schemaId: number | null) {
   if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
+  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
+  store.ruleEditor.value = null;
+  store.insertTarget.value = null;
   const seq = ++openSeq;
   store.selectedQueueId.value = queueId;
   store.selectedSchemaId.value = schemaId;
@@ -389,5 +393,66 @@ export async function deleteSchema(id: number) {
     await refreshLists();
   } catch (err: any) {
     fail(err, 'Failed to delete the schema');
+  }
+}
+
+// ---- Rule mode ---------------------------------------------------------------------------
+// The right panel edits one native Rule. A rule is its own object in Rossum, so it has its
+// own Save, separate from the schema's staged edits and undo stack.
+
+/** Open a rule from the queue's list, or a new one (null). */
+export function openRuleEditor(id: number | null) {
+  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
+  const rule = id == null ? null : store.rules.value.find((r) => r.id === id);
+  const draft = rule ? draftFromRule(rule) : emptyDraft();
+  store.ruleEditor.value = { ruleId: rule ? rule.id : null, base: draft, draft };
+  store.ruleErrors.value = [];
+  store.insertTarget.value = null;
+  store.selectedKey.value = null;
+  if (rule) store.ruleId.value = rule.id;
+}
+
+export function updateRuleDraft(patch: Partial<RuleDraft>) {
+  const ed = store.ruleEditor.value;
+  if (!ed) return;
+  store.ruleEditor.value = { ...ed, draft: { ...ed.draft, ...patch } };
+}
+
+export function closeRuleEditor() {
+  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
+  store.ruleEditor.value = null;
+  store.insertTarget.value = null;
+  store.ruleErrors.value = [];
+}
+
+export async function saveRule() {
+  const ed = store.ruleEditor.value;
+  const queue = store.selectedQueue.value;
+  if (!ed) return;
+  const errors = draftErrors(ed.draft);
+  if (!queue && ed.ruleId == null) errors.push('Open a queue to attach the new rule to');
+  store.ruleErrors.value = errors;
+  if (errors.length) return;
+  store.ruleSaving.value = true;
+  try {
+    const saved =
+      ed.ruleId != null
+        ? await api.patchRule(ed.ruleId, draftBody(ed.draft))
+        : await api.createRule(
+            draftBody(ed.draft, {
+              queueUrl: queue!.url,
+              organization: await organizationUrl().catch(() => undefined),
+            }),
+          );
+    if (queue) await loadRules(queue.id);
+    const draft = draftFromRule(saved);
+    store.ruleEditor.value = { ruleId: saved?.id ?? ed.ruleId, base: draft, draft };
+    if (saved?.id != null) store.ruleId.value = saved.id;
+  } catch (err: any) {
+    store.ruleErrors.value = [
+      isRateLimited(err) ? rateLimitMessage(err) : err?.message || 'Failed to save the rule',
+    ];
+  } finally {
+    store.ruleSaving.value = false;
   }
 }

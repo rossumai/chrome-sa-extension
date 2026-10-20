@@ -103,6 +103,8 @@ beforeEach(() => {
   store.lineRow.value = {};
   store.fieldFilter.value = '';
   store.ruleId.value = null;
+  store.ruleEditor.value = null;
+  store.insertTarget.value = null;
   store.rules.value = [
     {
       id: 40,
@@ -594,5 +596,80 @@ describe('Builder rule highlight', () => {
       (root.querySelector('[data-action="clear-rule"]') as HTMLElement).click();
     });
     expect(row('doc_id').dataset.rule).toBeUndefined();
+  });
+});
+
+describe('Builder rule mode', () => {
+  const content = () => root.querySelector('[data-code="condition"] .cm-content') as HTMLElement;
+  const condition = () => store.ruleEditor.value!.draft.trigger_condition;
+
+  it('+ Rule opens the rule editor in place of the field inspector', () => {
+    act(() => {
+      row('doc_id').click();
+    });
+    expect(root.querySelector('aside[data-panel="field"]')).not.toBeNull();
+    act(() => {
+      (root.querySelector('[data-action="new-rule"]') as HTMLElement).click();
+    });
+    expect(root.querySelector('aside[data-panel="rule"]')).not.toBeNull();
+    expect(root.querySelector('aside[data-panel="field"]')).toBeNull();
+  });
+
+  it('clicking a field after focusing the condition inserts field.<id> and selects nothing', () => {
+    act(() => {
+      (root.querySelector('[data-action="new-rule"]') as HTMLElement).click();
+    });
+    act(() => {
+      content().dispatchEvent(new FocusEvent('focus'));
+    });
+    act(() => {
+      row('doc_id').click();
+    });
+    expect(condition()).toBe('field.doc_id');
+    expect(store.selectedKey.value).toBeNull();
+  });
+
+  it("clicking a field after focusing an action's field box puts the bare id there", () => {
+    act(() => {
+      (root.querySelector('[data-action="new-rule"]') as HTMLElement).click();
+    });
+    act(() => {
+      (root.querySelector('input[data-insert="schema_id"]') as HTMLInputElement).focus();
+    });
+    act(() => {
+      row('item_desc').click();
+    });
+    expect(store.ruleEditor.value!.draft.actions[0].payload.schema_id).toBe('item_desc');
+  });
+
+  it('Edit opens the picked rule', () => {
+    const select = root.querySelector('select[data-picker="rule"]') as HTMLSelectElement;
+    act(() => {
+      select.value = '40';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    act(() => {
+      (root.querySelector('[data-action="edit-rule"]') as HTMLElement).click();
+    });
+    expect(store.ruleEditor.value!.ruleId).toBe(40);
+    expect(content().textContent).toContain('is_empty(field.doc_id)');
+  });
+});
+
+describe('Builder shortcuts inside a code editor', () => {
+  it('⌘Z and Esc typed in CodeMirror leave the schema history and the panel alone', () => {
+    act(() => {
+      (row('doc_id').querySelector('button[data-col="visible"]') as HTMLButtonElement).click();
+    });
+    act(() => {
+      (root.querySelector('[data-action="new-rule"]') as HTMLElement).click();
+    });
+    const cm = root.querySelector('[data-code="condition"] .cm-content') as HTMLElement;
+    act(() => {
+      cm.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', metaKey: true, bubbles: true }));
+      cm.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+    expect(store.history.value.past.length).toBe(1);
+    expect(store.ruleEditor.value).not.toBeNull();
   });
 });

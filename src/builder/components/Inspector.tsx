@@ -4,7 +4,7 @@ import { work, selectedKey } from '../store.js';
 import { apply } from '../index.jsx';
 import { setAttr, findByKey, type Node } from '../model.js';
 import CodeEditor from './CodeEditor.jsx';
-import { widthPref } from './widthPref.js';
+import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
 
 function get(node: Node, path: string[]): any {
@@ -233,7 +233,7 @@ function ReadOnlyJson({ label, value }: { label: string; value: unknown }) {
   );
 }
 
-const panel = widthPref('builderInspectorWidth', 300, 240, 900);
+const panel = rightPanel;
 
 export default function Inspector() {
   useEffect(panel.load, []);
@@ -246,6 +246,7 @@ export default function Inspector() {
       class={s.inspector + (fill ? ' ' + s.inspectorFill : '')}
       style={{ width: `${panel.width.value}px` }}
       data-expanded={fill ? 'true' : undefined}
+      data-panel="field"
     >
       <div
         class={s.inspectorResizer}

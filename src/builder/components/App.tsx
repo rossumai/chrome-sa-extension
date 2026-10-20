@@ -10,21 +10,31 @@ import {
   generalErrors,
   queues,
   selectedKey,
+  ruleEditor,
 } from '../store.js';
-import { undoChange, redoChange, loadQueues, openQueue, openSchema } from '../index.jsx';
+import {
+  undoChange,
+  redoChange,
+  loadQueues,
+  openQueue,
+  openSchema,
+  closeRuleEditor,
+} from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
 import Grid from './Grid.jsx';
 import Inspector from './Inspector.jsx';
+import RuleEditor from './RuleEditor.jsx';
 import SaveDialog from './SaveDialog.jsx';
 import AnnotationPicker from './AnnotationPicker.jsx';
 import s from './Builder.module.css';
 
 function inField(t: EventTarget | null): boolean {
   const el = t as HTMLElement | null;
-  // Text entry only: a focused switch or select must not swallow ⌘Z after a change.
+  // Text entry only: a focused switch or select must not swallow ⌘Z after a change. A code
+  // editor (CodeMirror's contenteditable) is text entry with its own undo and Esc.
   if (!el) return false;
-  if (el.tagName === 'TEXTAREA') return true;
+  if (el.tagName === 'TEXTAREA' || el.isContentEditable || el.closest?.('.cm-editor')) return true;
   return el.tagName === 'INPUT' && (el as HTMLInputElement).type !== 'checkbox';
 }
 
@@ -35,7 +45,8 @@ export default function App({ connected }: { connected: boolean | null }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !inField(e.target)) {
-        selectedKey.value = null; // closes the inspector
+        if (ruleEditor.value) closeRuleEditor();
+        else selectedKey.value = null; // closes the inspector
         return;
       }
       if (!(e.metaKey || e.ctrlKey) || inField(e.target)) return;
@@ -112,7 +123,7 @@ export default function App({ connected }: { connected: boolean | null }) {
               >
                 <Grid />
               </div>
-              <Inspector />
+              {ruleEditor.value ? <RuleEditor /> : <Inspector />}
             </div>
           </div>
         )}

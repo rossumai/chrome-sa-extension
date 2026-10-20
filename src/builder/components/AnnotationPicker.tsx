@@ -13,7 +13,7 @@ import {
 } from '../store.js';
 import { flatten } from '../model.js';
 import { countMatches } from '../fieldFilter.js';
-import { pickAnnotation, clearAnnotation } from '../index.jsx';
+import { pickAnnotation, clearAnnotation, openRuleEditor } from '../index.jsx';
 import s from './Builder.module.css';
 
 // The bar above the grid: a field filter (id or label); an annotation (one of the queue's
@@ -109,6 +109,24 @@ export default function AnnotationPicker() {
               </option>
             ))}
           </select>
+          {ruleId.value != null && (
+            <button
+              type="button"
+              class={s.linkBtn}
+              data-action="edit-rule"
+              onClick={() => openRuleEditor(ruleId.value)}
+            >
+              Edit
+            </button>
+          )}
+          <button
+            type="button"
+            class={s.linkBtn}
+            data-action="new-rule"
+            onClick={() => openRuleEditor(null)}
+          >
+            + Rule
+          </button>
           {ruleId.value != null && (
             <button
               type="button"

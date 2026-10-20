@@ -127,4 +127,16 @@ describe('builder api', () => {
       'https://x.rossum.ai/api/v1/rules/?queue=3&page_size=100',
     );
   });
+
+  it('creates and patches rules', async () => {
+    fetchMock.mockResolvedValue(jsonRes({ id: 4 }));
+    await api.createRule({ name: 'R' });
+    await api.patchRule(4, { name: 'R2' });
+    expect(
+      fetchMock.mock.calls.map(([url, o]: any) => [url, o.method, JSON.parse(o.body)]),
+    ).toEqual([
+      ['https://x.rossum.ai/api/v1/rules/', 'POST', { name: 'R' }],
+      ['https://x.rossum.ai/api/v1/rules/4', 'PATCH', { name: 'R2' }],
+    ]);
+  });
 });

@@ -30,12 +30,15 @@ export default function CodeEditor({
   name,
   expanded = false,
   onToggleExpand,
+  onFocusInsert,
 }: {
   value: string;
   onCommit: (v: string) => void;
   name: string;
   expanded?: boolean;
   onToggleExpand?: () => void;
+  /** Called on focus with a function that inserts text at the cursor (and commits it). */
+  onFocusInsert?: (insert: (text: string) => void) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -55,6 +58,13 @@ export default function CodeEditor({
           ...(expanded ? [] : [collapsed]),
           ...(prefersDark() ? [oneDark] : []),
           EditorView.domEventHandlers({
+            focus: (_e, ed) => {
+              onFocusInsert?.((text) => {
+                ed.dispatch(ed.state.replaceSelection(text));
+                ed.focus();
+                onCommit(ed.state.doc.toString());
+              });
+            },
             blur: (_e, ed) => {
               const text = ed.state.doc.toString();
               if (text !== value) onCommit(text);

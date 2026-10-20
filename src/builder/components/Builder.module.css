@@ -845,3 +845,22 @@
   color: var(--bg-card); /* white on violet in light mode, dark on the lighter violet in dark */
   background: var(--mdh-special-bidi);
 }
+
+/* Rule mode: rows are click-to-insert targets. */
+.pickable td {
+  cursor: copy;
+}
+
+.ruleHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actionCard {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-sidebar);
+}

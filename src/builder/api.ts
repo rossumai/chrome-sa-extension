@@ -160,3 +160,11 @@ export function deleteQueue(id: number): Promise<any> {
 export function deleteSchema(id: number): Promise<any> {
   return request('DELETE', `/api/v1/schemas/${id}`);
 }
+
+export function createRule(body: Record<string, unknown>): Promise<any> {
+  return request('POST', '/api/v1/rules/', body);
+}
+
+export function patchRule(id: number, body: Record<string, unknown>): Promise<any> {
+  return request('PATCH', `/api/v1/rules/${id}`, body);
+}

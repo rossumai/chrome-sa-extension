@@ -10,6 +10,8 @@ import {
   lineRow,
   fieldFilter,
   ruleRoleById,
+  ruleEditor,
+  insertTarget,
 } from '../store.js';
 import { visibleKeys } from '../fieldFilter.js';
 import { apply } from '../index.jsx';
@@ -257,6 +259,7 @@ function Row({
   const cls = [
     s.row,
     role ? s.ruleHit : '',
+    ruleEditor.value ? s.pickable : '',
     kind === 'section' ? s.sectionRow : '',
     selectedKey.value === key ? s.selected : '',
     st === 'new' ? s.isNew : '',
@@ -270,6 +273,14 @@ function Row({
       data-status={st === 'deleted' ? undefined : st}
       data-deleted={deleted ? 'true' : undefined}
       data-rule={role}
+      onClickCapture={(e) => {
+        // Rule mode: a click inserts this field's id into the rule input focused last, and
+        // nothing in the row (ID edit, flags, delete) reacts — one click does one thing.
+        if (!ruleEditor.value) return;
+        e.stopPropagation();
+        e.preventDefault();
+        if (kind !== 'section' && node.id) insertTarget.value?.(String(node.id));
+      }}
       onClick={() => (selectedKey.value = key)}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {

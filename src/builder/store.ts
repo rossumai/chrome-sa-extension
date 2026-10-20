@@ -4,6 +4,7 @@ import { initHistory, type History } from './history.js';
 import { changeSummary, rowStatus, type Node } from './model.js';
 import type { AnnotationValues } from './values.js';
 import { ruleFieldRefs, ruleRoles } from './rules.js';
+import { sameDraft, type RuleDraft } from './ruleDraft.js';
 
 export const domain = signal('');
 export const token = signal('');
@@ -77,5 +78,23 @@ export function startDraft(name: string, content: Node[]) {
 export const rules = signal<any[]>([]);
 export const ruleId = signal<number | null>(null);
 export const pickedRule = computed(() => rules.value.find((r) => r.id === ruleId.value) || null);
-export const ruleRefs = computed(() => (pickedRule.value ? ruleFieldRefs(pickedRule.value) : null));
+// Rule mode: the right panel edits one rule (ruleId null = a new one). While it is open, a
+// click on a field inserts its id into whichever rule input was focused last (insertTarget).
+export type RuleEditorState = { ruleId: number | null; base: RuleDraft; draft: RuleDraft };
+export const ruleEditor = signal<RuleEditorState | null>(null);
+export const ruleDirty = computed(() =>
+  ruleEditor.value ? !sameDraft(ruleEditor.value.base, ruleEditor.value.draft) : false,
+);
+export const insertTarget = signal<((id: string) => void) | null>(null);
+export const ruleErrors = signal<string[]>([]);
+export const ruleSaving = signal(false);
+
+// The fields to highlight: the rule being edited (live, as it is typed), else the picked one.
+export const ruleRefs = computed(() =>
+  ruleEditor.value
+    ? ruleFieldRefs(ruleEditor.value.draft)
+    : pickedRule.value
+      ? ruleFieldRefs(pickedRule.value)
+      : null,
+);
 export const ruleRoleById = computed(() => (ruleRefs.value ? ruleRoles(ruleRefs.value) : null));
