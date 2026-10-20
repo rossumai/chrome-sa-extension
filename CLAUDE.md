@@ -267,9 +267,10 @@ draws "Sandbox" in the navbar's badge row and nothing for production, and while 
 screen saying Sandbox that chip is hidden with `display: none` — never moved, React owns it —
 and comes back whenever ours is not. It is matched by its "Sandbox" label OR its
 `MuiChip-colorInfo` class, since the label is translated; "Developer mode" is not an
-environment and is left alone. The chip never truncates, so the pill shows only in a gap that
-holds the chip plus 60px of name (or the whole pill, if shorter — `pillMinWidth`). The line stays
-even when the pill has no room.
+environment, and is hidden on its own by `dev-mode-chip.ts` (always on): it only repeats the
+popup's Dev features switch and costs header room on a small screen. The chip never truncates,
+so the pill shows only in a gap that holds the chip plus 60px of name (or the whole pill, if
+shorter — `pillMinWidth`). The line stays even when the pill has no room.
 
 **NetSuite** and **Coupa** are self-contained single files with no observer. Coupa uses two
 strategies: JSON from `#initial_full_react_data` (React pages), and DOM attributes with
@@ -448,7 +449,8 @@ Enforced by tests, not by convention. Do not weaken them.
   ONE helper, `orgNameOn` in `src/rossum/orgName.ts`, since the popup coercing it
   (`!!vals[key]`) showed the switch off while the feature ran. It is also the one key read on
   BOTH sides: it governs the header name and the Console's connection bars. `closable-tooltips`,
-  `dataset-mgmt-suggest` and `track-viewed` are always on, with no toggle and no key.
+  `dataset-mgmt-suggest`, `track-viewed` and `dev-mode-chip` are always on, with no toggle and
+  no key.
 - **The one gate** — `experimentalUnlocked`: 5 quick clicks on the popup's version hash, hiding
   only the Academy, mirrored live via `chrome.storage.onChanged`.
 - **Auth staging** — `consoleAuth_<uuid>`: single-use, 24h TTL, removed on read.
