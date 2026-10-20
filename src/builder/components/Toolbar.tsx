@@ -10,9 +10,11 @@ import {
   saving,
   renamed,
   draftName,
+  schemaFabry,
 } from '../store.js';
-import { undoChange, redoChange, discard, renameSchema } from '../index.jsx';
+import { undoChange, redoChange, discard, renameSchema, openSchemaFabry } from '../index.jsx';
 import EditableCell from './EditableCell.jsx';
+import FabryMark from '../../ui/FabryMark.jsx';
 import { canUndo, canRedo } from '../history.js';
 import s from './Builder.module.css';
 
@@ -57,6 +59,15 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       )}
       <span class={s.spacer} />
       {text && <span class={s.staged}>{text}</span>}
+      <button
+        type="button"
+        class={s.btn + ' ' + s.fabryBtn}
+        data-action="open-schema-fabry"
+        title="Ask Mr. Fabry to change the schema"
+        onClick={openSchemaFabry}
+      >
+        <FabryMark size={14} animated={schemaFabry.value.busy} /> Mr. Fabry
+      </button>
       <button
         type="button"
         class={s.btn}

@@ -43,6 +43,9 @@ import {
   askRuleAssistant,
   discardRule,
   askFieldAssistant,
+  openSchemaFabry,
+  askSchemaFabry,
+  fixWithFabry,
   save,
   pickAnnotation,
   renameSchema,
@@ -501,5 +504,100 @@ describe('Mr. Fabry on a field', () => {
     store.queues.value = [{ id: 2, name: 'B', schema: 'https://x/api/v1/schemas/22' }];
     await openQueue(2);
     expect(store.fieldAssist.value.chatId).toBeNull();
+  });
+});
+
+describe('Mr. Fabry on the whole schema', () => {
+  const reply = (text: string) =>
+    vi
+      .mocked(agentApi.streamMessage)
+      .mockImplementation(async (_id: string, content: string, opts: any) => {
+        if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
+      });
+  const content = () => [
+    {
+      category: 'section',
+      id: 's',
+      label: 'S',
+      children: [{ category: 'datapoint', id: 'doc_id', label: 'Doc', type: 'string' }],
+    },
+  ];
+
+  beforeEach(() => {
+    vi.mocked(agentApi.createChat).mockClear();
+    vi.mocked(agentApi.streamMessage).mockReset();
+    vi.mocked(api.validateSchema).mockReset();
+    store.ruleEditor.value = null;
+    store.schema.value = { id: 7, name: 'S', modified_at: 't0', content: content() };
+    store.startDraft('S', withKeys(content()));
+    store.schemaFabry.value = {
+      open: false,
+      chatId: null,
+      busy: false,
+      error: null,
+      turns: [],
+      problems: [],
+    };
+  });
+
+  it('applies the changes as one edit, validates the result, and reports what it skipped', async () => {
+    openSchemaFabry();
+    expect(store.schemaFabry.value.open).toBe(true);
+    reply(
+      JSON.stringify({
+        summary: 'Added a PO field',
+        changes: [
+          {
+            op: 'add',
+            kind: 'field',
+            parent: 's',
+            field: { id: 'po', label: 'PO', type: 'string' },
+          },
+          { op: 'delete', id: 'ghost' },
+        ],
+      }),
+    );
+    vi.mocked(api.validateSchema).mockResolvedValue({});
+    await askSchemaFabry('Add a PO number');
+    expect(store.history.value.past.length).toBe(1);
+    expect(flatten(store.work.value).map((r) => r.node.id)).toEqual(['s', 'doc_id', 'po']);
+    const sent = vi.mocked(api.validateSchema).mock.calls[0];
+    expect(sent[0]).toBe(7);
+    expect(sent[1][0].children.map((c: any) => c.id)).toEqual(['doc_id', 'po']);
+    const turn = store.schemaFabry.value.turns.at(-1)!;
+    expect(turn).toMatchObject({ role: 'fabry', text: 'Added a PO field', applied: 1 });
+    expect(store.schemaFabry.value.problems).toEqual(['Skipped: No field with ID ghost']);
+    expect([...store.fabryChangedKeys.value!].length).toBe(1);
+  });
+
+  it('puts validate errors on their rows and offers them to Mr. Fabry to fix', async () => {
+    openSchemaFabry();
+    reply(
+      JSON.stringify({
+        summary: 'x',
+        changes: [{ op: 'set', id: 'doc_id', attrs: { label: 'D' } }],
+      }),
+    );
+    vi.mocked(api.validateSchema).mockResolvedValue({
+      content: [{ children: { '0': { label: ['bad'] } } }],
+    });
+    await askSchemaFabry('rename');
+    const k = flatten(store.work.value).find((r) => r.node.id === 'doc_id')!.key;
+    expect(store.rowErrors.value.get(k)).toEqual(['label: bad']);
+    expect(store.schemaFabry.value.problems).toEqual(['doc_id: label: bad']);
+    reply(JSON.stringify({ summary: 'fixed', changes: [] }));
+    vi.mocked(api.validateSchema).mockResolvedValue({});
+    await fixWithFabry();
+    const fixPrompt = vi.mocked(agentApi.streamMessage).mock.calls.at(-1)![1];
+    expect(fixPrompt).toContain('doc_id: label: bad');
+    expect(agentApi.createChat).toHaveBeenCalledTimes(1);
+    expect(store.schemaFabry.value.problems).toEqual([]);
+  });
+
+  it('opening the schema panel closes the rule editor', () => {
+    store.rules.value = [{ id: 4, name: 'R', trigger_condition: 'field.a', actions: [] }];
+    openRuleEditor(4);
+    openSchemaFabry();
+    expect(store.ruleEditor.value).toBeNull();
   });
 });

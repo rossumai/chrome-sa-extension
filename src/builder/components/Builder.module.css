@@ -985,3 +985,31 @@
   gap: 6px;
   margin-bottom: 4px;
 }
+
+.fabryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.turns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.turnYou {
+  align-self: flex-end;
+  max-width: 85%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--bg-hover);
+}
+
+.turnFabry {
+  padding: 6px 8px;
+  border: 1px solid var(--info-border);
+  border-radius: 8px;
+  background: var(--info-bg);
+}

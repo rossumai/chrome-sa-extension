@@ -11,6 +11,7 @@ import {
   queues,
   selectedKey,
   ruleEditor,
+  schemaFabry,
 } from '../store.js';
 import {
   undoChange,
@@ -19,12 +20,14 @@ import {
   openQueue,
   openSchema,
   closeRuleEditor,
+  closeSchemaFabry,
 } from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
 import Grid from './Grid.jsx';
 import Inspector from './Inspector.jsx';
 import RuleEditor from './RuleEditor.jsx';
+import SchemaFabryPanel from './SchemaFabryPanel.jsx';
 import SaveDialog from './SaveDialog.jsx';
 import AnnotationPicker from './AnnotationPicker.jsx';
 import s from './Builder.module.css';
@@ -45,7 +48,8 @@ export default function App({ connected }: { connected: boolean | null }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !inField(e.target)) {
-        if (ruleEditor.value) closeRuleEditor();
+        if (schemaFabry.value.open) closeSchemaFabry();
+        else if (ruleEditor.value) closeRuleEditor();
         else selectedKey.value = null; // closes the inspector
         return;
       }
@@ -124,7 +128,13 @@ export default function App({ connected }: { connected: boolean | null }) {
               >
                 <Grid />
               </div>
-              {ruleEditor.value ? <RuleEditor /> : <Inspector />}
+              {schemaFabry.value.open ? (
+                <SchemaFabryPanel />
+              ) : ruleEditor.value ? (
+                <RuleEditor />
+              ) : (
+                <Inspector />
+              )}
             </div>
           </div>
         )}

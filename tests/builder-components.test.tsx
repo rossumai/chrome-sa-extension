@@ -119,6 +119,16 @@ beforeEach(() => {
   store.fieldFilter.value = '';
   store.ruleId.value = null;
   store.ruleEditor.value = null;
+  store.schemaFabry.value = {
+    open: false,
+    chatId: null,
+    busy: false,
+    error: null,
+    turns: [],
+    problems: [],
+  };
+  store.fabryChangedKeys.value = null;
+  store.onlyFabryChanges.value = false;
   store.rules.value = [
     {
       id: 40,
@@ -959,5 +969,25 @@ describe('Builder field inspector: Mr. Fabry box', () => {
     expect(
       root.querySelector('aside[data-expanded="true"] textarea[data-fabry-prompt]'),
     ).not.toBeNull();
+  });
+});
+
+describe('Builder schema-wide Mr. Fabry', () => {
+  it('the toolbar button opens the Mr. Fabry panel; "only changes" narrows the grid', () => {
+    act(() => {
+      (root.querySelector('[data-action="open-schema-fabry"]') as HTMLElement).click();
+    });
+    expect(root.querySelector('aside[data-panel="schema-fabry"]')).not.toBeNull();
+    act(() => {
+      store.fabryChangedKeys.value = new Set([keyOf('item_desc')]);
+    });
+    act(() => {
+      (root.querySelector('input[data-action="only-fabry"]') as HTMLInputElement).click();
+    });
+    const shown = [...root.querySelectorAll('[data-row-key]')].map(
+      (r) =>
+        flatten(store.work.value).find((x) => x.key === r.getAttribute('data-row-key'))!.node.id,
+    );
+    expect(shown).toEqual(['items_section', 'items', 'item', 'item_desc']);
   });
 });

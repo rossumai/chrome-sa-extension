@@ -15,8 +15,10 @@ import {
   ruleMarks,
   ruleGlobalMarks,
   schemaLocked,
+  onlyFabryChanges,
+  fabryChangedKeys,
 } from '../store.js';
-import { visibleKeys } from '../fieldFilter.js';
+import { visibleKeys, withAncestors } from '../fieldFilter.js';
 import { apply, openRuleEditor } from '../index.jsx';
 import {
   setAttr,
@@ -630,7 +632,11 @@ const HEAD: Record<string, any> = {
 export default function Grid() {
   useEffect(loadWidths, []);
   const w = widths.value;
-  const show = visibleKeys(work.value, fieldFilter.value, ruleFilterIds.value, 'or');
+  let show = visibleKeys(work.value, fieldFilter.value, ruleFilterIds.value, 'or');
+  if (onlyFabryChanges.value && fabryChangedKeys.value) {
+    const mine = withAncestors(work.value, fabryChangedKeys.value);
+    show = show ? new Set([...show].filter((k) => mine.has(k))) : mine;
+  }
   // The annotation's values go after every editing column, the row actions included.
   const ruleOn = !!ruleMarks.value;
   const cols = [...COLS, ...(ruleOn ? ['rule'] : []), ...(values.value ? ['value'] : [])];

@@ -56,3 +56,14 @@ export function countMatches(nodes: Node[], query: string): number {
   if (!q) return 0;
   return flatten(nodes).filter((r) => matches(r.node, q)).length;
 }
+
+/** `keys` plus every ancestor of them, so a changed column still shows under its table. */
+export function withAncestors(nodes: Node[], keys: Set<string>): Set<string> {
+  const parent = new Map(flatten(nodes).map((r) => [r.key, r.parentKey]));
+  const out = new Set<string>();
+  for (const key of keys) {
+    for (let k: string | null = key; k !== null && !out.has(k); k = parent.get(k) ?? null)
+      out.add(k);
+  }
+  return out;
+}

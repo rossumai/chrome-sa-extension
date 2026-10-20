@@ -161,3 +161,31 @@ export const fieldAssist = signal<FieldAssistState>({
   reply: null,
   warnings: [],
 });
+
+// Mr. Fabry for the whole schema: a panel with the conversation; its changes land as one
+// undoable edit. fabryChangedKeys = rows the last answer touched (for "only its changes").
+export type SchemaTurn = {
+  role: 'you' | 'fabry';
+  text: string;
+  applied?: number;
+  problems?: string[];
+  reply?: string; // the raw reply, when it held no usable list of changes
+};
+export type SchemaFabryState = {
+  open: boolean;
+  chatId: string | null;
+  busy: boolean;
+  error: string | null;
+  turns: SchemaTurn[];
+  problems: string[]; // what is still wrong after the last answer — "Ask Mr. Fabry to fix"
+};
+export const schemaFabry = signal<SchemaFabryState>({
+  open: false,
+  chatId: null,
+  busy: false,
+  error: null,
+  turns: [],
+  problems: [],
+});
+export const fabryChangedKeys = signal<Set<string> | null>(null);
+export const onlyFabryChanges = signal(false);

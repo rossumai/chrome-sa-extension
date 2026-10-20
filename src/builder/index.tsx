@@ -4,8 +4,17 @@
 import * as api from './api.js';
 import * as store from './store.js';
 import { push, undo, redo } from './history.js';
-import { withKeys, findByKey, mergeAttrs, type Node } from './model.js';
-import { saveSchema, type SaveResult } from './save.js';
+import {
+  withKeys,
+  findByKey,
+  mergeAttrs,
+  localErrors,
+  stripForSave,
+  rowStatus,
+  flatten,
+  type Node,
+} from './model.js';
+import { saveSchema, mapValidateErrors, type SaveResult } from './save.js';
 import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { annotationValues } from './values.js';
@@ -13,6 +22,15 @@ import * as agentApi from '../agent/agentApi.js';
 import { buildRulePrompt, buildFollowupPrompt, parseRuleReply } from './ruleAssist.js';
 import { runAssist, schemaFieldList } from './assist.js';
 import { buildFieldPrompt, buildFieldFollowup, parseFieldReply } from './fieldAssist.js';
+import {
+  compactSchema,
+  buildSchemaPrompt,
+  buildSchemaFollowup,
+  buildFixPrompt,
+  parseSchemaReply,
+  applyChanges,
+  fitSchema,
+} from './schemaAssist.js';
 import { draftFromRule, emptyDraft, draftBody, draftErrors, type RuleDraft } from './ruleDraft.js';
 
 function fail(err: any, fallback: string) {
@@ -417,6 +435,7 @@ export function openRuleEditor(id: number | null, fieldId?: string) {
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   const rule = id == null ? null : store.rules.value.find((r) => r.id === id);
   const draft = rule ? draftFromRule(rule) : emptyDraft(fieldId);
+  store.schemaFabry.value = { ...store.schemaFabry.value, open: false }; // one right panel at a time
   store.ruleEditor.value = {
     ruleId: rule ? rule.id : null,
     base: draft,
@@ -583,4 +602,110 @@ export async function askFieldAssistant(key: string, request: string) {
         : err?.message || 'Mr. Fabry is not available';
     store.fieldAssist.value = { ...store.fieldAssist.value, busy: false, error: msg };
   }
+}
+
+// ---- Mr. Fabry for the whole schema --------------------------------------------------------
+
+export function openSchemaFabry() {
+  if (store.ruleEditor.value) closeRuleEditor();
+  if (store.ruleEditor.value) return; // the user kept an unsaved rule open
+  store.schemaFabry.value = { ...store.schemaFabry.value, open: true };
+  store.selectedKey.value = null;
+}
+
+export function closeSchemaFabry() {
+  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
+  store.onlyFabryChanges.value = false;
+}
+
+/**
+ * Ask for schema changes (or, with `fix`, for fixes to the problems left by the last answer).
+ * Every change that can be applied is, as ONE undoable edit; the result is checked locally and
+ * with the validate dry run; what is still wrong is shown on rows and kept for "fix".
+ */
+export async function askSchemaFabry(request: string, fix?: string[]) {
+  const st = store.schemaFabry.value;
+  if (st.busy || (!fix && !request.trim())) return;
+  const schema = compactSchema(store.work.value);
+  const fitted = fitSchema(schema, (sch) =>
+    fix
+      ? buildFixPrompt(fix, sch)
+      : st.chatId
+        ? buildSchemaFollowup(request, sch)
+        : buildSchemaPrompt({ request, schema: sch }),
+  );
+  if (!fitted.ok) {
+    store.schemaFabry.value = { ...st, error: fitted.error };
+    return;
+  }
+  const content = fitted.prompt;
+  const you = { role: 'you' as const, text: fix ? 'Fix the problems above.' : request };
+  store.schemaFabry.value = { ...st, busy: true, error: null, turns: [...st.turns, you] };
+  try {
+    const res = await runAssist({ agentApi, chatId: st.chatId, content });
+    const parsed = parseSchemaReply(res.text);
+    const cur = store.schemaFabry.value;
+    if (!parsed.ok) {
+      store.schemaFabry.value = {
+        ...cur,
+        chatId: res.chatId,
+        busy: false,
+        turns: [...cur.turns, { role: 'fabry', text: parsed.error, reply: res.text }],
+      };
+      return;
+    }
+    const before = store.work.value;
+    const r = applyChanges(before, parsed.changes);
+    if (r.applied) apply(r.nodes);
+    store.fabryChangedKeys.value = new Set(rowStatus(before, r.nodes).keys());
+
+    // Check the exact content Save would send: local rules, then the validate dry run.
+    const problems = r.skipped.map((x) => `Skipped: ${x.reason}`);
+    const errs = localErrors(r.nodes);
+    const sch = store.schema.value;
+    if (!errs.length && sch) {
+      try {
+        const verdict = await api.validateSchema(sch.id, stripForSave(r.nodes));
+        if (verdict && Object.keys(verdict).length)
+          errs.push(...mapValidateErrors(verdict, r.nodes));
+      } catch (err: any) {
+        problems.push(`Could not validate: ${err?.message || 'unknown error'}`);
+      }
+    }
+    const idOf = new Map(flatten(r.nodes).map((x) => [x.key, String(x.node.id)]));
+    const byRow = new Map<string, string[]>();
+    for (const e of errs) {
+      if (e.key) byRow.set(e.key, [...(byRow.get(e.key) || []), e.message]);
+      problems.push(e.key ? `${idOf.get(e.key)}: ${e.message}` : e.message);
+    }
+    store.rowErrors.value = byRow;
+    store.schemaFabry.value = {
+      ...cur,
+      chatId: res.chatId,
+      busy: false,
+      problems,
+      turns: [
+        ...cur.turns,
+        {
+          role: 'fabry',
+          text: [parsed.summary || 'Done.', fitted.note].filter(Boolean).join(' '),
+          applied: r.applied,
+          problems,
+        },
+      ],
+    };
+  } catch (err: any) {
+    const msg =
+      err?.status === 401
+        ? 'Session expired. Open the Console from a Rossum tab again.'
+        : err?.message || 'Mr. Fabry is not available';
+    store.schemaFabry.value = { ...store.schemaFabry.value, busy: false, error: msg };
+  }
+}
+
+/** Send exactly the problems left by the last answer back to the same chat. */
+export function fixWithFabry() {
+  const problems = store.schemaFabry.value.problems;
+  if (problems.length) return askSchemaFabry('', problems);
+  return Promise.resolve();
 }
