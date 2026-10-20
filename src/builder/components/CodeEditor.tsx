@@ -37,8 +37,17 @@ const flashField = StateField.define<DecorationSet>({
   },
   provide: (f) => EditorView.decorations.from(f),
 });
+// The flash fades from the highlight color to nothing over FLASH_MS; the timer then drops
+// the (by then invisible) decoration. Keyframe names are global, hence the prefix.
 const flashTheme = EditorView.theme({
-  '.cm-flash': { backgroundColor: 'rgba(66, 112, 219, 0.22)', borderRadius: '2px' },
+  '.cm-flash': {
+    borderRadius: '2px',
+    animation: 'builder-cm-flash 1.2s ease-out forwards',
+  },
+  '@keyframes builder-cm-flash': {
+    from: { backgroundColor: 'rgba(66, 112, 219, 0.35)' },
+    to: { backgroundColor: 'rgba(66, 112, 219, 0)' },
+  },
 });
 const FLASH_MS = 1200;
 

@@ -1178,5 +1178,14 @@ describe('Builder hook mode: jump to a configuration', () => {
     expect(text[head]).toBe('{');
     expect(text.slice(head, head + 20)).toContain('"name": "B"');
     expect(root.querySelector('[data-code="hook"] .cm-flash')).not.toBeNull();
+    // the flash fades out: an animation from the highlight color to transparent
+    const css = [
+      ...[...document.querySelectorAll('style')].map((el) => el.textContent || ''),
+      ...((document as any).adoptedStyleSheets || []).flatMap((sh: CSSStyleSheet) =>
+        [...sh.cssRules].map((r) => r.cssText),
+      ),
+    ].join('\n');
+    expect(css).toMatch(/@keyframes builder-cm-flash/);
+    expect(css).toMatch(/cm-flash[^}]*animation[^}]*builder-cm-flash/);
   });
 });
