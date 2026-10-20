@@ -502,3 +502,31 @@ describe('Builder field filter', () => {
     expect(root.querySelectorAll('[data-row-key]').length).toBe(flatten(store.work.value).length);
   });
 });
+
+describe('Builder panel collapse', () => {
+  it('collapses the left panel to a strip and expands it back, remembering the state', () => {
+    act(() => {
+      (root.querySelector('[data-action="collapse-nav"]') as HTMLElement).click();
+    });
+    const nav = () => root.querySelector('nav') as HTMLElement;
+    expect(nav().dataset.collapsed).toBe('true');
+    expect(root.querySelector('[data-queue-id]')).toBeNull();
+    expect(chromeSet).toHaveBeenCalledWith({ builderNavCollapsed: true });
+    act(() => {
+      (root.querySelector('[data-action="expand-nav"]') as HTMLElement).click();
+    });
+    expect(nav().dataset.collapsed).toBeUndefined();
+    expect(root.querySelector('[data-queue-id]')).not.toBeNull();
+  });
+
+  it('stays expanded, with no collapse button, while nothing is open', () => {
+    act(() => {
+      (root.querySelector('[data-action="collapse-nav"]') as HTMLElement).click();
+      store.selectedQueueId.value = null;
+      store.selectedSchemaId.value = null;
+    });
+    expect((root.querySelector('nav') as HTMLElement).dataset.collapsed).toBeUndefined();
+    expect(root.querySelector('[data-action="collapse-nav"]')).toBeNull();
+    expect(root.querySelector('[data-queue-id]')).not.toBeNull();
+  });
+});

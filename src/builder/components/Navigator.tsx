@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
+import { signal } from '@preact/signals';
 import {
   queues,
   workspaces,
@@ -15,6 +16,27 @@ import { widthPref } from './widthPref.js';
 import s from './Builder.module.css';
 
 const nav = widthPref('builderNavWidth', 260, 180, 640);
+
+// Folded into a thin strip while a schema is open; remembered per browser.
+const COLLAPSED_KEY = 'builderNavCollapsed';
+const collapsed = signal(false);
+let collapsedLoaded = false;
+
+function loadCollapsed() {
+  if (collapsedLoaded) return;
+  collapsedLoaded = true;
+  globalThis.chrome?.storage?.local
+    ?.get([COLLAPSED_KEY])
+    .then((v) => {
+      collapsed.value = v?.[COLLAPSED_KEY] === true;
+    })
+    .catch(() => {});
+}
+
+function setCollapsed(v: boolean) {
+  collapsed.value = v;
+  globalThis.chrome?.storage?.local?.set({ [COLLAPSED_KEY]: v })?.catch(() => {});
+}
 
 function DeleteBtn({
   onClick,
@@ -46,19 +68,50 @@ function DeleteBtn({
 // the open schema is highlighted, so it is plain which queues an edit changes.
 export default function Navigator() {
   useEffect(nav.load, []);
+  useEffect(loadCollapsed, []);
   const [filter, setFilter] = useState('');
   const [creating, setCreating] = useState<CreateTarget | null>(null);
   const groups = queueGroups(workspaces.value, queues.value, filter);
   const orphans = orphanSchemas(schemas.value, queues.value, filter);
   const shared = sharedQueueIds.value;
+  // Only collapsible while something is open: with nothing open, the list is the way in.
+  const canCollapse = selectedQueueId.value != null || selectedSchemaId.value != null;
+  if (canCollapse && collapsed.value) {
+    return (
+      <nav class={s.nav + ' ' + s.navCollapsed} data-collapsed="true">
+        <button
+          type="button"
+          class={s.iconBtn}
+          data-action="expand-nav"
+          title="Show queues and schemas"
+          onClick={() => setCollapsed(false)}
+        >
+          »
+        </button>
+      </nav>
+    );
+  }
   return (
     <nav class={s.nav} style={{ width: `${nav.width.value}px` }}>
-      <input
-        class={s.input}
-        placeholder="Filter queues and schemas"
-        value={filter}
-        onInput={(e) => setFilter((e.currentTarget as HTMLInputElement).value)}
-      />
+      <div class={s.navTop}>
+        <input
+          class={s.input}
+          placeholder="Filter queues and schemas"
+          value={filter}
+          onInput={(e) => setFilter((e.currentTarget as HTMLInputElement).value)}
+        />
+        {canCollapse && (
+          <button
+            type="button"
+            class={s.iconBtn}
+            data-action="collapse-nav"
+            title="Hide this panel"
+            onClick={() => setCollapsed(true)}
+          >
+            «
+          </button>
+        )}
+      </div>
       <div class={s.navScroll}>
         <div class={s.groupTitle}>
           Queues

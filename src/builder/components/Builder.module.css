@@ -805,3 +805,15 @@
   margin: 0 6px;
   background: var(--border);
 }
+
+.navTop {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.navCollapsed {
+  width: 28px;
+  padding: 8px 2px;
+  align-items: center;
+}
