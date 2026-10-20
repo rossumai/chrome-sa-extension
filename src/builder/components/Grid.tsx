@@ -1,6 +1,6 @@
 import { h, Fragment } from 'preact';
 import { signal } from '@preact/signals';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import {
   work,
   status,
@@ -12,9 +12,10 @@ import {
   ruleRoleById,
   ruleEditor,
   insertTarget,
+  fieldRules,
 } from '../store.js';
 import { visibleKeys } from '../fieldFilter.js';
-import { apply } from '../index.jsx';
+import { apply, openRuleEditor } from '../index.jsx';
 import {
   setAttr,
   setDeleted,
@@ -239,6 +240,59 @@ function ValueCell({ node, tableId }: { node: Node; tableId: string | null }) {
   return <span title={val}>{val}</span>;
 }
 
+// The field's rule count; one rule opens in the rule editor, several open a list to pick from.
+const rulesMenuFor = signal<string | null>(null);
+
+function RulesCell({ fieldId }: { fieldId: string }) {
+  const list = fieldRules.value.get(fieldId) || [];
+  const open = rulesMenuFor.value === fieldId;
+  const wrap = useRef<HTMLSpanElement>(null);
+  // While the list is open, a press anywhere outside it closes it.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e: MouseEvent) => {
+      if (!wrap.current?.contains(e.target as Element)) rulesMenuFor.value = null;
+    };
+    window.addEventListener('mousedown', onDown);
+    return () => window.removeEventListener('mousedown', onDown);
+  }, [open]);
+  if (!list.length) return null;
+  return (
+    <span class={s.rulesWrap} ref={wrap}>
+      <button
+        type="button"
+        class={s.rulesCount}
+        title={list.map((x) => `${x.rule.name} (${x.rule.id})`).join('\n')}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (list.length === 1) openRuleEditor(list[0].rule.id);
+          else rulesMenuFor.value = open ? null : fieldId;
+        }}
+      >
+        {list.length}
+      </button>
+      {open && (
+        <div class={s.rulesMenu}>
+          {list.map((x) => (
+            <button
+              type="button"
+              data-rule-option={String(x.rule.id)}
+              class={s.rulesOption}
+              onClick={(e) => {
+                e.stopPropagation();
+                rulesMenuFor.value = null;
+                openRuleEditor(x.rule.id);
+              }}
+            >
+              {x.rule.name} ({x.rule.id})
+            </button>
+          ))}
+        </div>
+      )}
+    </span>
+  );
+}
+
 function Row({
   node,
   depth,
@@ -277,6 +331,8 @@ function Row({
         // Rule mode: a click inserts this field's id into the rule input focused last, and
         // nothing in the row (ID edit, flags, delete) reacts — one click does one thing.
         if (!ruleEditor.value) return;
+        // The Rules cell keeps working, to jump from one rule to another.
+        if ((e.target as Element).closest('[data-col="rules"]')) return;
         e.stopPropagation();
         e.preventDefault();
         if (kind !== 'section' && node.id) insertTarget.value?.(String(node.id));
@@ -375,6 +431,9 @@ function Row({
           </span>
         </span>
       </td>
+      <td data-col="rules" class={s.rulesCell}>
+        {kind !== 'section' && <RulesCell fieldId={String(node.id ?? '')} />}
+      </td>
       <td class={s.actions}>
         {node.__deleted ? (
           <button
@@ -436,7 +495,7 @@ function AddRow({
   return (
     <tr class={s.addRow}>
       <td />
-      <td colSpan={values.value ? 7 : 6} style={{ paddingLeft: `${6 + depth * 16}px` }}>
+      <td colSpan={values.value ? 8 : 7} style={{ paddingLeft: `${6 + depth * 16}px` }}>
         <span class={s.addLinks}>
           {section ? (
             <Fragment>
@@ -481,13 +540,14 @@ function renderNode(
 }
 
 const WIDTHS_KEY = 'builderColumnWidths';
-const COLS = ['id', 'label', 'source', 'type', 'flags'];
+const COLS = ['id', 'label', 'source', 'type', 'flags', 'rules'];
 const DEFAULT_WIDTHS: Record<string, number> = {
   id: 220,
   label: 200,
   type: 90,
   source: 110,
   flags: 110,
+  rules: 64,
   value: 180,
 };
 const MIN_WIDTH = 50;
@@ -527,6 +587,7 @@ function startResize(col: string, e: MouseEvent) {
 const HEAD: Record<string, any> = {
   id: 'ID',
   label: 'Label',
+  rules: 'Rules',
   value: 'Value',
   type: 'Type',
   source: 'Source',

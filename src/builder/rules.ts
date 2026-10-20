@@ -30,3 +30,14 @@ export function ruleRoles(refs: RuleRefs): Map<string, RuleRole> {
   for (const id of refs.actions) out.set(id, out.has(id) ? 'both' : 'action');
   return out;
 }
+
+/** Per field id: the rules that use it, with how (for the grid's Rules column). */
+export function rulesByField(rules: any[]): Map<string, { rule: any; role: RuleRole }[]> {
+  const out = new Map<string, { rule: any; role: RuleRole }[]>();
+  for (const rule of rules) {
+    for (const [id, role] of ruleRoles(ruleFieldRefs(rule))) {
+      out.set(id, [...(out.get(id) || []), { rule, role }]);
+    }
+  }
+  return out;
+}

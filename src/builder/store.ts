@@ -3,7 +3,7 @@ import { signal, computed } from '@preact/signals';
 import { initHistory, type History } from './history.js';
 import { changeSummary, rowStatus, type Node } from './model.js';
 import type { AnnotationValues } from './values.js';
-import { ruleFieldRefs, ruleRoles } from './rules.js';
+import { ruleFieldRefs, ruleRoles, rulesByField } from './rules.js';
 import { sameDraft, type RuleDraft } from './ruleDraft.js';
 
 export const domain = signal('');
@@ -98,3 +98,6 @@ export const ruleRefs = computed(() =>
       : null,
 );
 export const ruleRoleById = computed(() => (ruleRefs.value ? ruleRoles(ruleRefs.value) : null));
+
+// Every queue rule that uses each field, for the grid's Rules column.
+export const fieldRules = computed(() => rulesByField(rules.value));

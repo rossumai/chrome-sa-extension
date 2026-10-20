@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ruleFieldRefs, ruleRoles } from '../src/builder/rules.js';
+import { ruleFieldRefs, ruleRoles, rulesByField } from '../src/builder/rules.js';
 
 const rule = {
   id: 1,
@@ -33,5 +33,18 @@ describe('ruleRoles', () => {
     expect(roles.get('amount_total')).toBe('both');
     expect(roles.get('item_amount')).toBe('condition');
     expect(roles.get('note')).toBe('action');
+  });
+});
+
+describe('rulesByField', () => {
+  it('lists, per field, the rules that use it with their role', () => {
+    const other = { id: 2, name: 'Other', trigger_condition: 'field.note', actions: [] };
+    const map = rulesByField([rule, other]);
+    expect(map.get('amount_total')!.map((x) => [x.rule.id, x.role])).toEqual([[1, 'both']]);
+    expect(map.get('note')!.map((x) => [x.rule.id, x.role])).toEqual([
+      [1, 'action'],
+      [2, 'condition'],
+    ]);
+    expect(map.has('nothing')).toBe(false);
   });
 });

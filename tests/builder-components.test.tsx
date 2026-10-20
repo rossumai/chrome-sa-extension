@@ -125,7 +125,7 @@ describe('Builder screen', () => {
     const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
       th.getAttribute('data-col'),
     );
-    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags']);
+    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules']);
     const flags = row('doc_id').querySelector('td[data-col="flags"]')!;
     expect(
       [...flags.querySelectorAll('button[data-col]')].map((e) => e.getAttribute('data-col')),
@@ -302,7 +302,7 @@ describe('Builder annotation values', () => {
     const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
       th.getAttribute('data-col'),
     );
-    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'value']);
+    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules', 'value']);
   });
 
   it('shows header values, a row count on the table, and steps through table rows', () => {
@@ -671,5 +671,56 @@ describe('Builder shortcuts inside a code editor', () => {
     });
     expect(store.history.value.past.length).toBe(1);
     expect(store.ruleEditor.value).not.toBeNull();
+  });
+});
+
+describe('Builder rules column', () => {
+  const cell = (id: string) => row(id).querySelector('td[data-col="rules"]') as HTMLElement;
+
+  it('counts the rules that use each field; one rule opens straight into the editor', () => {
+    expect(cell('doc_id').textContent).toBe('1');
+    expect(cell('item_desc').textContent).toBe('1');
+    expect(cell('vendor').textContent).toBe('');
+    act(() => {
+      (cell('doc_id').querySelector('button') as HTMLElement).click();
+    });
+    expect(store.ruleEditor.value!.ruleId).toBe(40);
+  });
+
+  it('several rules open a list; picking one opens it', () => {
+    act(() => {
+      store.rules.value = [
+        ...store.rules.value,
+        { id: 41, name: 'Second', enabled: true, trigger_condition: 'field.doc_id', actions: [] },
+      ];
+    });
+    expect(cell('doc_id').textContent).toBe('2');
+    act(() => {
+      (cell('doc_id').querySelector('button') as HTMLElement).click();
+    });
+    const items = [...root.querySelectorAll('[data-rule-option]')].map((e) => e.textContent);
+    expect(items).toEqual(['Doc ID present (40)', 'Second (41)']);
+    act(() => {
+      (root.querySelector('[data-rule-option="41"]') as HTMLElement).click();
+    });
+    expect(store.ruleEditor.value!.ruleId).toBe(41);
+    expect(root.querySelector('[data-rule-option]')).toBeNull();
+  });
+
+  it('the list closes on a click anywhere else', () => {
+    act(() => {
+      store.rules.value = [
+        ...store.rules.value,
+        { id: 41, name: 'Second', enabled: true, trigger_condition: 'field.doc_id', actions: [] },
+      ];
+    });
+    act(() => {
+      (cell('doc_id').querySelector('button') as HTMLElement).click();
+    });
+    expect(root.querySelector('[data-rule-option]')).not.toBeNull();
+    act(() => {
+      document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    });
+    expect(root.querySelector('[data-rule-option]')).toBeNull();
   });
 });
