@@ -662,7 +662,7 @@ const DEFAULT_WIDTHS: Record<string, number> = {
   flags: 110,
   rules: 64,
   matching: 72,
-  mdh: 80,
+  mdh: 110,
   value: 180,
   rule: 110,
 };
