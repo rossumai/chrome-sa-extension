@@ -15,6 +15,7 @@ import {
   newList,
   newTable,
   freshKeys,
+  mergeAttrs,
   nextKey,
   localErrors,
   rowStatus,
@@ -339,5 +340,36 @@ describe('newList / newTable', () => {
     const used = new Set(flatten(t).map((r) => r.key));
     expect(new Set(ks).size).toBe(3);
     expect(ks.some((k) => used.has(k))).toBe(false);
+  });
+});
+
+describe('mergeAttrs', () => {
+  it('deep-merges objects, replaces arrays, deletes on null, and keeps the key', () => {
+    const t = withKeys([
+      {
+        category: 'section',
+        id: 's',
+        children: [
+          {
+            category: 'datapoint',
+            id: 'x',
+            constraints: { required: false, length: { max: 5 } },
+            rir_field_names: ['a'],
+            default_value: '1',
+          },
+        ],
+      },
+    ]);
+    const k = flatten(t)[1].key;
+    const next = mergeAttrs(t, k, {
+      constraints: { required: true },
+      rir_field_names: ['b'],
+      default_value: null,
+    });
+    const n = findByKey(next, k)!;
+    expect(n.constraints).toEqual({ required: true, length: { max: 5 } });
+    expect(n.rir_field_names).toEqual(['b']);
+    expect('default_value' in n).toBe(false);
+    expect(n.__key).toBe(k);
   });
 });

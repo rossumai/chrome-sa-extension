@@ -921,3 +921,43 @@ describe('Builder rule editor: Mr. Fabry box', () => {
     expect(cm.textContent).toBe('is_empty(field.doc_id)');
   });
 });
+
+describe('Builder field inspector: Mr. Fabry box', () => {
+  it('shows an Ask box for a field, also in the expanded formula editor', () => {
+    act(() => {
+      row('doc_id').click();
+    });
+    expect(
+      root.querySelector('aside[data-panel="field"] textarea[data-fabry-prompt]'),
+    ).not.toBeNull();
+    act(() => {
+      store.startDraft(
+        'Invoice schema',
+        withKeys([
+          {
+            category: 'section',
+            id: 's',
+            label: 'S',
+            children: [
+              {
+                category: 'datapoint',
+                id: 'f',
+                label: 'F',
+                type: 'number',
+                ui_configuration: { type: 'formula' },
+                formula: '1',
+              },
+            ],
+          },
+        ]),
+      );
+      store.selectedKey.value = flatten(store.work.value).find((r) => r.node.id === 'f')!.key;
+    });
+    act(() => {
+      (root.querySelector('[data-action="expand-formula"]') as HTMLElement).click();
+    });
+    expect(
+      root.querySelector('aside[data-expanded="true"] textarea[data-fabry-prompt]'),
+    ).not.toBeNull();
+  });
+});

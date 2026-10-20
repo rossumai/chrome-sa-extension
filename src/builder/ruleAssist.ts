@@ -1,36 +1,10 @@
 // src/builder/ruleAssist.ts
 // Mr. Fabry in the rule editor: turn a plain-language request into a native Rule. The prompt
 // pins the answer to one JSON block in the rule's own shape; the reply is parsed and checked
-// before it may fill the editor. The chat is READ-ONLY (no mcpMode, cautious persona): the
-// agent proposes, the user still saves. Pure builders + an injected transport, like
-// src/audit/fabry.ts.
-import { flatten, type Node } from './model.js';
+// before it may fill the editor (the user still saves). Shared plumbing is in assist.ts.
 import { draftFromRule, draftErrors, type RuleDraft } from './ruleDraft.js';
 import { ruleFieldRefs } from './rules.js';
-import { newAcc, foldEvents, replyText } from '../agent/agentStream.js';
-
-export type FieldInfo = { id: string; label: string; type: string; table: string | null };
-
-/** The schema's fields for the prompt: datapoints and tables, with each column's table. */
-export function schemaFieldList(nodes: Node[]): FieldInfo[] {
-  const rows = flatten(nodes);
-  const byKey = new Map(rows.map((r) => [r.key, r]));
-  const tableOf = (parentKey: string | null): string | null => {
-    for (let k = parentKey; k; k = byKey.get(k)?.parentKey ?? null) {
-      const r = byKey.get(k)!;
-      if (r.kind === 'multivalue') return String(r.node.id);
-    }
-    return null;
-  };
-  return rows
-    .filter((r) => !r.deleted && (r.kind === 'datapoint' || r.kind === 'multivalue'))
-    .map((r) => ({
-      id: String(r.node.id),
-      label: String(r.node.label ?? ''),
-      type: r.kind === 'multivalue' ? 'table' : String(r.node.type ?? 'string'),
-      table: tableOf(r.parentKey),
-    }));
-}
+import { extractJson, fieldLines, type FieldInfo } from './assist.js';
 
 const CONTRACT = [
   'You write ONE Rossum native Rule. Do not create or change anything in Rossum — only propose.',
@@ -46,12 +20,6 @@ const CONTRACT = [
   '- Use only field ids from the list below.',
   'Reply with exactly one ```json block holding the whole rule, and nothing after it.',
 ].join('\n');
-
-function fieldLines(fields: FieldInfo[]): string {
-  return fields
-    .map((f) => `- ${f.id}: ${f.label} (${f.type}${f.table ? `, column of table ${f.table}` : ''})`)
-    .join('\n');
-}
 
 export function buildRulePrompt({
   request,
@@ -87,17 +55,9 @@ export function buildFollowupPrompt(request: string, current: RuleDraft): string
 export type ParsedRule =
   { ok: true; draft: RuleDraft; unknownFields: string[] } | { ok: false; error: string };
 
-function jsonText(text: string): string | null {
-  const fence = /```(?:json)?\s*\n([\s\S]*?)```/.exec(text);
-  if (fence) return fence[1];
-  const a = text.indexOf('{');
-  const b = text.lastIndexOf('}');
-  return a >= 0 && b > a ? text.slice(a, b + 1) : null;
-}
-
 /** Parse and check a reply. Missing action ids, `enabled` and `event` get their defaults. */
 export function parseRuleReply(text: string, schemaIds: Set<string>): ParsedRule {
-  const raw = jsonText(text);
+  const raw = extractJson(text);
   if (!raw) return { ok: false, error: 'Mr. Fabry did not return a rule' };
   let obj: any;
   try {
@@ -126,29 +86,4 @@ export function parseRuleReply(text: string, schemaIds: Set<string>): ParsedRule
     (id) => !schemaIds.has(id),
   );
   return { ok: true, draft, unknownFields };
-}
-
-/** One turn: a new cautious chat the first time, the same chat for follow-ups. Read-only. */
-export async function runRuleAssist({
-  agentApi,
-  chatId,
-  content,
-  signal,
-}: {
-  agentApi: any;
-  chatId: string | null;
-  content: string;
-  signal?: AbortSignal;
-}): Promise<{ chatId: string; text: string }> {
-  let id = chatId;
-  if (!id) {
-    id = (await agentApi.createChat()) as string;
-    await agentApi.streamMessage(id, '/persona cautious', { onEvent: () => {}, signal });
-  }
-  const acc = newAcc();
-  await agentApi.streamMessage(id, content, {
-    signal,
-    onEvent: (ev: unknown) => foldEvents(acc, [ev]),
-  });
-  return { chatId: id, text: replyText(acc) };
 }

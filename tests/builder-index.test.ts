@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as store from '../src/builder/store.js';
-import { withKeys } from '../src/builder/model.js';
+import { withKeys, flatten } from '../src/builder/model.js';
 
 vi.mock('../src/builder/api.js', () => ({
   getSchema: vi.fn(),
@@ -42,6 +42,7 @@ import {
   closeRuleEditor,
   askRuleAssistant,
   discardRule,
+  askFieldAssistant,
   save,
   pickAnnotation,
   renameSchema,
@@ -414,5 +415,91 @@ describe('Mr. Fabry in the rule editor', () => {
     discardRule();
     expect(store.ruleEditor.value!.draft.trigger_condition).toBe('field.doc_id');
     expect(store.ruleDirty.value).toBe(false);
+  });
+});
+
+describe('Mr. Fabry on a field', () => {
+  const reply = (text: string) =>
+    vi
+      .mocked(agentApi.streamMessage)
+      .mockImplementation(async (_id: string, content: string, opts: any) => {
+        if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
+      });
+
+  beforeEach(() => {
+    vi.mocked(agentApi.createChat).mockClear();
+    vi.mocked(agentApi.streamMessage).mockReset();
+    store.ruleEditor.value = null;
+    store.fieldAssist.value = {
+      forKey: null,
+      chatId: null,
+      busy: false,
+      error: null,
+      reply: null,
+      warnings: [],
+    };
+    store.startDraft(
+      'S',
+      withKeys([
+        {
+          category: 'section',
+          id: 's',
+          label: 'S',
+          children: [
+            { category: 'datapoint', id: 'amount', label: 'Amount', type: 'number' },
+            {
+              category: 'datapoint',
+              id: 'check',
+              label: 'Check',
+              type: 'number',
+              ui_configuration: { type: 'formula' },
+              formula: '',
+            },
+          ],
+        },
+      ]),
+    );
+  });
+  const key = (id: string) => flatten(store.work.value).find((r) => r.node.id === id)!.key;
+
+  it('applies the changes as one undoable schema edit', async () => {
+    reply('```json\n{"formula": "field.amount * 2"}\n```');
+    await askFieldAssistant(key('check'), 'twice the amount');
+    expect(flatten(store.work.value).find((r) => r.node.id === 'check')!.node.formula).toBe(
+      'field.amount * 2',
+    );
+    expect(store.history.value.past.length).toBe(1);
+    expect(store.fieldAssist.value.error).toBeNull();
+  });
+
+  it('a rejected answer changes nothing and says why', async () => {
+    reply('{"formula": "field.check + 1"}');
+    await askFieldAssistant(key('check'), 'x');
+    expect(store.history.value.past.length).toBe(0);
+    expect(store.fieldAssist.value.error).toContain('reads its own field');
+  });
+
+  it('keeps one chat per field and starts a new one for another field', async () => {
+    reply('{"label": "Twice"}');
+    await askFieldAssistant(key('check'), 'a');
+    await askFieldAssistant(key('check'), 'b');
+    expect(agentApi.createChat).toHaveBeenCalledTimes(1);
+    await askFieldAssistant(key('amount'), 'c');
+    expect(agentApi.createChat).toHaveBeenCalledTimes(2);
+  });
+
+  it('opening a schema forgets the field chat (keys are reused across schemas)', async () => {
+    store.fieldAssist.value = {
+      forKey: 'k2',
+      chatId: 'old',
+      busy: false,
+      error: null,
+      reply: null,
+      warnings: [],
+    };
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: [] });
+    store.queues.value = [{ id: 2, name: 'B', schema: 'https://x/api/v1/schemas/22' }];
+    await openQueue(2);
+    expect(store.fieldAssist.value.chatId).toBeNull();
   });
 });

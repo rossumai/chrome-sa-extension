@@ -150,3 +150,14 @@ export const assist = signal<AssistState>({
   warnings: [],
 });
 export const assistRev = signal(0);
+
+// Mr. Fabry in the field inspector: one read-only chat per field (forKey).
+export type FieldAssistState = AssistState & { forKey: string | null };
+export const fieldAssist = signal<FieldAssistState>({
+  forKey: null,
+  chatId: null,
+  busy: false,
+  error: null,
+  reply: null,
+  warnings: [],
+});

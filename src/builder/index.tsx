@@ -4,19 +4,15 @@
 import * as api from './api.js';
 import * as store from './store.js';
 import { push, undo, redo } from './history.js';
-import { withKeys, type Node } from './model.js';
+import { withKeys, findByKey, mergeAttrs, type Node } from './model.js';
 import { saveSchema, type SaveResult } from './save.js';
 import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { annotationValues } from './values.js';
 import * as agentApi from '../agent/agentApi.js';
-import {
-  schemaFieldList,
-  buildRulePrompt,
-  buildFollowupPrompt,
-  parseRuleReply,
-  runRuleAssist,
-} from './ruleAssist.js';
+import { buildRulePrompt, buildFollowupPrompt, parseRuleReply } from './ruleAssist.js';
+import { runAssist, schemaFieldList } from './assist.js';
+import { buildFieldPrompt, buildFieldFollowup, parseFieldReply } from './fieldAssist.js';
 import { draftFromRule, emptyDraft, draftBody, draftErrors, type RuleDraft } from './ruleDraft.js';
 
 function fail(err: any, fallback: string) {
@@ -80,6 +76,15 @@ function idFromUrl(url: unknown): number | null {
 
 function setBase(schema: any) {
   store.schema.value = schema;
+  // Keys are regenerated per load (k1, k2…), so a field chat must not outlive its schema.
+  store.fieldAssist.value = {
+    forKey: null,
+    chatId: null,
+    busy: false,
+    error: null,
+    reply: null,
+    warnings: [],
+  };
   store.startDraft(schema?.name ?? '', withKeys(schema?.content || []));
   store.rowErrors.value = new Map();
   store.generalErrors.value = [];
@@ -498,7 +503,7 @@ export async function askRuleAssistant(request: string) {
         current: changed ? ed.draft : null,
       });
   try {
-    const { chatId, text } = await runRuleAssist({ agentApi, chatId: prev.chatId, content });
+    const { chatId, text } = await runAssist({ agentApi, chatId: prev.chatId, content });
     if (!store.ruleEditor.value) return; // closed while Mr. Fabry was writing
     const r = parseRuleReply(text, new Set(fields.map((f) => f.id)));
     if (!r.ok) {
@@ -520,5 +525,62 @@ export async function askRuleAssistant(request: string) {
         ? 'Session expired. Open the Console from a Rossum tab again.'
         : err?.message || 'Mr. Fabry is not available';
     store.assist.value = { ...store.assist.value, busy: false, error: msg };
+  }
+}
+
+/**
+ * Ask Mr. Fabry to change one field (a formula, typically). A usable answer is applied as ONE
+ * undoable schema edit, staged until Save like any other; anything else changes nothing.
+ */
+export async function askFieldAssistant(key: string, request: string) {
+  const node = findByKey(store.work.value, key);
+  if (!node || !request.trim() || store.fieldAssist.value.busy) return;
+  const prev = store.fieldAssist.value.forKey === key ? store.fieldAssist.value : null;
+  const chatId = prev?.chatId ?? null;
+  store.fieldAssist.value = {
+    forKey: key,
+    chatId,
+    busy: true,
+    error: null,
+    reply: null,
+    warnings: [],
+  };
+  const fields = schemaFieldList(store.work.value);
+  const info = fields.find((f) => f.id === node.id);
+  const content = chatId
+    ? buildFieldFollowup(request, node)
+    : buildFieldPrompt({ request, field: node, fields, table: info?.table ?? null });
+  try {
+    const res = await runAssist({ agentApi, chatId, content });
+    const r = parseFieldReply(res.text, {
+      selfId: String(node.id),
+      schemaIds: new Set(fields.map((f) => f.id)),
+    });
+    if (!r.ok) {
+      store.fieldAssist.value = {
+        forKey: key,
+        chatId: res.chatId,
+        busy: false,
+        error: r.error,
+        reply: res.text,
+        warnings: [],
+      };
+      return;
+    }
+    if (findByKey(store.work.value, key)) apply(mergeAttrs(store.work.value, key, r.patch));
+    store.fieldAssist.value = {
+      forKey: key,
+      chatId: res.chatId,
+      busy: false,
+      error: null,
+      reply: null,
+      warnings: r.warnings,
+    };
+  } catch (err: any) {
+    const msg =
+      err?.status === 401
+        ? 'Session expired. Open the Console from a Rossum tab again.'
+        : err?.message || 'Mr. Fabry is not available';
+    store.fieldAssist.value = { ...store.fieldAssist.value, busy: false, error: msg };
   }
 }

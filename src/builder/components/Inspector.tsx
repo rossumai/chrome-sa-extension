@@ -1,9 +1,10 @@
 import { h, Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { work, selectedKey } from '../store.js';
-import { apply } from '../index.jsx';
+import { work, selectedKey, fieldAssist, type AssistState } from '../store.js';
+import { apply, askFieldAssistant } from '../index.jsx';
 import { setAttr, findByKey, type Node } from '../model.js';
 import CodeEditor from './CodeEditor.jsx';
+import AskFabry from './AskFabry.jsx';
 import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
 
@@ -234,6 +235,7 @@ function ReadOnlyJson({ label, value }: { label: string; value: unknown }) {
 }
 
 const panel = rightPanel;
+const IDLE: AssistState = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
 
 export default function Inspector() {
   useEffect(panel.load, []);
@@ -262,6 +264,22 @@ export default function Inspector() {
   const kind = node.category;
   const src = node.ui_configuration?.type;
   const type = node.type;
+  // Mr. Fabry for this field: one chat per field; the answer is one undoable schema edit.
+  const fa = fieldAssist.value;
+  const askBox = (
+    <AskFabry
+      key={`fabry:${node.__key}`}
+      state={fa.forKey === node.__key ? fa : IDLE}
+      onAsk={(text) => askFieldAssistant(node.__key, text)}
+      placeholder={
+        src === 'formula'
+          ? 'Describe what this formula should compute'
+          : 'Describe what to change on this field'
+      }
+      followupPlaceholder="What should change?"
+      doneText="Applied as one edit — Undo takes it back."
+    />
+  );
   const formulaEditor = (fill: boolean) => (
     <div class={s.field + (fill ? ' ' + s.grow : '')}>
       <span class={s.fieldLabel}>Formula</span>
@@ -279,6 +297,7 @@ export default function Inspector() {
     return shell(
       <Fragment>
         <h4 class={s.mono + ' ' + s.inspTitle}>{node.id}</h4>
+        {askBox}
         {formulaEditor(true)}
       </Fragment>,
       true,
@@ -292,6 +311,7 @@ export default function Inspector() {
         {type ? ` · ${type}` : ''}
         {src ? ` · ${src}` : ''}
       </div>
+      {kind === 'datapoint' && askBox}
       {kind === 'datapoint' && (
         <div key={node.__key}>
           <Text node={node} path={['description']} label="Description" />

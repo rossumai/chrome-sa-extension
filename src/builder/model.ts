@@ -129,6 +129,25 @@ export function setAttr(nodes: Node[], key: string, path: string[], value: unkno
   return update(nodes, key, (n) => set(n, 0));
 }
 
+function isPlain(v: unknown): v is Record<string, unknown> {
+  return !!v && typeof v === 'object' && !Array.isArray(v);
+}
+
+function deepMerge(base: Node, patch: Record<string, unknown>): Node {
+  const out: Node = { ...base };
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === null) delete out[k];
+    else if (isPlain(v) && isPlain(base[k])) out[k] = deepMerge(base[k], v);
+    else out[k] = v;
+  }
+  return out;
+}
+
+/** Merge attribute changes into one node: objects merge, arrays replace, null deletes. */
+export function mergeAttrs(nodes: Node[], key: string, patch: Record<string, unknown>): Node[] {
+  return update(nodes, key, (n) => ({ ...deepMerge(n, patch), __key: n.__key }));
+}
+
 export function addField(nodes: Node[], parentKey: string, field: Node): Node[] {
   return update(nodes, parentKey, (p) => ({ ...p, children: [...kids(p), field] }));
 }

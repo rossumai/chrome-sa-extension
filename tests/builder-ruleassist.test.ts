@@ -1,11 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-  buildRulePrompt,
-  parseRuleReply,
-  runRuleAssist,
-  schemaFieldList,
-} from '../src/builder/ruleAssist.js';
+import { buildRulePrompt, parseRuleReply } from '../src/builder/ruleAssist.js';
 import { withKeys } from '../src/builder/model.js';
+import { runAssist, schemaFieldList } from '../src/builder/assist.js';
 
 const schema = withKeys([
   {
@@ -113,7 +109,7 @@ describe('parseRuleReply', () => {
   });
 });
 
-describe('runRuleAssist', () => {
+describe('runAssist', () => {
   function fakeAgent(reply: string) {
     return {
       createChat: vi.fn(async () => 'chat-1'),
@@ -125,11 +121,11 @@ describe('runRuleAssist', () => {
 
   it('opens a cautious read-only chat the first time and reuses it after', async () => {
     const agent = fakeAgent('ok');
-    const first = await runRuleAssist({ agentApi: agent, chatId: null, content: 'P1' });
+    const first = await runAssist({ agentApi: agent, chatId: null, content: 'P1' });
     expect(first).toEqual({ chatId: 'chat-1', text: 'ok' });
     expect(agent.streamMessage.mock.calls.map((c) => c[1])).toEqual(['/persona cautious', 'P1']);
     expect(agent.streamMessage.mock.calls.every((c) => !c[2]?.mcpMode)).toBe(true);
-    await runRuleAssist({ agentApi: agent, chatId: 'chat-1', content: 'P2' });
+    await runAssist({ agentApi: agent, chatId: 'chat-1', content: 'P2' });
     expect(agent.createChat).toHaveBeenCalledTimes(1);
   });
 });
