@@ -90,3 +90,20 @@ describe('visibleKeys with a rule', () => {
     expect(visibleKeys(tree, '', null)).toBeNull();
   });
 });
+
+describe('visibleKeys in rule mode (union)', () => {
+  it("shows the rule's fields plus whatever the text matches", () => {
+    expect(ids(visibleKeys(tree, '', new Set(['document_id']), 'or'))).toEqual([
+      'basic_section',
+      'document_id',
+    ]);
+    expect(ids(visibleKeys(tree, 'code', new Set(['document_id']), 'or'))).toEqual([
+      'basic_section',
+      'document_id',
+      'items_section',
+      'line_items',
+      'line_item',
+      'item_code',
+    ]);
+  });
+});

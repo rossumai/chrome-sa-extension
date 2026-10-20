@@ -102,10 +102,10 @@ export const ruleRoleById = computed(() => (ruleRefs.value ? ruleRoles(ruleRefs.
 // Every queue rule that uses each field, for the grid's Rules column.
 export const fieldRules = computed(() => rulesByField(rules.value));
 
-// The picked rule as a filter: only its fields show — except in rule mode, where every
-// field stays visible so any of them can be clicked into the rule.
+// Rule mode filters the grid to the open rule's fields (live, as the condition is typed);
+// the text filter then ADDS matches, so a new field can be found and clicked in.
 export const ruleFilterIds = computed(() => {
-  if (ruleEditor.value || !pickedRule.value) return null;
-  const r = ruleFieldRefs(pickedRule.value);
+  if (!ruleEditor.value) return null;
+  const r = ruleFieldRefs(ruleEditor.value.draft);
   return new Set([...r.condition, ...r.actions]);
 });

@@ -7,13 +7,13 @@ import {
   fieldFilter,
   work,
   rules,
-  ruleId,
   ruleRefs,
   selectedQueueId,
+  ruleEditor,
 } from '../store.js';
 import { flatten } from '../model.js';
 import { countMatches } from '../fieldFilter.js';
-import { pickAnnotation, clearAnnotation, openRuleEditor } from '../index.jsx';
+import { pickAnnotation, clearAnnotation, openRuleEditor, closeRuleEditor } from '../index.jsx';
 import s from './Builder.module.css';
 
 // The bar above the grid: the filters — text (id or label) and a rule (only its fields) —
@@ -22,6 +22,7 @@ import s from './Builder.module.css';
 export default function AnnotationPicker() {
   const id = annotationId.value;
   const listed = annotations.value.some((a) => a.id === id);
+  const editing = ruleEditor.value;
   const matchCount = countMatches(work.value, fieldFilter.value);
   // Fields the picked rule names that this schema does not have: usually a broken rule.
   const refs = ruleRefs.value;
@@ -52,37 +53,28 @@ export default function AnnotationPicker() {
           <select
             class={s.select}
             data-picker="rule"
-            value={ruleId.value != null ? String(ruleId.value) : ''}
-            title={rules.value.find((r) => r.id === ruleId.value)?.trigger_condition || ''}
+            value={editing ? (editing.ruleId != null ? String(editing.ruleId) : 'new') : ''}
             onChange={(e) => {
               const v = (e.currentTarget as HTMLSelectElement).value;
-              ruleId.value = v ? Number(v) : null;
+              if (v && v !== 'new') openRuleEditor(Number(v));
+              else if (!v) closeRuleEditor();
             }}
           >
             <option value="">{rules.value.length ? 'no rule' : 'no rules on this queue'}</option>
+            {editing && editing.ruleId == null && <option value="new">new rule (unsaved)</option>}
             {rules.value.map((r) => (
               <option value={String(r.id)}>
                 {r.name} ({r.id}){r.enabled === false ? ' · disabled' : ''}
               </option>
             ))}
           </select>
-          {ruleId.value != null && (
-            <button
-              type="button"
-              class={s.linkBtn}
-              data-action="edit-rule"
-              onClick={() => openRuleEditor(ruleId.value)}
-            >
-              Edit
-            </button>
-          )}
-          {ruleId.value != null && (
+          {editing && (
             <button
               type="button"
               class={s.iconBtn}
               data-action="clear-rule"
               title="Stop filtering by this rule"
-              onClick={() => (ruleId.value = null)}
+              onClick={closeRuleEditor}
             >
               ✕
             </button>

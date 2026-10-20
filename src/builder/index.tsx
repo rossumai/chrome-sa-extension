@@ -423,6 +423,7 @@ export function closeRuleEditor() {
   store.ruleEditor.value = null;
   store.insertTarget.value = null;
   store.ruleErrors.value = [];
+  store.ruleId.value = null;
 }
 
 export async function saveRule() {

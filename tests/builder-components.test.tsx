@@ -57,6 +57,21 @@ vi.stubGlobal('chrome', { storage: { local: { get: vi.fn(async () => ({})), set:
 const keyOf = (id: string) => flatten(store.work.value).find((r) => r.node.id === id)!.key;
 const row = (id: string) => root.querySelector(`[data-row-key="${keyOf(id)}"]`) as HTMLElement;
 
+const pickRule = (v: string) => {
+  const select = root.querySelector('select[data-picker="rule"]') as HTMLSelectElement;
+  act(() => {
+    select.value = v;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+};
+const typeFilter = (v: string) => {
+  const input = root.querySelector('input[data-filter="fields"]') as HTMLInputElement;
+  act(() => {
+    input.value = v;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+};
+
 beforeEach(() => {
   document.body.innerHTML = '';
   root = document.createElement('div');
@@ -625,8 +640,10 @@ describe('Builder rule mode', () => {
     act(() => {
       content().dispatchEvent(new FocusEvent('focus'));
     });
+    expect(row('doc_id')).toBeNull(); // only the rule's own field shows...
+    typeFilter('doc');
     act(() => {
-      row('doc_id').click();
+      row('doc_id').click(); // ...until the text filter brings another one in
     });
     expect(condition()).toBe('field.vendor field.doc_id');
     expect(store.selectedKey.value).toBeNull();
@@ -639,23 +656,18 @@ describe('Builder rule mode', () => {
     act(() => {
       (root.querySelector('input[data-insert="schema_id"]') as HTMLInputElement).focus();
     });
+    typeFilter('desc');
     act(() => {
       row('item_desc').click();
     });
     expect(store.ruleEditor.value!.draft.actions[0].payload.schema_id).toBe('item_desc');
   });
 
-  it('Edit opens the picked rule', () => {
-    const select = root.querySelector('select[data-picker="rule"]') as HTMLSelectElement;
-    act(() => {
-      select.value = '40';
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-    act(() => {
-      (root.querySelector('[data-action="edit-rule"]') as HTMLElement).click();
-    });
+  it('picking a rule opens it in the rule editor; the bar has no Edit button', () => {
+    pickRule('40');
     expect(store.ruleEditor.value!.ruleId).toBe(40);
     expect(content().textContent).toContain('is_empty(field.doc_id)');
+    expect(root.querySelector('[data-action="edit-rule"]')).toBeNull();
   });
 });
 
@@ -737,12 +749,8 @@ describe('Builder rule filter', () => {
         flatten(store.work.value).find((x) => x.key === r.getAttribute('data-row-key'))!.node.id,
     );
 
-  it('picking a rule leaves only its fields; editing it brings every field back', () => {
-    const select = root.querySelector('select[data-picker="rule"]') as HTMLSelectElement;
-    act(() => {
-      select.value = '40';
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+  it('picking a rule leaves only its fields; text adds matches; ✕ closes and shows all', () => {
+    pickRule('40');
     expect(shown()).toEqual([
       'basic_section',
       'doc_id',
@@ -751,15 +759,15 @@ describe('Builder rule filter', () => {
       'item',
       'item_desc',
     ]);
-    act(() => {
-      (root.querySelector('[data-action="edit-rule"]') as HTMLElement).click();
-    });
-    expect(shown().length).toBe(flatten(store.work.value).length);
-    act(() => {
-      (root.querySelector('[data-action="close-rule"]') as HTMLElement).click();
-    });
+    typeFilter('vendor');
+    expect(shown()).toContain('vendor');
     expect(shown()).toContain('doc_id');
-    expect(shown()).not.toContain('vendor');
+    typeFilter('');
+    act(() => {
+      (root.querySelector('[data-action="clear-rule"]') as HTMLElement).click();
+    });
+    expect(store.ruleEditor.value).toBeNull();
+    expect(shown().length).toBe(flatten(store.work.value).length);
   });
 
   it('the rule filter sits right after the text filter, before the annotation picker', () => {

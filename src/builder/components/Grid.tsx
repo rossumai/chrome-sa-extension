@@ -622,7 +622,7 @@ const HEAD: Record<string, any> = {
 export default function Grid() {
   useEffect(loadWidths, []);
   const w = widths.value;
-  const show = visibleKeys(work.value, fieldFilter.value, ruleFilterIds.value);
+  const show = visibleKeys(work.value, fieldFilter.value, ruleFilterIds.value, 'or');
   // The annotation's values go after every editing column, the row actions included.
   const cols = values.value ? [...COLS, 'value'] : COLS;
   const total = 22 + 60 + cols.reduce((sum, c) => sum + w[c], 0);

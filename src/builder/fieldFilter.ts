@@ -16,17 +16,25 @@ function matches(n: Node, q: string): boolean {
 }
 
 /**
- * Keys of the rows to show, or null to show everything. A row matches when it matches the
- * text query (if any) AND, given `ruleIds`, is one of the fields a rule uses.
+ * Keys of the rows to show, or null to show everything. With `ruleIds`, mode 'and' shows the
+ * rule's fields that match the text; mode 'or' (rule mode) shows the rule's fields PLUS any
+ * text match, so a field the rule does not use yet can be found and clicked in.
  */
 export function visibleKeys(
   nodes: Node[],
   query: string,
   ruleIds: Set<string> | null = null,
+  mode: 'and' | 'or' = 'and',
 ): Set<string> | null {
   const q = query.trim().toLowerCase();
   if (!q && !ruleIds) return null;
-  const hit = (n: Node) => (!q || matches(n, q)) && (!ruleIds || ruleIds.has(String(n.id)));
+  const inRule = (n: Node) => !!ruleIds && ruleIds.has(String(n.id));
+  const hit = (n: Node) =>
+    !ruleIds
+      ? matches(n, q)
+      : mode === 'or'
+        ? inRule(n) || (!!q && matches(n, q))
+        : inRule(n) && (!q || matches(n, q));
   const rows = flatten(nodes);
   const parent = new Map(rows.map((r) => [r.key, r.parentKey]));
   const keep = new Set<string>();
