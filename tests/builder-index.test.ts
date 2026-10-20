@@ -9,6 +9,7 @@ vi.mock('../src/builder/api.js', () => ({
   patchSchema: vi.fn(),
   getAnnotationContent: vi.fn(),
   listAnnotations: vi.fn(),
+  listRules: vi.fn(async () => []),
   listWorkspaces: vi.fn(async () => []),
   listQueues: vi.fn(async () => []),
   listSchemas: vi.fn(async () => []),
@@ -240,5 +241,19 @@ describe('create and delete', () => {
     expect(api.createSchema).toHaveBeenLastCalledWith('Blank', [
       { category: 'section', id: 'basic_info_section', label: 'Basic information', children: [] },
     ]);
+  });
+});
+
+describe('rules', () => {
+  it('opening a queue loads its rules and clears the picked rule', async () => {
+    store.ruleId.value = 99;
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: section('b') });
+    vi.mocked(api.listRules).mockResolvedValue([
+      { id: 4, name: 'R', trigger_condition: 'True', actions: [] },
+    ]);
+    await openQueue(2);
+    expect(store.ruleId.value).toBeNull();
+    await vi.waitFor(() => expect(store.rules.value.map((r) => r.id)).toEqual([4]));
+    expect(api.listRules).toHaveBeenCalledWith(2);
   });
 });

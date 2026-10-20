@@ -119,4 +119,12 @@ describe('builder api', () => {
       ['https://x.rossum.ai/api/v1/schemas/5', 'DELETE'],
     ]);
   });
+
+  it('listRules lists the rules attached to a queue', async () => {
+    fetchMock.mockResolvedValue(jsonRes({ results: [], pagination: { next: null } }));
+    await api.listRules(3);
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://x.rossum.ai/api/v1/rules/?queue=3&page_size=100',
+    );
+  });
 });

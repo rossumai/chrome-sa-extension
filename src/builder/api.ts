@@ -107,6 +107,11 @@ export function listSchemas(): Promise<RawResource[]> {
   return listAll('/api/v1/schemas/?page_size=100');
 }
 
+/** The native Rules attached to a queue. */
+export function listRules(queueId: number): Promise<RawResource[]> {
+  return listAll(`/api/v1/rules/?queue=${queueId}&page_size=100`);
+}
+
 export function getSchema(id: number): Promise<any> {
   return get(`/api/v1/schemas/${id}`);
 }

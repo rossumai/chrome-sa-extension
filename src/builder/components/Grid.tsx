@@ -1,7 +1,16 @@
 import { h, Fragment } from 'preact';
 import { signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
-import { work, status, rowErrors, selectedKey, values, lineRow, fieldFilter } from '../store.js';
+import {
+  work,
+  status,
+  rowErrors,
+  selectedKey,
+  values,
+  lineRow,
+  fieldFilter,
+  ruleRoleById,
+} from '../store.js';
 import { visibleKeys } from '../fieldFilter.js';
 import { apply } from '../index.jsx';
 import {
@@ -244,8 +253,10 @@ function Row({
   const errs = rowErrors.value.get(key);
   const kind = node.category;
   const dp = kind === 'datapoint';
+  const role = kind === 'section' ? undefined : ruleRoleById.value?.get(node.id);
   const cls = [
     s.row,
+    role ? s.ruleHit : '',
     kind === 'section' ? s.sectionRow : '',
     selectedKey.value === key ? s.selected : '',
     st === 'new' ? s.isNew : '',
@@ -258,6 +269,7 @@ function Row({
       data-row-key={key}
       data-status={st === 'deleted' ? undefined : st}
       data-deleted={deleted ? 'true' : undefined}
+      data-rule={role}
       onClick={() => (selectedKey.value = key)}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
@@ -277,6 +289,20 @@ function Row({
       </td>
       <td data-col="id" style={{ paddingLeft: `${6 + depth * 16}px` }}>
         {kind === 'section' && <span class={s.caret}>▾ </span>}
+        {role && (
+          <span
+            class={s.ruleBadge}
+            title={
+              role === 'both'
+                ? 'The rule reads this field and acts on it'
+                : role === 'condition'
+                  ? 'The rule condition reads this field'
+                  : 'A rule action targets this field'
+            }
+          >
+            {role === 'condition' ? 'if' : role === 'action' ? '→' : 'if →'}
+          </span>
+        )}
         <EditableCell
           mono
           value={String(node.id ?? '')}

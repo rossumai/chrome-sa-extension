@@ -97,6 +97,8 @@ async function load(queueId: number | null, schemaId: number | null) {
   store.selectedSchemaId.value = schemaId;
   clearAnnotation();
   store.annotations.value = [];
+  store.rules.value = [];
+  store.ruleId.value = null;
   store.selectedKey.value = null;
   store.schema.value = null;
   store.loading.value = true;
@@ -107,7 +109,10 @@ async function load(queueId: number | null, schemaId: number | null) {
     const schema = await api.getSchema(schemaId);
     if (seq !== openSeq) return;
     setBase(schema);
-    if (queueId != null) loadAnnotations(queueId);
+    if (queueId != null) {
+      loadAnnotations(queueId);
+      loadRules(queueId);
+    }
   } catch (err: any) {
     if (seq !== openSeq) return;
     setBase(null);
@@ -206,6 +211,17 @@ async function loadAnnotations(queueId: number) {
     }));
   } catch {
     store.annotations.value = [];
+  }
+}
+
+// Fills the rule picker. A failure leaves it empty (the picker then says so).
+async function loadRules(queueId: number) {
+  try {
+    const list = await api.listRules(queueId);
+    if (store.selectedQueueId.value !== queueId) return;
+    store.rules.value = list;
+  } catch {
+    store.rules.value = [];
   }
 }
 

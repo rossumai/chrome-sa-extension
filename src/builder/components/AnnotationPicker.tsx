@@ -1,15 +1,34 @@
-import { h } from 'preact';
-import { annotations, annotationId, annotationError, values, fieldFilter, work } from '../store.js';
+import { h, Fragment } from 'preact';
+import {
+  annotations,
+  annotationId,
+  annotationError,
+  values,
+  fieldFilter,
+  work,
+  rules,
+  ruleId,
+  ruleRefs,
+  selectedQueueId,
+} from '../store.js';
+import { flatten } from '../model.js';
 import { countMatches } from '../fieldFilter.js';
 import { pickAnnotation, clearAnnotation } from '../index.jsx';
 import s from './Builder.module.css';
 
-// A field filter (id or label), then: pick one of the queue's newest annotations, or paste any annotation ID or URL, to see
-// its values next to each field.
+// The bar above the grid: a field filter (id or label); an annotation (one of the queue's
+// newest, or any pasted ID or URL) whose values show next to each field; and a rule whose
+// fields are highlighted.
 export default function AnnotationPicker() {
   const id = annotationId.value;
   const listed = annotations.value.some((a) => a.id === id);
   const matchCount = countMatches(work.value, fieldFilter.value);
+  // Fields the picked rule names that this schema does not have: usually a broken rule.
+  const refs = ruleRefs.value;
+  const ids = new Set(flatten(work.value).map((r) => r.node.id));
+  const missing = refs
+    ? [...new Set([...refs.condition, ...refs.actions])].filter((x) => !ids.has(x))
+    : [];
   return (
     <div class={s.pickBar}>
       <input
@@ -69,6 +88,48 @@ export default function AnnotationPicker() {
       )}
       {id != null && !values.value && !annotationError.value && <span class={s.dim}>Loading…</span>}
       {annotationError.value && <span class={s.warn}>{annotationError.value}</span>}
+      {selectedQueueId.value != null && (
+        <Fragment>
+          <span class={s.barGap} />
+          <span class={s.dim}>Rule</span>
+          <select
+            class={s.select}
+            data-picker="rule"
+            value={ruleId.value != null ? String(ruleId.value) : ''}
+            title={rules.value.find((r) => r.id === ruleId.value)?.trigger_condition || ''}
+            onChange={(e) => {
+              const v = (e.currentTarget as HTMLSelectElement).value;
+              ruleId.value = v ? Number(v) : null;
+            }}
+          >
+            <option value="">{rules.value.length ? 'no rule' : 'no rules on this queue'}</option>
+            {rules.value.map((r) => (
+              <option value={String(r.id)}>
+                {r.name} ({r.id}){r.enabled === false ? ' · disabled' : ''}
+              </option>
+            ))}
+          </select>
+          {ruleId.value != null && (
+            <button
+              type="button"
+              class={s.iconBtn}
+              data-action="clear-rule"
+              title="Stop highlighting this rule's fields"
+              onClick={() => (ruleId.value = null)}
+            >
+              ✕
+            </button>
+          )}
+          {missing.length > 0 && (
+            <span
+              class={s.warn}
+              title="The rule names these fields, but this schema has none of them"
+            >
+              not in schema: {missing.join(', ')}
+            </span>
+          )}
+        </Fragment>
+      )}
     </div>
   );
 }

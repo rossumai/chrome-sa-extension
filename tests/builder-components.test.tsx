@@ -102,6 +102,16 @@ beforeEach(() => {
   store.values.value = null;
   store.lineRow.value = {};
   store.fieldFilter.value = '';
+  store.ruleId.value = null;
+  store.rules.value = [
+    {
+      id: 40,
+      name: 'Doc ID present',
+      enabled: true,
+      trigger_condition: 'is_empty(field.doc_id) or field.ghost_field',
+      actions: [{ type: 'show_message', payload: { schema_id: 'item_desc' } }],
+    },
+  ];
   act(() => {
     render(<App connected={true} />, root);
   });
@@ -566,5 +576,23 @@ describe('Builder inspector visibility', () => {
     });
     expect(store.selectedKey.value).not.toBeNull();
     expect(aside()).not.toBeNull();
+  });
+});
+
+describe('Builder rule highlight', () => {
+  it('picking a rule marks the fields it reads and targets, and lists missing ones', () => {
+    const select = root.querySelector('select[data-picker="rule"]') as HTMLSelectElement;
+    act(() => {
+      select.value = '40';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(row('doc_id').dataset.rule).toBe('condition');
+    expect(row('item_desc').dataset.rule).toBe('action');
+    expect(row('vendor').dataset.rule).toBeUndefined();
+    expect(root.textContent).toContain('ghost_field');
+    act(() => {
+      (root.querySelector('[data-action="clear-rule"]') as HTMLElement).click();
+    });
+    expect(row('doc_id').dataset.rule).toBeUndefined();
   });
 });

@@ -3,6 +3,7 @@ import { signal, computed } from '@preact/signals';
 import { initHistory, type History } from './history.js';
 import { changeSummary, rowStatus, type Node } from './model.js';
 import type { AnnotationValues } from './values.js';
+import { ruleFieldRefs, ruleRoles } from './rules.js';
 
 export const domain = signal('');
 export const token = signal('');
@@ -71,3 +72,10 @@ export function startDraft(name: string, content: Node[]) {
   baseName.value = name;
   history.value = initHistory({ name, content });
 }
+
+// Native Rules of the selected queue, and the one picked to highlight its fields.
+export const rules = signal<any[]>([]);
+export const ruleId = signal<number | null>(null);
+export const pickedRule = computed(() => rules.value.find((r) => r.id === ruleId.value) || null);
+export const ruleRefs = computed(() => (pickedRule.value ? ruleFieldRefs(pickedRule.value) : null));
+export const ruleRoleById = computed(() => (ruleRefs.value ? ruleRoles(ruleRefs.value) : null));

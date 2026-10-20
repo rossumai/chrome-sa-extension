@@ -829,3 +829,19 @@
     opacity: 1;
   }
 }
+
+/* Fields the picked rule uses: a violet edge and a small "if" / "→" badge. */
+.ruleHit td:first-child {
+  box-shadow: inset 3px 0 var(--mdh-special-bidi);
+}
+
+.ruleBadge {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--bg-card); /* white on violet in light mode, dark on the lighter violet in dark */
+  background: var(--mdh-special-bidi);
+}
