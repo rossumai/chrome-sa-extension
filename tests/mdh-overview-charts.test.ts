@@ -3,11 +3,11 @@ import {
   overheadColor,
   overheadTextColor,
   indexOverhead,
+  footprint,
   scaleArea,
   treemapItems,
   squarify,
   buildTreemap,
-  buildScatter,
   TOP_N,
   SCALE_MODES,
 } from '../src/mdh/overviewCharts.js';
@@ -43,6 +43,17 @@ describe('indexOverhead', () => {
     expect(indexOverhead({ storageSize: 0, totalIndexSize: 50 })).toBe(0);
     expect(indexOverhead({ storageSize: 100 })).toBe(0);
     expect(indexOverhead({})).toBe(0);
+  });
+});
+
+describe('footprint', () => {
+  it('adds index bytes to document storage, as MongoDB totalSize does', () => {
+    expect(footprint({ storageSize: 10, totalIndexSize: 4 })).toBe(14);
+  });
+  it('treats an absent side as zero', () => {
+    expect(footprint({ storageSize: 10 })).toBe(10);
+    expect(footprint({ totalIndexSize: 4 })).toBe(4);
+    expect(footprint(null)).toBe(0);
   });
 });
 
@@ -91,14 +102,30 @@ describe('treemapItems', () => {
     expect(other.memberCount).toBe(2);
     expect(other.storageSize).toBe(14 * MiB); // c + d
     expect(other.totalIndexSize).toBe(3 * MiB);
+    expect(other.footprint).toBe(17 * MiB);
     expect(other.overhead).toBeCloseTo((3 * MiB) / (14 * MiB), 6);
+    expect(other.members).toEqual([
+      { name: 'c', footprint: 11 * MiB },
+      { name: 'd', footprint: 6 * MiB },
+    ]);
+  });
+
+  it('ranks by footprint, so a small collection with large indexes moves up', () => {
+    const items = treemapItems(
+      [
+        { name: 'data', storageSize: 10 * MiB, totalIndexSize: 0 },
+        { name: 'indexed', storageSize: 4 * MiB, totalIndexSize: 20 * MiB },
+      ],
+      10,
+    );
+    expect(items.map((i) => i.name)).toEqual(['indexed', 'data']);
   });
 
   it('sorts by storage descending and adds no Other when the tail is empty', () => {
     const items = treemapItems(rows, 10);
     expect(items.some((i) => i.isOther)).toBe(false);
     for (let i = 1; i < items.length; i++) {
-      expect(items[i - 1].storageSize).toBeGreaterThanOrEqual(items[i].storageSize);
+      expect(items[i - 1].footprint).toBeGreaterThanOrEqual(items[i].footprint);
     }
   });
 });
@@ -167,42 +194,55 @@ describe('buildTreemap', () => {
   });
 });
 
-describe('buildScatter', () => {
-  const rows = [
-    { name: 'a', count: 100, avgObjSize: 1024, storageSize: 5 * MiB, totalIndexSize: 1 * MiB },
-    { name: 'b', count: 10000, avgObjSize: 4096, storageSize: 30 * MiB, totalIndexSize: 3 * MiB },
-    { name: 'tiny', count: 0, avgObjSize: 0 }, // excluded
-    { name: 'err', error: 'x', count: 5, avgObjSize: 100 }, // excluded
-  ];
-  it('plots only valid points within the plot area', () => {
-    const r = buildScatter(rows, { width: 300, height: 200 });
-    expect(r.points.map((p) => p.name).sort()).toEqual(['a', 'b']);
-    for (const p of r.points) {
-      expect(p.cx).toBeGreaterThanOrEqual(r.plot.l - 1e-6);
-      expect(p.cx).toBeLessThanOrEqual(r.plot.l + r.plot.pw + 1e-6);
-      expect(p.cy).toBeGreaterThanOrEqual(r.plot.t - 1e-6);
-      expect(p.cy).toBeLessThanOrEqual(r.plot.t + r.plot.ph + 1e-6);
+describe('buildTreemap area', () => {
+  const area = (t: any) => t.w * t.h;
+  it('sizes tiles by footprint (data + indexes) in linear mode', () => {
+    const tiles = buildTreemap(
+      [
+        { name: 'a', storageSize: 10 * MiB, totalIndexSize: 30 * MiB }, // 40 MiB
+        { name: 'b', storageSize: 20 * MiB, totalIndexSize: 0 }, // 20 MiB
+      ],
+      { width: 300, height: 200, mode: 'linear' },
+    );
+    const by = Object.fromEntries(tiles.map((t) => [t.name, area(t)]));
+    expect(by.a / by.b).toBeCloseTo(2, 6);
+  });
+  it('scales Other member by member, so it matches the members as separate tiles', () => {
+    const rows = [
+      { name: 'a', storageSize: 100 * MiB, totalIndexSize: 0 },
+      { name: 'b', storageSize: 1 * MiB, totalIndexSize: 0 },
+      { name: 'c', storageSize: 1 * MiB, totalIndexSize: 0 },
+    ];
+    for (const mode of ['sqrt', 'log']) {
+      const folded = buildTreemap(rows, { width: 300, height: 200, topN: 1, mode });
+      const open = buildTreemap(rows, { width: 300, height: 200, topN: 10, mode });
+      const other = folded.find((t) => t.isOther);
+      const members = open.filter((t) => t.name !== 'a').reduce((s, t) => s + area(t), 0);
+      expect(area(other)).toBeCloseTo(members, 6);
     }
   });
-  it('emits decade ticks as powers of ten in log mode', () => {
-    const r = buildScatter(rows, { width: 300, height: 200, mode: 'log' });
-    for (const tk of r.xTicks) expect(Math.log10(tk.v) % 1).toBeCloseTo(0, 9);
-    for (const tk of r.yTicks) expect(Math.log10(tk.v) % 1).toBeCloseTo(0, 9);
-  });
-  it('honors the shared scale mode (linear) with linear ticks from 0, points in-bounds', () => {
-    const r = buildScatter(rows, { width: 300, height: 200, mode: 'linear' });
-    expect(r.points.map((p) => p.name).sort()).toEqual(['a', 'b']);
-    expect(r.xTicks[0].v).toBe(0); // linear ticks start at 0, not a decade
-    for (const p of r.points) {
-      expect(p.cx).toBeGreaterThanOrEqual(r.plot.l - 1e-6);
-      expect(p.cx).toBeLessThanOrEqual(r.plot.l + r.plot.pw + 1e-6);
-      expect(p.cy).toBeGreaterThanOrEqual(r.plot.t - 1e-6);
-      expect(p.cy).toBeLessThanOrEqual(r.plot.t + r.plot.ph + 1e-6);
+});
+
+describe('buildTreemap Other placement', () => {
+  it('puts Other in the bottom-right corner in every mode, even when it outweighs named tiles', () => {
+    const rows = [{ name: 'a', storageSize: 100 * MiB, totalIndexSize: 0 }];
+    // 20 small collections: summed they are bigger than 'b' and 'c' in every mode.
+    rows.push({ name: 'b', storageSize: 8 * MiB, totalIndexSize: 0 });
+    rows.push({ name: 'c', storageSize: 6 * MiB, totalIndexSize: 0 });
+    for (let i = 0; i < 20; i++)
+      rows.push({ name: `t${i}`, storageSize: 1 * MiB, totalIndexSize: 0 });
+    for (const mode of SCALE_MODES) {
+      for (const [W, H] of [
+        [300, 200],
+        [200, 300],
+      ]) {
+        const tiles = buildTreemap(rows, { width: W, height: H, topN: 3, mode });
+        const other = tiles[tiles.length - 1];
+        expect(other.isOther).toBe(true);
+        expect(other.x + other.w).toBeCloseTo(W, 6);
+        expect(other.y + other.h).toBeCloseTo(H, 6);
+      }
     }
-  });
-  it('returns empty layout when there is no data or no size', () => {
-    expect(buildScatter([], { width: 300, height: 200 }).points).toEqual([]);
-    expect(buildScatter(rows, { width: 0, height: 200 }).points).toEqual([]);
   });
 });
 

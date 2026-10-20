@@ -9,7 +9,10 @@ official Rossum product.
 
 Your feature toggles, per-tab navigation state (which Console app and collection
 you had open), and the ids of annotations you recently opened in the Rossum UI.
-All of it stays in your browser. None of it is transmitted anywhere.
+In a Rossum tab, the name, id, sandbox flag and deployment location of the
+organisation you are signed in to are kept in that tab's session storage for up to
+a day, so a page reload does not ask the API again; it is cleared when the tab
+closes. All of it stays in your browser. None of it is transmitted anywhere.
 
 While you use the Rossum Console or the DevTools panel, the extension calls the
 Rossum API of the organisation you are signed in to, using your own session
@@ -66,6 +69,7 @@ list and the code disagree.
 | `sa_rossum_expand_reasoning` | a reasoning field's options were auto-expanded on a page |
 | `sa_rossum_scroll_lock` | the sidebar scroll lock actually restored a scroll position Rossum had reset |
 | `sa_rossum_org_name` | the organization's name was shown in the Rossum header on a page |
+| `sa_rossum_org_env` | the organization's environment (sandbox or production) was shown in the Rossum header on a page |
 | `sa_rossum_tooltip_close` | you dismissed a validation tooltip with its × button |
 | `sa_rossum_mdh_suggest_click` | you clicked "Open Dataset Management" on the legacy Master Data Hub banner |
 
