@@ -292,4 +292,21 @@ describe('rossum content-script entry', () => {
       true,
     );
   });
+
+  it('hides Rossum’s Developer mode chip with every toggle off', async () => {
+    loadEntry({});
+    globalThis.MutationObserver = vi.fn(function (this: any) {
+      this.observe = vi.fn();
+    }) as any;
+    const row = document.createElement('div');
+    row.innerHTML =
+      '<div class="MuiChip-root"><span class="MuiChip-label">Developer mode</span></div>' +
+      '<div class="MuiTabs-root"></div>';
+    document.body.append(row);
+
+    await import('../src/rossum/index.js');
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(row.querySelector<HTMLElement>('.MuiChip-root')!.style.display).toBe('none');
+  });
 });

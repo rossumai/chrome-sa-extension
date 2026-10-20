@@ -45,6 +45,8 @@ Toggled in the popup:
 Always on:
 
 - **Closable validation tooltips.** Adds a × to validation tooltips on the annotation screen.
+- **No Developer mode chip.** Hides Rossum's "Developer mode" chip from the top bar. It only
+  repeats the popup's Dev features switch and takes room on a small screen.
 - **Matching provenance.** On an annotation, the popup shows which MDH hooks and lookup fields
   produced each matched value. It can also open in Chrome's side panel, which stays open while
   you work.

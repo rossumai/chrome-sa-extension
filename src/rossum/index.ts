@@ -14,6 +14,10 @@ import { init as initDatasetMgmtSuggest } from './features/dataset-mgmt-suggest.
 import { init as initTrackViewed } from './features/track-viewed.js';
 import { init as initTrainingQuest } from './features/training-quest.js';
 import { init as initOrgName, handleNode as handleOrgName } from './features/org-name.js';
+import {
+  init as initDevModeChip,
+  handleNode as handleDevModeChip,
+} from './features/dev-mode-chip.js';
 import { orgNameOn } from './orgName.js';
 
 initClosableTooltips();
@@ -39,7 +43,7 @@ chrome.storage.local.get(SETTINGS_KEYS).then((settings) => {
   // not the name is on, and OFF by default like every other toggle — a test org without
   // the sandbox flag shows Production, a call each user makes for themselves.
   const showOrgEnv = !!settings.orgEnvEnabled;
-  const handlers = [handleClosableTooltip];
+  const handlers = [handleClosableTooltip, handleDevModeChip];
   if (showOrgName || showOrgEnv) handlers.push(handleOrgName);
 
   if (settings.schemaAnnotationsEnabled) {
@@ -82,4 +86,5 @@ chrome.storage.local.get(SETTINGS_KEYS).then((settings) => {
   // already on the page. After observe(), never before, or a header rendered in
   // between would be missed by both.
   if (showOrgName || showOrgEnv) initOrgName({ name: showOrgName, env: showOrgEnv });
+  initDevModeChip();
 });
