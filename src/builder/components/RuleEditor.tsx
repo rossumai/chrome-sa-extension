@@ -1,9 +1,16 @@
 import { h } from 'preact';
-import { useEffect } from 'preact/hooks';
-import { ruleEditor, ruleDirty, ruleErrors, ruleSaving } from '../store.js';
-import { updateRuleDraft, closeRuleEditor, saveRule } from '../index.jsx';
+import { useEffect, useState } from 'preact/hooks';
+import { ruleEditor, ruleDirty, ruleErrors, ruleSaving, assist, assistRev } from '../store.js';
+import {
+  updateRuleDraft,
+  closeRuleEditor,
+  saveRule,
+  askRuleAssistant,
+  discardRule,
+} from '../index.jsx';
 import { ACTION_TYPES, ACTION_EVENTS, newAction, withActionType } from '../ruleDraft.js';
 import CodeEditor from './CodeEditor.jsx';
+import FabryMark from '../../ui/FabryMark.jsx';
 import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
 
@@ -159,6 +166,57 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
   );
 }
 
+// "Ask Mr. Fabry": a plain-language request that comes back as a rule filling the editor.
+function FabryBox({ fromField }: { fromField: string | null }) {
+  const [text, setText] = useState(fromField ? `For ${fromField}: ` : '');
+  const a = assist.value;
+  const ask = () => askRuleAssistant(text);
+  return (
+    <div class={s.fabryBox}>
+      <div class={s.fabryHead}>
+        <FabryMark size={16} animated={a.busy} />
+        <span class={s.fieldLabel}>Ask Mr. Fabry</span>
+      </div>
+      <textarea
+        class={s.input}
+        data-fabry-prompt=""
+        rows={3}
+        placeholder={a.chatId ? 'What should change?' : 'Describe what the rule should do'}
+        value={text}
+        onInput={(e) => setText((e.currentTarget as HTMLTextAreaElement).value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask();
+        }}
+      />
+      <div class={s.codeBar}>
+        <button
+          type="button"
+          class={s.btn}
+          data-action="ask-fabry"
+          disabled={a.busy || !text.trim()}
+          onClick={ask}
+          title="Ask (⌘Enter)"
+        >
+          {a.busy ? 'Mr. Fabry is writing…' : a.chatId ? 'Ask again' : 'Ask'}
+        </button>
+        {!a.busy && a.chatId && !a.error && (
+          <span class={s.dim}>Proposal filled in — review, then Save rule or Discard.</span>
+        )}
+      </div>
+      {a.error && <div class={s.rowError}>{a.error}</div>}
+      {a.warnings.map((w) => (
+        <div class={s.warn}>{w}</div>
+      ))}
+      {a.reply && (
+        <details>
+          <summary class={s.dim}>Mr. Fabry's reply</summary>
+          <pre class={s.code}>{a.reply}</pre>
+        </details>
+      )}
+    </div>
+  );
+}
+
 // Rule mode's right panel: the open rule's name, condition and actions, with its own Save.
 export default function RuleEditor() {
   useEffect(rightPanel.load, []);
@@ -183,6 +241,10 @@ export default function RuleEditor() {
           ✕
         </button>
       </div>
+      <FabryBox
+        key={`fabry:${ed.ruleId ?? 'new'}:${ed.fromField ?? ''}`}
+        fromField={ed.fromField ?? null}
+      />
       <label class={s.field}>
         <span class={s.fieldLabel}>Name</span>
         <input
@@ -214,7 +276,7 @@ export default function RuleEditor() {
       <div class={s.field}>
         <span class={s.fieldLabel}>Condition (fires when True)</span>
         <CodeEditor
-          key={`rule:${ed.ruleId ?? 'new'}`}
+          key={`rule:${ed.ruleId ?? 'new'}:${assistRev.value}`}
           name="condition"
           value={d.trigger_condition}
           onCommit={(v) => updateRuleDraft({ trigger_condition: v })}
@@ -243,6 +305,15 @@ export default function RuleEditor() {
       <div class={s.dialogActions}>
         <button type="button" class={s.btn} onClick={closeRuleEditor}>
           Close
+        </button>
+        <button
+          type="button"
+          class={s.btn}
+          data-action="discard-rule"
+          disabled={!ruleDirty.value}
+          onClick={discardRule}
+        >
+          Discard
         </button>
         <button
           type="button"

@@ -85,7 +85,13 @@ export const rules = signal<any[]>([]);
 export const ruleId = signal<number | null>(null);
 export const pickedRule = computed(() => rules.value.find((r) => r.id === ruleId.value) || null);
 // Rule mode: the right panel edits one rule (ruleId null = a new one).
-export type RuleEditorState = { ruleId: number | null; base: RuleDraft; draft: RuleDraft };
+export type RuleEditorState = {
+  ruleId: number | null;
+  base: RuleDraft;
+  draft: RuleDraft;
+  /** The field a new rule was started from (its Rules-column +), for Mr. Fabry's prompt. */
+  fromField?: string | null;
+};
 export const ruleEditor = signal<RuleEditorState | null>(null);
 export const ruleDirty = computed(() =>
   ruleEditor.value ? !sameDraft(ruleEditor.value.base, ruleEditor.value.draft) : false,
@@ -126,3 +132,21 @@ export const ruleGlobalMarks = computed(() =>
 
 // In rule mode the schema is read-only: one thing is edited at a time.
 export const schemaLocked = computed(() => !!ruleEditor.value);
+
+// Mr. Fabry in the rule editor: one read-only chat per opened rule. assistRev bumps when a
+// proposal (or Discard) replaces the draft from outside, so the condition editor reloads.
+export type AssistState = {
+  chatId: string | null;
+  busy: boolean;
+  error: string | null;
+  reply: string | null; // the raw reply, shown when it held no usable rule
+  warnings: string[];
+};
+export const assist = signal<AssistState>({
+  chatId: null,
+  busy: false,
+  error: null,
+  reply: null,
+  warnings: [],
+});
+export const assistRev = signal(0);

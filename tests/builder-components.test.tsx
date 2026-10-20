@@ -895,3 +895,29 @@ describe('Builder grid is read-only in rule mode', () => {
     expect(store.history.value.past.length).toBe(1);
   });
 });
+
+describe('Builder rule editor: Mr. Fabry box', () => {
+  it('opens prefilled with the field the rule started from', () => {
+    act(() => {
+      (row('doc_id').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
+    });
+    const box = root.querySelector('textarea[data-fabry-prompt]') as HTMLTextAreaElement;
+    expect(box.value).toContain('doc_id');
+    expect(root.querySelector('[data-action="ask-fabry"]')).not.toBeNull();
+  });
+
+  it('the condition editor shows a proposal once it fills the draft', () => {
+    act(() => {
+      (row('doc_id').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
+    });
+    act(() => {
+      store.ruleEditor.value = {
+        ...store.ruleEditor.value!,
+        draft: { ...store.ruleEditor.value!.draft, trigger_condition: 'is_empty(field.doc_id)' },
+      };
+      store.assistRev.value++;
+    });
+    const cm = root.querySelector('[data-code="condition"] .cm-content') as HTMLElement;
+    expect(cm.textContent).toBe('is_empty(field.doc_id)');
+  });
+});

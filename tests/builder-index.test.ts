@@ -22,6 +22,11 @@ vi.mock('../src/builder/api.js', () => ({
   deleteSchema: vi.fn(),
   get: vi.fn(),
 }));
+vi.mock('../src/agent/agentApi.js', () => ({
+  createChat: vi.fn(async () => 'chat-9'),
+  streamMessage: vi.fn(),
+}));
+import * as agentApi from '../src/agent/agentApi.js';
 import * as api from '../src/builder/api.js';
 import {
   openQueue,
@@ -35,6 +40,8 @@ import {
   updateRuleDraft,
   saveRule,
   closeRuleEditor,
+  askRuleAssistant,
+  discardRule,
   save,
   pickAnnotation,
   renameSchema,
@@ -332,5 +339,80 @@ describe('rule editor', () => {
     closeRuleEditor();
     expect(store.ruleEditor.value).toBeNull();
     ask.mockRestore();
+  });
+});
+
+describe('Mr. Fabry in the rule editor', () => {
+  const reply = (text: string) =>
+    vi
+      .mocked(agentApi.streamMessage)
+      .mockImplementation(async (_id: string, content: string, opts: any) => {
+        if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
+      });
+  const proposal = {
+    name: 'Doc id required',
+    trigger_condition: 'is_empty(field.doc_id)',
+    actions: [
+      { type: 'show_message', payload: { type: 'error', content: 'Missing', schema_id: 'doc_id' } },
+    ],
+  };
+
+  beforeEach(() => {
+    vi.mocked(agentApi.createChat).mockClear();
+    vi.mocked(agentApi.streamMessage).mockReset();
+    store.startDraft(
+      'S',
+      withKeys([
+        {
+          category: 'section',
+          id: 's',
+          label: 'S',
+          children: [{ category: 'datapoint', id: 'doc_id', label: 'Doc', type: 'string' }],
+        },
+      ]),
+    );
+    store.queues.value = [{ id: 1, name: 'A', url: 'q/1', schema: 's/7' }];
+    store.selectedQueueId.value = 1;
+    store.ruleEditor.value = null;
+  });
+
+  it('fills the editor with the proposal, unsaved, and reuses the chat for a follow-up', async () => {
+    openRuleEditor(null, 'doc_id');
+    reply('```json\n' + JSON.stringify(proposal) + '\n```');
+    const rev = store.assistRev.value;
+    await askRuleAssistant('Error when the document id is missing');
+    const prompt = vi.mocked(agentApi.streamMessage).mock.calls[1][1];
+    expect(prompt).toContain('Error when the document id is missing');
+    expect(prompt).toContain('The rule starts from the field doc_id.');
+    expect(store.ruleEditor.value!.draft.trigger_condition).toBe('is_empty(field.doc_id)');
+    expect(store.ruleDirty.value).toBe(true);
+    expect(store.assistRev.value).toBe(rev + 1);
+    await askRuleAssistant('make it a warning');
+    expect(agentApi.createChat).toHaveBeenCalledTimes(1);
+  });
+
+  it('a reply without a rule leaves the draft and shows the error', async () => {
+    openRuleEditor(null, 'doc_id');
+    reply('I am not sure what you mean.');
+    await askRuleAssistant('???');
+    expect(store.ruleEditor.value!.draft.trigger_condition).toBe('field.doc_id');
+    expect(store.assist.value.error).toBe('Mr. Fabry did not return a rule');
+    expect(store.assist.value.reply).toContain('not sure');
+  });
+
+  it('warns about fields the proposal uses that the schema does not have', async () => {
+    openRuleEditor(null, 'doc_id');
+    reply(JSON.stringify({ ...proposal, trigger_condition: 'field.ghost > 0' }));
+    await askRuleAssistant('x');
+    expect(store.assist.value.warnings.join(' ')).toContain('ghost');
+  });
+
+  it('Discard puts the rule back as it was opened', async () => {
+    openRuleEditor(null, 'doc_id');
+    reply(JSON.stringify(proposal));
+    await askRuleAssistant('x');
+    discardRule();
+    expect(store.ruleEditor.value!.draft.trigger_condition).toBe('field.doc_id');
+    expect(store.ruleDirty.value).toBe(false);
   });
 });

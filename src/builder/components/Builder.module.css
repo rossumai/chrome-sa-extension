@@ -970,3 +970,18 @@
   cursor: default;
   background: none;
 }
+
+.fabryBox {
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid var(--info-border);
+  border-radius: 6px;
+  background: var(--info-bg);
+}
+
+.fabryHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}

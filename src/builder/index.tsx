@@ -9,6 +9,14 @@ import { saveSchema, type SaveResult } from './save.js';
 import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { annotationValues } from './values.js';
+import * as agentApi from '../agent/agentApi.js';
+import {
+  schemaFieldList,
+  buildRulePrompt,
+  buildFollowupPrompt,
+  parseRuleReply,
+  runRuleAssist,
+} from './ruleAssist.js';
 import { draftFromRule, emptyDraft, draftBody, draftErrors, type RuleDraft } from './ruleDraft.js';
 
 function fail(err: any, fallback: string) {
@@ -404,7 +412,13 @@ export function openRuleEditor(id: number | null, fieldId?: string) {
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   const rule = id == null ? null : store.rules.value.find((r) => r.id === id);
   const draft = rule ? draftFromRule(rule) : emptyDraft(fieldId);
-  store.ruleEditor.value = { ruleId: rule ? rule.id : null, base: draft, draft };
+  store.ruleEditor.value = {
+    ruleId: rule ? rule.id : null,
+    base: draft,
+    draft,
+    fromField: rule ? null : (fieldId ?? null),
+  };
+  store.assist.value = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
   store.ruleErrors.value = [];
   store.selectedKey.value = null;
   if (rule) store.ruleId.value = rule.id;
@@ -452,5 +466,59 @@ export async function saveRule() {
     ];
   } finally {
     store.ruleSaving.value = false;
+  }
+}
+
+/** Put the open rule back as it was opened (or last saved). */
+export function discardRule() {
+  const ed = store.ruleEditor.value;
+  if (!ed) return;
+  store.ruleEditor.value = { ...ed, draft: ed.base };
+  store.ruleErrors.value = [];
+  store.assistRev.value++;
+}
+
+/**
+ * Ask Mr. Fabry for the rule described in `request`. A usable answer fills the editor (still
+ * unsaved — Discard undoes it); anything else is shown with the raw reply. Read-only chat.
+ */
+export async function askRuleAssistant(request: string) {
+  const ed = store.ruleEditor.value;
+  if (!ed || !request.trim() || store.assist.value.busy) return;
+  const prev = store.assist.value;
+  store.assist.value = { ...prev, busy: true, error: null, reply: null, warnings: [] };
+  const fields = schemaFieldList(store.work.value);
+  const changed = ed.ruleId != null || JSON.stringify(ed.draft) !== JSON.stringify(ed.base);
+  const content = prev.chatId
+    ? buildFollowupPrompt(request, ed.draft)
+    : buildRulePrompt({
+        request,
+        fields,
+        startField: ed.fromField ?? null,
+        current: changed ? ed.draft : null,
+      });
+  try {
+    const { chatId, text } = await runRuleAssist({ agentApi, chatId: prev.chatId, content });
+    if (!store.ruleEditor.value) return; // closed while Mr. Fabry was writing
+    const r = parseRuleReply(text, new Set(fields.map((f) => f.id)));
+    if (!r.ok) {
+      store.assist.value = { chatId, busy: false, error: r.error, reply: text, warnings: [] };
+      return;
+    }
+    updateRuleDraft(r.draft);
+    store.assistRev.value++;
+    store.assist.value = {
+      chatId,
+      busy: false,
+      error: null,
+      reply: null,
+      warnings: r.unknownFields.length ? [`Not in this schema: ${r.unknownFields.join(', ')}`] : [],
+    };
+  } catch (err: any) {
+    const msg =
+      err?.status === 401
+        ? 'Session expired. Open the Console from a Rossum tab again.'
+        : err?.message || 'Mr. Fabry is not available';
+    store.assist.value = { ...store.assist.value, busy: false, error: msg };
   }
 }
