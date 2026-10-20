@@ -170,4 +170,11 @@ describe('Rail — academy (experimental) gate', () => {
     expect(titles).toContain('Mr. Fabry');
     expect(titles).toContain(ACADEMY_TITLE);
   });
+
+  it('marks the Builder as beta', () => {
+    const btn = [...mount().querySelectorAll('.app-rail-item')].find(
+      (b) => b.getAttribute('title') === 'Schema Builder',
+    )!;
+    expect(btn.querySelector('.app-rail-beta')).not.toBeNull();
+  });
 });

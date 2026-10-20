@@ -125,7 +125,7 @@ type RailApp = {
 const APPS: RailApp[] = [
   { id: 'mdh', label: 'Data', title: 'Dataset Management', icon: DATA_ICON },
   { id: 'audit', label: 'Audit', title: 'Audit Log Viewer', icon: AUDIT_ICON },
-  { id: 'builder', label: 'Builder', title: 'Schema Builder', icon: HAMMER_ICON },
+  { id: 'builder', label: 'Builder', title: 'Schema Builder', icon: HAMMER_ICON, beta: true },
   {
     id: 'inspector',
     label: 'Inspector',
