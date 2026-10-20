@@ -323,13 +323,14 @@
   background: var(--warning-bg);
 }
 
+/* Staged changes: green = new, yellow = edited, red = deleted (struck through until Save). */
 .isDeleted td {
-  opacity: 0.5;
+  background: var(--danger-bg);
+  color: var(--danger-fg);
   text-decoration: line-through;
 }
 
 .isDeleted td.actions {
-  opacity: 1;
   text-decoration: none;
 }
 
