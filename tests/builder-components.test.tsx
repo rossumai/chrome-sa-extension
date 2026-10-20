@@ -1146,3 +1146,37 @@ describe('Builder hook mode: per configuration', () => {
     expect(shown()).toContain('doc_id');
   });
 });
+
+describe('Builder hook mode: jump to a configuration', () => {
+  it('clicking a configuration moves the editor to its { and flashes it', async () => {
+    act(() => {
+      store.hooks.value = [
+        {
+          id: 72,
+          name: 'Jump',
+          settings: {
+            configurations: [
+              { name: 'A', source: { queries: [{ find: { x: '{doc_id}' } }] } },
+              { name: 'B', source: { queries: [{ find: { y: '{doc_id}' } }] } },
+            ],
+          },
+        },
+      ];
+    });
+    act(() => {
+      (row('doc_id').querySelector('[data-action="field-hooks"]') as HTMLElement).click();
+    });
+    act(() => {
+      (root.querySelector('[data-config-index="1"]') as HTMLElement).click();
+    });
+    const { EditorView } = await import('@codemirror/view');
+    const view = EditorView.findFromDOM(
+      root.querySelector('[data-code="hook"] .cm-editor') as HTMLElement,
+    )!;
+    const text = view.state.doc.toString();
+    const head = view.state.selection.main.head;
+    expect(text[head]).toBe('{');
+    expect(text.slice(head, head + 20)).toContain('"name": "B"');
+    expect(root.querySelector('[data-code="hook"] .cm-flash')).not.toBeNull();
+  });
+});

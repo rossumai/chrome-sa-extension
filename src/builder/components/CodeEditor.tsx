@@ -1,7 +1,8 @@
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { EditorView, basicSetup } from 'codemirror';
-import { EditorState } from '@codemirror/state';
+import { EditorState, StateEffect, StateField } from '@codemirror/state';
+import { Decoration, type DecorationSet } from '@codemirror/view';
 import { python } from '@codemirror/lang-python';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -20,6 +21,33 @@ const surface = EditorView.theme({
   '&': { fontSize: '12px', border: '1px solid var(--border)', borderRadius: '4px' },
   '.cm-scroller': { fontFamily: 'ui-monospace, Menlo, monospace' },
 });
+// A short highlight over a range ("this is the part you picked"), cleared by a timer.
+const flashOn = StateEffect.define<{ from: number; to: number }>();
+const flashOff = StateEffect.define<null>();
+const flashMark = Decoration.mark({ class: 'cm-flash' });
+const flashField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(deco, tr) {
+    deco = deco.map(tr.changes);
+    for (const e of tr.effects) {
+      if (e.is(flashOn)) deco = Decoration.set([flashMark.range(e.value.from, e.value.to)]);
+      else if (e.is(flashOff)) deco = Decoration.none;
+    }
+    return deco;
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
+const flashTheme = EditorView.theme({
+  '.cm-flash': { backgroundColor: 'rgba(66, 112, 219, 0.22)', borderRadius: '2px' },
+});
+const FLASH_MS = 1200;
+
+/** What a parent may do to the editor: read its text, or jump to a range and flash it. */
+export type CodeEditorHandle = {
+  getText: () => string;
+  reveal: (from: number, to: number) => void;
+};
+
 // Collapsed, the editor stops growing at 320px and scrolls; expanded, it fills its panel.
 const collapsed = EditorView.theme({ '.cm-scroller': { maxHeight: '320px' } });
 
@@ -33,6 +61,7 @@ export default function CodeEditor({
   onToggleExpand,
   language = 'python',
   formatter = ruffFormat,
+  handleRef,
 }: {
   value: string;
   onCommit: (v: string) => void;
@@ -42,6 +71,7 @@ export default function CodeEditor({
   language?: 'python' | 'json';
   /** What Format runs; Ruff for Python. A syntax error comes back as a message. */
   formatter?: PythonFormatter;
+  handleRef?: { current: CodeEditorHandle | null };
 }) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -59,6 +89,8 @@ export default function CodeEditor({
           basicSetup,
           language === 'json' ? json() : python(),
           surface,
+          flashField,
+          flashTheme,
           ...(expanded ? [] : [collapsed]),
           ...(prefersDark() ? [oneDark] : []),
           EditorView.domEventHandlers({
@@ -71,7 +103,23 @@ export default function CodeEditor({
       }),
     });
     view.current = v;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (handleRef) {
+      handleRef.current = {
+        getText: () => v.state.doc.toString(),
+        reveal: (from, to) => {
+          v.dispatch({
+            selection: { anchor: from },
+            effects: [EditorView.scrollIntoView(from, { y: 'start' }), flashOn.of({ from, to })],
+          });
+          clearTimeout(timer);
+          timer = setTimeout(() => v.dispatch({ effects: flashOff.of(null) }), FLASH_MS);
+        },
+      };
+    }
     return () => {
+      clearTimeout(timer);
+      if (handleRef) handleRef.current = null;
       v.destroy();
       view.current = null;
     };

@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import {
   hookEditor,
   hookDirty,
@@ -19,7 +19,8 @@ import {
   discardHook,
   askHookAssistant,
 } from '../index.jsx';
-import CodeEditor from './CodeEditor.jsx';
+import CodeEditor, { type CodeEditorHandle } from './CodeEditor.jsx';
+import { configRange } from '../jsonRanges.js';
 import { configSummaries } from '../matching.js';
 import AskFabry from './AskFabry.jsx';
 import { rightPanel } from './panels.js';
@@ -35,6 +36,14 @@ export default function HookEditor() {
   const hook = hooks.value.find((h) => h.id === ed.hookId);
   const refs = hookRefs.value;
   const configs = hookLive.value ? configSummaries(hookLive.value) : [];
+  const editor = useRef<CodeEditorHandle | null>(null);
+  // Pick a configuration: narrow the grid to it, and jump the editor to its "{" with a flash.
+  const pick = (i: number) => {
+    hookConfigIndex.value = i;
+    const h = editor.current;
+    const r = h && configRange(h.getText(), i);
+    if (h && r) h.reveal(r.from, r.to);
+  };
   return (
     <aside
       class={s.inspector + ' ' + s.inspectorFill}
@@ -79,7 +88,7 @@ export default function HookEditor() {
             data-config-index={String(c.index)}
             class={s.configItem + (hookConfigIndex.value === c.index ? ' ' + s.queueOn : '')}
             title={`Show only the fields configuration ${c.index + 1} uses`}
-            onClick={() => (hookConfigIndex.value = c.index)}
+            onClick={() => pick(c.index)}
           >
             <b>{c.index + 1}</b> · {c.name}
             <span class={s.dim}>
@@ -102,6 +111,7 @@ export default function HookEditor() {
         <CodeEditor
           key={`hook:${ed.hookId}:${hookAssistRev.value}`}
           name="hook"
+          handleRef={editor}
           language="json"
           formatter={formatJson}
           expanded
