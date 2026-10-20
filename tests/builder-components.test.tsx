@@ -468,6 +468,9 @@ describe('Builder formula editor', () => {
 
 describe('Builder inspector width', () => {
   it('dragging the inspector edge left widens it and remembers the width', () => {
+    act(() => {
+      row('doc_id').click();
+    });
     const aside = root.querySelector('aside') as HTMLElement;
     const before = parseInt(aside.style.width, 10);
     const handle = root.querySelector('[data-resize="inspector"]') as HTMLElement;
@@ -528,5 +531,40 @@ describe('Builder panel collapse', () => {
     expect((root.querySelector('nav') as HTMLElement).dataset.collapsed).toBeUndefined();
     expect(root.querySelector('[data-action="collapse-nav"]')).toBeNull();
     expect(root.querySelector('[data-queue-id]')).not.toBeNull();
+  });
+});
+
+describe('Builder inspector visibility', () => {
+  const aside = () => root.querySelector('aside');
+
+  it('appears when a row is clicked and hides on a click into empty grid space', () => {
+    expect(aside()).toBeNull();
+    act(() => {
+      row('doc_id').click();
+    });
+    expect(aside()).not.toBeNull();
+    act(() => {
+      (root.querySelector('[data-grid-wrap]') as HTMLElement).click();
+    });
+    expect(aside()).toBeNull();
+    expect(store.selectedKey.value).toBeNull();
+  });
+
+  it('hides on Esc when not typing', () => {
+    act(() => {
+      row('doc_id').click();
+    });
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(aside()).toBeNull();
+  });
+
+  it('stays open for a click on a grid button, such as + Field', () => {
+    act(() => {
+      (root.querySelector('[data-action="add-field"]') as HTMLElement).click();
+    });
+    expect(store.selectedKey.value).not.toBeNull();
+    expect(aside()).not.toBeNull();
   });
 });

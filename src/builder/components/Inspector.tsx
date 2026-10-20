@@ -256,7 +256,8 @@ export default function Inspector() {
       {children}
     </aside>
   );
-  if (!node) return shell(<div class={s.dim}>Select a row to see all its settings.</div>);
+  // No selection, no panel: it comes in when a row is clicked (see App's click-away).
+  if (!node) return null;
   const kind = node.category;
   const src = node.ui_configuration?.type;
   const type = node.type;

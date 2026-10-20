@@ -9,6 +9,7 @@ import {
   selectedSchemaId,
   generalErrors,
   queues,
+  selectedKey,
 } from '../store.js';
 import { undoChange, redoChange, loadQueues, openQueue, openSchema } from '../index.jsx';
 import Navigator from './Navigator.jsx';
@@ -33,6 +34,10 @@ export default function App({ connected }: { connected: boolean | null }) {
   // ⌘Z / Ctrl+Z undo, ⇧⌘Z / Ctrl+Shift+Z / Ctrl+Y redo — not while typing in a field.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !inField(e.target)) {
+        selectedKey.value = null; // closes the inspector
+        return;
+      }
       if (!(e.metaKey || e.ctrlKey) || inField(e.target)) return;
       const k = e.key.toLowerCase();
       if (k === 'z' && !e.shiftKey) undoChange();
@@ -93,7 +98,18 @@ export default function App({ connected }: { connected: boolean | null }) {
             <Toolbar onSave={() => setSaveOpen(true)} />
             <AnnotationPicker />
             <div class={s.body}>
-              <div class={s.gridWrap}>
+              <div
+                class={s.gridWrap}
+                data-grid-wrap=""
+                onClick={(e) => {
+                  // A click into empty grid space clears the selection, which hides the
+                  // inspector. Rows select themselves; buttons and inputs act, not deselect.
+                  const hit = (e.target as Element).closest(
+                    '[data-row-key], button, input, select, textarea, label, a',
+                  );
+                  if (!hit) selectedKey.value = null;
+                }}
+              >
                 <Grid />
               </div>
               <Inspector />

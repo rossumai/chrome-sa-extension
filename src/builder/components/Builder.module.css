@@ -600,6 +600,7 @@
 }
 
 .inspector {
+  animation: inspectorIn 0.14s ease-out;
   position: relative;
   flex: none;
   overflow-y: auto;
@@ -816,4 +817,15 @@
   width: 28px;
   padding: 8px 2px;
   align-items: center;
+}
+
+@keyframes inspectorIn {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
