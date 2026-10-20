@@ -3,7 +3,7 @@ import { signal, computed } from '@preact/signals';
 import { initHistory, type History } from './history.js';
 import { changeSummary, rowStatus, movedKeys, type Node } from './model.js';
 import type { AnnotationValues } from './values.js';
-import { mdhHooks, hooksByField, hookFieldRefs, hookRoles } from './matching.js';
+import { mdhHooks, hooksByField, hookFieldRefs, hookRoles, fieldConfigs } from './matching.js';
 import {
   ruleFieldRefs,
   ruleRoles,
@@ -222,18 +222,34 @@ export const hookAssist = signal<AssistState>({
 });
 export const hookAssistRev = signal(0);
 
-// The fields the hook uses, read from the editor (live) — or from the saved settings while
+// The hook as edited: settings parsed from the editor (live) — or the saved settings while
 // the editor holds JSON that does not parse.
-export const hookRefs = computed(() => {
+export const hookLive = computed(() => {
   const ed = hookEditor.value;
   if (!ed) return null;
-  let settings: unknown;
   try {
-    settings = JSON.parse(ed.draft);
+    return { settings: JSON.parse(ed.draft) };
   } catch {
-    settings = hooks.value.find((h) => h.id === ed.hookId)?.settings;
+    return { settings: hooks.value.find((h) => h.id === ed.hookId)?.settings };
   }
-  return hookFieldRefs({ settings });
+});
+// One configuration picked in the hook panel (null = all of them).
+export const hookConfigIndex = signal<number | null>(null);
+export const hookRefs = computed(() =>
+  hookLive.value ? hookFieldRefs(hookLive.value, hookConfigIndex.value ?? undefined) : null,
+);
+// Per field: the configurations (numbered from 1 in the grid) that use it, and how.
+export const hookFieldConfigs = computed(() => {
+  if (!hookLive.value) return null;
+  const all = fieldConfigs(hookLive.value);
+  const i = hookConfigIndex.value;
+  if (i == null) return all;
+  const out = new Map<string, { index: number; name: string; role: string }[]>();
+  for (const [id, list] of all) {
+    const mine = list.filter((x) => x.index === i);
+    if (mine.length) out.set(id, mine);
+  }
+  return out;
 });
 export const hookFilterIds = computed(() =>
   hookRefs.value ? new Set([...hookRefs.value.inputs, ...hookRefs.value.outputs]) : null,

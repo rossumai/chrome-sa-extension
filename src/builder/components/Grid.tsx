@@ -20,6 +20,7 @@ import {
   fieldHooks,
   hookRoleById,
   hookFilterIds,
+  hookFieldConfigs,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
 import { apply, openRuleEditor, openHookEditor } from '../index.jsx';
@@ -366,19 +367,22 @@ function MarkIcons({ marks }: { marks: ActionMark[] }) {
   );
 }
 
-// In hook mode: does the hook match ON this field (in), fill it (out), or both?
-function HookBadge({ role }: { role?: string }) {
-  if (!role) return null;
-  const marks = role === 'both' ? ['in', 'out'] : [role];
+// In hook mode: which configuration matches ON this field (in N) or fills it (out N).
+function HookBadges({ fieldId }: { fieldId: string }) {
+  const list = hookFieldConfigs.value?.get(fieldId);
+  if (!list) return null;
+  const marks = list.flatMap((c) =>
+    (c.role === 'both' ? ['in', 'out'] : [c.role]).map((role) => ({ role, c })),
+  );
   return (
     <span class={s.marks}>
-      {marks.map((m) => (
+      {marks.map(({ role, c }) => (
         <span
-          class={s.ruleBadge + ' ' + (m === 'out' ? s.badgeOut : '')}
-          data-mark={m}
-          title={m === 'in' ? 'The hook matches on this field' : 'The hook fills this field'}
+          class={s.ruleBadge + ' ' + (role === 'out' ? s.badgeOut : '')}
+          data-mark={role}
+          title={`${role === 'in' ? 'Matched on' : 'Filled'} in configuration ${c.index + 1}: ${c.name}`}
         >
-          {m}
+          {role} {c.index + 1}
         </span>
       ))}
     </span>
@@ -563,7 +567,7 @@ function Row({
       )}
       {hookRoleById.value && (
         <td data-col="mdh">
-          {kind !== 'section' && <HookBadge role={hookRoleById.value.get(String(node.id ?? ''))} />}
+          {kind !== 'section' && <HookBadges fieldId={String(node.id ?? '')} />}
         </td>
       )}
       {values.value && (

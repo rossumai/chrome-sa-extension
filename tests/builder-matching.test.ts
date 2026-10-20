@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { hookFieldRefs, hookRoles, hooksByField, mdhHooks } from '../src/builder/matching.js';
+import {
+  hookFieldRefs,
+  hookRoles,
+  hooksByField,
+  mdhHooks,
+  configSummaries,
+  fieldConfigs,
+} from '../src/builder/matching.js';
 
 const vendorHook = {
   id: 7,
@@ -66,5 +73,45 @@ describe('hooksByField', () => {
         ['b', 'out'],
       ]),
     );
+  });
+});
+
+describe('per configuration', () => {
+  const twoConfigs = {
+    settings: {
+      configurations: [
+        {
+          name: 'by VAT',
+          source: { dataset: 'vendors', queries: [{ find: { v: '{vat}' } }] },
+          mapping: { target_schema_id: 'vendor' },
+        },
+        {
+          source: { dataset: 'pos', queries: [{ find: { p: '{po}' } }] },
+          mapping: { target_schema_id: 'po_match' },
+          additional_mappings: [{ target_schema_id: 'vendor' }],
+        },
+      ],
+    },
+  };
+
+  it('summarizes each configuration: number, name, dataset, target', () => {
+    expect(configSummaries(twoConfigs)).toEqual([
+      { index: 0, name: 'by VAT', dataset: 'vendors', target: 'vendor' },
+      { index: 1, name: 'Configuration 2', dataset: 'pos', target: 'po_match' },
+    ]);
+  });
+
+  it('lists, per field, which configurations use it and how', () => {
+    const m = fieldConfigs(twoConfigs);
+    expect(m.get('vat')).toEqual([{ index: 0, name: 'by VAT', role: 'in' }]);
+    expect(m.get('vendor')).toEqual([
+      { index: 0, name: 'by VAT', role: 'out' },
+      { index: 1, name: 'Configuration 2', role: 'out' },
+    ]);
+  });
+
+  it('hookFieldRefs can be limited to one configuration', () => {
+    expect([...hookFieldRefs(twoConfigs, 1).inputs]).toEqual(['po']);
+    expect([...hookFieldRefs(twoConfigs, 1).outputs].sort()).toEqual(['po_match', 'vendor']);
   });
 });

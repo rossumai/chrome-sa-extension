@@ -14,22 +14,62 @@ export function mdhHooks(hooks: any[]): any[] {
   return hooks.filter(isMdhHook);
 }
 
-/** A hook (or `{settings}` being edited) — untyped on the wire. */
-export function hookFieldRefs(hook: any): HookRefs {
+function configRefs(cfg: any): HookRefs {
   const inputs = new Set<string>();
   const outputs = new Set<string>();
-  for (const cfg of hookConfigs(hook)) {
-    collectPlaceholders(cfg?.source?.queries ?? cfg?.matching?.queries, inputs);
-    if (typeof cfg?.action_condition === 'string')
-      collectPlaceholders(cfg.action_condition, inputs);
-    const target = cfg?.mapping?.target_schema_id;
-    if (typeof target === 'string' && target) outputs.add(target);
-    for (const m of Array.isArray(cfg?.additional_mappings) ? cfg.additional_mappings : []) {
-      if (typeof m?.target_schema_id === 'string' && m.target_schema_id)
-        outputs.add(m.target_schema_id);
-    }
+  collectPlaceholders(cfg?.source?.queries ?? cfg?.matching?.queries, inputs);
+  if (typeof cfg?.action_condition === 'string') collectPlaceholders(cfg.action_condition, inputs);
+  const target = cfg?.mapping?.target_schema_id;
+  if (typeof target === 'string' && target) outputs.add(target);
+  for (const m of Array.isArray(cfg?.additional_mappings) ? cfg.additional_mappings : []) {
+    if (typeof m?.target_schema_id === 'string' && m.target_schema_id)
+      outputs.add(m.target_schema_id);
   }
   return { inputs, outputs };
+}
+
+/**
+ * The fields a hook (or `{settings}` being edited — untyped on the wire) uses, across all its
+ * configurations or, given `index`, just that one.
+ */
+export function hookFieldRefs(hook: any, index?: number): HookRefs {
+  const inputs = new Set<string>();
+  const outputs = new Set<string>();
+  hookConfigs(hook).forEach((cfg, i) => {
+    if (index != null && i !== index) return;
+    const r = configRefs(cfg);
+    r.inputs.forEach((x) => inputs.add(x));
+    r.outputs.forEach((x) => outputs.add(x));
+  });
+  return { inputs, outputs };
+}
+
+export type ConfigSummary = { index: number; name: string; dataset: string; target: string };
+
+const configName = (cfg: any, i: number) =>
+  cfg?.name ? String(cfg.name) : `Configuration ${i + 1}`;
+
+/** One line per configuration, for the hook panel's list. */
+export function configSummaries(hook: any): ConfigSummary[] {
+  return hookConfigs(hook).map((cfg, i) => ({
+    index: i,
+    name: configName(cfg, i),
+    dataset: String(cfg?.source?.dataset ?? ''),
+    target: String(cfg?.mapping?.target_schema_id ?? ''),
+  }));
+}
+
+/** Per field id: which configurations use it, and how (in / out / both). */
+export function fieldConfigs(
+  hook: any,
+): Map<string, { index: number; name: string; role: HookRole }[]> {
+  const out = new Map<string, { index: number; name: string; role: HookRole }[]>();
+  hookConfigs(hook).forEach((cfg, i) => {
+    for (const [id, role] of hookRoles(configRefs(cfg))) {
+      out.set(id, [...(out.get(id) || []), { index: i, name: configName(cfg, i), role }]);
+    }
+  });
+  return out;
 }
 
 export function hookRoles(refs: HookRefs): Map<string, HookRole> {

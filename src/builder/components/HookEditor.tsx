@@ -9,6 +9,8 @@ import {
   hookAssistRev,
   hooks,
   hookRefs,
+  hookConfigIndex,
+  hookLive,
 } from '../store.js';
 import {
   updateHookDraft,
@@ -18,6 +20,7 @@ import {
   askHookAssistant,
 } from '../index.jsx';
 import CodeEditor from './CodeEditor.jsx';
+import { configSummaries } from '../matching.js';
 import AskFabry from './AskFabry.jsx';
 import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
@@ -31,6 +34,7 @@ export default function HookEditor() {
   const ed = hookEditor.value!;
   const hook = hooks.value.find((h) => h.id === ed.hookId);
   const refs = hookRefs.value;
+  const configs = hookLive.value ? configSummaries(hookLive.value) : [];
   return (
     <aside
       class={s.inspector + ' ' + s.inspectorFill}
@@ -59,6 +63,31 @@ export default function HookEditor() {
       <div class={s.dim}>
         Matches on {refs?.inputs.size ?? 0} field(s), fills {refs?.outputs.size ?? 0}. The grid
         shows only those.
+      </div>
+      <div class={s.configList}>
+        <button
+          type="button"
+          data-config-index="all"
+          class={s.configItem + (hookConfigIndex.value == null ? ' ' + s.queueOn : '')}
+          onClick={() => (hookConfigIndex.value = null)}
+        >
+          All configurations ({configs.length})
+        </button>
+        {configs.map((c) => (
+          <button
+            type="button"
+            data-config-index={String(c.index)}
+            class={s.configItem + (hookConfigIndex.value === c.index ? ' ' + s.queueOn : '')}
+            title={`Show only the fields configuration ${c.index + 1} uses`}
+            onClick={() => (hookConfigIndex.value = c.index)}
+          >
+            <b>{c.index + 1}</b> · {c.name}
+            <span class={s.dim}>
+              {c.dataset ? ` · ${c.dataset}` : ''}
+              {c.target ? ` → ${c.target}` : ''}
+            </span>
+          </button>
+        ))}
       </div>
       <AskFabry
         key={`fabry-hook:${ed.hookId}`}

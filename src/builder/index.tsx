@@ -763,6 +763,7 @@ export function openHookEditor(id: number) {
   store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
   const text = pretty(hook.settings);
   store.hookEditor.value = { hookId: id, base: text, draft: text };
+  store.hookConfigIndex.value = null;
   store.hookErrors.value = [];
   store.hookAssist.value = IDLE_ASSIST;
   store.selectedKey.value = null;

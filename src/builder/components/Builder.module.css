@@ -1018,3 +1018,31 @@
 .badgeOut {
   background: var(--success);
 }
+
+.configList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 8px 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.configItem {
+  padding: 3px 8px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.configItem:hover {
+  background: var(--bg-hover);
+}

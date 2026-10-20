@@ -1089,3 +1089,60 @@ describe('Builder Matching column and hook mode', () => {
     expect(root.querySelector('th[data-col="mdh"]')).toBeNull();
   });
 });
+
+describe('Builder hook mode: per configuration', () => {
+  const shown = () =>
+    [...root.querySelectorAll('[data-row-key]')].map(
+      (r) =>
+        flatten(store.work.value).find((x) => x.key === r.getAttribute('data-row-key'))!.node.id,
+    );
+  const badges = (id: string) =>
+    [...row(id).querySelectorAll('td[data-col="mdh"] [data-mark]')].map((e) => e.textContent);
+
+  it('numbers the configurations in the badges; picking one narrows the grid to it', () => {
+    act(() => {
+      store.hooks.value = [
+        {
+          id: 71,
+          name: 'Two configs',
+          settings: {
+            configurations: [
+              {
+                name: 'A',
+                source: { queries: [{ find: { x: '{doc_id}' } }] },
+                mapping: { target_schema_id: 'vendor' },
+              },
+              {
+                name: 'B',
+                source: { queries: [{ find: { y: '{item_desc}' } }] },
+                mapping: { target_schema_id: 'vendor' },
+              },
+            ],
+          },
+        },
+      ];
+    });
+    act(() => {
+      (row('doc_id').querySelector('[data-action="field-hooks"]') as HTMLElement).click();
+    });
+    expect(badges('doc_id')).toEqual(['in 1']);
+    expect(badges('vendor')).toEqual(['out 1', 'out 2']);
+    expect(shown()).toContain('item_desc');
+    act(() => {
+      (root.querySelector('[data-config-index="1"]') as HTMLElement).click();
+    });
+    expect(shown()).toEqual([
+      'basic_section',
+      'vendor',
+      'items_section',
+      'items',
+      'item',
+      'item_desc',
+    ]);
+    expect(badges('vendor')).toEqual(['out 2']);
+    act(() => {
+      (root.querySelector('[data-config-index="all"]') as HTMLElement).click();
+    });
+    expect(shown()).toContain('doc_id');
+  });
+});
