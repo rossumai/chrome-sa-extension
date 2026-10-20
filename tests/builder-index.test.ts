@@ -10,6 +10,8 @@ vi.mock('../src/builder/api.js', () => ({
   getAnnotationContent: vi.fn(),
   listAnnotations: vi.fn(),
   listRules: vi.fn(async () => []),
+  listHooks: vi.fn(async () => []),
+  patchHookSettings: vi.fn(),
   createRule: vi.fn(),
   patchRule: vi.fn(),
   listWorkspaces: vi.fn(async () => []),
@@ -46,6 +48,11 @@ import {
   openSchemaFabry,
   askSchemaFabry,
   fixWithFabry,
+  openHookEditor,
+  updateHookDraft,
+  saveHook,
+  discardHook,
+  askHookAssistant,
   save,
   pickAnnotation,
   renameSchema,
@@ -642,5 +649,100 @@ describe('Mr. Fabry on the whole schema', () => {
     await openQueue(2);
     expect(store.schemaFabry.value).toMatchObject({ chatId: null, turns: [], problems: [] });
     expect(store.fabryTouched.value.size).toBe(0);
+  });
+});
+
+describe('hook mode (MDH)', () => {
+  const hook = {
+    id: 7,
+    name: 'Vendor matching',
+    settings: {
+      configurations: [
+        {
+          source: { dataset: 'v', queries: [{ find: { vat: '{doc_id}' } }] },
+          mapping: { dataset_key: 'id', target_schema_id: 'vendor' },
+        },
+      ],
+    },
+  };
+  const reply = (text: string) =>
+    vi
+      .mocked(agentApi.streamMessage)
+      .mockImplementation(async (_id: string, content: string, opts: any) => {
+        if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
+      });
+
+  beforeEach(() => {
+    vi.mocked(api.patchHookSettings).mockReset();
+    vi.mocked(agentApi.streamMessage).mockReset();
+    store.ruleEditor.value = null;
+    store.hookEditor.value = null;
+    store.hooks.value = [hook];
+    store.startDraft(
+      'S',
+      withKeys([
+        {
+          category: 'section',
+          id: 's',
+          label: 'S',
+          children: [
+            { category: 'datapoint', id: 'doc_id', label: 'Doc', type: 'string' },
+            { category: 'datapoint', id: 'vendor', label: 'Vendor', type: 'enum' },
+          ],
+        },
+      ]),
+    );
+  });
+
+  it('opening a queue loads its hooks', async () => {
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: [] });
+    vi.mocked(api.listHooks).mockResolvedValue([hook]);
+    store.queues.value = [{ id: 2, name: 'B', schema: 'https://x/api/v1/schemas/22' }];
+    await openQueue(2);
+    await vi.waitFor(() => expect(store.hooks.value.map((h) => h.id)).toEqual([7]));
+    expect(api.listHooks).toHaveBeenCalledWith(2);
+  });
+
+  it('opens the hook settings as JSON, locks the schema, filters to its fields', () => {
+    store.rules.value = [{ id: 4, name: 'R', trigger_condition: 'field.a', actions: [] }];
+    openRuleEditor(4);
+    openHookEditor(7);
+    expect(store.ruleEditor.value).toBeNull();
+    expect(JSON.parse(store.hookEditor.value!.draft)).toEqual(hook.settings);
+    expect(store.schemaLocked.value).toBe(true);
+    expect([...store.hookFilterIds.value!].sort()).toEqual(['doc_id', 'vendor']);
+  });
+
+  it('refuses to save JSON that does not parse, then saves the settings', async () => {
+    openHookEditor(7);
+    updateHookDraft('{ broken');
+    await saveHook();
+    expect(api.patchHookSettings).not.toHaveBeenCalled();
+    expect(store.hookErrors.value[0]).toContain('not valid JSON');
+    const next = { configurations: [] };
+    updateHookDraft(JSON.stringify(next));
+    vi.mocked(api.patchHookSettings).mockResolvedValue({ ...hook, settings: next });
+    await saveHook();
+    expect(api.patchHookSettings).toHaveBeenCalledWith(7, next);
+    expect(store.hooks.value[0].settings).toEqual(next);
+    expect(store.hookDirty.value).toBe(false);
+  });
+
+  it('Mr. Fabry fills the editor with new settings; Discard brings back the saved ones', async () => {
+    openHookEditor(7);
+    const proposed = {
+      configurations: [
+        {
+          source: { queries: [{ find: { x: '{ghost}' } }] },
+          mapping: { target_schema_id: 'vendor' },
+        },
+      ],
+    };
+    reply('```json\n' + JSON.stringify(proposed) + '\n```');
+    await askHookAssistant('match on ghost instead');
+    expect(JSON.parse(store.hookEditor.value!.draft)).toEqual(proposed);
+    expect(store.hookAssist.value.warnings.join(' ')).toContain('ghost');
+    discardHook();
+    expect(JSON.parse(store.hookEditor.value!.draft)).toEqual(hook.settings);
   });
 });

@@ -32,6 +32,8 @@ import {
   applyChanges,
   fitSchema,
 } from './schemaAssist.js';
+import { buildHookPrompt, buildHookFollowup, parseHookReply } from './hookAssist.js';
+import { MAX_PROMPT } from '../inspector/promptBudget.js';
 import { draftFromRule, emptyDraft, draftBody, draftErrors, type RuleDraft } from './ruleDraft.js';
 
 function fail(err: any, fallback: string) {
@@ -126,7 +128,10 @@ export async function openSchema(schemaId: number) {
 async function load(queueId: number | null, schemaId: number | null) {
   if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
+  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
   store.ruleEditor.value = null;
+  store.hookEditor.value = null;
+  store.hooks.value = [];
   // A new schema, a new conversation: Mr. Fabry's context and its row keys belong to the old one.
   store.schemaFabry.value = {
     ...store.schemaFabry.value,
@@ -158,6 +163,7 @@ async function load(queueId: number | null, schemaId: number | null) {
     if (queueId != null) {
       loadAnnotations(queueId);
       loadRules(queueId);
+      loadHooks(queueId);
     }
   } catch (err: any) {
     if (seq !== openSeq) return;
@@ -257,6 +263,17 @@ async function loadAnnotations(queueId: number) {
     }));
   } catch {
     store.annotations.value = [];
+  }
+}
+
+// Fills the Matching column. A failure leaves it empty.
+async function loadHooks(queueId: number) {
+  try {
+    const list = await api.listHooks(queueId);
+    if (store.selectedQueueId.value !== queueId) return;
+    store.hooks.value = list;
+  } catch {
+    store.hooks.value = [];
   }
 }
 
@@ -445,6 +462,8 @@ export async function deleteSchema(id: number) {
 /** Open a rule from the queue's list, or a new one (null) — started from `fieldId` if given. */
 export function openRuleEditor(id: number | null, fieldId?: string) {
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
+  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
+  store.hookEditor.value = null;
   const rule = id == null ? null : store.rules.value.find((r) => r.id === id);
   const draft = rule ? draftFromRule(rule) : emptyDraft(fieldId);
   store.schemaFabry.value = { ...store.schemaFabry.value, open: false }; // one right panel at a time
@@ -620,7 +639,8 @@ export async function askFieldAssistant(key: string, request: string) {
 
 export function openSchemaFabry() {
   if (store.ruleEditor.value) closeRuleEditor();
-  if (store.ruleEditor.value) return; // the user kept an unsaved rule open
+  if (store.hookEditor.value) closeHookEditor();
+  if (store.ruleEditor.value || store.hookEditor.value) return; // the user kept unsaved work open
   store.schemaFabry.value = { ...store.schemaFabry.value, open: true };
   store.selectedKey.value = null;
 }
@@ -724,4 +744,141 @@ export function fixWithFabry() {
   const problems = store.schemaFabry.value.problems;
   if (problems.length) return askSchemaFabry('', problems);
   return Promise.resolve();
+}
+
+// ---- Hook mode (MDH) -----------------------------------------------------------------------
+// The right panel edits one MDH hook's settings as JSON. A hook is its own object in Rossum:
+// its own Save (PATCH settings), separate from the schema and from rules.
+
+const pretty = (v: unknown) => JSON.stringify(v ?? {}, null, 2);
+const IDLE_ASSIST = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
+
+export function openHookEditor(id: number) {
+  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
+  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
+  const hook = store.hooks.value.find((h) => h.id === id);
+  if (!hook) return;
+  store.ruleEditor.value = null;
+  store.ruleId.value = null;
+  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
+  const text = pretty(hook.settings);
+  store.hookEditor.value = { hookId: id, base: text, draft: text };
+  store.hookErrors.value = [];
+  store.hookAssist.value = IDLE_ASSIST;
+  store.selectedKey.value = null;
+}
+
+export function updateHookDraft(text: string) {
+  const ed = store.hookEditor.value;
+  if (ed) store.hookEditor.value = { ...ed, draft: text };
+}
+
+export function closeHookEditor() {
+  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
+  store.hookEditor.value = null;
+  store.hookErrors.value = [];
+}
+
+export function discardHook() {
+  const ed = store.hookEditor.value;
+  if (!ed) return;
+  store.hookEditor.value = { ...ed, draft: ed.base };
+  store.hookErrors.value = [];
+  store.hookAssistRev.value++;
+}
+
+function parseSettings(
+  text: string,
+): { ok: true; value: Record<string, unknown> } | { ok: false; error: string } {
+  let v: unknown;
+  try {
+    v = JSON.parse(text);
+  } catch (err: any) {
+    return {
+      ok: false,
+      error: `The settings are not valid JSON: ${err?.message || 'parse error'}`,
+    };
+  }
+  if (!v || typeof v !== 'object' || Array.isArray(v)) {
+    return { ok: false, error: 'The settings must be a JSON object' };
+  }
+  return { ok: true, value: v as Record<string, unknown> };
+}
+
+export async function saveHook() {
+  const ed = store.hookEditor.value;
+  if (!ed) return;
+  const parsed = parseSettings(ed.draft);
+  if (!parsed.ok) {
+    store.hookErrors.value = [parsed.error];
+    return;
+  }
+  store.hookErrors.value = [];
+  store.hookSaving.value = true;
+  try {
+    const saved = await api.patchHookSettings(ed.hookId, parsed.value);
+    const settings = saved?.settings ?? parsed.value;
+    store.hooks.value = store.hooks.value.map((h) => (h.id === ed.hookId ? { ...h, settings } : h));
+    const text = pretty(settings);
+    store.hookEditor.value = { hookId: ed.hookId, base: text, draft: text };
+    store.hookAssistRev.value++;
+  } catch (err: any) {
+    store.hookErrors.value = [
+      isRateLimited(err) ? rateLimitMessage(err) : err?.message || 'Failed to save the hook',
+    ];
+  } finally {
+    store.hookSaving.value = false;
+  }
+}
+
+/** Ask Mr. Fabry to change the hook's settings; a usable answer fills the editor, unsaved. */
+export async function askHookAssistant(request: string) {
+  const ed = store.hookEditor.value;
+  const prev = store.hookAssist.value;
+  if (!ed || !request.trim() || prev.busy) return;
+  const hook = store.hooks.value.find((h) => h.id === ed.hookId);
+  const current = parseSettings(ed.draft);
+  const settings = current.ok ? current.value : hook?.settings;
+  const fields = schemaFieldList(store.work.value);
+  const content = prev.chatId
+    ? buildHookFollowup(request, settings)
+    : buildHookPrompt({ request, settings, fields, name: String(hook?.name ?? '') });
+  if (content.length > MAX_PROMPT) {
+    store.hookAssist.value = {
+      ...prev,
+      error: 'These settings are too large to send to Mr. Fabry in one message.',
+    };
+    return;
+  }
+  store.hookAssist.value = { ...prev, busy: true, error: null, reply: null, warnings: [] };
+  try {
+    const res = await runAssist({ agentApi, chatId: prev.chatId, content });
+    if (!store.hookEditor.value) return;
+    const r = parseHookReply(res.text, new Set(fields.map((f) => f.id)));
+    if (!r.ok) {
+      store.hookAssist.value = {
+        chatId: res.chatId,
+        busy: false,
+        error: r.error,
+        reply: res.text,
+        warnings: [],
+      };
+      return;
+    }
+    updateHookDraft(pretty(r.settings));
+    store.hookAssistRev.value++;
+    store.hookAssist.value = {
+      chatId: res.chatId,
+      busy: false,
+      error: null,
+      reply: null,
+      warnings: r.warnings,
+    };
+  } catch (err: any) {
+    const msg =
+      err?.status === 401
+        ? 'Session expired. Open the Console from a Rossum tab again.'
+        : err?.message || 'Mr. Fabry is not available';
+    store.hookAssist.value = { ...store.hookAssist.value, busy: false, error: msg };
+  }
 }

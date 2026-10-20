@@ -12,6 +12,7 @@ import {
   selectedKey,
   ruleEditor,
   schemaFabry,
+  hookEditor,
 } from '../store.js';
 import {
   undoChange,
@@ -21,12 +22,14 @@ import {
   openSchema,
   closeRuleEditor,
   closeSchemaFabry,
+  closeHookEditor,
 } from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
 import Grid from './Grid.jsx';
 import Inspector from './Inspector.jsx';
 import RuleEditor from './RuleEditor.jsx';
+import HookEditor from './HookEditor.jsx';
 import SchemaFabryPanel from './SchemaFabryPanel.jsx';
 import SaveDialog from './SaveDialog.jsx';
 import AnnotationPicker from './AnnotationPicker.jsx';
@@ -50,11 +53,12 @@ export default function App({ connected }: { connected: boolean | null }) {
       if (e.key === 'Escape' && !inField(e.target)) {
         if (schemaFabry.value.open) closeSchemaFabry();
         else if (ruleEditor.value) closeRuleEditor();
+        else if (hookEditor.value) closeHookEditor();
         else selectedKey.value = null; // closes the inspector
         return;
       }
       if (!(e.metaKey || e.ctrlKey) || inField(e.target)) return;
-      if (ruleEditor.value) return; // the schema is read-only in rule mode
+      if (ruleEditor.value || hookEditor.value) return; // the schema is read-only there
       const k = e.key.toLowerCase();
       if (k === 'z' && !e.shiftKey) undoChange();
       else if ((k === 'z' && e.shiftKey) || k === 'y') redoChange();
@@ -132,6 +136,8 @@ export default function App({ connected }: { connected: boolean | null }) {
                 <SchemaFabryPanel />
               ) : ruleEditor.value ? (
                 <RuleEditor />
+              ) : hookEditor.value ? (
+                <HookEditor />
               ) : (
                 <Inspector />
               )}

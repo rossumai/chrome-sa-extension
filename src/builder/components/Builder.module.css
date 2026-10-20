@@ -1014,3 +1014,7 @@
   border-radius: 8px;
   background: var(--info-bg);
 }
+
+.badgeOut {
+  background: var(--success);
+}

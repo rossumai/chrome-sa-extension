@@ -3,6 +3,7 @@ import { signal, computed } from '@preact/signals';
 import { initHistory, type History } from './history.js';
 import { changeSummary, rowStatus, movedKeys, type Node } from './model.js';
 import type { AnnotationValues } from './values.js';
+import { mdhHooks, hooksByField, hookFieldRefs, hookRoles } from './matching.js';
 import {
   ruleFieldRefs,
   ruleRoles,
@@ -131,7 +132,7 @@ export const ruleGlobalMarks = computed(() =>
 );
 
 // In rule mode the schema is read-only: one thing is edited at a time.
-export const schemaLocked = computed(() => !!ruleEditor.value);
+export const schemaLocked = computed(() => !!ruleEditor.value || !!hookEditor.value);
 
 // Mr. Fabry in the rule editor: one read-only chat per opened rule. assistRev bumps when a
 // proposal (or Discard) replaces the draft from outside, so the condition editor reloads.
@@ -199,3 +200,42 @@ export const fabryChangedKeys = computed(() => {
   return new Set([...fabryTouched.value].filter((k) => differs.has(k)));
 });
 export const onlyFabryChanges = signal(false);
+
+// ---- Hook mode (MDH) ---------------------------------------------------------------------
+// The queue's hooks; the MDH ones feed the Matching column. Hook mode edits one hook's
+// settings as JSON text in the right panel (base = as saved, draft = in the editor).
+export const hooks = signal<any[]>([]);
+export const fieldHooks = computed(() => hooksByField(mdhHooks(hooks.value)));
+export type HookEditorState = { hookId: number; base: string; draft: string };
+export const hookEditor = signal<HookEditorState | null>(null);
+export const hookDirty = computed(() =>
+  hookEditor.value ? hookEditor.value.base !== hookEditor.value.draft : false,
+);
+export const hookErrors = signal<string[]>([]);
+export const hookSaving = signal(false);
+export const hookAssist = signal<AssistState>({
+  chatId: null,
+  busy: false,
+  error: null,
+  reply: null,
+  warnings: [],
+});
+export const hookAssistRev = signal(0);
+
+// The fields the hook uses, read from the editor (live) — or from the saved settings while
+// the editor holds JSON that does not parse.
+export const hookRefs = computed(() => {
+  const ed = hookEditor.value;
+  if (!ed) return null;
+  let settings: unknown;
+  try {
+    settings = JSON.parse(ed.draft);
+  } catch {
+    settings = hooks.value.find((h) => h.id === ed.hookId)?.settings;
+  }
+  return hookFieldRefs({ settings });
+});
+export const hookFilterIds = computed(() =>
+  hookRefs.value ? new Set([...hookRefs.value.inputs, ...hookRefs.value.outputs]) : null,
+);
+export const hookRoleById = computed(() => (hookRefs.value ? hookRoles(hookRefs.value) : null));

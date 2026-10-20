@@ -17,9 +17,12 @@ import {
   schemaLocked,
   onlyFabryChanges,
   fabryChangedKeys,
+  fieldHooks,
+  hookRoleById,
+  hookFilterIds,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
-import { apply, openRuleEditor } from '../index.jsx';
+import { apply, openRuleEditor, openHookEditor } from '../index.jsx';
 import {
   setAttr,
   setDeleted,
@@ -216,72 +219,120 @@ function ValueCell({ node, tableId }: { node: Node; tableId: string | null }) {
   return <span title={val}>{val}</span>;
 }
 
-// The field's rule count; one rule opens in the rule editor, several open a list to pick from.
-const rulesMenuFor = signal<string | null>(null);
+// A count of the rules (or MDH hooks) that use a field: one opens it in the right panel,
+// several open a list to pick from. One menu is open at a time across both columns.
+const pickMenuFor = signal<string | null>(null);
 
-function RulesCell({ fieldId }: { fieldId: string }) {
-  const list = fieldRules.value.get(fieldId) || [];
-  const open = rulesMenuFor.value === fieldId;
+type PickItem = { id: number; label: string };
+
+function PickCell({
+  menuKey,
+  action,
+  optionAttr,
+  items,
+  onPick,
+  extra,
+}: {
+  menuKey: string;
+  action: string;
+  optionAttr: string;
+  items: PickItem[];
+  onPick: (id: number) => void;
+  extra?: any;
+}) {
+  const open = pickMenuFor.value === menuKey;
   const wrap = useRef<HTMLSpanElement>(null);
   // While the list is open, a press anywhere outside it closes it.
   useEffect(() => {
     if (!open) return undefined;
     const onDown = (e: MouseEvent) => {
-      if (!wrap.current?.contains(e.target as Element)) rulesMenuFor.value = null;
+      if (!wrap.current?.contains(e.target as Element)) pickMenuFor.value = null;
     };
     window.addEventListener('mousedown', onDown);
     return () => window.removeEventListener('mousedown', onDown);
   }, [open]);
-  const add = (
-    <button
-      type="button"
-      class={s.rulesAdd}
-      data-action="new-rule-for-field"
-      title={`New rule for ${fieldId}`}
-      onClick={(e) => {
-        e.stopPropagation();
-        openRuleEditor(null, fieldId);
-      }}
-    >
-      +
-    </button>
-  );
-  if (!list.length) return <span class={s.rulesWrap}>{add}</span>;
+  if (!items.length) return <span class={s.rulesWrap}>{extra}</span>;
   return (
     <span class={s.rulesWrap} ref={wrap}>
       <button
         type="button"
         class={s.rulesCount}
-        data-action="field-rules"
-        title={list.map((x) => `${x.rule.name} (${x.rule.id})`).join('\n')}
+        data-action={action}
+        title={items.map((x) => x.label).join('\n')}
         onClick={(e) => {
           e.stopPropagation();
-          if (list.length === 1) openRuleEditor(list[0].rule.id);
-          else rulesMenuFor.value = open ? null : fieldId;
+          if (items.length === 1) onPick(items[0].id);
+          else pickMenuFor.value = open ? null : menuKey;
         }}
       >
-        {list.length}
+        {items.length}
       </button>
-      {add}
+      {extra}
       {open && (
         <div class={s.rulesMenu}>
-          {list.map((x) => (
+          {items.map((x) => (
             <button
               type="button"
-              data-rule-option={String(x.rule.id)}
+              {...{ [optionAttr]: String(x.id) }}
               class={s.rulesOption}
               onClick={(e) => {
                 e.stopPropagation();
-                rulesMenuFor.value = null;
-                openRuleEditor(x.rule.id);
+                pickMenuFor.value = null;
+                onPick(x.id);
               }}
             >
-              {x.rule.name} ({x.rule.id})
+              {x.label}
             </button>
           ))}
         </div>
       )}
     </span>
+  );
+}
+
+function RulesCell({ fieldId }: { fieldId: string }) {
+  const items = (fieldRules.value.get(fieldId) || []).map((x) => ({
+    id: x.rule.id,
+    label: `${x.rule.name} (${x.rule.id})`,
+  }));
+  return (
+    <PickCell
+      menuKey={`rules:${fieldId}`}
+      action="field-rules"
+      optionAttr="data-rule-option"
+      items={items}
+      onPick={(id) => openRuleEditor(id)}
+      extra={
+        <button
+          type="button"
+          class={s.rulesAdd}
+          data-action="new-rule-for-field"
+          title={`New rule for ${fieldId}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            openRuleEditor(null, fieldId);
+          }}
+        >
+          +
+        </button>
+      }
+    />
+  );
+}
+
+function HooksCell({ fieldId }: { fieldId: string }) {
+  const items = (fieldHooks.value.get(fieldId) || []).map((x) => ({
+    id: x.hook.id,
+    label: `${x.hook.name} (${x.hook.id}) · ${x.role === 'in' ? 'matched on' : x.role === 'out' ? 'fills' : 'both'}`,
+  }));
+  return (
+    <PickCell
+      menuKey={`hooks:${fieldId}`}
+      action="field-hooks"
+      optionAttr="data-hook-option"
+      items={items}
+      onPick={(id) => openHookEditor(id)}
+    />
   );
 }
 
@@ -311,6 +362,25 @@ function MarkIcons({ marks }: { marks: ActionMark[] }) {
           </span>
         );
       })}
+    </span>
+  );
+}
+
+// In hook mode: does the hook match ON this field (in), fill it (out), or both?
+function HookBadge({ role }: { role?: string }) {
+  if (!role) return null;
+  const marks = role === 'both' ? ['in', 'out'] : [role];
+  return (
+    <span class={s.marks}>
+      {marks.map((m) => (
+        <span
+          class={s.ruleBadge + ' ' + (m === 'out' ? s.badgeOut : '')}
+          data-mark={m}
+          title={m === 'in' ? 'The hook matches on this field' : 'The hook fills this field'}
+        >
+          {m}
+        </span>
+      ))}
     </span>
   );
 }
@@ -446,6 +516,11 @@ function Row({
           <RulesCell fieldId={String(node.id)} />
         )}
       </td>
+      <td data-col="matching" class={s.rulesCell}>
+        {kind !== 'section' && kind !== 'tuple' && node.id && (
+          <HooksCell fieldId={String(node.id)} />
+        )}
+      </td>
       <td class={s.actions}>
         {locked ? null : node.__deleted ? (
           <button
@@ -486,6 +561,11 @@ function Row({
           )}
         </td>
       )}
+      {hookRoleById.value && (
+        <td data-col="mdh">
+          {kind !== 'section' && <HookBadge role={hookRoleById.value.get(String(node.id ?? ''))} />}
+        </td>
+      )}
       {values.value && (
         <td data-col="value" class={s.value}>
           <ValueCell node={node} tableId={tableId} />
@@ -520,7 +600,9 @@ function AddRow({
     <tr class={s.addRow}>
       <td />
       <td
-        colSpan={7 + (ruleMarks.value ? 1 : 0) + (values.value ? 1 : 0)}
+        colSpan={
+          8 + (ruleMarks.value ? 1 : 0) + (hookRoleById.value ? 1 : 0) + (values.value ? 1 : 0)
+        }
         style={{ paddingLeft: `${6 + depth * 16}px` }}
       >
         <span class={s.addLinks}>
@@ -567,7 +649,7 @@ function renderNode(
 }
 
 const WIDTHS_KEY = 'builderColumnWidths';
-const COLS = ['id', 'label', 'source', 'type', 'flags', 'rules'];
+const COLS = ['id', 'label', 'source', 'type', 'flags', 'rules', 'matching'];
 const DEFAULT_WIDTHS: Record<string, number> = {
   id: 220,
   label: 200,
@@ -575,6 +657,8 @@ const DEFAULT_WIDTHS: Record<string, number> = {
   source: 110,
   flags: 110,
   rules: 64,
+  matching: 72,
+  mdh: 80,
   value: 180,
   rule: 110,
 };
@@ -616,6 +700,8 @@ const HEAD: Record<string, any> = {
   id: 'ID',
   label: 'Label',
   rules: 'Rules',
+  matching: 'Matching',
+  mdh: 'MDH',
   value: 'Value',
   rule: 'Rule',
   type: 'Type',
@@ -632,14 +718,25 @@ const HEAD: Record<string, any> = {
 export default function Grid() {
   useEffect(loadWidths, []);
   const w = widths.value;
-  let show = visibleKeys(work.value, fieldFilter.value, ruleFilterIds.value, 'or');
+  let show = visibleKeys(
+    work.value,
+    fieldFilter.value,
+    ruleFilterIds.value ?? hookFilterIds.value,
+    'or',
+  );
   if (onlyFabryChanges.value) {
     const mine = withAncestors(work.value, fabryChangedKeys.value);
     show = show ? new Set([...show].filter((k) => mine.has(k))) : mine;
   }
   // The annotation's values go after every editing column, the row actions included.
   const ruleOn = !!ruleMarks.value;
-  const cols = [...COLS, ...(ruleOn ? ['rule'] : []), ...(values.value ? ['value'] : [])];
+  const hookOn = !!hookRoleById.value;
+  const cols = [
+    ...COLS,
+    ...(ruleOn ? ['rule'] : []),
+    ...(hookOn ? ['mdh'] : []),
+    ...(values.value ? ['value'] : []),
+  ];
   const total = 22 + 60 + cols.reduce((sum, c) => sum + w[c], 0);
   const head = (c: string) => (
     <th data-col={c} class={s.resizable}>
@@ -656,6 +753,7 @@ export default function Grid() {
         ))}
         <col style={{ width: '60px' }} />
         {ruleOn && <col data-col="rule" style={{ width: `${w.rule}px` }} />}
+        {hookOn && <col data-col="mdh" style={{ width: `${w.mdh}px` }} />}
         {values.value && <col data-col="value" style={{ width: `${w.value}px` }} />}
       </colgroup>
       <thead>
@@ -664,6 +762,7 @@ export default function Grid() {
           {COLS.map(head)}
           <th />
           {ruleOn && head('rule')}
+          {hookOn && head('mdh')}
           {values.value && head('value')}
         </tr>
       </thead>

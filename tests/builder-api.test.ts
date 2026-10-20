@@ -139,4 +139,20 @@ describe('builder api', () => {
       ['https://x.rossum.ai/api/v1/rules/4', 'PATCH', { name: 'R2' }],
     ]);
   });
+
+  it("lists a queue's hooks and patches a hook's settings", async () => {
+    fetchMock.mockResolvedValue(jsonRes({ results: [], pagination: { next: null } }));
+    await api.listHooks(3);
+    fetchMock.mockResolvedValue(jsonRes({ id: 7 }));
+    await api.patchHookSettings(7, { configurations: [] });
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://x.rossum.ai/api/v1/hooks/?queue=3&page_size=100',
+    );
+    const [url, o] = fetchMock.mock.calls[1];
+    expect([url, o.method, JSON.parse(o.body)]).toEqual([
+      'https://x.rossum.ai/api/v1/hooks/7',
+      'PATCH',
+      { settings: { configurations: [] } },
+    ]);
+  });
 });

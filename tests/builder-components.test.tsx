@@ -121,6 +121,21 @@ beforeEach(() => {
   store.fieldFilter.value = '';
   store.ruleId.value = null;
   store.ruleEditor.value = null;
+  store.hookEditor.value = null;
+  store.hooks.value = [
+    {
+      id: 70,
+      name: 'Vendor matching',
+      settings: {
+        configurations: [
+          {
+            source: { dataset: 'v', queries: [{ find: { id: '{doc_id}' } }] },
+            mapping: { dataset_key: 'id', target_schema_id: 'vendor' },
+          },
+        ],
+      },
+    },
+  ];
   store.schemaFabry.value = {
     open: false,
     chatId: null,
@@ -151,7 +166,7 @@ describe('Builder screen', () => {
     const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
       th.getAttribute('data-col'),
     );
-    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules']);
+    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules', 'matching']);
     const flags = row('doc_id').querySelector('td[data-col="flags"]')!;
     expect(
       [...flags.querySelectorAll('button[data-col]')].map((e) => e.getAttribute('data-col')),
@@ -328,7 +343,7 @@ describe('Builder annotation values', () => {
     const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
       th.getAttribute('data-col'),
     );
-    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules', 'value']);
+    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules', 'matching', 'value']);
   });
 
   it('shows header values, a row count on the table, and steps through table rows', () => {
@@ -858,7 +873,16 @@ describe('Builder rule column and whole-document row', () => {
       ];
     });
     pickRule('60');
-    expect(heads()).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules', 'rule']);
+    expect(heads()).toEqual([
+      'id',
+      'label',
+      'source',
+      'type',
+      'flags',
+      'rules',
+      'matching',
+      'rule',
+    ]);
     const doc = root.querySelector('[data-doc-row]') as HTMLElement;
     expect(doc.textContent).toContain('Whole document');
     expect(
@@ -1034,5 +1058,34 @@ describe('Ask box', () => {
     });
     expect(store.schemaFabry.value.turns[0]).toEqual({ role: 'you', text: 'line one' });
     expect(box().value).toBe('');
+  });
+});
+
+describe('Builder Matching column and hook mode', () => {
+  const shown = () =>
+    [...root.querySelectorAll('[data-row-key]')].map(
+      (r) =>
+        flatten(store.work.value).find((x) => x.key === r.getAttribute('data-row-key'))!.node.id,
+    );
+  const matchCount = (id: string) =>
+    row(id).querySelector('td[data-col="matching"] [data-action="field-hooks"]')?.textContent ?? '';
+
+  it('counts the MDH hooks per field; clicking opens hook mode', () => {
+    expect(matchCount('doc_id')).toBe('1');
+    expect(matchCount('vendor')).toBe('1');
+    expect(matchCount('item_desc')).toBe('');
+    act(() => {
+      (row('doc_id').querySelector('[data-action="field-hooks"]') as HTMLElement).click();
+    });
+    expect(root.querySelector('aside[data-panel="hook"]')).not.toBeNull();
+    expect(shown()).toEqual(['basic_section', 'doc_id', 'vendor']);
+    expect(row('doc_id').querySelector('td[data-col="mdh"] [data-mark="in"]')).not.toBeNull();
+    expect(row('vendor').querySelector('td[data-col="mdh"] [data-mark="out"]')).not.toBeNull();
+    expect(row('doc_id').querySelector('[data-action="delete"]')).toBeNull();
+    act(() => {
+      (root.querySelector('[data-action="close-hook"]') as HTMLElement).click();
+    });
+    expect(root.querySelector('aside[data-panel="hook"]')).toBeNull();
+    expect(root.querySelector('th[data-col="mdh"]')).toBeNull();
   });
 });

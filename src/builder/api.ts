@@ -168,3 +168,13 @@ export function createRule(body: Record<string, unknown>): Promise<any> {
 export function patchRule(id: number, body: Record<string, unknown>): Promise<any> {
   return request('PATCH', `/api/v1/rules/${id}`, body);
 }
+
+/** The hooks attached to a queue (the Builder keeps the MDH ones). */
+export function listHooks(queueId: number): Promise<RawResource[]> {
+  return listAll(`/api/v1/hooks/?queue=${queueId}&page_size=100`);
+}
+
+/** Replaces the hook's whole `settings` object; secrets are a separate field and untouched. */
+export function patchHookSettings(id: number, settings: Record<string, unknown>): Promise<any> {
+  return request('PATCH', `/api/v1/hooks/${id}`, { settings });
+}

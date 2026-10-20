@@ -179,7 +179,7 @@ export function extractConfigsFromHook(hook: any): any[] {
   return out;
 }
 
-function isMdhHook(hook: any): boolean {
+export function isMdhHook(hook: any): boolean {
   if (!hook) return false;
   return hookConfigs(hook).some(
     (c) => Array.isArray(c?.source?.queries) || Array.isArray(c?.matching?.queries),

@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { EditorView, basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { python } from '@codemirror/lang-python';
+import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { formatPython, ruffFormat } from '../format.js';
+import { formatPython, ruffFormat, type PythonFormatter } from '../format.js';
 import s from './Builder.module.css';
 
 function prefersDark() {
@@ -30,12 +31,17 @@ export default function CodeEditor({
   name,
   expanded = false,
   onToggleExpand,
+  language = 'python',
+  formatter = ruffFormat,
 }: {
   value: string;
   onCommit: (v: string) => void;
   name: string;
   expanded?: boolean;
   onToggleExpand?: () => void;
+  language?: 'python' | 'json';
+  /** What Format runs; Ruff for Python. A syntax error comes back as a message. */
+  formatter?: PythonFormatter;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -51,7 +57,7 @@ export default function CodeEditor({
         selection: { anchor: value.length }, // start at the end of the text
         extensions: [
           basicSetup,
-          python(),
+          language === 'json' ? json() : python(),
           surface,
           ...(expanded ? [] : [collapsed]),
           ...(prefersDark() ? [oneDark] : []),
@@ -75,7 +81,7 @@ export default function CodeEditor({
     const v = view.current;
     if (!v) return;
     setBusy(true);
-    const r = await formatPython(v.state.doc.toString(), ruffFormat);
+    const r = await formatPython(v.state.doc.toString(), formatter);
     setBusy(false);
     if (!r.ok) {
       setError(r.error);
@@ -95,7 +101,11 @@ export default function CodeEditor({
           data-action={`format-${name}`}
           disabled={busy}
           onClick={format}
-          title="Format with Ruff (loads the formatter on first use)"
+          title={
+            language === 'json'
+              ? 'Format the JSON'
+              : 'Format with Ruff (loads the formatter on first use)'
+          }
         >
           {busy ? 'Formatting…' : 'Format'}
         </button>
