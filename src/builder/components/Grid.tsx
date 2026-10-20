@@ -13,6 +13,7 @@ import {
   ruleEditor,
   insertTarget,
   fieldRules,
+  ruleFilterIds,
 } from '../store.js';
 import { visibleKeys } from '../fieldFilter.js';
 import { apply, openRuleEditor } from '../index.jsx';
@@ -256,12 +257,27 @@ function RulesCell({ fieldId }: { fieldId: string }) {
     window.addEventListener('mousedown', onDown);
     return () => window.removeEventListener('mousedown', onDown);
   }, [open]);
-  if (!list.length) return null;
+  const add = (
+    <button
+      type="button"
+      class={s.rulesAdd}
+      data-action="new-rule-for-field"
+      title={`New rule for ${fieldId}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        openRuleEditor(null, fieldId);
+      }}
+    >
+      +
+    </button>
+  );
+  if (!list.length) return <span class={s.rulesWrap}>{add}</span>;
   return (
     <span class={s.rulesWrap} ref={wrap}>
       <button
         type="button"
         class={s.rulesCount}
+        data-action="field-rules"
         title={list.map((x) => `${x.rule.name} (${x.rule.id})`).join('\n')}
         onClick={(e) => {
           e.stopPropagation();
@@ -271,6 +287,7 @@ function RulesCell({ fieldId }: { fieldId: string }) {
       >
         {list.length}
       </button>
+      {add}
       {open && (
         <div class={s.rulesMenu}>
           {list.map((x) => (
@@ -432,7 +449,9 @@ function Row({
         </span>
       </td>
       <td data-col="rules" class={s.rulesCell}>
-        {kind !== 'section' && <RulesCell fieldId={String(node.id ?? '')} />}
+        {kind !== 'section' && kind !== 'tuple' && node.id && (
+          <RulesCell fieldId={String(node.id)} />
+        )}
       </td>
       <td class={s.actions}>
         {node.__deleted ? (
@@ -603,7 +622,7 @@ const HEAD: Record<string, any> = {
 export default function Grid() {
   useEffect(loadWidths, []);
   const w = widths.value;
-  const show = visibleKeys(work.value, fieldFilter.value);
+  const show = visibleKeys(work.value, fieldFilter.value, ruleFilterIds.value);
   // The annotation's values go after every editing column, the row actions included.
   const cols = values.value ? [...COLS, 'value'] : COLS;
   const total = 22 + 60 + cols.reduce((sum, c) => sum + w[c], 0);

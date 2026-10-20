@@ -916,3 +916,20 @@
 .rulesOption:hover {
   background: var(--bg-hover);
 }
+
+.rulesAdd {
+  margin-left: 4px;
+  padding: 0 4px;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  visibility: hidden;
+}
+
+.row:hover .rulesAdd {
+  visibility: visible;
+}

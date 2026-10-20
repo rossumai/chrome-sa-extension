@@ -70,3 +70,23 @@ describe('visibleKeys', () => {
     expect(visibleKeys(tree, 'zzz')!.size).toBe(0);
   });
 });
+
+describe('visibleKeys with a rule', () => {
+  it("shows only the rule's fields with their parents, and narrows further by text", () => {
+    expect(ids(visibleKeys(tree, '', new Set(['item_amount', 'document_id'])))).toEqual([
+      'basic_section',
+      'document_id',
+      'items_section',
+      'line_items',
+      'line_item',
+      'item_amount',
+    ]);
+    expect(ids(visibleKeys(tree, 'amount', new Set(['item_amount', 'document_id'])))).toEqual([
+      'items_section',
+      'line_items',
+      'line_item',
+      'item_amount',
+    ]);
+    expect(visibleKeys(tree, '', null)).toBeNull();
+  });
+});

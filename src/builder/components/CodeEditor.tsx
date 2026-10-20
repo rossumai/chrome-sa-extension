@@ -51,6 +51,7 @@ export default function CodeEditor({
       parent: host.current,
       state: EditorState.create({
         doc: value,
+        selection: { anchor: value.length }, // start at the end, where a click-insert continues
         extensions: [
           basicSetup,
           python(),
@@ -60,7 +61,10 @@ export default function CodeEditor({
           EditorView.domEventHandlers({
             focus: (_e, ed) => {
               onFocusInsert?.((text) => {
-                ed.dispatch(ed.state.replaceSelection(text));
+                // Right after a word or a closing bracket, a space keeps the two apart.
+                const at = ed.state.selection.main.from;
+                const before = ed.state.sliceDoc(Math.max(0, at - 1), at);
+                ed.dispatch(ed.state.replaceSelection(/[\w)\]]/.test(before) ? ` ${text}` : text));
                 ed.focus();
                 onCommit(ed.state.doc.toString());
               });

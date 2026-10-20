@@ -400,11 +400,11 @@ export async function deleteSchema(id: number) {
 // The right panel edits one native Rule. A rule is its own object in Rossum, so it has its
 // own Save, separate from the schema's staged edits and undo stack.
 
-/** Open a rule from the queue's list, or a new one (null). */
-export function openRuleEditor(id: number | null) {
+/** Open a rule from the queue's list, or a new one (null) — started from `fieldId` if given. */
+export function openRuleEditor(id: number | null, fieldId?: string) {
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   const rule = id == null ? null : store.rules.value.find((r) => r.id === id);
-  const draft = rule ? draftFromRule(rule) : emptyDraft();
+  const draft = rule ? draftFromRule(rule) : emptyDraft(fieldId);
   store.ruleEditor.value = { ruleId: rule ? rule.id : null, base: draft, draft };
   store.ruleErrors.value = [];
   store.insertTarget.value = null;

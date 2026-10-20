@@ -34,13 +34,16 @@ export function draftFromRule(rule: any): RuleDraft {
   };
 }
 
-export function emptyDraft(): RuleDraft {
+/** A new rule; started from a field, its condition reads it and its message anchors on it. */
+export function emptyDraft(fieldId?: string): RuleDraft {
+  const action = newAction([]);
+  if (fieldId) action.payload.schema_id = fieldId;
   return {
     name: '',
     description: '',
     enabled: true,
-    trigger_condition: '',
-    actions: [newAction([])],
+    trigger_condition: fieldId ? `field.${fieldId}` : '',
+    actions: [action],
   };
 }
 

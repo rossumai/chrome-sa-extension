@@ -590,7 +590,7 @@ describe('Builder rule highlight', () => {
     });
     expect(row('doc_id').dataset.rule).toBe('condition');
     expect(row('item_desc').dataset.rule).toBe('action');
-    expect(row('vendor').dataset.rule).toBeUndefined();
+    expect(row('vendor')).toBeNull(); // filtered out: the rule does not use it
     expect(root.textContent).toContain('ghost_field');
     act(() => {
       (root.querySelector('[data-action="clear-rule"]') as HTMLElement).click();
@@ -603,21 +603,24 @@ describe('Builder rule mode', () => {
   const content = () => root.querySelector('[data-code="condition"] .cm-content') as HTMLElement;
   const condition = () => store.ruleEditor.value!.draft.trigger_condition;
 
-  it('+ Rule opens the rule editor in place of the field inspector', () => {
+  it("a field's + opens a new rule in place of the field inspector; the bar has no + Rule", () => {
+    expect(root.querySelector('[data-action="new-rule"]')).toBeNull();
     act(() => {
       row('doc_id').click();
     });
     expect(root.querySelector('aside[data-panel="field"]')).not.toBeNull();
     act(() => {
-      (root.querySelector('[data-action="new-rule"]') as HTMLElement).click();
+      (row('doc_id').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
     });
+    expect(store.ruleEditor.value!.draft.trigger_condition).toBe('field.doc_id');
+    expect(store.ruleEditor.value!.draft.actions[0].payload.schema_id).toBe('doc_id');
     expect(root.querySelector('aside[data-panel="rule"]')).not.toBeNull();
     expect(root.querySelector('aside[data-panel="field"]')).toBeNull();
   });
 
-  it('clicking a field after focusing the condition inserts field.<id> and selects nothing', () => {
+  it('clicking a field after focusing the condition inserts field.<id> at the end, spaced', () => {
     act(() => {
-      (root.querySelector('[data-action="new-rule"]') as HTMLElement).click();
+      (row('vendor').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
     });
     act(() => {
       content().dispatchEvent(new FocusEvent('focus'));
@@ -625,13 +628,13 @@ describe('Builder rule mode', () => {
     act(() => {
       row('doc_id').click();
     });
-    expect(condition()).toBe('field.doc_id');
+    expect(condition()).toBe('field.vendor field.doc_id');
     expect(store.selectedKey.value).toBeNull();
   });
 
   it("clicking a field after focusing an action's field box puts the bare id there", () => {
     act(() => {
-      (root.querySelector('[data-action="new-rule"]') as HTMLElement).click();
+      (row('vendor').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
     });
     act(() => {
       (root.querySelector('input[data-insert="schema_id"]') as HTMLInputElement).focus();
@@ -662,7 +665,7 @@ describe('Builder shortcuts inside a code editor', () => {
       (row('doc_id').querySelector('button[data-col="visible"]') as HTMLButtonElement).click();
     });
     act(() => {
-      (root.querySelector('[data-action="new-rule"]') as HTMLElement).click();
+      (row('doc_id').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
     });
     const cm = root.querySelector('[data-code="condition"] .cm-content') as HTMLElement;
     act(() => {
@@ -676,13 +679,15 @@ describe('Builder shortcuts inside a code editor', () => {
 
 describe('Builder rules column', () => {
   const cell = (id: string) => row(id).querySelector('td[data-col="rules"]') as HTMLElement;
+  const count = (id: string) =>
+    cell(id).querySelector('[data-action="field-rules"]')?.textContent ?? '';
 
   it('counts the rules that use each field; one rule opens straight into the editor', () => {
-    expect(cell('doc_id').textContent).toBe('1');
-    expect(cell('item_desc').textContent).toBe('1');
-    expect(cell('vendor').textContent).toBe('');
+    expect(count('doc_id')).toBe('1');
+    expect(count('item_desc')).toBe('1');
+    expect(count('vendor')).toBe('');
     act(() => {
-      (cell('doc_id').querySelector('button') as HTMLElement).click();
+      (cell('doc_id').querySelector('[data-action="field-rules"]') as HTMLElement).click();
     });
     expect(store.ruleEditor.value!.ruleId).toBe(40);
   });
@@ -694,9 +699,9 @@ describe('Builder rules column', () => {
         { id: 41, name: 'Second', enabled: true, trigger_condition: 'field.doc_id', actions: [] },
       ];
     });
-    expect(cell('doc_id').textContent).toBe('2');
+    expect(count('doc_id')).toBe('2');
     act(() => {
-      (cell('doc_id').querySelector('button') as HTMLElement).click();
+      (cell('doc_id').querySelector('[data-action="field-rules"]') as HTMLElement).click();
     });
     const items = [...root.querySelectorAll('[data-rule-option]')].map((e) => e.textContent);
     expect(items).toEqual(['Doc ID present (40)', 'Second (41)']);
@@ -715,12 +720,56 @@ describe('Builder rules column', () => {
       ];
     });
     act(() => {
-      (cell('doc_id').querySelector('button') as HTMLElement).click();
+      (cell('doc_id').querySelector('[data-action="field-rules"]') as HTMLElement).click();
     });
     expect(root.querySelector('[data-rule-option]')).not.toBeNull();
     act(() => {
       document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     });
     expect(root.querySelector('[data-rule-option]')).toBeNull();
+  });
+});
+
+describe('Builder rule filter', () => {
+  const shown = () =>
+    [...root.querySelectorAll('[data-row-key]')].map(
+      (r) =>
+        flatten(store.work.value).find((x) => x.key === r.getAttribute('data-row-key'))!.node.id,
+    );
+
+  it('picking a rule leaves only its fields; editing it brings every field back', () => {
+    const select = root.querySelector('select[data-picker="rule"]') as HTMLSelectElement;
+    act(() => {
+      select.value = '40';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(shown()).toEqual([
+      'basic_section',
+      'doc_id',
+      'items_section',
+      'items',
+      'item',
+      'item_desc',
+    ]);
+    act(() => {
+      (root.querySelector('[data-action="edit-rule"]') as HTMLElement).click();
+    });
+    expect(shown().length).toBe(flatten(store.work.value).length);
+    act(() => {
+      (root.querySelector('[data-action="close-rule"]') as HTMLElement).click();
+    });
+    expect(shown()).toContain('doc_id');
+    expect(shown()).not.toContain('vendor');
+  });
+
+  it('the rule filter sits right after the text filter, before the annotation picker', () => {
+    const bar = root.querySelector('input[data-filter="fields"]')!.parentElement!;
+    const order = [
+      ...bar.querySelectorAll(
+        'input[data-filter="fields"], select[data-picker="rule"], select:not([data-picker])',
+      ),
+    ];
+    expect(order[0].getAttribute('data-filter')).toBe('fields');
+    expect(order[1].getAttribute('data-picker')).toBe('rule');
   });
 });

@@ -86,3 +86,11 @@ describe('rule drafts', () => {
     expect(sameDraft(draftFromRule(rule), { ...draftFromRule(rule), enabled: false })).toBe(false);
   });
 });
+
+describe('emptyDraft for a field', () => {
+  it('starts the condition on the field and anchors the first message on it', () => {
+    const d = emptyDraft('doc_id');
+    expect(d.trigger_condition).toBe('field.doc_id');
+    expect(d.actions[0].payload.schema_id).toBe('doc_id');
+  });
+});
