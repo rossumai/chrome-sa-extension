@@ -1036,6 +1036,9 @@
 }
 
 .configItem {
+  /* overflow: hidden lets a flex item shrink below its text (min-height becomes 0), so without
+     this a long list squeezed every button to a 6px sliver instead of scrolling (measured). */
+  flex-shrink: 0;
   padding: 3px 8px;
   border: none;
   border-radius: 4px;
