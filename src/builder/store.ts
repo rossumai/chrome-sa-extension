@@ -1,7 +1,7 @@
 // src/builder/store.ts
 import { signal, computed } from '@preact/signals';
 import { initHistory, type History } from './history.js';
-import { changeSummary, rowStatus, type Node } from './model.js';
+import { changeSummary, rowStatus, movedKeys, type Node } from './model.js';
 import type { AnnotationValues } from './values.js';
 import {
   ruleFieldRefs,
@@ -162,8 +162,8 @@ export const fieldAssist = signal<FieldAssistState>({
   warnings: [],
 });
 
-// Mr. Fabry for the whole schema: a panel with the conversation; its changes land as one
-// undoable edit. fabryChangedKeys = rows the last answer touched (for "only its changes").
+// Mr. Fabry for the whole schema: a panel with the conversation; each answer's changes land
+// as one undoable edit.
 export type SchemaTurn = {
   role: 'you' | 'fabry';
   text: string;
@@ -187,5 +187,15 @@ export const schemaFabry = signal<SchemaFabryState>({
   turns: [],
   problems: [],
 });
-export const fabryChangedKeys = signal<Set<string> | null>(null);
+// Every row an answer in this conversation touched; reset when another schema opens.
+export const fabryTouched = signal<Set<string>>(new Set());
+// …of which, the rows that still differ from the saved schema: an undone or saved change
+// drops out by itself. This is what "only Mr. Fabry's changes" shows.
+export const fabryChangedKeys = computed(() => {
+  const differs = new Set([
+    ...rowStatus(base.value, work.value).keys(),
+    ...movedKeys(base.value, work.value),
+  ]);
+  return new Set([...fabryTouched.value].filter((k) => differs.has(k)));
+});
 export const onlyFabryChanges = signal(false);

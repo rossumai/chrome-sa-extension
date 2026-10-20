@@ -317,6 +317,22 @@ export function rowStatus(base: Node[], work: Node[]): Map<string, 'new' | 'edit
   return out;
 }
 
+/** Rows that moved: a different parent, or a new place among siblings that stayed put. */
+export function movedKeys(base: Node[], work: Node[]): Set<string> {
+  const out = new Set<string>();
+  const bp = parents(base);
+  const wp = parents(work);
+  const stayers = new Set<string>();
+  for (const [k, p] of wp) {
+    if (!bp.has(k)) continue;
+    if (bp.get(k) === p) stayers.add(k);
+    else out.add(k);
+  }
+  const ib = positions(base, stayers);
+  for (const [k, i] of positions(work, stayers)) if (ib.get(k) !== i) out.add(k);
+  return out;
+}
+
 export function changeSummary(
   base: Node[],
   work: Node[],
@@ -327,16 +343,7 @@ export function changeSummary(
     else if (v === 'edited') s.edited++;
     else s.deleted++;
   }
-  const bp = parents(base);
-  const wp = parents(work);
-  const stayers = new Set<string>();
-  for (const [k, p] of wp) {
-    if (!bp.has(k)) continue;
-    if (bp.get(k) === p) stayers.add(k);
-    else s.moved++;
-  }
-  const ib = positions(base, stayers);
-  for (const [k, i] of positions(work, stayers)) if (ib.get(k) !== i) s.moved++;
+  s.moved = movedKeys(base, work).size;
   return s;
 }
 

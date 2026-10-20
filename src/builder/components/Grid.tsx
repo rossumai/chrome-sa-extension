@@ -633,7 +633,7 @@ export default function Grid() {
   useEffect(loadWidths, []);
   const w = widths.value;
   let show = visibleKeys(work.value, fieldFilter.value, ruleFilterIds.value, 'or');
-  if (onlyFabryChanges.value && fabryChangedKeys.value) {
+  if (onlyFabryChanges.value) {
     const mine = withAncestors(work.value, fabryChangedKeys.value);
     show = show ? new Set([...show].filter((k) => mine.has(k))) : mine;
   }

@@ -11,6 +11,7 @@ import {
   localErrors,
   stripForSave,
   rowStatus,
+  movedKeys,
   flatten,
   type Node,
 } from './model.js';
@@ -126,6 +127,17 @@ async function load(queueId: number | null, schemaId: number | null) {
   if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   store.ruleEditor.value = null;
+  // A new schema, a new conversation: Mr. Fabry's context and its row keys belong to the old one.
+  store.schemaFabry.value = {
+    ...store.schemaFabry.value,
+    chatId: null,
+    busy: false,
+    error: null,
+    turns: [],
+    problems: [],
+  };
+  store.fabryTouched.value = new Set();
+  store.onlyFabryChanges.value = false;
   const seq = ++openSeq;
   store.selectedQueueId.value = queueId;
   store.selectedSchemaId.value = schemaId;
@@ -657,7 +669,11 @@ export async function askSchemaFabry(request: string, fix?: string[]) {
     const before = store.work.value;
     const r = applyChanges(before, parsed.changes);
     if (r.applied) apply(r.nodes);
-    store.fabryChangedKeys.value = new Set(rowStatus(before, r.nodes).keys());
+    store.fabryTouched.value = new Set([
+      ...store.fabryTouched.value,
+      ...rowStatus(before, r.nodes).keys(),
+      ...movedKeys(before, r.nodes),
+    ]);
 
     // Check the exact content Save would send: local rules, then the validate dry run.
     const problems = r.skipped.map((x) => `Skipped: ${x.reason}`);

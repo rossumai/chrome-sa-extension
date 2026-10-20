@@ -600,4 +600,47 @@ describe('Mr. Fabry on the whole schema', () => {
     openSchemaFabry();
     expect(store.ruleEditor.value).toBeNull();
   });
+
+  it("'only changes' covers every answer, and drops a change once it is undone", async () => {
+    openSchemaFabry();
+    vi.mocked(api.validateSchema).mockResolvedValue({});
+    reply(
+      JSON.stringify({
+        summary: 'a',
+        changes: [{ op: 'add', kind: 'field', parent: 's', field: { id: 'po', label: 'PO' } }],
+      }),
+    );
+    await askSchemaFabry('one');
+    reply(
+      JSON.stringify({
+        summary: 'b',
+        changes: [{ op: 'set', id: 'doc_id', attrs: { label: 'D' } }],
+      }),
+    );
+    await askSchemaFabry('two');
+    const ids = () =>
+      [...store.fabryChangedKeys.value]
+        .map((k) => flatten(store.work.value).find((r) => r.key === k)!.node.id)
+        .sort();
+    expect(ids()).toEqual(['doc_id', 'po']);
+    undoChange();
+    expect(ids()).toEqual(['po']);
+  });
+
+  it('opening another schema starts a new conversation', async () => {
+    store.schemaFabry.value = {
+      open: true,
+      chatId: 'c',
+      busy: false,
+      error: null,
+      turns: [{ role: 'you', text: 'x' }],
+      problems: ['p'],
+    };
+    store.fabryTouched.value = new Set(['k1']);
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: [] });
+    store.queues.value = [{ id: 2, name: 'B', schema: 'https://x/api/v1/schemas/22' }];
+    await openQueue(2);
+    expect(store.schemaFabry.value).toMatchObject({ chatId: null, turns: [], problems: [] });
+    expect(store.fabryTouched.value.size).toBe(0);
+  });
 });

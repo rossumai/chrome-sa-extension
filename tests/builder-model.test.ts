@@ -16,6 +16,7 @@ import {
   newTable,
   freshKeys,
   mergeAttrs,
+  movedKeys,
   nextKey,
   localErrors,
   rowStatus,
@@ -371,5 +372,14 @@ describe('mergeAttrs', () => {
     expect(n.rir_field_names).toEqual(['b']);
     expect('default_value' in n).toBe(false);
     expect(n.__key).toBe(k);
+  });
+});
+
+describe('movedKeys', () => {
+  it('names the rows that moved (the same rule changeSummary counts by)', () => {
+    const base = withKeys(fixture());
+    const work = move(base, keyOf(base, 'document_id'), keyOf(base, 'line_items_section'), 1);
+    expect([...movedKeys(base, work)]).toEqual([keyOf(base, 'document_id')]);
+    expect(movedKeys(base, base).size).toBe(0);
   });
 });

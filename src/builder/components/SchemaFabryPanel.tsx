@@ -11,7 +11,7 @@ import s from './Builder.module.css';
 export default function SchemaFabryPanel() {
   useEffect(rightPanel.load, []);
   const st = schemaFabry.value;
-  const changed = fabryChangedKeys.value?.size ?? 0;
+  const changed = fabryChangedKeys.value.size;
   return (
     <aside
       class={s.inspector}

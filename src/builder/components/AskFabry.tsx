@@ -22,7 +22,12 @@ export default function AskFabry({
   doneText: string;
 }) {
   const [text, setText] = useState(initial);
-  const ask = () => onAsk(text);
+  // Sent = cleared, so the next message starts empty (the panel's log keeps what was asked).
+  const ask = () => {
+    if (!text.trim() || state.busy) return;
+    onAsk(text);
+    setText('');
+  };
   return (
     <div class={s.fabryBox}>
       <div class={s.fabryHead}>
@@ -37,7 +42,10 @@ export default function AskFabry({
         value={text}
         onInput={(e) => setText((e.currentTarget as HTMLTextAreaElement).value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask();
+          // Enter sends, Shift+Enter is a new line; not while an IME is composing a character.
+          if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+          e.preventDefault();
+          ask();
         }}
       />
       <div class={s.codeBar}>
@@ -47,7 +55,7 @@ export default function AskFabry({
           data-action="ask-fabry"
           disabled={state.busy || !text.trim()}
           onClick={ask}
-          title="Ask (⌘Enter)"
+          title="Ask (Enter; Shift+Enter for a new line)"
         >
           {state.busy ? 'Mr. Fabry is writing…' : state.chatId ? 'Ask again' : 'Ask'}
         </button>
