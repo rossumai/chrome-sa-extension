@@ -50,6 +50,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         return;
       }
       if (!(e.metaKey || e.ctrlKey) || inField(e.target)) return;
+      if (ruleEditor.value) return; // the schema is read-only in rule mode
       const k = e.key.toLowerCase();
       if (k === 'z' && !e.shiftKey) undoChange();
       else if ((k === 'z' && e.shiftKey) || k === 'y') redoChange();

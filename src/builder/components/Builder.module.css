@@ -964,3 +964,9 @@
 .docRow td {
   font-style: italic;
 }
+
+/* Rule mode shows the flags read-only. */
+.flag:disabled {
+  cursor: default;
+  background: none;
+}

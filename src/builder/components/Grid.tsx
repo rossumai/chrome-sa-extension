@@ -14,6 +14,7 @@ import {
   ruleFilterIds,
   ruleMarks,
   ruleGlobalMarks,
+  schemaLocked,
 } from '../store.js';
 import { visibleKeys } from '../fieldFilter.js';
 import { apply, openRuleEditor } from '../index.jsx';
@@ -111,6 +112,7 @@ function FlagButton({
       data-col={flag}
       aria-pressed={on ? 'true' : 'false'}
       title={`${FLAG_TITLES[flag]}: ${on ? 'on' : 'off'}`}
+      disabled={schemaLocked.value}
       onClick={(e) => {
         e.stopPropagation();
         onToggle(!on);
@@ -128,6 +130,7 @@ function SourceCell({ node }: { node: Node }) {
   return (
     <select
       class={s.select}
+      disabled={schemaLocked.value}
       value={src ?? ''}
       onClick={(e) => e.stopPropagation()}
       onChange={(e) =>
@@ -146,6 +149,7 @@ function TypeCell({ node }: { node: Node }) {
   return (
     <select
       class={s.select}
+      disabled={schemaLocked.value}
       value={node.type ?? 'string'}
       onClick={(e) => e.stopPropagation()}
       onChange={(e) => {
@@ -325,6 +329,7 @@ function Row({
   const errs = rowErrors.value.get(key);
   const kind = node.category;
   const dp = kind === 'datapoint';
+  const locked = schemaLocked.value;
   const role = kind === 'section' ? undefined : ruleRoleById.value?.get(node.id);
   const cls = [
     s.row,
@@ -346,6 +351,7 @@ function Row({
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
+        if (locked) return;
         const from = e.dataTransfer?.getData('text/plain');
         const t = from ? dropTarget(work.value, from, key) : null;
         if (from && t) apply(move(work.value, from, t.parent, t.index));
@@ -353,7 +359,7 @@ function Row({
     >
       <td
         class={s.grip}
-        draggable={!deleted && kind !== 'tuple'}
+        draggable={!locked && !deleted && kind !== 'tuple'}
         onDragStart={(e) => e.dataTransfer?.setData('text/plain', key)}
         title="Drag to reorder"
       >
@@ -361,15 +367,19 @@ function Row({
       </td>
       <td data-col="id" style={{ paddingLeft: `${6 + depth * 16}px` }}>
         {kind === 'section' && <span class={s.caret}>▾ </span>}
-        <EditableCell
-          mono
-          value={String(node.id ?? '')}
-          autoEdit={pendingEdit.value === key}
-          onCommit={(v) => {
-            pendingEdit.value = null;
-            edit(key, ['id'], v.trim());
-          }}
-        />
+        {locked ? (
+          <span class={s.mono}>{String(node.id ?? '')}</span>
+        ) : (
+          <EditableCell
+            mono
+            value={String(node.id ?? '')}
+            autoEdit={pendingEdit.value === key}
+            onCommit={(v) => {
+              pendingEdit.value = null;
+              edit(key, ['id'], v.trim());
+            }}
+          />
+        )}
         {errs && (
           <div class={s.rowError}>
             {errs.map((m) => (
@@ -379,7 +389,14 @@ function Row({
         )}
       </td>
       <td data-col="label">
-        <EditableCell value={String(node.label ?? '')} onCommit={(v) => edit(key, ['label'], v)} />
+        {locked ? (
+          String(node.label ?? '')
+        ) : (
+          <EditableCell
+            value={String(node.label ?? '')}
+            onCommit={(v) => edit(key, ['label'], v)}
+          />
+        )}
       </td>
       <td data-col="source">{dp ? <SourceCell node={node} /> : null}</td>
       <td data-col="type">
@@ -428,7 +445,7 @@ function Row({
         )}
       </td>
       <td class={s.actions}>
-        {node.__deleted ? (
+        {locked ? null : node.__deleted ? (
           <button
             type="button"
             class={s.linkBtn}

@@ -859,3 +859,39 @@ describe('Builder rule column and whole-document row', () => {
     expect(root.querySelector('[data-doc-row]')).toBeNull();
   });
 });
+
+describe('Builder grid is read-only in rule mode', () => {
+  it('no delete, disabled selects and flags, no ID editing, no drag; Rules column still works', () => {
+    pickRule('40');
+    const r = row('doc_id');
+    expect(r.querySelector('[data-action="delete"]')).toBeNull();
+    expect((r.querySelector('td[data-col="type"] select') as HTMLSelectElement).disabled).toBe(
+      true,
+    );
+    expect((r.querySelector('td[data-col="source"] select') as HTMLSelectElement).disabled).toBe(
+      true,
+    );
+    expect((r.querySelector('button[data-col="visible"]') as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    expect(r.querySelector('[data-edit]')).toBeNull();
+    expect(r.querySelector('[draggable="true"]')).toBeNull();
+    expect(r.querySelector('[data-action="new-rule-for-field"]')).not.toBeNull();
+    act(() => {
+      (root.querySelector('[data-action="clear-rule"]') as HTMLElement).click();
+    });
+    expect(row('doc_id').querySelector('[data-action="delete"]')).not.toBeNull();
+    expect(row('doc_id').querySelector('[data-edit]')).not.toBeNull();
+  });
+
+  it('⌘Z does not undo a schema change while a rule is open', () => {
+    act(() => {
+      (row('doc_id').querySelector('button[data-col="visible"]') as HTMLButtonElement).click();
+    });
+    pickRule('40');
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', metaKey: true }));
+    });
+    expect(store.history.value.past.length).toBe(1);
+  });
+});

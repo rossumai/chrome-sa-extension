@@ -123,3 +123,6 @@ export const ruleMarks = computed(() =>
 export const ruleGlobalMarks = computed(() =>
   ruleEditor.value ? globalActionMarks(ruleEditor.value.draft) : null,
 );
+
+// In rule mode the schema is read-only: one thing is edited at a time.
+export const schemaLocked = computed(() => !!ruleEditor.value);
