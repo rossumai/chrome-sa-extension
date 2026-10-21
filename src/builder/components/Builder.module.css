@@ -1142,11 +1142,6 @@
   color: var(--text-secondary);
 }
 
-.provenanceHost {
-  display: block;
-  margin-top: 6px;
-}
-
 /* A row jumped to from the validation panel flashes, then fades. */
 .rowFlash td {
   animation: rowFlash 1.2s ease-out;
@@ -1156,4 +1151,26 @@
   from {
     background: var(--info-bg);
   }
+}
+
+.queryGlyph {
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.q_winner {
+  color: var(--success);
+}
+
+.q_gated,
+.q_error {
+  color: var(--danger);
+}
+
+.q_empty,
+.q_skipped,
+.q_pending {
+  color: var(--text-secondary);
 }

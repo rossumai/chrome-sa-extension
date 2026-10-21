@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import App from '../src/builder/components/App.jsx';
@@ -75,6 +75,14 @@ const typeFilter = (v: string) => {
   });
 };
 
+// Unmount after each test: a tree left mounted stays subscribed to the store's signals and
+// keeps reacting in later tests (61 stale apps once replayed provenance at the same time).
+afterEach(() => {
+  act(() => {
+    render(null, root);
+  });
+});
+
 beforeEach(() => {
   document.body.innerHTML = '';
   root = document.createElement('div');
@@ -122,6 +130,7 @@ beforeEach(() => {
   store.validation.value = null;
   store.onlyMessages.value = false;
   store.validationPanel.value = null;
+  store.annotationContent.value = [];
   store.revalidateError.value = null;
   store.fieldFilter.value = '';
   store.ruleId.value = null;
@@ -1372,12 +1381,45 @@ describe('Builder validation panel', () => {
     expect(panel()).toBeNull();
   });
 
-  it('has a Provenance tab', () => {
+  it('Provenance replays each MDH configuration against the annotation', async () => {
     validated();
+    const fetchMock = vi.fn(async (url: string, opts: any) => ({
+      ok: true,
+      status: 200,
+      json: async () => {
+        expect(url).toContain('/svc/data-storage/api/v1/data/aggregate');
+        const body = JSON.parse(opts.body);
+        return { result: JSON.stringify(body).includes('INV-9') ? [{ id: 1 }] : [] };
+      },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    act(() => {
+      store.annotationContent.value = [
+        {
+          category: 'section',
+          schema_id: 'basic_section',
+          children: [
+            { category: 'datapoint', id: 101, schema_id: 'doc_id', content: { value: 'INV-9' } },
+          ],
+        },
+      ];
+    });
     act(() => {
       (panel().querySelector('[data-tab="provenance"]') as HTMLElement).click();
     });
     expect(store.validationPanel.value).toBe('provenance');
-    expect(panel().querySelector('[data-provenance-host]')).not.toBeNull();
+    await vi.waitFor(() =>
+      expect(panel().querySelector('[data-query-status="winner"]')).not.toBeNull(),
+    );
+    const cfg = panel().querySelector('[data-provenance-config]') as HTMLElement;
+    expect(cfg.textContent).toContain('Vendor matching (70)');
+    expect(cfg.textContent).toContain('1 hit');
+    // replayed once, not again on every re-render
+    await new Promise((r) => setTimeout(r, 50));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
+    vi.stubGlobal('chrome', {
+      storage: { local: { get: vi.fn(async () => ({})), set: chromeSet } },
+    });
   });
 });

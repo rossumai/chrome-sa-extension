@@ -274,3 +274,6 @@ export const onlyMessages = signal(false);
 // a jump from the panel.
 export const validationPanel = signal<'rules' | 'provenance' | null>(null);
 export const flashRowKey = signal<string | null>(null);
+
+// The picked annotation's content tree as fetched (the provenance replay reads it).
+export const annotationContent = signal<any[]>([]);

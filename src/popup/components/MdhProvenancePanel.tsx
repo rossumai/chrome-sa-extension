@@ -96,24 +96,7 @@ function DocLookupIcon() {
 
 // `onPin` is optional and rendered only when supplied: the popup passes a handler
 // that hands this same card to the side panel, the side panel itself passes none.
-/** The Rossum context the card works in. The popup and side panel read it from the tab. */
-export type ProvenanceContext = {
-  token: string;
-  domain: string;
-  annotationId: string | null;
-  queueId: string | null;
-};
-
-// `context`, when given (the Console's Builder), replaces reading the context from `tab`.
-export default function MdhProvenancePanel({
-  tab,
-  onPin,
-  context,
-}: {
-  tab?: any;
-  onPin?: () => void;
-  context?: ProvenanceContext;
-}) {
+export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: () => void }) {
   const [refreshNonce, setRefreshNonce] = useState(0);
   // A `kind`-discriminated state machine whose arms carry different payloads (ctx, hookEntries,
   // headerValues, ...), so it is read as `any` rather than restated as a nine-arm union.
@@ -145,7 +128,7 @@ export default function MdhProvenancePanel({
     const forceRefresh = refreshNonce > 0;
 
     (async () => {
-      const ctx = context ?? (await runInTab(tab.id, readCurrentContext));
+      const ctx = await runInTab(tab.id, readCurrentContext);
       if (cancelled) return;
       if (!ctx) {
         setState({ kind: 'message', message: 'Reload the Rossum tab, then reopen this popup.' });

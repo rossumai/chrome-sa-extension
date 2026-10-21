@@ -1,5 +1,5 @@
-import { h, render } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
+import { h } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import {
   validation,
   validationPanel,
@@ -7,16 +7,24 @@ import {
   values,
   work,
   annotationId,
-  selectedQueueId,
   domain,
   token,
   revalidating,
+  hooks,
+  annotationContent,
 } from '../store.js';
-import { openRuleEditor, closeValidationPanel, revalidate, revealRow } from '../index.jsx';
+import {
+  openRuleEditor,
+  closeValidationPanel,
+  revalidate,
+  revealRow,
+  openHookEditor,
+} from '../index.jsx';
 import { flatten } from '../model.js';
 import type { PlacedMessage } from '../validation.js';
-import { scopeToShadow } from '../scopeCss.js';
-import MdhProvenancePanel from '../../popup/components/MdhProvenancePanel.jsx';
+import { STATUS_GLYPH, evaluateCfgCondition, replayConfig } from '../../popup/mdh-provenance.js';
+import { provenanceInputs, provenanceConfigs, configValues } from '../provenance.js';
+import { pickHookConfig } from './hookJump.js';
 import Icon from './icons.jsx';
 import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
@@ -118,48 +126,134 @@ function RulesTab() {
   );
 }
 
-// The popup's MDH provenance card, in a shadow root with its own copy of popup.css: neither
-// stylesheet can reach the other. Builder hands it the annotation instead of a browser tab.
-function ProvenanceTab() {
-  const host = useRef<HTMLDivElement>(null);
-  const id = annotationId.value;
+const STATUS_TEXT: Record<string, string> = {
+  pending: 'replaying…',
+  winner: 'matched',
+  empty: 'no match',
+  skipped: 'skipped',
+  gated: 'gated',
+  error: 'failed',
+};
+
+// One configuration: its condition, its row (table configurations), and the query cascade
+// replayed against the annotation — the popup provenance card's logic, drawn the Builder way.
+function ConfigReplay({
+  item,
+  inputs,
+}: {
+  item: { hook: any; index: number; cfg: any };
+  inputs: any;
+}) {
+  const [row, setRow] = useState(0);
+  const [statuses, setStatuses] = useState<any[]>([]);
+  const { cfg } = item;
+  const { scope, values } = configValues(cfg, inputs, row);
+  const cond = evaluateCfgCondition(cfg, values, inputs.types);
+  // Replay when the inputs change — not when a re-render hands over equal objects.
+  const valuesKey = JSON.stringify(values);
+  const cfgKey = JSON.stringify(cfg);
   useEffect(() => {
-    const el = host.current;
-    if (!el) return undefined;
-    const root = el.shadowRoot ?? el.attachShadow({ mode: 'open' });
-    root.replaceChildren();
-    const mount = document.createElement('div');
-    root.appendChild(mount);
-    let cancelled = false;
-    const url = globalThis.chrome?.runtime?.getURL?.('popup/popup.css');
-    if (url) {
-      fetch(url)
-        .then((r) => r.text())
-        .then((css) => {
-          if (cancelled) return;
-          const style = document.createElement('style');
-          style.textContent = scopeToShadow(css);
-          root.prepend(style);
-        })
-        .catch(() => {});
-    }
-    render(
-      <MdhProvenancePanel
-        context={{
-          token: token.value,
-          domain: domain.value,
-          annotationId: id != null ? String(id) : null,
-          queueId: selectedQueueId.value != null ? String(selectedQueueId.value) : null,
-        }}
-      />,
-      mount,
-    );
-    return () => {
-      cancelled = true;
-      render(null, mount);
-    };
-  }, [id, validation.value]);
-  return <div data-provenance-host="" ref={host} class={s.provenanceHost} />;
+    const ctrl = new AbortController();
+    setStatuses(cfg.queries.map(() => ({ status: 'pending' })));
+    replayConfig(
+      domain.value,
+      token.value,
+      cfg,
+      values,
+      ctrl.signal,
+      (i, st) => setStatuses((prev) => prev.map((p, j) => (j === i ? st : p))),
+      inputs.types,
+    ).catch(() => {});
+    return () => ctrl.abort();
+  }, [valuesKey, cfgKey]);
+  const extra = cfg.additionalMappings.map((m: any) => m.target).filter(Boolean);
+  return (
+    <div class={s.resultItem} data-provenance-config="">
+      <div>
+        <b>
+          {item.index + 1} · {cfg.name || `Configuration ${item.index + 1}`}
+        </b>{' '}
+        <span class={s.dim}>
+          {item.hook.name} ({item.hook.id}) · {cfg.dataset} → {cfg.target}
+          {extra.length ? ` (+ ${extra.join(', ')})` : ''}
+        </span>{' '}
+        <button
+          type="button"
+          class={s.linkBtn}
+          title="Open this configuration in hook mode"
+          onClick={() => {
+            openHookEditor(item.hook.id);
+            pickHookConfig(item.index);
+          }}
+        >
+          open
+        </button>
+      </div>
+      {cond.hasCondition && (
+        <div class={s.resultMsg + ' ' + s.mono}>
+          if {cond.substituted} →{' '}
+          {cond.result === null ? `error: ${cond.error}` : String(cond.result)}
+        </div>
+      )}
+      {scope && (
+        <div class={s.resultMsg}>
+          <span class={s.stepper}>
+            row
+            <button
+              type="button"
+              class={s.iconBtn}
+              disabled={row === 0}
+              onClick={() => setRow(row - 1)}
+            >
+              ‹
+            </button>
+            {Math.min(row, scope.rowCount - 1) + 1}/{scope.rowCount} of {scope.tableSchemaId}
+            <button
+              type="button"
+              class={s.iconBtn}
+              disabled={row >= scope.rowCount - 1}
+              onClick={() => setRow(row + 1)}
+            >
+              ›
+            </button>
+          </span>
+        </div>
+      )}
+      {cfg.queries.map((q: any, i: number) => {
+        const st = statuses[i] || { status: 'pending' };
+        const g = STATUS_GLYPH[st.status] || STATUS_GLYPH.pending;
+        return (
+          <div class={s.resultMsg} data-query-status={st.status} title={g.title}>
+            <span class={s.queryGlyph + ' ' + (s[`q_${st.status}`] || '')}>{g.glyph}</span>{' '}
+            <span class={s.mono}>{q.label}</span>{' '}
+            <span class={s.dim}>
+              {STATUS_TEXT[st.status] ?? st.status}
+              {st.hint ? ` — ${st.hint}` : ''}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProvenanceTab() {
+  if (annotationId.value == null)
+    return <div class={s.dim}>Pick an annotation to replay matching.</div>;
+  const items = provenanceConfigs(hooks.value);
+  if (!items.length) return <div class={s.dim}>No MDH hooks on this queue.</div>;
+  const inputs = provenanceInputs(annotationContent.value, work.value);
+  return (
+    <div>
+      <div class={s.dim}>
+        Replays each configuration's queries against its dataset with this annotation's values
+        (read-only, first hit per query).
+      </div>
+      {items.map((it) => (
+        <ConfigReplay key={`${it.hook.id}:${it.index}`} item={it} inputs={inputs} />
+      ))}
+    </div>
+  );
 }
 
 export default function ValidationPanel() {

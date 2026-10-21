@@ -295,6 +295,7 @@ export function clearAnnotation() {
   pickSeq++;
   store.validation.value = null;
   store.revalidateError.value = null;
+  store.annotationContent.value = [];
   store.annotationId.value = null;
   store.values.value = null;
   store.lineRow.value = {};
@@ -318,6 +319,7 @@ export async function pickAnnotation(input: string) {
   try {
     const data = await api.getAnnotationContent(id);
     if (seq !== pickSeq) return;
+    store.annotationContent.value = data?.content || [];
     store.values.value = annotationValues(data?.content || []);
   } catch (err: any) {
     if (seq !== pickSeq) return;
@@ -921,6 +923,7 @@ export async function revalidate() {
     const res = await api.validateAnnotation(id);
     const content = await api.getAnnotationContent(id);
     if (seq !== pickSeq) return; // another annotation was picked meanwhile
+    store.annotationContent.value = content?.content || [];
     const values = annotationValues(content?.content || []);
     store.values.value = values;
     store.validation.value = {
