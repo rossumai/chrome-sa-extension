@@ -6,8 +6,10 @@ import {
   values,
   revalidating,
   revalidateError,
+  validation,
+  validationPanel,
 } from '../store.js';
-import { pickAnnotation, clearAnnotation, revalidate } from '../index.jsx';
+import { pickAnnotation, clearAnnotation, revalidate, openValidationPanel } from '../index.jsx';
 import s from './Builder.module.css';
 
 // In the toolbar, next to the schema name: one annotation (of the queue's newest, or any
@@ -72,6 +74,16 @@ export default function AnnotationPicker() {
       {id != null && !values.value && !annotationError.value && <span class={s.dim}>Loading…</span>}
       {annotationError.value && <span class={s.warn}>{annotationError.value}</span>}
       {revalidateError.value && <span class={s.warn}>{revalidateError.value}</span>}
+      {validation.value && !validationPanel.value && (
+        <button
+          type="button"
+          class={s.linkBtn}
+          data-action="open-validation"
+          onClick={() => openValidationPanel()}
+        >
+          Results
+        </button>
+      )}
     </span>
   );
 }

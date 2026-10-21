@@ -466,6 +466,7 @@ export async function deleteSchema(id: number) {
 
 /** Open a rule from the queue's list, or a new one (null) — started from `fieldId` if given. */
 export function openRuleEditor(id: number | null, fieldId?: string) {
+  store.validationPanel.value = null;
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
   store.hookEditor.value = null;
@@ -643,6 +644,7 @@ export async function askFieldAssistant(key: string, request: string) {
 // ---- Mr. Fabry for the whole schema --------------------------------------------------------
 
 export function openSchemaFabry() {
+  store.validationPanel.value = null;
   if (store.ruleEditor.value) closeRuleEditor();
   if (store.hookEditor.value) closeHookEditor();
   if (store.ruleEditor.value || store.hookEditor.value) return; // the user kept unsaved work open
@@ -759,6 +761,7 @@ const pretty = (v: unknown) => JSON.stringify(v ?? {}, null, 2);
 const IDLE_ASSIST = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
 
 export function openHookEditor(id: number) {
+  store.validationPanel.value = null;
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
   const hook = store.hooks.value.find((h) => h.id === id);
@@ -925,6 +928,7 @@ export async function revalidate() {
       fired: firedRuleIds(res?.matched_trigger_rules),
       raw: res,
     };
+    openValidationPanel('rules');
   } catch (err: any) {
     store.revalidateError.value = isRateLimited(err)
       ? rateLimitMessage(err)
@@ -939,4 +943,32 @@ export async function revalidate() {
     }
     store.revalidating.value = false;
   }
+}
+
+// ---- Validation panel ----------------------------------------------------------------------
+
+/** Show the results in the right panel — unless an edited rule or hook is open there. */
+export function openValidationPanel(tab: 'rules' | 'provenance' = 'rules') {
+  if (store.ruleDirty.value || store.hookDirty.value) return; // keep unsaved work in view
+  store.ruleEditor.value = null;
+  store.hookEditor.value = null;
+  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
+  store.selectedKey.value = null;
+  store.validationPanel.value = tab;
+}
+
+export function closeValidationPanel() {
+  store.validationPanel.value = null;
+}
+
+const FLASH_ROW_MS = 1200;
+let flashTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Scroll the grid to a row and flash it (a jump from the validation panel). */
+export function revealRow(key: string) {
+  const el = document.querySelector(`[data-row-key="${key}"]`) as HTMLElement | null;
+  el?.scrollIntoView?.({ block: 'center' });
+  store.flashRowKey.value = key;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => (store.flashRowKey.value = null), FLASH_ROW_MS);
 }

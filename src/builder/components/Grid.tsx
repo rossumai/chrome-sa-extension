@@ -23,6 +23,7 @@ import {
   hookFieldConfigs,
   validation,
   onlyMessages,
+  flashRowKey,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
 import { apply, openRuleEditor, openHookEditor } from '../index.jsx';
@@ -428,6 +429,7 @@ function Row({
   const cls = [
     s.row,
     role ? s.ruleHit : '',
+    flashRowKey.value === key ? s.rowFlash : '',
     kind === 'section' ? s.sectionRow : '',
     selectedKey.value === key ? s.selected : '',
     st === 'new' ? s.isNew : '',

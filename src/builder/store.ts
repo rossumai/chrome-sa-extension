@@ -269,3 +269,8 @@ export const revalidateError = signal<string | null>(null);
 
 // After a Revalidate: show only the fields that got a message (and their parents).
 export const onlyMessages = signal(false);
+
+// The validation panel (right side) and its tab; null = closed. A row briefly flashed after
+// a jump from the panel.
+export const validationPanel = signal<'rules' | 'provenance' | null>(null);
+export const flashRowKey = signal<string | null>(null);

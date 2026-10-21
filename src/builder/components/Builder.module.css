@@ -1077,3 +1077,83 @@
   max-height: 240px;
   overflow: auto;
 }
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 4px 10px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tabOn {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.resultItem {
+  display: block;
+  width: 100%;
+  margin: 2px 0;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+}
+
+.resultClick {
+  cursor: pointer;
+}
+
+.resultClick:hover {
+  background: var(--bg-hover);
+}
+
+.resultMsg {
+  margin-left: 18px;
+}
+
+.msgLine {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.firedDot {
+  margin-right: 4px;
+  color: var(--danger);
+}
+
+.quietDot {
+  margin-right: 4px;
+  color: var(--text-secondary);
+}
+
+.provenanceHost {
+  display: block;
+  margin-top: 6px;
+}
+
+/* A row jumped to from the validation panel flashes, then fades. */
+.rowFlash td {
+  animation: rowFlash 1.2s ease-out;
+}
+
+@keyframes rowFlash {
+  from {
+    background: var(--info-bg);
+  }
+}

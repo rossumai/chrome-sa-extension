@@ -786,7 +786,9 @@ describe('revalidate', () => {
       matched_trigger_rules: [4],
     });
     vi.mocked(api.getAnnotationContent).mockResolvedValue(content('NEW'));
+    store.validationPanel.value = null;
     await revalidate();
+    expect(store.validationPanel.value).toBe('rules'); // results open in the right panel
     expect(api.startAnnotation).toHaveBeenCalledWith(5);
     expect(api.cancelAnnotation).toHaveBeenCalledWith(5);
     expect(store.values.value!.values.get('doc_id')).toEqual(['NEW']);

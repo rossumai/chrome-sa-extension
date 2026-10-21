@@ -13,6 +13,7 @@ import {
   ruleEditor,
   schemaFabry,
   hookEditor,
+  validationPanel,
 } from '../store.js';
 import {
   undoChange,
@@ -23,6 +24,7 @@ import {
   closeRuleEditor,
   closeSchemaFabry,
   closeHookEditor,
+  closeValidationPanel,
 } from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
@@ -31,6 +33,7 @@ import Inspector from './Inspector.jsx';
 import RuleEditor from './RuleEditor.jsx';
 import HookEditor from './HookEditor.jsx';
 import SchemaFabryPanel from './SchemaFabryPanel.jsx';
+import ValidationPanel from './ValidationPanel.jsx';
 import SaveDialog from './SaveDialog.jsx';
 import FilterBar from './FilterBar.jsx';
 import s from './Builder.module.css';
@@ -52,6 +55,7 @@ export default function App({ connected }: { connected: boolean | null }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !inField(e.target)) {
         if (schemaFabry.value.open) closeSchemaFabry();
+        else if (validationPanel.value) closeValidationPanel();
         else if (ruleEditor.value) closeRuleEditor();
         else if (hookEditor.value) closeHookEditor();
         else selectedKey.value = null; // closes the inspector
@@ -134,6 +138,8 @@ export default function App({ connected }: { connected: boolean | null }) {
               </div>
               {schemaFabry.value.open ? (
                 <SchemaFabryPanel />
+              ) : validationPanel.value ? (
+                <ValidationPanel />
               ) : ruleEditor.value ? (
                 <RuleEditor />
               ) : hookEditor.value ? (

@@ -6,6 +6,7 @@ import App from '../src/builder/components/App.jsx';
 import * as store from '../src/builder/store.js';
 import { withKeys, flatten } from '../src/builder/model.js';
 import { annotationValues } from '../src/builder/values.js';
+import type { PlacedMessage } from '../src/builder/validation.js';
 import { apply } from '../src/builder/index.jsx';
 import { setAttr } from '../src/builder/model.js';
 
@@ -120,6 +121,7 @@ beforeEach(() => {
   store.lineRow.value = {};
   store.validation.value = null;
   store.onlyMessages.value = false;
+  store.validationPanel.value = null;
   store.revalidateError.value = null;
   store.fieldFilter.value = '';
   store.ruleId.value = null;
@@ -1305,5 +1307,77 @@ describe('Builder: only fields with messages', () => {
     );
     expect(shown).toEqual(['items_section', 'items', 'item', 'item_desc']);
     expect(root.querySelector('[data-doc-row]')).toBeNull(); // no document-level messages
+  });
+});
+
+describe('Builder validation panel', () => {
+  function validated() {
+    act(() => {
+      store.annotationId.value = 55;
+      store.values.value = annotationValues([]);
+      store.validation.value = {
+        placed: {
+          byField: new Map<string, Map<number, PlacedMessage[]>>([
+            ['doc_id', new Map([[0, [{ type: 'error', content: 'Doc id missing', ruleId: 40 }]]])],
+            ['item_desc', new Map([[1, [{ type: 'warning', content: 'required', ruleId: null }]]])],
+          ]),
+          general: [{ type: 'info', content: 'Duplicate document', ruleId: null }],
+        },
+        fired: new Set([40]),
+        raw: {},
+      };
+      store.rules.value = [
+        ...store.rules.value,
+        {
+          id: 41,
+          name: 'Quiet rule',
+          enabled: true,
+          trigger_condition: 'field.vendor',
+          actions: [],
+        },
+      ];
+      store.validationPanel.value = 'rules';
+    });
+  }
+  const panel = () => root.querySelector('aside[data-panel="validation"]') as HTMLElement;
+
+  it('lists rules fired first with their messages, then the other messages by field', () => {
+    validated();
+    const rules = [...panel().querySelectorAll('[data-rule-result]')].map((e) => [
+      e.getAttribute('data-rule-result'),
+      e.getAttribute('data-fired'),
+    ]);
+    expect(rules).toEqual([
+      ['40', 'true'],
+      ['41', 'false'],
+    ]);
+    expect(panel().querySelector('[data-rule-result="40"]')!.textContent).toContain(
+      'Doc id missing',
+    );
+    const others = [...panel().querySelectorAll('[data-other-message]')].map((e) => e.textContent);
+    expect(
+      others.some(
+        (t) => t!.includes('item_desc') && t!.includes('row 2') && t!.includes('required'),
+      ),
+    ).toBe(true);
+    expect(others.some((t) => t!.includes('Duplicate document'))).toBe(true);
+  });
+
+  it('clicking a rule opens it in rule mode, which closes the panel', () => {
+    validated();
+    act(() => {
+      (panel().querySelector('[data-rule-result="40"] button') as HTMLElement).click();
+    });
+    expect(store.ruleEditor.value!.ruleId).toBe(40);
+    expect(panel()).toBeNull();
+  });
+
+  it('has a Provenance tab', () => {
+    validated();
+    act(() => {
+      (panel().querySelector('[data-tab="provenance"]') as HTMLElement).click();
+    });
+    expect(store.validationPanel.value).toBe('provenance');
+    expect(panel().querySelector('[data-provenance-host]')).not.toBeNull();
   });
 });
