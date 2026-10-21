@@ -27,6 +27,14 @@ describe('placeMessages', () => {
   });
 });
 
+describe('placeMessages with string ids', () => {
+  it('places a message whose datapoint id comes as a string', () => {
+    const r = placeMessages([{ id: '101', type: 'error', content: 'Missing' }], ids);
+    expect(r.byField.get('doc_id')!.get(0)![0].content).toBe('Missing');
+    expect(r.general).toEqual([]);
+  });
+});
+
 describe('firedRuleIds', () => {
   it('accepts ids, rule URLs and rule objects', () => {
     expect([

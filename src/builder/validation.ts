@@ -21,7 +21,10 @@ export function placeMessages(
       content: String(m?.content ?? ''),
       ruleId: typeof m?.detail?.rule_id === 'number' ? m.detail.rule_id : null,
     };
-    const at = typeof m?.id === 'number' ? ids.get(m.id) : undefined;
+    // The datapoint id may come as a number or a numeric string (the Inspector reads it as a string).
+    const dp =
+      typeof m?.id === 'number' ? m.id : /^\d+$/.test(String(m?.id ?? '')) ? Number(m.id) : null;
+    const at = dp != null ? ids.get(dp) : undefined;
     if (!at) {
       general.push(msg);
       continue;

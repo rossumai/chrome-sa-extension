@@ -259,6 +259,10 @@ export const hookRoleById = computed(() => (hookRefs.value ? hookRoles(hookRefs.
 
 // The last Revalidate of the picked annotation: its messages placed on fields and rows, and
 // the rules whose condition was True.
-export const validation = signal<{ placed: PlacedMessages; fired: Set<number> } | null>(null);
+export const validation = signal<{
+  placed: PlacedMessages;
+  fired: Set<number>;
+  raw: unknown; // the validate response as received, for the strip's "Raw response"
+} | null>(null);
 export const revalidating = signal(false);
 export const revalidateError = signal<string | null>(null);

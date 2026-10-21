@@ -25,6 +25,10 @@ export default function ValidationStrip() {
           <span class={s.stripText}>{m.content}</span>
         </span>
       ))}
+      <details class={s.rawDetails}>
+        <summary class={s.dim}>Raw response</summary>
+        <pre class={s.code}>{JSON.stringify(v.raw, null, 2)}</pre>
+      </details>
     </div>
   );
 }

@@ -1260,6 +1260,7 @@ describe('Builder validation results', () => {
           general: [{ type: 'warning', content: 'Duplicate document', ruleId: null }],
         },
         fired: new Set([40]),
+        raw: {},
       };
     });
     expect(row('doc_id').querySelector('td[data-col="value"] [data-mark="error"]')).not.toBeNull();

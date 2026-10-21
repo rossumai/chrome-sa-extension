@@ -923,6 +923,7 @@ export async function revalidate() {
     store.validation.value = {
       placed: placeMessages(res?.messages, values.ids),
       fired: firedRuleIds(res?.matched_trigger_rules),
+      raw: res,
     };
   } catch (err: any) {
     store.revalidateError.value = isRateLimited(err)
