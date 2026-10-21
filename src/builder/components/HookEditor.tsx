@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 import {
   hookEditor,
   hookDirty,
@@ -9,8 +9,6 @@ import {
   hookAssistRev,
   hooks,
   hookRefs,
-  hookConfigIndex,
-  hookLive,
 } from '../store.js';
 import {
   updateHookDraft,
@@ -19,9 +17,8 @@ import {
   discardHook,
   askHookAssistant,
 } from '../index.jsx';
-import CodeEditor, { type CodeEditorHandle } from './CodeEditor.jsx';
-import { configRange } from '../jsonRanges.js';
-import { configSummaries } from '../matching.js';
+import CodeEditor from './CodeEditor.jsx';
+import { hookEditorRef } from './hookJump.js';
 import AskFabry from './AskFabry.jsx';
 import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
@@ -35,15 +32,6 @@ export default function HookEditor() {
   const ed = hookEditor.value!;
   const hook = hooks.value.find((h) => h.id === ed.hookId);
   const refs = hookRefs.value;
-  const configs = hookLive.value ? configSummaries(hookLive.value) : [];
-  const editor = useRef<CodeEditorHandle | null>(null);
-  // Pick a configuration: narrow the grid to it, and jump the editor to its "{" with a flash.
-  const pick = (i: number) => {
-    hookConfigIndex.value = i;
-    const h = editor.current;
-    const r = h && configRange(h.getText(), i);
-    if (h && r) h.reveal(r.from, r.to);
-  };
   return (
     <aside
       class={s.inspector + ' ' + s.inspectorFill}
@@ -73,31 +61,6 @@ export default function HookEditor() {
         Matches on {refs?.inputs.size ?? 0} field(s), fills {refs?.outputs.size ?? 0}. The grid
         shows only those.
       </div>
-      <div class={s.configList}>
-        <button
-          type="button"
-          data-config-index="all"
-          class={s.configItem + (hookConfigIndex.value == null ? ' ' + s.queueOn : '')}
-          onClick={() => (hookConfigIndex.value = null)}
-        >
-          All configurations ({configs.length})
-        </button>
-        {configs.map((c) => (
-          <button
-            type="button"
-            data-config-index={String(c.index)}
-            class={s.configItem + (hookConfigIndex.value === c.index ? ' ' + s.queueOn : '')}
-            title={`Show only the fields configuration ${c.index + 1} uses`}
-            onClick={() => pick(c.index)}
-          >
-            <b>{c.index + 1}</b> · {c.name}
-            <span class={s.dim}>
-              {c.dataset ? ` · ${c.dataset}` : ''}
-              {c.target ? ` → ${c.target}` : ''}
-            </span>
-          </button>
-        ))}
-      </div>
       <AskFabry
         key={`fabry-hook:${ed.hookId}`}
         state={hookAssist.value}
@@ -111,7 +74,7 @@ export default function HookEditor() {
         <CodeEditor
           key={`hook:${ed.hookId}:${hookAssistRev.value}`}
           name="hook"
-          handleRef={editor}
+          handleRef={hookEditorRef}
           language="json"
           formatter={formatJson}
           expanded

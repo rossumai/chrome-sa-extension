@@ -766,15 +766,14 @@ describe('Builder rule filter', () => {
     expect(shown().length).toBe(flatten(store.work.value).length);
   });
 
-  it('the rule filter sits right after the text filter, before the annotation picker', () => {
+  it('the filter bar holds text, rule, hook (and configuration); the annotation is in the toolbar', () => {
     const bar = root.querySelector('input[data-filter="fields"]')!.parentElement!;
-    const order = [
-      ...bar.querySelectorAll(
-        'input[data-filter="fields"], select[data-picker="rule"], select:not([data-picker])',
-      ),
-    ];
-    expect(order[0].getAttribute('data-filter')).toBe('fields');
-    expect(order[1].getAttribute('data-picker')).toBe('rule');
+    const order = [...bar.querySelectorAll('input[data-filter], select[data-picker]')].map(
+      (e) => e.getAttribute('data-filter') || e.getAttribute('data-picker'),
+    );
+    expect(order).toEqual(['fields', 'rule', 'hook']);
+    expect(root.querySelector('[data-toolbar] select[data-picker="annotation"]')).not.toBeNull();
+    expect(bar.querySelector('select[data-picker="annotation"]')).toBeNull();
   });
 });
 
@@ -1129,7 +1128,9 @@ describe('Builder hook mode: per configuration', () => {
     expect(badges('vendor')).toEqual(['out 1', 'out 2']);
     expect(shown()).toContain('item_desc');
     act(() => {
-      (root.querySelector('[data-config-index="1"]') as HTMLElement).click();
+      const sel = root.querySelector('select[data-picker="config"]') as HTMLSelectElement;
+      sel.value = '1';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
     });
     expect(shown()).toEqual([
       'basic_section',
@@ -1141,7 +1142,9 @@ describe('Builder hook mode: per configuration', () => {
     ]);
     expect(badges('vendor')).toEqual(['out 2']);
     act(() => {
-      (root.querySelector('[data-config-index="all"]') as HTMLElement).click();
+      const sel = root.querySelector('select[data-picker="config"]') as HTMLSelectElement;
+      sel.value = '';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
     });
     expect(shown()).toContain('doc_id');
   });
@@ -1167,7 +1170,9 @@ describe('Builder hook mode: jump to a configuration', () => {
       (row('doc_id').querySelector('[data-action="field-hooks"]') as HTMLElement).click();
     });
     act(() => {
-      (root.querySelector('[data-config-index="1"]') as HTMLElement).click();
+      const sel = root.querySelector('select[data-picker="config"]') as HTMLSelectElement;
+      sel.value = '1';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
     });
     const { EditorView } = await import('@codemirror/view');
     const view = EditorView.findFromDOM(
@@ -1187,5 +1192,47 @@ describe('Builder hook mode: jump to a configuration', () => {
     ].join('\n');
     expect(css).toMatch(/@keyframes builder-cm-flash/);
     expect(css).toMatch(/cm-flash[^}]*animation[^}]*builder-cm-flash/);
+  });
+});
+
+describe('Builder MDH hook filter', () => {
+  it('picking a hook opens hook mode; the configuration filter appears; clearing closes it', () => {
+    expect(root.querySelector('select[data-picker="config"]')).toBeNull();
+    const hookSel = root.querySelector('select[data-picker="hook"]') as HTMLSelectElement;
+    expect([...hookSel.options].map((o) => o.textContent)).toEqual([
+      'no hook',
+      'Vendor matching (70)',
+    ]);
+    act(() => {
+      hookSel.value = '70';
+      hookSel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(root.querySelector('aside[data-panel="hook"]')).not.toBeNull();
+    const cfg = root.querySelector('select[data-picker="config"]') as HTMLSelectElement;
+    expect([...cfg.options].map((o) => o.textContent)).toEqual([
+      'All configurations (1)',
+      '1 · Configuration 1',
+    ]);
+    act(() => {
+      const sel = root.querySelector('select[data-picker="hook"]') as HTMLSelectElement;
+      sel.value = '';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(root.querySelector('aside[data-panel="hook"]')).toBeNull();
+    expect(root.querySelector('select[data-picker="config"]')).toBeNull();
+  });
+
+  it('a rule and a hook close each other', () => {
+    pickRule('40');
+    const hookSel = root.querySelector('select[data-picker="hook"]') as HTMLSelectElement;
+    act(() => {
+      hookSel.value = '70';
+      hookSel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(store.ruleEditor.value).toBeNull();
+    expect((root.querySelector('select[data-picker="rule"]') as HTMLSelectElement).value).toBe('');
+    pickRule('40');
+    expect(store.hookEditor.value).toBeNull();
+    expect((root.querySelector('select[data-picker="hook"]') as HTMLSelectElement).value).toBe('');
   });
 });

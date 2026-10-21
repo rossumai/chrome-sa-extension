@@ -15,6 +15,7 @@ import {
 import { undoChange, redoChange, discard, renameSchema, openSchemaFabry } from '../index.jsx';
 import EditableCell from './EditableCell.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
+import AnnotationPicker from './AnnotationPicker.jsx';
 import { canUndo, canRedo } from '../history.js';
 import s from './Builder.module.css';
 
@@ -38,7 +39,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
   const ws = workspaces.value.find((w) => w.url === q?.workspace);
   const text = summaryText(summary.value, renamed.value);
   return (
-    <div class={s.toolbar}>
+    <div class={s.toolbar} data-toolbar="">
       <span class={s.crumb}>
         {ws ? `${ws.name} › ` : ''}
         <b>{q ? `${q.name} (${q.id})` : 'No queue'}</b>
@@ -52,6 +53,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
           </span>
         )}
       </span>
+      <AnnotationPicker />
       {sharedCount.value > 1 && (
         <span class={s.shared} title="Editing this schema changes every queue that uses it">
           used by {sharedCount.value} queues

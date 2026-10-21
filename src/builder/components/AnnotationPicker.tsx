@@ -1,98 +1,19 @@
-import { h, Fragment } from 'preact';
-import {
-  annotations,
-  annotationId,
-  annotationError,
-  values,
-  fieldFilter,
-  work,
-  rules,
-  ruleRefs,
-  selectedQueueId,
-  ruleEditor,
-} from '../store.js';
-import { flatten } from '../model.js';
-import { countMatches } from '../fieldFilter.js';
-import { pickAnnotation, clearAnnotation, openRuleEditor, closeRuleEditor } from '../index.jsx';
+import { h } from 'preact';
+import { annotations, annotationId, annotationError, values } from '../store.js';
+import { pickAnnotation, clearAnnotation } from '../index.jsx';
 import s from './Builder.module.css';
 
-// The bar above the grid: the filters — text (id or label) and a rule (only its fields) —
-// then an annotation (one of the queue's newest, or any pasted ID or URL) whose values show
-// next to each field.
+// In the toolbar, next to the schema name: one annotation (of the queue's newest, or any
+// pasted ID or URL) whose values show in the grid's Value column.
 export default function AnnotationPicker() {
   const id = annotationId.value;
   const listed = annotations.value.some((a) => a.id === id);
-  const editing = ruleEditor.value;
-  const matchCount = countMatches(work.value, fieldFilter.value);
-  // Fields the picked rule names that this schema does not have: usually a broken rule.
-  const refs = ruleRefs.value;
-  const ids = new Set(flatten(work.value).map((r) => r.node.id));
-  const missing = refs
-    ? [...new Set([...refs.condition, ...refs.actions])].filter((x) => !ids.has(x))
-    : [];
   return (
-    <div class={s.pickBar}>
-      <input
-        class={s.input + ' ' + s.fieldFilter}
-        data-filter="fields"
-        placeholder="Find field by ID or label"
-        value={fieldFilter.value}
-        onInput={(e) => (fieldFilter.value = (e.currentTarget as HTMLInputElement).value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') fieldFilter.value = '';
-        }}
-      />
-      {fieldFilter.value.trim() && (
-        <span class={s.dim}>
-          {matchCount} {matchCount === 1 ? 'match' : 'matches'}
-        </span>
-      )}
-      {selectedQueueId.value != null && (
-        <Fragment>
-          <span class={s.dim}>Rule</span>
-          <select
-            class={s.select}
-            data-picker="rule"
-            value={editing ? (editing.ruleId != null ? String(editing.ruleId) : 'new') : ''}
-            onChange={(e) => {
-              const v = (e.currentTarget as HTMLSelectElement).value;
-              if (v && v !== 'new') openRuleEditor(Number(v));
-              else if (!v) closeRuleEditor();
-            }}
-          >
-            <option value="">{rules.value.length ? 'no rule' : 'no rules on this queue'}</option>
-            {editing && editing.ruleId == null && <option value="new">new rule (unsaved)</option>}
-            {rules.value.map((r) => (
-              <option value={String(r.id)}>
-                {r.name} ({r.id}){r.enabled === false ? ' · disabled' : ''}
-              </option>
-            ))}
-          </select>
-          {editing && (
-            <button
-              type="button"
-              class={s.iconBtn}
-              data-action="clear-rule"
-              title="Stop filtering by this rule"
-              onClick={closeRuleEditor}
-            >
-              ✕
-            </button>
-          )}
-          {missing.length > 0 && (
-            <span
-              class={s.warn}
-              title="The rule names these fields, but this schema has none of them"
-            >
-              not in schema: {missing.join(', ')}
-            </span>
-          )}
-        </Fragment>
-      )}
-      <span class={s.barGap} />
+    <span class={s.annoPick}>
       <span class={s.dim}>Values from</span>
       <select
         class={s.select}
+        data-picker="annotation"
         value={id != null && listed ? String(id) : ''}
         onChange={(e) => {
           const v = (e.currentTarget as HTMLSelectElement).value;
@@ -108,8 +29,8 @@ export default function AnnotationPicker() {
         ))}
       </select>
       <input
-        class={s.input}
-        placeholder="or paste an annotation ID or URL"
+        class={s.input + ' ' + s.pasteId}
+        placeholder="or paste ID / URL"
         onKeyDown={(e) => {
           if (e.key !== 'Enter') return;
           const el = e.currentTarget as HTMLInputElement;
@@ -131,6 +52,6 @@ export default function AnnotationPicker() {
       )}
       {id != null && !values.value && !annotationError.value && <span class={s.dim}>Loading…</span>}
       {annotationError.value && <span class={s.warn}>{annotationError.value}</span>}
-    </div>
+    </span>
   );
 }
