@@ -1,6 +1,13 @@
 import { h } from 'preact';
-import { annotations, annotationId, annotationError, values } from '../store.js';
-import { pickAnnotation, clearAnnotation } from '../index.jsx';
+import {
+  annotations,
+  annotationId,
+  annotationError,
+  values,
+  revalidating,
+  revalidateError,
+} from '../store.js';
+import { pickAnnotation, clearAnnotation, revalidate } from '../index.jsx';
 import s from './Builder.module.css';
 
 // In the toolbar, next to the schema name: one annotation (of the queue's newest, or any
@@ -42,6 +49,18 @@ export default function AnnotationPicker() {
       {id != null && (
         <button
           type="button"
+          class={s.btn}
+          data-action="revalidate"
+          disabled={revalidating.value}
+          title="Run validation on this document (formulas, hooks, rules) without changing a value"
+          onClick={revalidate}
+        >
+          {revalidating.value ? 'Validating…' : '↻ Revalidate'}
+        </button>
+      )}
+      {id != null && (
+        <button
+          type="button"
           class={s.iconBtn}
           data-action="clear-annotation"
           title="Stop showing annotation values"
@@ -52,6 +71,7 @@ export default function AnnotationPicker() {
       )}
       {id != null && !values.value && !annotationError.value && <span class={s.dim}>Loading…</span>}
       {annotationError.value && <span class={s.warn}>{annotationError.value}</span>}
+      {revalidateError.value && <span class={s.warn}>{revalidateError.value}</span>}
     </span>
   );
 }

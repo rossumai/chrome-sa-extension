@@ -10,6 +10,7 @@ import {
   hookEditor,
   hookLive,
   hookConfigIndex,
+  validation,
 } from '../store.js';
 import { flatten } from '../model.js';
 import { countMatches } from '../fieldFilter.js';
@@ -68,6 +69,7 @@ export default function FilterBar() {
             {rules.value.map((r) => (
               <option value={String(r.id)}>
                 {r.name} ({r.id}){r.enabled === false ? ' · disabled' : ''}
+                {validation.value?.fired.has(r.id) ? ' ● fired' : ''}
               </option>
             ))}
           </select>

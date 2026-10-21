@@ -3,6 +3,7 @@ import { signal, computed } from '@preact/signals';
 import { initHistory, type History } from './history.js';
 import { changeSummary, rowStatus, movedKeys, type Node } from './model.js';
 import type { AnnotationValues } from './values.js';
+import type { PlacedMessages } from './validation.js';
 import { mdhHooks, hooksByField, hookFieldRefs, hookRoles, fieldConfigs } from './matching.js';
 import {
   ruleFieldRefs,
@@ -255,3 +256,9 @@ export const hookFilterIds = computed(() =>
   hookRefs.value ? new Set([...hookRefs.value.inputs, ...hookRefs.value.outputs]) : null,
 );
 export const hookRoleById = computed(() => (hookRefs.value ? hookRoles(hookRefs.value) : null));
+
+// The last Revalidate of the picked annotation: its messages placed on fields and rows, and
+// the rules whose condition was True.
+export const validation = signal<{ placed: PlacedMessages; fired: Set<number> } | null>(null);
+export const revalidating = signal(false);
+export const revalidateError = signal<string | null>(null);

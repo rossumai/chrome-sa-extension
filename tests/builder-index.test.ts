@@ -12,6 +12,10 @@ vi.mock('../src/builder/api.js', () => ({
   listRules: vi.fn(async () => []),
   listHooks: vi.fn(async () => []),
   patchHookSettings: vi.fn(),
+  getAnnotation: vi.fn(),
+  startAnnotation: vi.fn(async () => ({})),
+  validateAnnotation: vi.fn(),
+  cancelAnnotation: vi.fn(async () => ({})),
   createRule: vi.fn(),
   patchRule: vi.fn(),
   listWorkspaces: vi.fn(async () => []),
@@ -53,6 +57,7 @@ import {
   saveHook,
   discardHook,
   askHookAssistant,
+  revalidate,
   save,
   pickAnnotation,
   renameSchema,
@@ -744,5 +749,74 @@ describe('hook mode (MDH)', () => {
     expect(store.hookAssist.value.warnings.join(' ')).toContain('ghost');
     discardHook();
     expect(JSON.parse(store.hookEditor.value!.draft)).toEqual(hook.settings);
+  });
+});
+
+describe('revalidate', () => {
+  const content = (v: string) => ({
+    content: [
+      {
+        category: 'section',
+        schema_id: 's',
+        children: [{ category: 'datapoint', id: 101, schema_id: 'doc_id', content: { value: v } }],
+      },
+    ],
+  });
+  beforeEach(() => {
+    for (const f of [
+      'getAnnotation',
+      'startAnnotation',
+      'validateAnnotation',
+      'cancelAnnotation',
+      'getAnnotationContent',
+    ] as const) {
+      vi.mocked(api[f]).mockReset();
+    }
+    vi.mocked(api.startAnnotation).mockResolvedValue({});
+    vi.mocked(api.cancelAnnotation).mockResolvedValue({});
+    store.annotationId.value = 5;
+    store.validation.value = null;
+    store.revalidateError.value = null;
+  });
+
+  it('starts a document in review, validates, refreshes the values, and hands it back', async () => {
+    vi.mocked(api.getAnnotation).mockResolvedValue({ id: 5, status: 'to_review' });
+    vi.mocked(api.validateAnnotation).mockResolvedValue({
+      messages: [{ id: 101, type: 'error', content: 'Missing' }],
+      matched_trigger_rules: [4],
+    });
+    vi.mocked(api.getAnnotationContent).mockResolvedValue(content('NEW'));
+    await revalidate();
+    expect(api.startAnnotation).toHaveBeenCalledWith(5);
+    expect(api.cancelAnnotation).toHaveBeenCalledWith(5);
+    expect(store.values.value!.values.get('doc_id')).toEqual(['NEW']);
+    expect(store.validation.value!.placed.byField.get('doc_id')!.get(0)![0].content).toBe(
+      'Missing',
+    );
+    expect([...store.validation.value!.fired]).toEqual([4]);
+  });
+
+  it('leaves a document you already review as it is', async () => {
+    vi.mocked(api.getAnnotation).mockResolvedValue({ id: 5, status: 'reviewing' });
+    vi.mocked(api.validateAnnotation).mockResolvedValue({ messages: [] });
+    vi.mocked(api.getAnnotationContent).mockResolvedValue(content('x'));
+    await revalidate();
+    expect(api.startAnnotation).not.toHaveBeenCalled();
+    expect(api.cancelAnnotation).not.toHaveBeenCalled();
+  });
+
+  it('refuses a document that is not in review', async () => {
+    vi.mocked(api.getAnnotation).mockResolvedValue({ id: 5, status: 'exported' });
+    await revalidate();
+    expect(api.startAnnotation).not.toHaveBeenCalled();
+    expect(store.revalidateError.value).toContain('exported');
+  });
+
+  it('still hands the document back when validation fails', async () => {
+    vi.mocked(api.getAnnotation).mockResolvedValue({ id: 5, status: 'to_review' });
+    vi.mocked(api.validateAnnotation).mockRejectedValue(new Error('boom'));
+    await revalidate();
+    expect(api.cancelAnnotation).toHaveBeenCalledWith(5);
+    expect(store.revalidateError.value).toBe('boom');
   });
 });

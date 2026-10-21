@@ -6,7 +6,7 @@ const content = [
     category: 'section',
     schema_id: 'basic_section',
     children: [
-      { category: 'datapoint', schema_id: 'doc_id', content: { value: 'INV-1' } },
+      { category: 'datapoint', id: 101, schema_id: 'doc_id', content: { value: 'INV-1' } },
       { category: 'datapoint', schema_id: 'empty', content: { value: '' } },
     ],
   },
@@ -22,14 +22,24 @@ const content = [
             category: 'tuple',
             schema_id: 'item',
             children: [
-              { category: 'datapoint', schema_id: 'item_desc', content: { value: 'Bolts' } },
+              {
+                category: 'datapoint',
+                id: 201,
+                schema_id: 'item_desc',
+                content: { value: 'Bolts' },
+              },
             ],
           },
           {
             category: 'tuple',
             schema_id: 'item',
             children: [
-              { category: 'datapoint', schema_id: 'item_desc', content: { value: 'Nuts' } },
+              {
+                category: 'datapoint',
+                id: 202,
+                schema_id: 'item_desc',
+                content: { value: 'Nuts' },
+              },
             ],
           },
         ],
@@ -57,5 +67,13 @@ describe('annotationValues', () => {
   it('tolerates an empty or malformed content', () => {
     expect(annotationValues([]).values.size).toBe(0);
     expect(annotationValues(null as any).rows.size).toBe(0);
+  });
+});
+
+describe('annotationValues ids', () => {
+  it('maps each datapoint id to its field and row', () => {
+    const v = annotationValues(content);
+    expect(v.ids.get(101)).toEqual({ schemaId: 'doc_id', row: 0 });
+    expect(v.ids.get(202)).toEqual({ schemaId: 'item_desc', row: 1 });
   });
 });

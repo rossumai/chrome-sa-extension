@@ -21,6 +21,7 @@ import {
   hookRoleById,
   hookFilterIds,
   hookFieldConfigs,
+  validation,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
 import { apply, openRuleEditor, openHookEditor } from '../index.jsx';
@@ -216,8 +217,18 @@ function ValueCell({ node, tableId }: { node: Node; tableId: string | null }) {
   if (node.category !== 'datapoint') return null;
   const list = v.values.get(node.id);
   const val = list?.[tableId ? (lineRow.value[tableId] ?? 0) : 0];
-  if (val === undefined) return <span class={s.dim}>—</span>;
-  return <span title={val}>{val}</span>;
+  const row = tableId ? (lineRow.value[tableId] ?? 0) : 0;
+  const msgs = (validation.value?.placed.byField.get(node.id)?.get(row) || []).map((m) => ({
+    kind: m.type,
+    text: m.content,
+    event: 'validation',
+  }));
+  return (
+    <span>
+      <MarkIcons marks={msgs} />
+      {val === undefined ? <span class={s.dim}>—</span> : <span title={val}>{val}</span>}
+    </span>
+  );
 }
 
 // A count of the rules (or MDH hooks) that use a field: one opens it in the right panel,
@@ -233,7 +244,9 @@ function PickCell({
   items,
   onPick,
   extra,
+  hot = false,
 }: {
+  hot?: boolean;
   menuKey: string;
   action: string;
   optionAttr: string;
@@ -257,8 +270,9 @@ function PickCell({
     <span class={s.rulesWrap} ref={wrap}>
       <button
         type="button"
-        class={s.rulesCount}
+        class={s.rulesCount + (hot ? ' ' + s.rulesCountFired : '')}
         data-action={action}
+        data-fired={hot ? 'true' : undefined}
         title={items.map((x) => x.label).join('\n')}
         onClick={(e) => {
           e.stopPropagation();
@@ -299,6 +313,9 @@ function RulesCell({ fieldId }: { fieldId: string }) {
   return (
     <PickCell
       menuKey={`rules:${fieldId}`}
+      hot={(fieldRules.value.get(fieldId) || []).some((x) =>
+        validation.value?.fired.has(x.rule.id),
+      )}
       action="field-rules"
       optionAttr="data-rule-option"
       items={items}

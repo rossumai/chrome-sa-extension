@@ -1,0 +1,43 @@
+import { describe, it, expect } from 'vitest';
+import { placeMessages, firedRuleIds } from '../src/builder/validation.js';
+
+const ids = new Map<number, { schemaId: string; row: number }>([
+  [101, { schemaId: 'doc_id', row: 0 }],
+  [202, { schemaId: 'item_desc', row: 1 }],
+]);
+
+describe('placeMessages', () => {
+  it('puts each message on its field and row; the rest are document-level', () => {
+    const r = placeMessages(
+      [
+        { id: 101, type: 'error', content: 'Missing', detail: { rule_id: 4 } },
+        { id: 202, type: 'warning', content: 'Odd' },
+        { id: 999, type: 'info', content: 'Unknown datapoint' },
+        { type: 'error', content: 'Whole document' },
+      ],
+      ids,
+    );
+    expect(r.byField.get('doc_id')!.get(0)).toEqual([
+      { type: 'error', content: 'Missing', ruleId: 4 },
+    ]);
+    expect(r.byField.get('item_desc')!.get(1)).toEqual([
+      { type: 'warning', content: 'Odd', ruleId: null },
+    ]);
+    expect(r.general.map((m) => m.content)).toEqual(['Unknown datapoint', 'Whole document']);
+  });
+});
+
+describe('firedRuleIds', () => {
+  it('accepts ids, rule URLs and rule objects', () => {
+    expect([
+      ...firedRuleIds([
+        4,
+        'https://x/api/v1/rules/5',
+        { id: 6 },
+        { url: 'https://x/api/v1/rules/7' },
+        'junk',
+      ]),
+    ]).toEqual([4, 5, 6, 7]);
+    expect(firedRuleIds(undefined).size).toBe(0);
+  });
+});

@@ -19,6 +19,7 @@ import { saveSchema, mapValidateErrors, type SaveResult } from './save.js';
 import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { annotationValues } from './values.js';
+import { placeMessages, firedRuleIds } from './validation.js';
 import * as agentApi from '../agent/agentApi.js';
 import { buildRulePrompt, buildFollowupPrompt, parseRuleReply } from './ruleAssist.js';
 import { runAssist, schemaFieldList } from './assist.js';
@@ -292,6 +293,8 @@ let pickSeq = 0;
 
 export function clearAnnotation() {
   pickSeq++;
+  store.validation.value = null;
+  store.revalidateError.value = null;
   store.annotationId.value = null;
   store.values.value = null;
   store.lineRow.value = {};
@@ -308,6 +311,8 @@ export async function pickAnnotation(input: string) {
   const id = Number(raw);
   const seq = ++pickSeq;
   store.annotationId.value = id;
+  store.validation.value = null;
+  store.revalidateError.value = null;
   store.annotationError.value = null;
   store.lineRow.value = {};
   try {
@@ -881,5 +886,56 @@ export async function askHookAssistant(request: string) {
         ? 'Session expired. Open the Console from a Rossum tab again.'
         : err?.message || 'Mr. Fabry is not available';
     store.hookAssist.value = { ...store.hookAssist.value, busy: false, error: msg };
+  }
+}
+
+// ---- Revalidate -------------------------------------------------------------------------
+// Validate the picked annotation as a reviewer's edit would — formulas, hooks and rules run —
+// without changing a value. Validation needs the document in `reviewing`: one in `to_review`
+// is started (locked to this user) and handed back afterwards; one already in review is left
+// as it is; any other status is refused.
+
+const REVIEWABLE = ['to_review', 'reviewing'];
+
+export async function revalidate() {
+  const id = store.annotationId.value;
+  if (id == null || store.revalidating.value) return;
+  const seq = pickSeq;
+  store.revalidating.value = true;
+  store.revalidateError.value = null;
+  let started = false;
+  try {
+    const ann = await api.getAnnotation(id);
+    const status = String(ann?.status ?? '');
+    if (!REVIEWABLE.includes(status)) {
+      store.revalidateError.value = `Only a document in review can be revalidated (this one is ${status || 'unknown'}).`;
+      return;
+    }
+    if (status === 'to_review') {
+      await api.startAnnotation(id);
+      started = true;
+    }
+    const res = await api.validateAnnotation(id);
+    const content = await api.getAnnotationContent(id);
+    if (seq !== pickSeq) return; // another annotation was picked meanwhile
+    const values = annotationValues(content?.content || []);
+    store.values.value = values;
+    store.validation.value = {
+      placed: placeMessages(res?.messages, values.ids),
+      fired: firedRuleIds(res?.matched_trigger_rules),
+    };
+  } catch (err: any) {
+    store.revalidateError.value = isRateLimited(err)
+      ? rateLimitMessage(err)
+      : err?.message || 'Revalidation failed';
+  } finally {
+    if (started) {
+      try {
+        await api.cancelAnnotation(id);
+      } catch (err: any) {
+        store.revalidateError.value = `Validated, but the document could not be handed back: ${err?.message || 'error'}`;
+      }
+    }
+    store.revalidating.value = false;
   }
 }

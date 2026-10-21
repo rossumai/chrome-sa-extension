@@ -1057,3 +1057,25 @@
 .pasteId {
   width: 150px;
 }
+
+.rulesCountFired {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.validationStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 12px;
+}
+
+.stripText {
+  margin-left: 4px;
+  color: var(--text-primary);
+}

@@ -155,4 +155,27 @@ describe('builder api', () => {
       { settings: { configurations: [] } },
     ]);
   });
+
+  it('reads an annotation, starts it, validates its content and cancels it', async () => {
+    fetchMock.mockResolvedValue(jsonRes({}));
+    await api.getAnnotation(5);
+    await api.startAnnotation(5);
+    await api.validateAnnotation(5);
+    await api.cancelAnnotation(5);
+    const calls = fetchMock.mock.calls.map(([url, o]: any) => [
+      url,
+      o.method,
+      o.body ? JSON.parse(o.body) : null,
+    ]);
+    expect(calls).toEqual([
+      ['https://x.rossum.ai/api/v1/annotations/5', 'GET', null],
+      ['https://x.rossum.ai/api/v1/annotations/5/start', 'POST', null],
+      [
+        'https://x.rossum.ai/api/v1/annotations/5/content/validate',
+        'POST',
+        { actions: ['user_update', 'started'] },
+      ],
+      ['https://x.rossum.ai/api/v1/annotations/5/cancel', 'POST', null],
+    ]);
+  });
 });

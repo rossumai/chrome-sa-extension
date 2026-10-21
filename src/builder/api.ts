@@ -178,3 +178,24 @@ export function listHooks(queueId: number): Promise<RawResource[]> {
 export function patchHookSettings(id: number, settings: Record<string, unknown>): Promise<any> {
   return request('PATCH', `/api/v1/hooks/${id}`, { settings });
 }
+
+export function getAnnotation(id: number): Promise<any> {
+  return get(`/api/v1/annotations/${id}`);
+}
+
+/** Puts the annotation in `reviewing`, locked to this user; validate needs that (else 409). */
+export function startAnnotation(id: number): Promise<any> {
+  return request('POST', `/api/v1/annotations/${id}/start`);
+}
+
+/** Runs validation as a reviewer's edit would: formulas, hooks and rules. */
+export function validateAnnotation(id: number): Promise<any> {
+  return request('POST', `/api/v1/annotations/${id}/content/validate`, {
+    actions: ['user_update', 'started'],
+  });
+}
+
+/** Hands a started annotation back (to `to_review`). */
+export function cancelAnnotation(id: number): Promise<any> {
+  return request('POST', `/api/v1/annotations/${id}/cancel`);
+}

@@ -118,6 +118,8 @@ beforeEach(() => {
   store.annotationId.value = null;
   store.values.value = null;
   store.lineRow.value = {};
+  store.validation.value = null;
+  store.revalidateError.value = null;
   store.fieldFilter.value = '';
   store.ruleId.value = null;
   store.ruleEditor.value = null;
@@ -1234,5 +1236,42 @@ describe('Builder MDH hook filter', () => {
     pickRule('40');
     expect(store.hookEditor.value).toBeNull();
     expect((root.querySelector('select[data-picker="hook"]') as HTMLSelectElement).value).toBe('');
+  });
+});
+
+describe('Builder validation results', () => {
+  it('shows messages on values, document messages, and fired rules', () => {
+    act(() => {
+      store.annotationId.value = 55;
+      store.values.value = annotationValues([
+        {
+          category: 'section',
+          schema_id: 'basic_section',
+          children: [
+            { category: 'datapoint', id: 101, schema_id: 'doc_id', content: { value: '' } },
+          ],
+        },
+      ]);
+      store.validation.value = {
+        placed: {
+          byField: new Map([
+            ['doc_id', new Map([[0, [{ type: 'error', content: 'Missing', ruleId: 40 }]]])],
+          ]),
+          general: [{ type: 'warning', content: 'Duplicate document', ruleId: null }],
+        },
+        fired: new Set([40]),
+      };
+    });
+    expect(row('doc_id').querySelector('td[data-col="value"] [data-mark="error"]')).not.toBeNull();
+    expect(root.querySelector('[data-validation-strip]')!.textContent).toContain(
+      'Duplicate document',
+    );
+    const count = row('doc_id').querySelector('[data-action="field-rules"]') as HTMLElement;
+    expect(count.dataset.fired).toBe('true');
+    const opt = [
+      ...(root.querySelector('select[data-picker="rule"]') as HTMLSelectElement).options,
+    ].find((o) => o.value === '40')!;
+    expect(opt.textContent).toContain('fired');
+    expect(root.querySelector('[data-action="revalidate"]')).not.toBeNull();
   });
 });
