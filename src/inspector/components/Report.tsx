@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import * as store from '../store.js';
+import { rateLimitMessage } from '../../net/rateLimit.js';
 import ReportHeader from './ReportHeader.jsx';
 import InvestigationStrip from './InvestigationStrip.jsx';
 import VerdictCard from './VerdictCard.jsx';
@@ -29,14 +30,22 @@ export default function Report() {
   const attrs = Object.values(store.attributions.value);
   const attributing = attrs.some((x) => x.status === 'loading');
   const logs = store.enrichment.value.hookLogs;
-  const pipelineStatus =
-    logs === null || !d.resolved?._hooksLoaded
+  // A throttled list (_hooksRateLimited / _labelsRateLimited) is never retried within the
+  // load, so it reads as unavailable rather than gathering for ever.
+  const pipelineStatus = d.resolved?._hooksRateLimited
+    ? 'unavailable'
+    : logs === null || !d.resolved?._hooksLoaded
       ? 'pending'
-      : logs === 'unavailable'
+      : logs === 'unavailable' || logs === 'rate-limited'
         ? 'unavailable'
         : 'sparse';
-  const labelsStatus =
-    d.resolved?.labelsById === undefined ? 'pending' : attributing ? 'attributing' : 'loaded';
+  const labelsStatus = d.resolved?._labelsRateLimited
+    ? 'unavailable'
+    : d.resolved?.labelsById === undefined
+      ? 'pending'
+      : attributing
+        ? 'attributing'
+        : 'loaded';
   const rejectionStatus =
     store.enrichment.value.workflow === null || store.enrichment.value.notes === null
       ? 'pending'
@@ -45,6 +54,12 @@ export default function Report() {
     <div class="inspector-report">
       <ReportHeader />
       <InvestigationStrip />
+      {store.rateLimited.value && (
+        <div class="inspector-ratelimit" role="status">
+          Some data could not be loaded. {rateLimitMessage(store.rateLimited.value)} Reopen the
+          annotation to load it again.
+        </div>
+      )}
       <VerdictCard />
       <DiagnosisPanel />
       <IntakeSection />

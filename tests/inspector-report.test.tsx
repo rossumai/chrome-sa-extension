@@ -46,6 +46,28 @@ beforeEach(() => {
   store.investigation.value = { stage: 'gathering', sourcesDone: 1, sourcesTotal: 9, activity: '' };
 });
 
+// The status chip of one report section.
+const sectionStatus = (el: HTMLElement, id: string) =>
+  el.querySelector(`[data-evidence-section="${id}"] .inspector-sst`)?.textContent;
+
+describe('Report under a 429', () => {
+  it('stops gathering Extension runs when the hooks were throttled', () => {
+    const d = baseAnnotation();
+    store.data.value = {
+      ...d,
+      resolved: { ...d.resolved, _hooksLoaded: false, _hooksRateLimited: true },
+    };
+    expect(sectionStatus(mount(), 'pipeline')).toBe('unavailable');
+  });
+
+  it('stops gathering Labels when the label context was throttled', () => {
+    const d = baseAnnotation();
+    const { labelsById: _, ...resolved } = d.resolved;
+    store.data.value = { ...d, resolved: { ...resolved, _labelsRateLimited: true } };
+    expect(sectionStatus(mount(), 'labels')).toBe('unavailable');
+  });
+});
+
 describe('Report', () => {
   it('assembles header, strip, verdict, diagnosis and all sections in order', () => {
     store.data.value = baseAnnotation();
@@ -92,6 +114,13 @@ describe('Report', () => {
     expect(section!.querySelector('.inspector-sst-sparse')).toBeTruthy();
   });
 
+  it('Extension runs section reports unavailable when hook logs were rate-limited', () => {
+    store.data.value = baseAnnotation();
+    store.enrichment.value = { ...store.enrichment.value, hookLogs: 'rate-limited' };
+    const section = mount().querySelector('[data-evidence-section="pipeline"]');
+    expect(section!.querySelector('.inspector-sst-unavailable')).toBeTruthy();
+  });
+
   it('Labels section is pending while labelsById is undefined', () => {
     store.data.value = baseAnnotation();
     store.data.value.resolved.labelsById = undefined;
@@ -125,5 +154,21 @@ describe('Report', () => {
     const el = mount();
     const section = el.querySelector('[data-evidence-section="rejection"]');
     expect(section!.querySelector('.inspector-sst-na')).toBeTruthy();
+  });
+
+  it('shows one rate-limit notice when the load was rate-limited', () => {
+    store.data.value = baseAnnotation();
+    store.rateLimited.value = { retryAfter: 20 };
+    const el = mount();
+    expect(el.querySelector('.inspector-ratelimit')!.textContent).toContain(
+      'Rossum is rate-limiting requests. Try again in 20 s.',
+    );
+    store.rateLimited.value = null;
+  });
+
+  it('shows no notice otherwise', () => {
+    store.data.value = baseAnnotation();
+    store.rateLimited.value = null;
+    expect(mount().querySelector('.inspector-ratelimit')).toBeNull();
   });
 });
