@@ -81,6 +81,13 @@ describe('runInTab', () => {
 });
 
 describe('openConsoleTab', () => {
+  it('opens the console tab without a position when there is no source tab (the Builder)', () => {
+    openConsoleTab(undefined, { token: 'tok', domain: 'https://x.rossum.ai' }, 'mdh');
+    expect(tabsCreateMock).toHaveBeenCalledWith({
+      url: 'chrome-extension://abc/console/console.html?authId=uuid-1',
+    });
+  });
+
   it('stages consoleAuth_<uuid> with the app and opens the console tab', () => {
     const tab = { id: 99, index: 4 };
     const auth = { token: 'tok', domain: 'https://x.rossum.ai' };
