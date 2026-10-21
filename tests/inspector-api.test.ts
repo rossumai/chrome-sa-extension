@@ -154,4 +154,15 @@ describe('workflow + relation endpoints', () => {
     expect(seenAuth).toBe('Bearer TKN');
     expect(out).toBe(blob);
   });
+
+  it('getBlob turns a 429 into the rate-limit error, like get', async () => {
+    globalThis.fetch = vi.fn(async () => ({
+      ok: false,
+      status: 429,
+      headers: { get: (k: string) => (k === 'Retry-After' ? '5' : null) },
+    })) as any;
+    await expect(
+      api.getBlob('https://api.example.rossum.ai/api/v1/pages/1/content'),
+    ).rejects.toMatchObject({ status: 429, retryAfter: 5 });
+  });
 });

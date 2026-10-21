@@ -96,6 +96,17 @@ describe('popup cache — hook entries that can be confirmed', () => {
     expect(await getCachedHookEntries('https://d', '42')).toBeNull();
   });
 
+  it('an empty entry with no id list is served plainly, with no check against the queue', async () => {
+    // Written for a queue whose hooks did not fit one page: nothing to compare with.
+    await setCachedHookEntries('https://d', '42', [], { hadHooks: false, hookIds: null });
+    expect(await getCachedHookEntries('https://d', '42')).toEqual({
+      entries: [],
+      hadHooks: false,
+      hookIds: null,
+      stale: false,
+    });
+  });
+
   it('an entry from before this change is served inside the window and expires after', async () => {
     data['mdhProv:hooks:v3:https://d#42'] = {
       entries: [{ hook: { id: 1, name: 'H' }, cfgs: [] }],

@@ -439,8 +439,10 @@ Enforced by tests, not by convention. Do not weaken them.
 - **A 429 is never "empty" and never retried automatically.** The Inspector, Galaxy and
   popup-provenance transports throw `rateLimitError` from `src/net/rateLimit.ts` (the DevTools,
   Dataset Management, Audit, changelog, Academy and content-script transports do not yet), and
-  code that maps an error to an empty result (`safe()` in the Inspector, `loadSchemaForQueue` in the popup) must let a 429
-  through or record it. The user retries — Refresh, reopen, Retry. The API ignores `fields=` on
+  code that maps an error to an empty result (`safe()` in the Inspector, `loadSchemaForQueue` in
+  the popup) must let a 429 through or record it; the Inspector's queue lists use `safeList()`,
+  which returns a `RATE_LIMITED` marker for their OWN 429, so another request's 429 cannot make a
+  500 read as throttled. The user retries — Refresh, reopen, Retry. The API ignores `fields=` on
   list endpoints (measured 2026-10-13), so a "cheap" list check downloads every full object;
   `/queues/{id}?fields=hooks` and `/schemas?queue={id}` are the small ones.
 

@@ -200,6 +200,7 @@ export async function getBlob(
   }
   release();
   if (res.status === 401) throw apiError('Session expired.', 401);
+  if (res.status === 429) throw rateLimitError(res, 'API error 429');
   if (!res.ok) throw apiError(`API error ${res.status}`, res.status);
   return res.blob();
 }

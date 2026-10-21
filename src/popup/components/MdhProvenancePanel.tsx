@@ -186,7 +186,7 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
         }
         if (cancelled) return;
         if (!hookEntries) {
-          let hookIds: string[] = [];
+          let hookIds: string[] | null = [];
           const mdhHooks = await loadMdhHooksForQueue(ctx.domain, ctx.token, queueId, (ids) => {
             hookIds = ids;
           });

@@ -104,12 +104,30 @@ describe('loadMdhHooksForQueue onAttached', () => {
         }),
       ),
     );
-    let ids: string[] = [];
+    let ids: string[] | null = [];
     const mdh = await loadMdhHooksForQueue(D, 't', 42, (hookIds) => {
       ids = hookIds;
     });
     expect(mdh).toEqual([]);
     expect(ids).toEqual(['1', '2']);
+  });
+});
+
+describe('loadMdhHooksForQueue on a queue with more than one page of hooks', () => {
+  it('reports no id list, since one page is not every attached hook', async () => {
+    // The queue's own `hooks` list is complete, so a partial page would never match it
+    // and every popup open would refetch.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        ok({ results: [{ id: 1, type: 'function' }], next: `${D}/api/v1/hooks?page=2` }),
+      ),
+    );
+    let ids: string[] | null = ['unset'];
+    await loadMdhHooksForQueue(D, 't', 42, (hookIds) => {
+      ids = hookIds;
+    });
+    expect(ids).toBeNull();
   });
 });
 
