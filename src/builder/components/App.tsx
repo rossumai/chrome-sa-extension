@@ -33,7 +33,6 @@ import HookEditor from './HookEditor.jsx';
 import SchemaFabryPanel from './SchemaFabryPanel.jsx';
 import SaveDialog from './SaveDialog.jsx';
 import FilterBar from './FilterBar.jsx';
-import ValidationStrip from './ValidationStrip.jsx';
 import s from './Builder.module.css';
 
 function inField(t: EventTarget | null): boolean {
@@ -118,7 +117,6 @@ export default function App({ connected }: { connected: boolean | null }) {
           <div class={s.editor}>
             <Toolbar onSave={() => setSaveOpen(true)} />
             <FilterBar />
-            <ValidationStrip />
             <div class={s.body}>
               <div
                 class={s.gridWrap}

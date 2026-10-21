@@ -266,3 +266,6 @@ export const validation = signal<{
 } | null>(null);
 export const revalidating = signal(false);
 export const revalidateError = signal<string | null>(null);
+
+// After a Revalidate: show only the fields that got a message (and their parents).
+export const onlyMessages = signal(false);

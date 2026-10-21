@@ -11,6 +11,7 @@ import {
   hookLive,
   hookConfigIndex,
   validation,
+  onlyMessages,
 } from '../store.js';
 import { flatten } from '../model.js';
 import { countMatches } from '../fieldFilter.js';
@@ -24,6 +25,7 @@ import s from './Builder.module.css';
 // only its fields; the text filter then adds matches.
 export default function FilterBar() {
   const editing = ruleEditor.value;
+  const msgFields = validation.value?.placed.byField.size ?? 0;
   const hookEd = hookEditor.value;
   const mdh = mdhHooks(hooks.value);
   const configs = hookLive.value ? configSummaries(hookLive.value) : [];
@@ -50,6 +52,18 @@ export default function FilterBar() {
         <span class={s.dim}>
           {matchCount} {matchCount === 1 ? 'match' : 'matches'}
         </span>
+      )}
+      {validation.value && (
+        <label class={s.checkField + ' ' + s.barToggle}>
+          <input
+            type="checkbox"
+            data-action="only-messages"
+            checked={onlyMessages.value}
+            onChange={(e) => (onlyMessages.value = (e.currentTarget as HTMLInputElement).checked)}
+          />
+          Only fields with messages ({msgFields}) · {validation.value.fired.size} rule
+          {validation.value.fired.size === 1 ? '' : 's'} fired
+        </label>
       )}
       {selectedQueueId.value != null && (
         <Fragment>

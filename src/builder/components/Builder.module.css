@@ -1064,27 +1064,16 @@
   color: var(--danger-fg);
 }
 
-.validationStrip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 12px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-card);
-  font-size: 12px;
+.barToggle {
+  margin-top: 0;
+  white-space: nowrap;
 }
 
-.stripText {
-  margin-left: 4px;
-  color: var(--text-primary);
+.docMessages {
+  white-space: normal !important;
 }
 
-.rawDetails {
-  flex-basis: 100%;
-}
-
-.rawDetails pre {
+.docMessages pre {
   max-height: 240px;
   overflow: auto;
 }

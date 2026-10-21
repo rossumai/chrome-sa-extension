@@ -22,6 +22,7 @@ import {
   hookFilterIds,
   hookFieldConfigs,
   validation,
+  onlyMessages,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
 import { apply, openRuleEditor, openHookEditor } from '../index.jsx';
@@ -745,6 +746,18 @@ export default function Grid() {
     ruleFilterIds.value ?? hookFilterIds.value,
     'or',
   );
+  // Messages with no field go in the "Whole document" row; with "only fields with messages"
+  // the grid keeps the fields that got one.
+  const docMessages = validation.value?.placed.general ?? [];
+  if (onlyMessages.value && validation.value) {
+    const keys = new Set(
+      flatten(work.value)
+        .filter((r) => validation.value!.placed.byField.has(String(r.node.id)))
+        .map((r) => r.key),
+    );
+    const mine = withAncestors(work.value, keys);
+    show = show ? new Set([...show].filter((k) => mine.has(k))) : mine;
+  }
   if (onlyFabryChanges.value) {
     const mine = withAncestors(work.value, fabryChangedKeys.value);
     show = show ? new Set([...show].filter((k) => mine.has(k))) : mine;
@@ -788,14 +801,32 @@ export default function Grid() {
         </tr>
       </thead>
       <tbody>
-        {ruleOn && (
+        {(ruleOn || docMessages.length > 0) && (
           <tr class={s.row + ' ' + s.sectionRow + ' ' + s.docRow} data-doc-row="">
             <td />
             <td colSpan={COLS.length + 1}>Whole document</td>
-            <td data-col="rule">
-              <MarkIcons marks={ruleGlobalMarks.value || []} />
-            </td>
-            {values.value && <td />}
+            {ruleOn && (
+              <td data-col="rule">
+                <MarkIcons marks={ruleGlobalMarks.value || []} />
+              </td>
+            )}
+            {hookOn && <td />}
+            {values.value && (
+              <td data-col="value" class={s.docMessages}>
+                {docMessages.map((m) => (
+                  <div>
+                    <MarkIcons marks={[{ kind: m.type, text: m.content, event: 'validation' }]} />
+                    {m.content}
+                  </div>
+                ))}
+                {validation.value && (
+                  <details>
+                    <summary class={s.dim}>raw response</summary>
+                    <pre class={s.code}>{JSON.stringify(validation.value.raw, null, 2)}</pre>
+                  </details>
+                )}
+              </td>
+            )}
           </tr>
         )}
         {work.value.flatMap((n) => renderNode(n, 0, false, null, show))}

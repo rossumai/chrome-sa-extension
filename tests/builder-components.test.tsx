@@ -119,6 +119,7 @@ beforeEach(() => {
   store.values.value = null;
   store.lineRow.value = {};
   store.validation.value = null;
+  store.onlyMessages.value = false;
   store.revalidateError.value = null;
   store.fieldFilter.value = '';
   store.ruleId.value = null;
@@ -1264,9 +1265,9 @@ describe('Builder validation results', () => {
       };
     });
     expect(row('doc_id').querySelector('td[data-col="value"] [data-mark="error"]')).not.toBeNull();
-    expect(root.querySelector('[data-validation-strip]')!.textContent).toContain(
-      'Duplicate document',
-    );
+    const doc = root.querySelector('[data-doc-row]') as HTMLElement;
+    expect(doc.querySelector('td[data-col="value"]')!.textContent).toContain('Duplicate document');
+    expect(root.querySelector('[data-validation-strip]')).toBeNull();
     const count = row('doc_id').querySelector('[data-action="field-rules"]') as HTMLElement;
     expect(count.dataset.fired).toBe('true');
     const opt = [
@@ -1274,5 +1275,35 @@ describe('Builder validation results', () => {
     ].find((o) => o.value === '40')!;
     expect(opt.textContent).toContain('fired');
     expect(root.querySelector('[data-action="revalidate"]')).not.toBeNull();
+  });
+});
+
+describe('Builder: only fields with messages', () => {
+  it('narrows the grid to fields that got a message, keeping their parents', () => {
+    act(() => {
+      store.annotationId.value = 55;
+      store.values.value = annotationValues([]);
+      store.validation.value = {
+        placed: {
+          byField: new Map([
+            ['item_desc', new Map([[0, [{ type: 'warning', content: 'Odd', ruleId: null }]]])],
+          ]),
+          general: [],
+        },
+        fired: new Set(),
+        raw: {},
+      };
+    });
+    const toggle = root.querySelector('input[data-action="only-messages"]') as HTMLInputElement;
+    expect(toggle.parentElement!.textContent).toContain('1');
+    act(() => {
+      toggle.click();
+    });
+    const shown = [...root.querySelectorAll('[data-row-key]')].map(
+      (r) =>
+        flatten(store.work.value).find((x) => x.key === r.getAttribute('data-row-key'))!.node.id,
+    );
+    expect(shown).toEqual(['items_section', 'items', 'item', 'item_desc']);
+    expect(root.querySelector('[data-doc-row]')).toBeNull(); // no document-level messages
   });
 });
