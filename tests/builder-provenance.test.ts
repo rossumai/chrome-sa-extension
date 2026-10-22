@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { provenanceInputs, provenanceConfigs, configValues } from '../src/builder/provenance.js';
+import {
+  provenanceInputs,
+  provenanceConfigs,
+  configValues,
+  configOutcome,
+} from '../src/builder/provenance.js';
 
 const schema = [
   {
@@ -95,5 +100,32 @@ describe('provenance inputs', () => {
     const r = configValues(items.cfg, p, 1);
     expect(r.scope).toEqual({ tableSchemaId: 'items', rowCount: 2 });
     expect(r.values.item_code).toBe('B');
+  });
+});
+
+describe('configOutcome', () => {
+  it('sums up a configuration from its query results', () => {
+    expect(
+      configOutcome([
+        { status: 'empty' },
+        { status: 'winner', hint: '1 hit' },
+        { status: 'skipped' },
+      ]),
+    ).toEqual({
+      kind: 'matched',
+      query: 1,
+      hint: '1 hit',
+    });
+    expect(configOutcome([{ status: 'empty' }, { status: 'empty' }])).toEqual({ kind: 'nomatch' });
+    expect(configOutcome([{ status: 'gated' }, { status: 'gated' }])).toEqual({ kind: 'gated' });
+    expect(configOutcome([{ status: 'empty' }, { status: 'error', hint: 'boom' }])).toEqual({
+      kind: 'error',
+      hint: 'boom',
+    });
+    expect(configOutcome([{ status: 'winner' }, { status: 'pending' }]).kind).toBe('matched');
+    expect(configOutcome([{ status: 'pending' }, { status: 'empty' }])).toEqual({
+      kind: 'pending',
+    });
+    expect(configOutcome([])).toEqual({ kind: 'nomatch' });
   });
 });

@@ -1409,11 +1409,28 @@ describe('Builder validation panel', () => {
     });
     expect(store.validationPanel.value).toBe('provenance');
     await vi.waitFor(() =>
-      expect(panel().querySelector('[data-query-status="winner"]')).not.toBeNull(),
+      expect(
+        panel().querySelector('[data-provenance-config][data-outcome="matched"]'),
+      ).not.toBeNull(),
     );
+    const group = panel().querySelector('[data-provenance-hook]') as HTMLElement;
+    expect(group.textContent).toContain('Vendor matching (70)');
     const cfg = panel().querySelector('[data-provenance-config]') as HTMLElement;
-    expect(cfg.textContent).toContain('Vendor matching (70)');
+    expect(cfg.getAttribute('data-outcome')).toBe('matched');
     expect(cfg.textContent).toContain('1 hit');
+    // details stay folded until the configuration is clicked
+    expect(cfg.querySelector('[data-provenance-details]')).toBeNull();
+    act(() => {
+      (cfg.querySelector('[data-action="toggle-config"]') as HTMLElement).click();
+    });
+    expect(cfg.querySelector('[data-provenance-details]')).not.toBeNull();
+    expect(cfg.querySelector('[data-query-status="winner"]')).not.toBeNull();
+    // filters show only the outcomes present; picking one keeps just those configurations
+    expect(panel().querySelector('[data-outcome-filter="nomatch"]')).toBeNull();
+    act(() => {
+      (panel().querySelector('[data-outcome-filter="matched"]') as HTMLElement).click();
+    });
+    expect(panel().querySelectorAll('[data-provenance-config]').length).toBe(1);
     // replayed once, not again on every re-render
     await new Promise((r) => setTimeout(r, 50));
     expect(fetchMock).toHaveBeenCalledTimes(1);

@@ -40,3 +40,22 @@ export function configValues(cfg: any, inputs: ProvenanceInputs, row: number) {
     : inputs.headerValues;
   return { scope, values };
 }
+
+export type Outcome =
+  | { kind: 'matched'; query: number; hint?: string }
+  | { kind: 'nomatch' }
+  | { kind: 'gated' }
+  | { kind: 'error'; hint?: string }
+  | { kind: 'pending' };
+
+/** A configuration's result from its queries' replay statuses (replayConfig's shape). */
+export function configOutcome(statuses: ({ status: string; hint?: string } | null)[]): Outcome {
+  const list = statuses.map((x) => x || { status: 'pending' });
+  const win = list.findIndex((x) => x.status === 'winner');
+  if (win >= 0) return { kind: 'matched', query: win, hint: list[win].hint };
+  const err = list.find((x) => x.status === 'error');
+  if (err) return { kind: 'error', hint: err.hint };
+  if (list.some((x) => x.status === 'pending')) return { kind: 'pending' };
+  if (list.length && list.every((x) => x.status === 'gated')) return { kind: 'gated' };
+  return { kind: 'nomatch' };
+}

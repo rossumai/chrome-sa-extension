@@ -1174,3 +1174,128 @@
 .q_pending {
   color: var(--text-secondary);
 }
+
+/* Provenance: one line per configuration, details on click. */
+.outcomeFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.filterChip {
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.filterChipOn {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  font-weight: 600;
+}
+
+.provHook {
+  margin-top: 10px;
+}
+
+.provHookHead {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.provRow {
+  border-bottom: 1px solid var(--border);
+}
+
+.provLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 2px;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.provLine:hover {
+  background: var(--bg-hover);
+}
+
+.provMeta {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outcomeChip {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.oc_matched {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.oc_nomatch {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.oc_gated {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.oc_error {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.oc_pending {
+  background: var(--info-bg);
+  color: var(--info-fg);
+}
+
+.qDots {
+  display: inline-flex;
+  gap: 2px;
+  flex: none;
+}
+
+.qDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.provDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 4px 8px 20px;
+  font-size: 12px;
+}
