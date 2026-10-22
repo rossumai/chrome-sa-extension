@@ -37,6 +37,7 @@ describe('rossum content-script entry', () => {
     // The entry observes document.body — make sure one exists.
     // The org name reads the page's session token before it asks for anything.
     window.localStorage.setItem('secureToken', 'tok');
+    window.sessionStorage.clear();
   });
 
   afterEach(() => {
@@ -228,5 +229,84 @@ describe('rossum content-script entry', () => {
 
     expect(orgPill()).toBeNull();
     expect(fetchRossumApiFresh).not.toHaveBeenCalled();
+  });
+
+  it('draws the environment chip only when its own switch is on', async () => {
+    loadEntry({ orgEnvEnabled: true });
+    vi.doMock('../src/rossum/api.js', () => ({
+      fetchRossumApi: vi.fn(),
+      fetchRossumApiFresh: vi
+        .fn()
+        .mockResolvedValue({ results: [{ name: 'Acme Corporation', sandbox: true }] }),
+    }));
+    globalThis.MutationObserver = vi.fn(function (this: any) {
+      this.observe = vi.fn();
+    }) as any;
+    document.body.append(headerMarkup());
+
+    await import('../src/rossum/index.js');
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('.rossum-sa-extension-org-chip')?.textContent).toBe('Sandbox');
+    });
+  });
+
+  it('draws the environment chip with the name switched off', async () => {
+    loadEntry({ orgNameEnabled: false, orgEnvEnabled: true });
+    vi.doMock('../src/rossum/api.js', () => ({
+      fetchRossumApi: vi.fn(),
+      fetchRossumApiFresh: vi.fn().mockResolvedValue(ORG_LIST),
+    }));
+    globalThis.MutationObserver = vi.fn(function (this: any) {
+      this.observe = vi.fn();
+    }) as any;
+    document.body.append(headerMarkup());
+
+    await import('../src/rossum/index.js');
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('.rossum-sa-extension-org-chip')?.textContent).toBe(
+        'Production',
+      );
+    });
+    expect(orgPill()!.textContent).toBe('Production');
+  });
+
+  it('draws no environment chip by default', async () => {
+    loadEntry({});
+    vi.doMock('../src/rossum/api.js', () => ({
+      fetchRossumApi: vi.fn(),
+      fetchRossumApiFresh: vi.fn().mockResolvedValue(ORG_LIST),
+    }));
+    globalThis.MutationObserver = vi.fn(function (this: any) {
+      this.observe = vi.fn();
+    }) as any;
+    document.body.append(headerMarkup());
+
+    await import('../src/rossum/index.js');
+
+    await vi.waitFor(() => {
+      expect(orgPill()?.textContent).toBe('Acme Corporation');
+    });
+    expect(document.querySelector('.rossum-sa-extension-org-band')!.hasAttribute('hidden')).toBe(
+      true,
+    );
+  });
+
+  it('hides Rossum’s Developer mode chip with every toggle off', async () => {
+    loadEntry({});
+    globalThis.MutationObserver = vi.fn(function (this: any) {
+      this.observe = vi.fn();
+    }) as any;
+    const row = document.createElement('div');
+    row.innerHTML =
+      '<div class="MuiChip-root"><span class="MuiChip-label">Developer mode</span></div>' +
+      '<div class="MuiTabs-root"></div>';
+    document.body.append(row);
+
+    await import('../src/rossum/index.js');
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(row.querySelector<HTMLElement>('.MuiChip-root')!.style.display).toBe('none');
   });
 });
