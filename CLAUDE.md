@@ -198,7 +198,7 @@ Nine entry points, plus two bundles nothing imports that are script-injected on 
 |---|---|
 | `src/rossum/index.ts` · `src/netsuite/index.ts` · `src/coupa/index.ts` | content scripts |
 | `src/popup/popup.tsx` | extension popup (Preact) |
-| `src/console/index.tsx` | Console page — an app rail over six apps |
+| `src/console/index.tsx` | Console page — an app rail over seven apps |
 | `src/background/index.ts` | MV3 service worker |
 | `src/devtools/devtools.ts` · `src/devtools/panel.tsx` | DevTools "Rossum" panel |
 | `src/sidepanel/index.tsx` | Chrome side panel |
@@ -280,8 +280,10 @@ Reloading the extension does NOT re-inject content scripts into open tabs — re
 
 ### Console apps (`src/console/`)
 
-An app-switcher rail over six apps. Adding one touches three hardcoded switch points
+An app-switcher rail over seven apps. Adding one touches three hardcoded switch points
 (`Rail.tsx` APPS, `Console.tsx` render switch, `boot.ts` `isValidApp`) plus `console/index.tsx`.
+`Console.tsx` unmounts the app you leave — except CIB deploy, which stays mounted (hidden) once
+opened, because its form, log and a deploy in flight live in component state.
 
 - **Dataset Management** (`src/mdh/`) — Preact SPA over Rossum Data Storage: collections,
   records, a CodeMirror+JSON5 aggregation-pipeline editor, indexes, one import and one export
@@ -314,8 +316,16 @@ An app-switcher rail over six apps. Adding one touches three hardcoded switch po
   stable per-message feedback id regardless. Plus **Architect**: per-org
   Markdown deliverables kept in a Data Storage collection, rendered as ONE scrolling
   specification (`components/SpecView.tsx`) and checked against live org state.
-- **Academy** (`src/academy/`) — the onboarding training track; the only app behind
-  `experimentalUnlocked`.
+- **CIB deploy** (`src/cib/`) — deploys the Coupa Integration Baseline into the connected org.
+  It bundles NO CIB content: at run time it lists the releases of the public
+  `rossumai/rossum-coupa-integration` repo, reads the chosen release's prd2 org folder from
+  `raw.githubusercontent.com` and compiles it in the browser into a create plan (`release.ts`;
+  v1.x releases take their deploy settings from the public deploy tool's `_config/`). `cib.ts` checks (read-only), then creates, patches and invokes — **the extension's one
+  bulk WRITE path into an org**, used only on the user's Deploy click. Progress is a checkpoint
+  document in the org's `_cib_deploy_runs` collection (the Coupa secret only as a placeholder),
+  so a re-run with the same run id resumes, and it is deleted once a deploy is complete. The
+  optional Coupa check function is a hook the user deploys and tears down by hand.
+- **Academy** (`src/academy/`) — the onboarding training track; behind `experimentalUnlocked`.
 
 Auth: the popup (or the worker) runs `readAuthInfo` in the Rossum tab via
 `chrome.scripting.executeScript`, stages a single-use `consoleAuth_<uuid>` in
@@ -452,7 +462,7 @@ Enforced by tests, not by convention. Do not weaken them.
   `dataset-mgmt-suggest`, `track-viewed` and `dev-mode-chip` are always on, with no toggle and
   no key.
 - **The one gate** — `experimentalUnlocked`: 5 quick clicks on the popup's version hash, hiding
-  only the Academy, mirrored live via `chrome.storage.onChanged`.
+  the rail apps marked `gated` in `Rail.tsx`, mirrored live via `chrome.storage.onChanged`.
 - **Auth staging** — `consoleAuth_<uuid>`: single-use, 24h TTL, removed on read.
 - **Global prefs** — `mdhPipelineWidth`, `mdhSidebarWidth`, `mdhUploadsColumnWidths`,
   `mdhOverviewChartsScale`, `mdhResultsView`, `mdhStages*`, `mdhStatsMode`,
@@ -469,7 +479,8 @@ Enforced by tests, not by convention. Do not weaken them.
 - **Usage** — `usageConsent` (`true`/`false`/**absent**, where absent means never answered),
   `usageClientId` (minted lazily by the worker on the first event, deleted on revoke),
   `usageAsked`; plus `usageSessionId` in `chrome.storage.session`.
-- Galaxy persists nothing. Chat content, and Architect deliverable text, versions and
+- Galaxy and CIB deploy persist nothing on the device (CIB keeps its credentials in component
+  state only; its checkpoint lives in the org). Chat content, and Architect deliverable text, versions and
   transcripts, never touch storage — they live in the org's own Data Storage collection.
 - **Orphaned** keys, read and written by nothing, deliberately left in existing profiles:
   `trainingUnlocked`, `fabryArchSplitRatio`, `fabryArchConsoleHeight`, `fabrySidebarOpen`,
@@ -648,6 +659,7 @@ older ones as history. Currently authoritative per area:
 - **Configuration changelog** — `2026-09-29-config-changelog-in-context-design.md` (the
   DevTools version rail and diff for the open object; the pure core in `src/changelog/`)
 - **Galaxy** — `2026-06-04-galaxy-3d-org-birdview-design.md`
+- **CIB deploy** — `2026-10-24-cib-deploy-console-design.md`
 - **Release automation** — `2026-06-12-chrome-web-store-auto-release-design.md`
 
 ## Localpages divergence
