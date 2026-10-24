@@ -29,6 +29,7 @@ import * as fabryStore from '../fabry/store.js';
 import { initFabry } from '../fabry/index.jsx';
 import * as academyStore from '../academy/store.js';
 import { initAcademy } from '../academy/index.jsx';
+import * as cibStore from '../cib/store.js';
 
 const AUTH_TTL_MS = 24 * 60 * 60 * 1000;
 const TITLES = {
@@ -37,6 +38,7 @@ const TITLES = {
   galaxy: 'Org Galaxy — Rossum SA',
   inspector: 'Inspector — Rossum SA',
   fabry: 'Mr. Fabry — Rossum SA',
+  cib: 'CIB deploy — Rossum SA',
   academy: 'Onboarding training — Rossum SA',
 };
 
@@ -48,6 +50,7 @@ const APP_EVENTS: Record<string, any> = {
   galaxy: 'sa_console_app_galaxy',
   inspector: 'sa_console_app_inspector',
   fabry: 'sa_console_app_fabry',
+  cib: 'sa_console_app_cib',
   academy: 'sa_console_app_academy',
 };
 
@@ -181,6 +184,7 @@ async function boot() {
     inspectorStore.connected.value = false;
     fabryStore.connected.value = false;
     academyStore.connected.value = false;
+    cibStore.connected.value = false;
     render(<Console />, document.getElementById('app')!);
     return;
   }
@@ -222,6 +226,10 @@ async function boot() {
   fabryStore.domain.value = domain;
   fabryStore.token.value = token;
   fabryStore.connected.value = true;
+
+  cibStore.domain.value = domain;
+  cibStore.token.value = token;
+  cibStore.connected.value = true;
 
   effect(() => {
     writeTabState('consoleActiveApp', activeApp.value);

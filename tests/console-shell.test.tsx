@@ -21,10 +21,27 @@ vi.mock('../src/audit/components/App.jsx', async () => {
   };
 });
 
+// stateful, like the real CIB page: its form, log and a running deploy live in component state
+vi.mock('../src/cib/components/App.jsx', async () => {
+  const { h } = await import('preact');
+  const { useState } = await import('preact/hooks');
+  return {
+    default: () => {
+      const [n, setN] = useState(0);
+      return (
+        <button class="cib-stub" onClick={() => setN(n + 1)}>
+          {`cib:${n}`}
+        </button>
+      );
+    },
+  };
+});
+
 import Console from '../src/console/components/Console.jsx';
 import { activeApp } from '../src/console/store.js';
 import * as mdhStore from '../src/mdh/store.js';
 import * as auditStore from '../src/audit/store.js';
+import * as cibStore from '../src/cib/store.js';
 
 function mount() {
   const root = document.createElement('div');
@@ -74,5 +91,30 @@ describe('Console connected tri-state', () => {
     root = mount();
     expect(root.querySelector('.audit-stub')?.textContent).toBe('audit:true');
     expect(root.querySelector('.empty-state')).toBeNull();
+  });
+});
+
+describe('Console keeps CIB mounted', () => {
+  it('keeps the CIB state when the user visits another app and comes back', async () => {
+    cibStore.connected.value = true;
+    mdhStore.connected.value = true;
+    activeApp.value = 'cib';
+    const root = document.createElement('div');
+    render(<Console />, root);
+    (root.querySelector('.cib-stub') as HTMLElement).click();
+    await new Promise((r) => setTimeout(r));
+    expect(root.querySelector('.cib-stub')!.textContent).toBe('cib:1');
+
+    activeApp.value = 'mdh';
+    render(<Console />, root);
+    expect(root.querySelector('.mdh-stub')).not.toBeNull();
+    expect((root.querySelector('.cib-stub')!.parentElement as HTMLElement).style.display).toBe(
+      'none',
+    );
+
+    activeApp.value = 'cib';
+    render(<Console />, root);
+    expect(root.querySelector('.cib-stub')!.textContent).toBe('cib:1');
+    expect(root.querySelector('.mdh-stub')).toBeNull();
   });
 });
