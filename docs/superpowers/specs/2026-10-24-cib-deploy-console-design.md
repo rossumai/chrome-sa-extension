@@ -64,6 +64,8 @@ Either from the browser — `POST <coupa>/oauth2/token`, only after the user gra
 hook ("CIB deploy: Coupa credentials check", manual invocation) that the user deploys and
 tears down with explicit buttons, never as a side effect. The secret is PATCHed into the hook's
 write-only `secrets` before each check; the invoke body carries only the token URL and client id.
+The page treats a hook as the check function only when its name, type and code all match what it
+deploys: a hook with the same name alone never gets the secret.
 Whether the hook can reach Coupa depends on the org's serverless egress.
 If a run reports that the secret could not be given to the hook (it was deleted elsewhere), the
 page re-reads the org's check functions, so the UI stops pointing at a dead hook.
@@ -72,6 +74,8 @@ page re-reads the org's check functions, so the UI stops pointing at a dead hook
 
 - The write path is client-side only, like the rest of the extension: there is no server-side
   guard beyond the user's own permissions.
+- The API client sends the token only to the organization's origin, so a changed checkpoint or
+  list cursor cannot send it elsewhere.
 - Imports are reported as started, not finished; a large dataset can still be filling (`__tmp_*`
   collection) after the run reports done.
 - No teardown in the app: removing a deployed CIB is out of scope.

@@ -197,3 +197,33 @@ test('onProgress: one call per object and per patch, with done/total', async () 
     wsQueue.map((_, i) => `${i + 1}/${wsQueue.length}`),
   );
 });
+
+test('the client sends the token only to the organization origin', async () => {
+  const { f, c } = setup();
+  const n = f.calls.length;
+  for (const url of [
+    'https://evil.example/api/v1/hooks/1',
+    'https://fake.rossum.app.evil.example/x',
+  ])
+    await assert.rejects(c.call('PATCH', url, { secrets: { s: 'x' } }), /not the organization/);
+  assert.equal(f.calls.length, n); // nothing was sent
+  assert.equal((await c.call('GET', `${f.api}/organizations/${ORG}`)).status !== 0, true);
+});
+
+test('a resumed deploy refuses a checkpoint that points at another origin', async () => {
+  const { f, c } = setup();
+  const ops = [{ key: 'h', type: 'hooks', body: { name: 'H' }, match: { name: 'H' } }];
+  const patches = [{ key: 'h', body: { active: true } }];
+  await c.ds('insert_one', {
+    document: {
+      kind: 'plan',
+      run: 'r',
+      ops,
+      patches,
+      cursor: 1,
+      idmap: { h: { id: 1, url: 'https://evil.example/api/v1/hooks/1', type: 'hooks' } },
+    },
+  });
+  await assert.rejects(deploy(c, { run: 'r', orgId: ORG, ops, patches }), /not the organization/);
+  assert.ok(!f.calls.some((x) => x.url.startsWith('https://evil.example')));
+});

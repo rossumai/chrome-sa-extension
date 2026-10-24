@@ -167,8 +167,13 @@ def rossum_hook_request_handler(payload):
     return out or {"error": "no answer within 25 s"}
 `;
 
-export const findCoupaProbes = async (c: Client) =>
-  (await c.list('hooks')).filter((h) => h.name === COUPA_PROBE_NAME);
+// the name alone is not proof: anyone who can make hooks can plant one with this name to get the secret
+const isCoupaProbe = (h: any) =>
+  h?.name === COUPA_PROBE_NAME &&
+  h.type === 'function' &&
+  h.config?.code?.trim() === COUPA_PROBE_CODE.trim();
+
+export const findCoupaProbes = async (c: Client) => (await c.list('hooks')).filter(isCoupaProbe);
 
 // an existing check function is re-used, so a second click does not make a second one
 export async function deployCoupaProbe(c: Client): Promise<any> {
@@ -215,6 +220,11 @@ export async function checkCoupaViaFunction(
     sleep = (s) => new Promise((r) => setTimeout(r, s * 1000)),
   }: { waitS?: number; sleep?: (s: number) => unknown } = {},
 ): Promise<{ status: string; detail?: string; missing?: string[]; extra?: string[] }> {
+  if (!isCoupaProbe((await c.call('GET', hookUrl)).data))
+    return {
+      status: 'unchecked',
+      detail: `${hookUrl} is not the check function this page deploys`,
+    };
   const s = await c.call('PATCH', hookUrl, { secrets: { client_secret: coupa.clientSecret } });
   if (s.status !== 200)
     return {

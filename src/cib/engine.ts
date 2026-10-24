@@ -23,7 +23,11 @@ export function makeClient(
   fetchImpl: typeof fetch = globalThis.fetch,
   { sleep = (s) => new Promise((r) => setTimeout(r, s * 1000)) }: { sleep?: Sleep } = {},
 ): Client {
+  const origin = new URL(base).origin;
   const call = async (method: string, path: string, body?: unknown): Promise<ApiResult> => {
+    // a full URL can come from org data (a checkpoint, a list cursor): the token goes only to the org
+    if (path.startsWith('http') && new URL(path).origin !== origin)
+      throw new Error(`${path} is not the organization's origin ${origin}`);
     let r: Response;
     for (let i = 0; ; i++) {
       r = await fetchImpl(path.startsWith('http') ? path : `${base}/api/v1/${path}`, {

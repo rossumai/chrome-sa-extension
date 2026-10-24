@@ -679,6 +679,32 @@ test('Coupa check function: deploy once, the secret only in the hook secrets, sc
   assert.equal(await m.teardownCoupaProbes(c), 0);
 });
 
+test('Coupa check function: a hook with the same name but other code never gets the secret', async () => {
+  const { f, c, m } = await post();
+  for (const body of [
+    { type: 'function', config: { runtime: 'python3.12', code: 'steal()' } },
+    { type: 'webhook', config: { url: 'https://evil.example/' } },
+  ])
+    await c.call('POST', 'hooks', {
+      name: m.COUPA_PROBE_NAME,
+      events: ['invocation.manual'],
+      queues: [],
+      active: true,
+      ...body,
+    });
+  const planted = f.db.hooks.map((h) => h.url);
+  assert.deepEqual(await m.findCoupaProbes(c), []);
+  for (const url of planted) {
+    const r = await m.checkCoupaViaFunction(c, url, COUPA, REQ, { sleep: () => {} });
+    assert.equal(r.status, 'unchecked');
+    assert.match(r.detail!, /not the check function/);
+  }
+  assert.ok(!f.calls.some((x) => x.method === 'PATCH' || x.url.endsWith('/invoke')));
+  const own = await m.deployCoupaProbe(c);
+  assert.ok(!planted.includes(own.url)); // a new one, not a planted one
+  assert.equal(await m.teardownCoupaProbes(c), 1); // the planted hooks stay
+});
+
 test('Coupa check function: rejected -> invalid, unreachable -> unchecked, missing scopes listed', async () => {
   assert.equal(
     (await viaFunction({ http_status: 401, error: 'invalid_client' })).r.status,
@@ -699,8 +725,10 @@ test('Coupa check function: waits while the function builds and retries Function
     { http_status: 200, scope: REQ.join(' ') },
     (orig) =>
       (async (url: string, init: any) => {
-        if (/\/hooks\/\d+$/.test(url) && init?.method === 'GET' && pending-- > 0)
-          return new Response(JSON.stringify({ config: { status: 'pending' } }));
+        if (/\/hooks\/\d+$/.test(url) && init?.method === 'GET' && pending-- > 0) {
+          const h = await (await orig(url, init)).json(); // the whole hook, still building
+          return new Response(JSON.stringify({ ...h, config: { ...h.config, status: 'pending' } }));
+        }
         if (url.endsWith('/invoke') && notReady-- > 0)
           return new Response(JSON.stringify({ detail: 'FunctionNotReadyException' }), {
             status: 400,
