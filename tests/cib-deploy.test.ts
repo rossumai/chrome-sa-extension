@@ -822,3 +822,26 @@ test('a complete deploy deletes its checkpoint; with imports pending it stays an
   const again = f.calls.slice(posts).filter((x) => x.method === 'POST' && x.url.startsWith(f.api));
   assert.ok(again.every((x) => x.url.endsWith('/invoke'))); // no object created a second time
 });
+
+test('verdict: one line says how the run ended', async () => {
+  const { verdict } = await import('../src/cib/cib.js');
+  const done = {
+    status: 'done',
+    idmap: { a: 1, b: 2 },
+    invoked: [{ status: 200 }, { status: 200 }],
+  };
+  assert.deepEqual(verdict({ ...done, pendingImports: [] }), {
+    tone: 'ok',
+    text: 'Deploy succeeded: 2 objects, 2 of 2 imports started, all datasets present.',
+  });
+  assert.deepEqual(
+    verdict({ ...done, invoked: [{ status: 200 }, { status: 500 }], pendingImports: ['x'] }),
+    {
+      tone: 'warn',
+      text: 'Deployed with open items: 2 objects, 1 of 2 imports started, 1 datasets still missing.',
+    },
+  );
+  assert.equal(verdict({ status: 'blocked' }).tone, 'fail');
+  assert.equal(verdict({ status: 'ready' }).text, 'Check passed: ready to deploy.');
+  assert.equal(verdict({ status: 'resumable' }).tone, 'warn');
+});

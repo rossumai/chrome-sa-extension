@@ -545,6 +545,33 @@ export async function waitImports(
   }
 }
 
+// one line that says how the run ended; tone picks the color (ok, warn, fail)
+export function verdict(r: {
+  status: string;
+  idmap?: Record<string, unknown>;
+  invoked?: { status: number }[];
+  pendingImports?: string[];
+}): { tone: 'ok' | 'warn' | 'fail'; text: string } {
+  if (r.status === 'blocked')
+    return {
+      tone: 'fail',
+      text: 'Blocked: nothing was written. Fix the blockers, then run again.',
+    };
+  if (r.status === 'ready') return { tone: 'ok', text: 'Check passed: ready to deploy.' };
+  if (r.status === 'resumable')
+    return { tone: 'warn', text: 'This run ID has a checkpoint: press Deploy to resume it.' };
+  const objects = Object.keys(r.idmap ?? {}).length,
+    invoked = r.invoked ?? [],
+    started = invoked.filter((x) => x.status >= 200 && x.status < 300).length,
+    pending = r.pendingImports ?? [];
+  const facts = `${objects} objects, ${started} of ${invoked.length} imports started, ${
+    pending.length ? `${pending.length} datasets still missing` : 'all datasets present'
+  }`;
+  return started === invoked.length && !pending.length
+    ? { tone: 'ok', text: `Deploy succeeded: ${facts}.` }
+    : { tone: 'warn', text: `Deployed with open items: ${facts}.` };
+}
+
 // the whole deploy in the order of tool v1.3.3 deploy_cib(). A run with a checkpoint is a resume:
 // its own objects are already in the org, so the read-only checks are skipped.
 // coupaFetch: a fetch that can reach Coupa (Node, extension); omit it where it cannot (in-tab).

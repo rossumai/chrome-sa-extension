@@ -16,6 +16,7 @@ import {
   findCoupaProbes,
   REGIONS,
   teardownCoupaProbes,
+  verdict,
 } from '../cib.js';
 import { CIB_REPO, listReleases, loadRelease, TOOL_REF, TOOL_REFS } from '../release.js';
 import styles from './App.module.css';
@@ -43,7 +44,13 @@ const host = (d: string) => {
   }
 };
 
-type Outcome = { status: string; blockers?: string[]; notes: string[]; details: string };
+type Outcome = {
+  status: string;
+  verdict: ReturnType<typeof verdict>;
+  blockers?: string[];
+  notes: string[];
+  details: string;
+};
 
 // the hook's page in the Rossum UI, from its API url
 const hookPage = (url: string) =>
@@ -223,6 +230,7 @@ export default function App({ connected }: { connected: boolean | null }) {
       const { idmap, blockers, notes, status, ...rest } = r;
       setOutcome({
         status,
+        verdict: verdict(r),
         blockers,
         notes,
         details: JSON.stringify({ ...rest, objects: idmap && Object.keys(idmap).length }, null, 1),
@@ -413,7 +421,9 @@ export default function App({ connected }: { connected: boolean | null }) {
           {outcome && (
             <section class={styles.card}>
               <div class={styles.status}>
-                <span class={styles[outcome.status] ?? ''}>{outcome.status}</span>
+                <span class={`${styles.verdict} ${styles[outcome.verdict.tone]}`}>
+                  {outcome.verdict.text}
+                </span>
               </div>
               {outcome.blockers?.map((b) => (
                 <div class={styles.blocker}>{b}</div>

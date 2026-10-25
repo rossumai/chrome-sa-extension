@@ -143,14 +143,17 @@
   height: 6px;
   accent-color: var(--accent);
 }
-.ready,
-.done {
+.verdict {
+  font-size: 15px;
+  font-weight: 600;
+}
+.ok {
   color: var(--success);
 }
-.blocked {
+.fail {
   color: var(--danger);
 }
-.resumable {
+.warn {
   color: var(--warning-fg);
 }
 .blocker {
