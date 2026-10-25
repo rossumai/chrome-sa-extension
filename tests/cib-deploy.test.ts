@@ -217,6 +217,7 @@ test('checkCoupa: valid token with all scopes is ok, extra scopes are listed', a
   );
   assert.deepEqual(r, { status: 'ok', missing: [], extra: ['core.x'] });
   assert.equal(coupaLast.url, 'https://acme-test.coupahost.com/oauth2/token');
+  assert.equal(coupaLast.init.credentials, 'omit'); // no Chrome sign-in dialog on a 401
   const form = new URLSearchParams(coupaLast.init.body);
   assert.deepEqual(
     [form.get('grant_type'), form.get('client_id'), form.get('client_secret')],
@@ -432,6 +433,13 @@ test('deployCib: real plan, clean org -> all objects, memorisation, 12 invokes, 
   assert.equal(r.invoked!.filter((x) => x.status === 200).length, 12);
   assert.deepEqual(r.pendingImports, []);
   assert.equal(f.collections.size, 3 + 12);
+});
+
+test('deployCib: a passed Coupa check says so', async () => {
+  const { c, m, opts } = await full();
+  const r = await m.deployCib(c, { ...opts, checkOnly: true });
+  assert.equal(r.status, 'ready');
+  assert.ok(r.notes.includes('Coupa accepted the credentials and grants all 2 required scopes'));
 });
 
 test('deployCib: a Coupa or preflight blocker stops it before anything is created', async () => {
@@ -666,6 +674,7 @@ test('Coupa check function: deploy once, the secret only in the hook secrets, sc
   });
   assert.deepEqual(r, { status: 'ok', missing: [], extra: ['core.x'] });
   assert.equal(h.type, 'function');
+  assert.equal(h.config.third_party_library_pack, 'default'); // the Rossum UI cannot show a null
   assert.equal(invokes[0].secrets.client_secret, 'S3CRET');
   const call = f.calls.find((x) => x.url.endsWith('/invoke'));
   assert.deepEqual(call.body, {
@@ -702,17 +711,32 @@ test('Coupa check function: a hook with the same name but other code never gets 
   assert.ok(!f.calls.some((x) => x.method === 'PATCH' || x.url.endsWith('/invoke')));
   const own = await m.deployCoupaProbe(c);
   assert.ok(!planted.includes(own.url)); // a new one, not a planted one
-  assert.equal(await m.teardownCoupaProbes(c), 1); // the planted hooks stay
+  // teardown goes by name and type (an older build's function has other code): the planted
+  // function goes too, the webhook stays
+  assert.equal(await m.teardownCoupaProbes(c), 2);
+  assert.deepEqual(
+    f.db.hooks.map((h) => h.type),
+    ['webhook'],
+  );
 });
 
-test('Coupa check function: rejected -> invalid, unreachable -> unchecked, missing scopes listed', async () => {
+test('Coupa check function: rejected -> invalid, timeout -> no_egress, unreachable -> unreachable, missing scopes listed', async () => {
   assert.equal(
     (await viaFunction({ http_status: 401, error: 'invalid_client' })).r.status,
     'invalid',
   );
-  const blocked = (await viaFunction({ error: 'URLError: timed out' })).r;
-  assert.equal(blocked.status, 'unchecked');
-  assert.match(blocked.detail!, /HTTPS/);
+  for (const answer of [
+    { error: 'URLError: <urlopen error timed out>', timeout: true },
+    { error: 'no answer within 25 s', timeout: true },
+  ]) {
+    const blocked = (await viaFunction(answer)).r;
+    assert.equal(blocked.status, 'no_egress');
+    assert.match(blocked.detail!, /could not connect to Coupa/);
+  }
+  const down = (await viaFunction({ error: 'URLError: Name or service not known', timeout: false }))
+    .r;
+  assert.equal(down.status, 'unreachable');
+  assert.match(down.detail!, /HTTPS/);
   assert.deepEqual((await viaFunction({ http_status: 200, scope: 'core.a.read' })).r.missing, [
     'core.b.read',
   ]);
@@ -751,6 +775,30 @@ test('deployCib with coupaProbe: rejected credentials block before anything is c
     f.db.hooks.map((x) => x.name),
     [m.COUPA_PROBE_NAME],
   );
+});
+
+test('deployCib with coupaProbe: no internet access for functions, or Coupa not reached, blocks', async () => {
+  const { f, c, m, opts } = await full();
+  const h = await m.deployCoupaProbe(c);
+  // the function's answer after its 10 s connect timeout
+  f.onInvoke = () => ({ error: 'URLError: <urlopen error timed out>', timeout: true });
+  const r = await m.deployCib(c, {
+    ...opts,
+    checkOnly: true,
+    coupaFetch: undefined,
+    coupaProbe: h.url,
+  });
+  assert.equal(r.status, 'blocked');
+  assert.match(r.blockers![0], /could not connect to Coupa/);
+  f.onInvoke = () => ({ error: 'URLError: Name or service not known', timeout: false });
+  const r2 = await m.deployCib(c, {
+    ...opts,
+    checkOnly: true,
+    coupaFetch: undefined,
+    coupaProbe: h.url,
+  });
+  assert.equal(r2.status, 'blocked');
+  assert.match(r2.blockers![0], /could not reach Coupa/);
 });
 
 test('a complete deploy deletes its checkpoint; with imports pending it stays and the same run ID re-runs only the imports', async () => {

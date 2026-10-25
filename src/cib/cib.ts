@@ -107,6 +107,7 @@ export async function checkCoupa(
   try {
     r = await fetchImpl(`${normalizeBaseUrl(coupa.baseUrl)}oauth2/token`, {
       method: 'POST',
+      credentials: 'omit', // with credentials, Coupa's 401 makes Chrome open a sign-in dialog
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'client_credentials',
@@ -152,7 +153,7 @@ def rossum_hook_request_handler(payload):
                                            "client_secret": payload["secrets"]["client_secret"]}).encode()
             req = urllib.request.Request(payload["token_url"], data=form,
                                          headers={"Content-Type": "application/x-www-form-urlencoded"})
-            with urllib.request.urlopen(req, timeout=20) as r:
+            with urllib.request.urlopen(req, timeout=10) as r:
                 out["http_status"], body = r.status, r.read()
             p = json.loads(body)["access_token"].split(".")[1]
             out["scope"] = json.loads(base64.urlsafe_b64decode(p + "=" * (-len(p) % 4))).get("scope") or ""
@@ -160,11 +161,12 @@ def rossum_hook_request_handler(payload):
             out.update(http_status=e.code, error=e.read().decode(errors="replace")[:300])
         except Exception as e:
             out["error"] = f"{type(e).__name__}: {e}"[:300]
+            out["timeout"] = isinstance(getattr(e, "reason", e), TimeoutError)
     # the thread gives a hard limit: urlopen's timeout does not cover a DNS lookup that hangs
     th = threading.Thread(target=call, daemon=True)
     th.start()
     th.join(25)
-    return out or {"error": "no answer within 25 s"}
+    return out or {"error": "no answer within 25 s", "timeout": True}
 `;
 
 // the name alone is not proof: anyone who can make hooks can plant one with this name to get the secret
@@ -188,7 +190,7 @@ export async function deployCoupaProbe(c: Client): Promise<any> {
     config: {
       runtime: 'python3.12',
       code: COUPA_PROBE_CODE,
-      third_party_library_pack: null,
+      third_party_library_pack: 'default', // the Rossum UI cannot show a hook with null here
       timeout_s: 30,
     },
   });
@@ -199,9 +201,12 @@ export async function deployCoupaProbe(c: Client): Promise<any> {
   return h.data;
 }
 
-// deletes every check function (also ones left from an earlier session); returns how many
+// deletes every check function (also ones left from an earlier session, or deployed by an
+// older build with other code: so the name alone is enough here); returns how many
 export async function teardownCoupaProbes(c: Client): Promise<number> {
-  const hs = await findCoupaProbes(c);
+  const hs = (await c.list('hooks')).filter(
+    (h: any) => h.name === COUPA_PROBE_NAME && h.type === 'function',
+  );
   for (const h of hs) {
     const r = await c.call('DELETE', h.url);
     if (r.status >= 300 && r.status !== 404)
@@ -252,9 +257,16 @@ export async function checkCoupaViaFunction(
       status: 'unchecked',
       detail: `the Coupa check function did not run: HTTP ${r.status} ${JSON.stringify(o).slice(0, 200)}`,
     };
+  // a blocked organization drops the packets, so the connect hangs; a new HTTPS allowance
+  // can take some minutes before functions get it (seen 2026-10-25)
+  if (o.timeout)
+    return {
+      status: 'no_egress',
+      detail: `the check function could not connect to Coupa (${o.error}), so the Coupa credentials were not checked. The organization does not allow HTTPS from functions, or a new allowance is not active yet: wait some minutes and click Check again`,
+    };
   if (o.http_status === undefined)
     return {
-      status: 'unchecked',
+      status: 'unreachable',
       detail: `the check function could not reach Coupa (${o.error}); the organization may not allow HTTPS from functions`,
     };
   if (o.http_status !== 200)
@@ -603,10 +615,13 @@ export async function deployCib(
       if (k.status === 'invalid') blockers.push(`Coupa rejected the credentials: ${k.detail}`);
       if (k.status === 'missing_scopes')
         blockers.push(`the Coupa credentials miss scopes: ${k.missing!.join(', ')}`);
+      if (k.status === 'no_egress' || k.status === 'unreachable') blockers.push(k.detail!);
       if (k.status === 'unchecked') notes.push(k.detail!);
-      if (k.status === 'ok' && !requiredScopes.length)
+      if (k.status === 'ok')
         notes.push(
-          'Coupa accepted the credentials; scopes not checked (no readable required_scopes.json)',
+          requiredScopes.length
+            ? `Coupa accepted the credentials and grants all ${requiredScopes.length} required scopes`
+            : 'Coupa accepted the credentials; scopes not checked (no readable required_scopes.json)',
         );
     }
     const pf = await preflight(c, p, orgId, { tokenOwnerUsername, allowExisting, region });

@@ -45,6 +45,10 @@ const host = (d: string) => {
 
 type Outcome = { status: string; blockers?: string[]; notes: string[]; details: string };
 
+// the hook's page in the Rossum UI, from its API url
+const hookPage = (url: string) =>
+  `${domain.value}/extensions/my-extensions/${url.split('/').pop()}`;
+
 export default function App({ connected }: { connected: boolean | null }) {
   const [v, setV] = useState<Record<string, any>>({
     version: '',
@@ -157,7 +161,7 @@ export default function App({ connected }: { connected: boolean | null }) {
       if (deploy) {
         const h = await deployCoupaProbe(c);
         setProbe(h.url);
-        line(`Coupa check function deployed: ${h.url}`);
+        line(`Coupa check function deployed: ${hookPage(h.url)}`);
       } else {
         const n = await teardownCoupaProbes(c);
         setProbe(null);
@@ -328,20 +332,28 @@ export default function App({ connected }: { connected: boolean | null }) {
               {text('coupaSecret', 'Coupa client secret', { secret: true })}
             </div>
           </div>
-          <details class={`${styles.formCard} ${styles.advanced}`} open={!!probe}>
-            <summary class={styles.advancedSummary}>
+          <div class={styles.formCard}>
+            <div class={styles.stepHeader}>
               <span class={styles.stepBadgeMuted}>i</span>
               <span class={styles.stepTitle}>
                 Coupa check function
                 <span class={styles.optionalTag}>optional</span>
               </span>
-              <span class={styles.chevron}>▾</span>
-            </summary>
-            <div class={`${styles.advancedBody} ${styles.checkRow}`}>
+            </div>
+            <div class={styles.checkRow}>
               <span class={styles.check}>
-                {probe
-                  ? `Deployed (${probe}): Check calls Coupa from it. It works only if the organization lets functions call HTTPS hosts.`
-                  : 'Not deployed: Check calls Coupa directly from this browser instead. Deploy this only if that does not work for the organization.'}
+                {probe ? (
+                  <span>
+                    Deployed (
+                    <a href={hookPage(probe)} target="_blank" rel="noreferrer">
+                      {hookPage(probe)}
+                    </a>
+                    ): Check calls Coupa from it. It works only if the organization lets functions
+                    call HTTPS hosts.
+                  </span>
+                ) : (
+                  'Not deployed. Check sends the Coupa credentials to Coupa from this browser. If the browser cannot connect to Coupa, deploy the check function.'
+                )}
               </span>
               <div class={styles.checkActions}>
                 <button
@@ -362,7 +374,7 @@ export default function App({ connected }: { connected: boolean | null }) {
                 </button>
               </div>
             </div>
-          </details>
+          </div>
           <div class={`${styles.formCard} ${styles.actionCard}`}>
             <div class="filters-row">
               {text('run', 'Run ID (re-use to resume)')}

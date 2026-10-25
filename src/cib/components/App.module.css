@@ -59,35 +59,6 @@
   margin-left: 6px;
 }
 
-/* The Coupa check function is optional and most deploys never touch it, so it
-   lives collapsed in a <details>: a one-line summary instead of a permanent
-   row of controls fighting the primary fields for attention. */
-.advanced {
-  padding: 0;
-}
-.advancedSummary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 16px;
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-}
-.advancedSummary::-webkit-details-marker {
-  display: none;
-}
-.chevron {
-  margin-left: auto;
-  color: var(--text-secondary);
-  transition: transform 0.15s;
-}
-.advanced[open] .chevron {
-  transform: rotate(180deg);
-}
-.advancedBody {
-  padding: 0 16px 14px;
-}
 /* The Coupa check function controls: explanation on its own line, so it never
    fights a button row (or a native "fill this field" tooltip) for the same
    horizontal space. */
