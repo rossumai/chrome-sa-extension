@@ -61,13 +61,25 @@ vi.stubGlobal('chrome', { storage: { local: { get: vi.fn(async () => ({})), set:
 const keyOf = (id: string) => flatten(store.work.value).find((r) => r.node.id === id)!.key;
 const row = (id: string) => root.querySelector(`[data-row-key="${keyOf(id)}"]`) as HTMLElement;
 
-const pickRule = (v: string) => {
-  const select = root.querySelector('select[data-picker="rule"]') as HTMLSelectElement;
+// The rule and hook filters are SearchPickers: focus opens the list, mousedown picks.
+const openPicker = (picker: string) => {
   act(() => {
-    select.value = v;
-    select.dispatchEvent(new Event('change', { bubbles: true }));
+    (root.querySelector(`[data-picker="${picker}"] input`) as HTMLInputElement).focus();
   });
 };
+const pickerOptions = (picker: string) =>
+  [...root.querySelectorAll(`[data-picker="${picker}"] [data-option]`)].map((o) => o.textContent);
+const pickIn = (picker: string, v: string) => {
+  openPicker(picker);
+  act(() => {
+    root
+      .querySelector(`[data-picker="${picker}"] [data-option="${v}"]`)!
+      .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  });
+};
+const pickerValue = (picker: string) =>
+  (root.querySelector(`[data-picker="${picker}"]`) as HTMLElement).dataset.value;
+const pickRule = (v: string) => pickIn('rule', v);
 const typeFilter = (v: string) => {
   const input = root.querySelector('input[data-filter="fields"]') as HTMLInputElement;
   act(() => {
@@ -668,11 +680,7 @@ describe('Builder inspector visibility', () => {
 
 describe('Builder rule highlight', () => {
   it('picking a rule marks the fields it reads and targets, and lists missing ones', () => {
-    const select = root.querySelector('select[data-picker="rule"]') as HTMLSelectElement;
-    act(() => {
-      select.value = '40';
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    pickRule('40');
     expect(row('doc_id').dataset.rule).toBe('condition');
     expect(row('item_desc').dataset.rule).toBe('action');
     expect(row('vendor')).toBeNull(); // filtered out: the rule does not use it
@@ -812,7 +820,7 @@ describe('Builder rule filter', () => {
 
   it('the filter bar holds text, rule, hook (and configuration), then the annotation', () => {
     const bar = root.querySelector('input[data-filter="fields"]')!.parentElement!;
-    const order = [...bar.querySelectorAll('input[data-filter], select[data-picker]')].map(
+    const order = [...bar.querySelectorAll('input[data-filter], [data-picker]')].map(
       (e) => e.getAttribute('data-filter') || e.getAttribute('data-picker'),
     );
     expect(order).toEqual(['fields', 'rule', 'hook', 'annotation']);
@@ -1225,18 +1233,63 @@ describe('Builder hook mode: jump to a configuration', () => {
   });
 });
 
+describe('Builder searchable rule picker', () => {
+  beforeEach(() => {
+    act(() => {
+      store.rules.value = [
+        { id: 40, name: 'Doc ID present', enabled: true, trigger_condition: '', actions: [] },
+        { id: 41, name: 'Totals match', enabled: true, trigger_condition: '', actions: [] },
+      ];
+    });
+  });
+  const input = () => root.querySelector('[data-picker="rule"] input') as HTMLInputElement;
+  const type = (v: string) =>
+    act(() => {
+      input().value = v;
+      input().dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  const key = (k: string) =>
+    act(() => {
+      input().dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
+    });
+
+  it('typing narrows the list by name or by id', () => {
+    openPicker('rule');
+    type('total');
+    expect(pickerOptions('rule')).toEqual(['Totals match (41)']);
+    type('40');
+    expect(pickerOptions('rule')).toEqual(['Doc ID present (40)']);
+    type('nothing like it');
+    expect(pickerOptions('rule')).toEqual([]);
+    expect(root.querySelector('[data-picker="rule"]')!.textContent).toContain('No match');
+  });
+
+  it('arrow keys move through the matches and Enter opens the rule', () => {
+    openPicker('rule');
+    key('ArrowDown');
+    key('Enter');
+    expect(store.ruleEditor.value!.ruleId).toBe(41);
+    expect(input().value).toBe('Totals match (41)');
+    expect(root.querySelector('[data-picker="rule"] [role="listbox"]')).toBeNull();
+  });
+
+  it('Esc closes the list and keeps the picked rule', () => {
+    pickRule('40');
+    openPicker('rule');
+    type('tot');
+    key('Escape');
+    expect(root.querySelector('[data-picker="rule"] [role="listbox"]')).toBeNull();
+    expect(input().value).toBe('Doc ID present (40)');
+    expect(store.ruleEditor.value!.ruleId).toBe(40);
+  });
+});
+
 describe('Builder MDH hook filter', () => {
   it('picking a hook opens hook mode; the configuration filter appears; clearing closes it', () => {
     expect(root.querySelector('select[data-picker="config"]')).toBeNull();
-    const hookSel = root.querySelector('select[data-picker="hook"]') as HTMLSelectElement;
-    expect([...hookSel.options].map((o) => o.textContent)).toEqual([
-      'no hook',
-      'Vendor matching (70)',
-    ]);
-    act(() => {
-      hookSel.value = '70';
-      hookSel.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    openPicker('hook');
+    expect(pickerOptions('hook')).toEqual(['Vendor matching (70)']);
+    pickIn('hook', '70');
     expect(root.querySelector('aside[data-panel="hook"]')).not.toBeNull();
     const cfg = root.querySelector('select[data-picker="config"]') as HTMLSelectElement;
     expect([...cfg.options].map((o) => o.textContent)).toEqual([
@@ -1244,9 +1297,7 @@ describe('Builder MDH hook filter', () => {
       '1 · Configuration 1',
     ]);
     act(() => {
-      const sel = root.querySelector('select[data-picker="hook"]') as HTMLSelectElement;
-      sel.value = '';
-      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      (root.querySelector('[data-action="clear-hook"]') as HTMLElement).click();
     });
     expect(root.querySelector('aside[data-panel="hook"]')).toBeNull();
     expect(root.querySelector('select[data-picker="config"]')).toBeNull();
@@ -1254,16 +1305,12 @@ describe('Builder MDH hook filter', () => {
 
   it('a rule and a hook close each other', () => {
     pickRule('40');
-    const hookSel = root.querySelector('select[data-picker="hook"]') as HTMLSelectElement;
-    act(() => {
-      hookSel.value = '70';
-      hookSel.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    pickIn('hook', '70');
     expect(store.ruleEditor.value).toBeNull();
-    expect((root.querySelector('select[data-picker="rule"]') as HTMLSelectElement).value).toBe('');
+    expect(pickerValue('rule')).toBe('');
     pickRule('40');
     expect(store.hookEditor.value).toBeNull();
-    expect((root.querySelector('select[data-picker="hook"]') as HTMLSelectElement).value).toBe('');
+    expect(pickerValue('hook')).toBe('');
   });
 });
 
@@ -1297,10 +1344,10 @@ describe('Builder validation results', () => {
     expect(root.querySelector('[data-validation-strip]')).toBeNull();
     const count = row('doc_id').querySelector('[data-action="field-rules"]') as HTMLElement;
     expect(count.dataset.fired).toBe('true');
-    const opt = [
-      ...(root.querySelector('select[data-picker="rule"]') as HTMLSelectElement).options,
-    ].find((o) => o.value === '40')!;
-    expect(opt.textContent).toContain('fired');
+    openPicker('rule');
+    expect(root.querySelector('[data-picker="rule"] [data-option="40"]')!.textContent).toContain(
+      'fired',
+    );
     expect(root.querySelector('[data-action="revalidate"]')).not.toBeNull();
   });
 });

@@ -19,11 +19,13 @@ import { openRuleEditor, closeRuleEditor, openHookEditor, closeHookEditor } from
 import { mdhHooks, configSummaries } from '../matching.js';
 import { pickHookConfig } from './hookJump.js';
 import AnnotationPicker from './AnnotationPicker.jsx';
+import SearchPicker from './SearchPicker.jsx';
 import s from './Builder.module.css';
 
 // The bar above the grid: its filters — text (id or label), a rule, an MDH hook and one of
-// the hook's configurations — and, at the right end, the annotation whose values show. Picking a rule or a hook opens it in the right panel and shows
-// only its fields; the text filter then adds matches.
+// the hook's configurations — and, at the right end, the annotation whose values show.
+// Picking a rule or a hook (typing finds it by name or id) opens it in the right panel and
+// shows only its fields; the text filter then adds matches.
 export default function FilterBar() {
   const editing = ruleEditor.value;
   const msgFields = validation.value?.placed.byField.size ?? 0;
@@ -68,25 +70,26 @@ export default function FilterBar() {
       {selectedQueueId.value != null && (
         <Fragment>
           <span class={s.dim}>Rule</span>
-          <select
-            class={s.select}
-            data-picker="rule"
+          <SearchPicker
+            picker="rule"
             value={editing ? (editing.ruleId != null ? String(editing.ruleId) : 'new') : ''}
-            onChange={(e) => {
-              const v = (e.currentTarget as HTMLSelectElement).value;
-              if (v && v !== 'new') openRuleEditor(Number(v));
-              else if (!v) closeRuleEditor();
+            placeholder={rules.value.length ? 'no rule' : 'no rules on this queue'}
+            options={[
+              ...(editing && editing.ruleId == null
+                ? [{ value: 'new', label: 'new rule (unsaved)' }]
+                : []),
+              ...rules.value.map((r) => ({
+                value: String(r.id),
+                label:
+                  `${r.name} (${r.id})` +
+                  (r.enabled === false ? ' · disabled' : '') +
+                  (validation.value?.fired.has(r.id) ? ' ● fired' : ''),
+              })),
+            ]}
+            onPick={(v) => {
+              if (v !== 'new') openRuleEditor(Number(v));
             }}
-          >
-            <option value="">{rules.value.length ? 'no rule' : 'no rules on this queue'}</option>
-            {editing && editing.ruleId == null && <option value="new">new rule (unsaved)</option>}
-            {rules.value.map((r) => (
-              <option value={String(r.id)}>
-                {r.name} ({r.id}){r.enabled === false ? ' · disabled' : ''}
-                {validation.value?.fired.has(r.id) ? ' ● fired' : ''}
-              </option>
-            ))}
-          </select>
+          />
           {editing && (
             <button
               type="button"
@@ -111,23 +114,13 @@ export default function FilterBar() {
       {selectedQueueId.value != null && (
         <Fragment>
           <span class={s.dim}>MDH</span>
-          <select
-            class={s.select}
-            data-picker="hook"
+          <SearchPicker
+            picker="hook"
             value={hookEd ? String(hookEd.hookId) : ''}
-            onChange={(e) => {
-              const v = (e.currentTarget as HTMLSelectElement).value;
-              if (v) openHookEditor(Number(v));
-              else closeHookEditor();
-            }}
-          >
-            <option value="">{mdh.length ? 'no hook' : 'no MDH hooks on this queue'}</option>
-            {mdh.map((x) => (
-              <option value={String(x.id)}>
-                {x.name} ({x.id})
-              </option>
-            ))}
-          </select>
+            placeholder={mdh.length ? 'no hook' : 'no MDH hooks on this queue'}
+            options={mdh.map((x) => ({ value: String(x.id), label: `${x.name} (${x.id})` }))}
+            onPick={(v) => openHookEditor(Number(v))}
+          />
           {hookEd && (
             <Fragment>
               <select
