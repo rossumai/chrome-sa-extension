@@ -270,6 +270,21 @@ export default function Inspector() {
       doneText="Applied as one edit — Undo takes it back."
     />
   );
+  // Closing clears the selection, as Esc or a click into empty grid space does.
+  const head = (
+    <div class={s.ruleHead}>
+      <h4 class={s.mono + ' ' + s.inspTitle}>{node.id}</h4>
+      <button
+        type="button"
+        class={s.iconBtn}
+        data-action="close-field"
+        title="Close (Esc)"
+        onClick={() => (selectedKey.value = null)}
+      >
+        ✕
+      </button>
+    </div>
+  );
   const formulaEditor = (fill: boolean) => (
     <div class={s.field + (fill ? ' ' + s.grow : '')}>
       <span class={s.fieldLabel}>Formula</span>
@@ -286,7 +301,7 @@ export default function Inspector() {
   if (expanded && src === 'formula') {
     return shell(
       <Fragment>
-        <h4 class={s.mono + ' ' + s.inspTitle}>{node.id}</h4>
+        {head}
         {askBox}
         {formulaEditor(true)}
       </Fragment>,
@@ -295,7 +310,7 @@ export default function Inspector() {
   }
   return shell(
     <Fragment>
-      <h4 class={s.mono + ' ' + s.inspTitle}>{node.id}</h4>
+      {head}
       <div class={s.dim}>
         {kind}
         {type ? ` · ${type}` : ''}

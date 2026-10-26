@@ -636,6 +636,17 @@ describe('Builder inspector visibility', () => {
     expect(store.selectedKey.value).toBeNull();
   });
 
+  it('hides on its ✕ button', () => {
+    act(() => {
+      row('doc_id').click();
+    });
+    act(() => {
+      (root.querySelector('[data-action="close-field"]') as HTMLElement).click();
+    });
+    expect(root.querySelector('aside[data-panel="field"]')).toBeNull();
+    expect(store.selectedKey.value).toBeNull();
+  });
+
   it('hides on Esc when not typing', () => {
     act(() => {
       row('doc_id').click();
