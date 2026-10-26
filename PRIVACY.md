@@ -1,6 +1,6 @@
 # Privacy policy — Rossum SA extension
 
-Last updated: 2026-08-19
+Last updated: 2026-10-24
 
 This is a community project supported by enthusiasts and volunteers, not an
 official Rossum product.
@@ -17,6 +17,16 @@ closes. All of it stays in your browser. None of it is transmitted anywhere.
 While you use the Rossum Console or the DevTools panel, the extension calls the
 Rossum API of the organisation you are signed in to, using your own session
 token, to show you your own data. Nothing from those calls is transmitted anywhere else.
+
+**CIB deploy** (a Console app) works only when you press Check or Deploy. It downloads the
+public Coupa Integration Baseline release files from GitHub (`api.github.com`,
+`raw.githubusercontent.com`); nothing about you or your organisation is sent there. To verify
+the Coupa client id and secret you enter, it asks the Coupa host you enter for an OAuth token —
+that request goes from your browser only after you grant the optional `*.coupahost.com` /
+`*.coupacloud.com` permission, or from a check function you deploy into your own organisation. A
+deploy writes the configuration, including the Coupa secret in the hooks' write-only secrets,
+into the Rossum organisation you are signed in to. The extension keeps none of these values on
+your device.
 
 ## Usage data — off unless you turn it on
 
@@ -101,6 +111,7 @@ once per document — the extension deliberately does not count repeatedly.
 | `sa_console_app_inspector` | the Inspector became the active app |
 | `sa_console_app_galaxy` | Galaxy became the active app |
 | `sa_console_app_fabry` | Mr. Fabry became the active app |
+| `sa_console_app_cib` | CIB deploy became the active app |
 | `sa_console_app_academy` | the Academy became the active app |
 | `sa_mdh_query_run` | the dataset query surface was used (at most once per Console session) |
 | `sa_mdh_export` | a dataset export started |
