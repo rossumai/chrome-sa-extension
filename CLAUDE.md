@@ -14,7 +14,8 @@ esbuild bundles ES modules from `src/` into `dist/`. No transpilation, no other 
 `build.js` also copies static assets and injects the version (see Versioning). Config:
 `format: 'iife'`, `minify: true`, `jsxFactory: 'h'`, `jsxFragment: 'Fragment'` (Preact JSX).
 
-- `npm run build` — clean build into `dist/`
+- `npm run build` — clean build into `dist/`; also fetches the pinned rdc wasm release into
+  `vendor/rdc/` when it is not there yet (see rdc under Console apps), so it needs network once
 - `npm run dev` — watch mode (JS only; re-run the full build for CSS/HTML changes)
 - `npm run typecheck` — `tsc --noEmit` for `src/`, then `-p tsconfig.tests.json` for `tests/`.
   Two programs, not one: see TypeScript below for why.
@@ -335,20 +336,29 @@ opened, because its form, log and a deploy in flight live in component state.
   log (ANSI colour rendered by `ansi.ts`) and the pulled tree. A prompt rdc raises is shown with
   its choices; Cancel answers `null`. `apiBase` is `${consoleDomain}/api/v1`; the org id is the
   one organization `GET /organizations` lists (`currentOrg`), else it refuses.
-  **The wasm is not in the repo.** `scripts/build-rdc-wasm.sh <rdc checkout>` (or `RDC_DIR`)
-  builds rdc's `wasm/` crate and runs `wasm-bindgen --target web` (the exact version the crate
-  pins, or it fails) into the git-ignored `vendor/rdc/`. Only when that exists does `build.js`
-  copy the glue and module to `dist/console/rdc/` **and add
-  `"content_security_policy": {"extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"}`
-  to `dist/manifest.json`** (`scripts/rdc-vendor.cjs`, pinned by `tests/rdc-vendor-build.test.ts`):
-  the default MV3 CSP refuses to compile any WebAssembly (measured in Chrome for Testing 156).
-  A clean checkout — CI, every Web Store release — has no vendor build, keeps the default CSP,
-  and the app says the build is missing. The glue is loaded at run time with
-  `import(chrome.runtime.getURL(…))`, which esbuild leaves alone in the iife bundle, so
-  `src/rdc/wasm.ts` carries a hand-kept subset of the generated `rdc_wasm.d.ts` (the source of
-  truth). **Shipping this app for real needs that CSP relaxation in `manifest.json` itself —
-  an open decision**, and the reason the rules above still say the Console runs under the
-  default CSP. 
+  **The wasm is not in the repo; every build fetches it.** `rdc-wasm.json` pins an rdc release:
+  `tag`, its `asset` (`rdc-<version>-wasm32-unknown-unknown.tar.gz`) and the asset's `sha256`.
+  `build.js` (via `scripts/rdc-vendor.cjs`) downloads
+  `https://github.com/mrtnzlml/rdc/releases/download/<tag>/<asset>` — no token, no
+  `api.github.com` — checks the sha256 BEFORE unpacking, unpacks it with Node's `zlib` and a
+  ustar reader (no `tar` CLI, no dependency) into the git-ignored `vendor/rdc/` with a
+  `.source.json` marker, and copies `rdc_wasm.js` + `rdc_wasm_bg.wasm` to `dist/console/rdc/`.
+  While the marker matches the pin nothing is downloaded again (`npm run dev`, rebuilds). A
+  network error, an HTTP error, a hash mismatch or a missing file FAILS the build — there is
+  no "build without wasm". So CI and the Web Store release get it through `npm run build` with
+  no workflow change, and need network access to github.com.
+  **To bump**: set `tag` and `asset` in `rdc-wasm.json`, put the new asset's `sha256`
+  (`curl -sL <url> | shasum -a 256`) beside them, build, and check the Console shows the new
+  version. `src/rdc/wasm.ts` carries a hand-kept subset of the release's `rdc_wasm.d.ts` (the
+  source of truth) — re-read it on a bump.
+  **Developer override**: `scripts/build-rdc-wasm.sh <rdc checkout>` (or `RDC_DIR`) builds a
+  LOCAL rdc's `wasm/` crate with `wasm-bindgen --target web` (the exact version the crate
+  pins, or it fails) into `vendor/rdc/` with a `{"local": …}` marker. Only
+  `RDC_WASM_LOCAL=1 npm run build` uses it; a plain build replaces it with the pinned release.
+  The glue is loaded at run time with `import(chrome.runtime.getURL(…))`, which esbuild leaves
+  alone in the iife bundle, because `npm run typecheck` and `npm test` run before any build on
+  a fresh clone, when `vendor/rdc/` does not exist yet.
+
 Auth: the popup (or the worker) runs `readAuthInfo` in the Rossum tab via
 `chrome.scripting.executeScript`, stages a single-use `consoleAuth_<uuid>` in
 `chrome.storage.local`, and opens `console/console.html?authId=…`. The Console reads and
@@ -608,8 +618,16 @@ and all their classes are prefixed `rossum-sa-extension-*`.
 - **esbuild** (dev)
 
 All are CSP-clean (no `eval`, no `new Function`) — check the BUILT bundles, and note that
-`\beval\(` also matches `chrome.devtools.inspectedWindow.eval(`, a DevTools API method. The
-Console runs under the default MV3 CSP — keep it that way.
+`\beval\(` also matches `chrome.devtools.inspectedWindow.eval(`, a DevTools API method.
+
+**The extension-page CSP is the MV3 default plus `'wasm-unsafe-eval'` and nothing else**
+(`manifest.json`: `script-src 'self' 'wasm-unsafe-eval'; object-src 'self';`, pinned by
+`tests/rdc-csp.test.ts`). It is there for the rdc app's WebAssembly only: the default
+`script-src 'self'` refuses to compile any wasm (measured in Chrome for Testing 156; Chrome's
+CSP docs say the same). It allows compiling wasm and nothing more — `eval`, `new Function` and
+remote scripts are still refused, so every bundle must stay CSP-clean exactly as before. It
+applies to every extension page (Console, popup, DevTools panel, side panel). Never add
+`'unsafe-eval'` (Chrome rejects it for extension pages anyway).
 
 ## JSX escape sequences
 

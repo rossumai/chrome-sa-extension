@@ -1,13 +1,14 @@
 #!/bin/sh
-# Builds rdc's wasm bindings from a local rdc checkout into vendor/rdc/ (git-ignored),
-# for the experimental rdc Console app. build.js copies them into dist/ when present.
+# DEVELOPER OVERRIDE. Normal builds use the rdc release pinned in rdc-wasm.json (see
+# scripts/rdc-vendor.cjs). This builds rdc's wasm bindings from a local rdc checkout into
+# vendor/rdc/ (git-ignored) instead, with a `{ "local": … }` marker. Only a build run with
+# RDC_WASM_LOCAL=1 uses it; a plain `npm run build` replaces it with the pinned release.
 #
 #   scripts/build-rdc-wasm.sh <path-to-rdc-checkout>     (or RDC_DIR=<path>)
+#   RDC_WASM_LOCAL=1 npm run build
 #
 # Needs the wasm32-unknown-unknown target and wasm-bindgen-cli at EXACTLY the version
 # <rdc>/wasm/Cargo.toml pins: the CLI refuses a module built by another wasm-bindgen.
-# To switch to a pinned release download later, replace the build steps below with a
-# download that writes the same three files into vendor/rdc/.
 set -eu
 
 RDC="${1:-${RDC_DIR:-}}"
@@ -47,5 +48,6 @@ wasm-bindgen --target web --out-dir "$TMP" "$RDC/wasm/target/wasm32-unknown-unkn
 
 rm -rf "$OUT"
 mkdir -p "$OUT"
-cp "$TMP/rdc_wasm.js" "$TMP/rdc_wasm_bg.wasm" "$TMP/rdc_wasm.d.ts" "$OUT/"
-echo "wrote $OUT (rdc_wasm.js, rdc_wasm_bg.wasm, rdc_wasm.d.ts)"
+cp "$TMP/rdc_wasm.js" "$TMP/rdc_wasm_bg.wasm" "$TMP/rdc_wasm.d.ts" "$TMP/rdc_wasm_bg.wasm.d.ts" "$OUT/"
+printf '{\n  "local": "%s"\n}\n' "$(cd "$RDC" && pwd)" > "$OUT/.source.json"
+echo "wrote $OUT from $RDC — build with RDC_WASM_LOCAL=1 npm run build to use it"

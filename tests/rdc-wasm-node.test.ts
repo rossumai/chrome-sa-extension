@@ -4,8 +4,9 @@ import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { envInputFor, ENV } from '../src/rdc/core.js';
 
-// Loads the real vendor build in Node, when there is one (scripts/build-rdc-wasm.sh). A clean
-// checkout has none, and then this is skipped. No network: only create + read the tree.
+// Loads the real rdc wasm in Node from vendor/rdc/, which `npm run build` fills (CI builds
+// before testing). Skipped only when vendor/rdc/ is absent — a fresh clone tested before its
+// first build. No network: only create + read the tree.
 const VENDOR = join(process.cwd(), 'vendor', 'rdc');
 const present = existsSync(join(VENDOR, 'rdc_wasm.js'));
 

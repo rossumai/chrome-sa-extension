@@ -1,7 +1,7 @@
 const esbuild = require('esbuild');
 const { execSync } = require('child_process');
 const { cpSync, rmSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
-const { RDC_VENDOR_DIR, RDC_SHIPPED_FILES, hasRdcVendor, withRdcCsp } = require('./scripts/rdc-vendor.cjs');
+const { RDC_VENDOR_DIR, RDC_SHIPPED_FILES, ensureRdcWasm } = require('./scripts/rdc-vendor.cjs');
 
 const isWatch = process.argv.includes('--watch');
 
@@ -22,15 +22,7 @@ for (const dir of ['dist/popup', 'dist/icons', 'dist/console', 'dist/devtools', 
 const manifest = JSON.parse(readFileSync('manifest.json', 'utf8'));
 manifest.version = chromeVersion;
 manifest.version_name = gitHash;
-// The experimental rdc app's wasm build, only when vendor/rdc/ exists — and with it, the one
-// CSP relaxation WebAssembly needs. Without it the manifest is exactly the source's. See
-// scripts/rdc-vendor.cjs.
-const rdcVendor = hasRdcVendor();
-writeFileSync('dist/manifest.json', JSON.stringify(withRdcCsp(manifest, rdcVendor), null, 2) + '\n');
-if (rdcVendor) {
-  mkdirSync('dist/console/rdc', { recursive: true });
-  for (const f of RDC_SHIPPED_FILES) cpSync(`${RDC_VENDOR_DIR}/${f}`, `dist/console/rdc/${f}`);
-}
+writeFileSync('dist/manifest.json', JSON.stringify(manifest, null, 2) + '\n');
 
 cpSync('icons', 'dist/icons', { recursive: true });
 cpSync('src/popup/popup.html', 'dist/popup/popup.html');
@@ -117,12 +109,27 @@ function hljsCombinedCss() {
 }
 
 
-if (isWatch) {
-  // Once, up front: the watcher rebuilds JS only, so re-run `npm run build` after editing a
-  // stylesheet or an HTML page.
-  copyDocStylesheets();
-  esbuild.context(options).then((ctx) => ctx.watch());
-} else {
-  esbuild.buildSync(options);
-  copyDocStylesheets();
+// The experimental rdc app's wasm: the release pinned in rdc-wasm.json, downloaded and
+// sha256-checked into vendor/rdc/ unless it is there already, then copied next to the
+// Console. Any failure fails the build. See scripts/rdc-vendor.cjs.
+async function copyRdcWasm() {
+  await ensureRdcWasm();
+  mkdirSync('dist/console/rdc', { recursive: true });
+  for (const f of RDC_SHIPPED_FILES) cpSync(`${RDC_VENDOR_DIR}/${f}`, `dist/console/rdc/${f}`);
 }
+
+(async () => {
+  await copyRdcWasm();
+  if (isWatch) {
+    // Once, up front: the watcher rebuilds JS only, so re-run `npm run build` after editing a
+    // stylesheet or an HTML page.
+    copyDocStylesheets();
+    esbuild.context(options).then((ctx) => ctx.watch());
+  } else {
+    esbuild.buildSync(options);
+    copyDocStylesheets();
+  }
+})().catch((e) => {
+  console.error(e.message || e);
+  process.exit(1);
+});

@@ -53,7 +53,7 @@ async function organizations(d: string, t: string): Promise<unknown> {
 }
 
 export default function App({ connected }: { connected: boolean | null }) {
-  // undefined while loading, null when this build has no rdc
+  // undefined while loading, null when it failed to load (the error says why)
   const [rdc, setRdc] = useState<Rdc | null | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -145,12 +145,6 @@ export default function App({ connected }: { connected: boolean | null }) {
         )}
         <div class={styles.body}>
           {rdc === undefined && <div class="empty-state">Loading rdc{'…'}</div>}
-          {rdc === null && !error && (
-            <div class="empty-state">
-              rdc wasm build not present — build it with scripts/build-rdc-wasm.sh, then rebuild the
-              extension.
-            </div>
-          )}
           {rdc && (
             <section class={styles.card}>
               <p class={styles.muted}>
