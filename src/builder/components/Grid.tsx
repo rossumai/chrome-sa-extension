@@ -777,9 +777,19 @@ export default function Grid() {
   useEffect(() => {
     const wrap = tableRef.current?.parentElement;
     if (!wrap || typeof ResizeObserver === 'undefined') return undefined;
-    const ro = new ResizeObserver(() => setAvail(wrap.clientWidth));
+    // Resize in the next frame, not inside the callback: a same-frame relayout re-triggers
+    // the observer, which Chrome reports as "ResizeObserver loop completed with undelivered
+    // notifications". setAvail skips the render when the width did not change.
+    let frame = 0;
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => setAvail(wrap.clientWidth));
+    });
     ro.observe(wrap);
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+    };
   }, []);
   let show = visibleKeys(
     work.value,
