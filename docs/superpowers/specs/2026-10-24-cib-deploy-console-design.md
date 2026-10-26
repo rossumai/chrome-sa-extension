@@ -46,7 +46,7 @@ Both hosts answer CORS with `*`, so no host permission is needed. A run makes 2 
    teardown gets a full first import (from the epoch), because the incremental anchor would
    otherwise import almost nothing.
 4. **Checkpoint**: after each step the run state (`ops`, `cursor`, `idmap`, …) is written to the
-   org's Data Storage collection `_cib_deploy_runs`. The Coupa secret is stored only as the
+   org's Data Storage collection `_SA_EXTENSION__cib_deploy_runs`. The Coupa secret is stored only as the
    placeholder `$secret:client_secret`. A re-run with the same run id resumes. A complete deploy
    deletes its checkpoint; a deploy with pending imports keeps it.
 

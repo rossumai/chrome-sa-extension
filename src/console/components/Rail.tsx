@@ -140,7 +140,6 @@ const APPS: RailApp[] = [
     title: 'CIB deploy (Coupa Integration Baseline)',
     icon: CIB_ICON,
     beta: true,
-    gated: true,
   },
   // `gated` hides the row unless experimentalUnlocked is set; `exp` is the
   // badge that names that gate. The title spells the abbreviation out, since

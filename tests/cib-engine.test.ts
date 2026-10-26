@@ -157,10 +157,13 @@ test('tokenOwner, when given, is used for $token_owner instead of the caller', a
   assert.equal(f.db.hooks[0].token_owner, `${f.api}/users/77`);
 });
 
-test('the checkpoint lives in the _cib_deploy_runs collection', async () => {
+test('the checkpoint lives in the hidden _SA_EXTENSION__cib_deploy_runs collection', async () => {
   const { f, c } = setup();
   await deploy(c, { run: 'r', orgId: ORG, ops: wsQueue });
-  assert.deepEqual([...new Set(f.ds.map((d) => d.collectionName))], ['_cib_deploy_runs']);
+  assert.deepEqual(
+    [...new Set(f.ds.map((d) => d.collectionName))],
+    ['_SA_EXTENSION__cib_deploy_runs'],
+  );
 });
 
 test('429: the call waits and retries (Retry-After when given), so a rate limit does not stop the deploy', async () => {

@@ -22,7 +22,7 @@ describe('Rail', () => {
 
   it('renders one button per app', () => {
     const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(5); // CIB is gated
+    expect(root.querySelectorAll('.app-rail-item').length).toBe(6); // only the Academy is gated
   });
 
   it('renders the Inspector app button and switches to it on click', () => {
@@ -45,9 +45,7 @@ describe('Rail', () => {
     expect(idx('Annotation Inspector')).toBeLessThan(idx('Org Galaxy')); // above Galaxy
   });
 
-  // CIB visibility and ordering are covered in detail by the "Rail — CIB gate"
-  // describe block below; this just confirms the overall rail order when
-  // every gated app is also visible (CIB sits after Galaxy, before Academy).
+  // CIB sits after Galaxy and before the Academy (visible once the gate is unlocked).
   it('orders CIB after Galaxy and before Academy when the gate is unlocked', () => {
     experimentalUnlocked.value = true;
     const items = [...mount().querySelectorAll('.app-rail-item')];
@@ -134,7 +132,7 @@ describe('Rail — academy (experimental) gate', () => {
   it('hides Academy while the gate is locked', () => {
     experimentalUnlocked.value = false;
     const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(5); // CIB and Academy both gated
+    expect(root.querySelectorAll('.app-rail-item').length).toBe(6); // the Academy is the only gated app
     expect(
       [...root.querySelectorAll('.app-rail-item')].some(
         (b) => b.getAttribute('title') === ACADEMY_TITLE,
@@ -156,18 +154,18 @@ describe('Rail — academy (experimental) gate', () => {
     expect(activeApp.value).toBe('academy');
   });
 
-  // The consolidation itself: ONE key now drives the Academy and CIB, not Fabry.
+  // The consolidation itself: ONE key now drives the Academy, not Fabry or CIB.
   // Before 2026-08-11 two keys drove two apps, and the pair of tests here
   // asserted they could not cross-unlock. The risk now runs the other way — that
   // the surviving gate quietly re-acquires Fabry — so that is what this pins.
-  it('drives the Academy and CIB; Fabry is present in both gate states', () => {
+  it('drives the Academy; Fabry and CIB are present in both gate states', () => {
     experimentalUnlocked.value = false;
     let titles = [...mount().querySelectorAll('.app-rail-item')].map((b) =>
       b.getAttribute('title'),
     );
     expect(titles).toContain('Mr. Fabry');
     expect(titles).not.toContain(ACADEMY_TITLE);
-    expect(titles).not.toContain('CIB deploy (Coupa Integration Baseline)');
+    expect(titles).toContain('CIB deploy (Coupa Integration Baseline)');
 
     experimentalUnlocked.value = true;
     titles = [...mount().querySelectorAll('.app-rail-item')].map((b) => b.getAttribute('title'));
@@ -177,27 +175,13 @@ describe('Rail — academy (experimental) gate', () => {
   });
 });
 
-describe('Rail — CIB gate', () => {
-  const CIB_TITLE = 'CIB deploy (Coupa Integration Baseline)';
-
-  it('hides CIB while the gate is locked', () => {
+describe('Rail — CIB is public', () => {
+  it('shows CIB with its beta badge while the experimental gate is LOCKED, and switches on click', () => {
     experimentalUnlocked.value = false;
-    const root = mount();
-    expect(
-      [...root.querySelectorAll('.app-rail-item')].some(
-        (b) => b.getAttribute('title') === CIB_TITLE,
-      ),
-    ).toBe(false);
-  });
-
-  it('shows CIB with a beta badge when unlocked, and switches on click', () => {
-    experimentalUnlocked.value = true;
-    const root = mount();
-    const btn = [...root.querySelectorAll('.app-rail-item')].find(
-      (b) => b.getAttribute('title') === CIB_TITLE,
+    const btn = [...mount().querySelectorAll('.app-rail-item')].find(
+      (b) => b.getAttribute('title') === 'CIB deploy (Coupa Integration Baseline)',
     )!;
     expect(btn).toBeTruthy();
-    // CIB has both beta and gated, so it shows the beta badge (not exp)
     expect(btn.querySelector('.app-rail-beta')!.textContent).toBe('beta');
     expect(btn.querySelector('.app-rail-exp')).toBeNull();
     (btn as HTMLElement).click();

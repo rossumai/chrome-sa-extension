@@ -3,7 +3,9 @@
 // Rossum API, resolving placeholders as it goes. Progress is checkpointed in Data Storage, so a run
 // can resume after a closed tab or a crash. Plans and API objects are raw JSON, hence the `any`s.
 
-const COLL = '_cib_deploy_runs';
+import { HIDDEN_PREFIX } from '../mdh/hiddenCollections.js';
+
+const COLL = `${HIDDEN_PREFIX}cib_deploy_runs`; // the prefix hides it in Dataset Management
 
 export type ApiResult = { status: number; data: any };
 export type Client = {
