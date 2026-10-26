@@ -86,7 +86,7 @@ export async function listAll(pathOrUrl: string, opts?: RequestOpts): Promise<Ra
   while (next) {
     const page = await get(next, opts);
     if (Array.isArray(page?.results)) out.push(...page.results);
-    next = page?.pagination?.next || null;
+    next = page?.pagination?.next || page?.next || null; // engine_fields: cursor pages
   }
   return out;
 }
@@ -167,6 +167,25 @@ export function createRule(body: Record<string, unknown>): Promise<any> {
 
 export function patchRule(id: number, body: Record<string, unknown>): Promise<any> {
   return request('PATCH', `/api/v1/rules/${id}`, body);
+}
+
+/** A queue's custom engine fields; `name` binds each to the schema datapoint of that id. */
+export function listEngineFields(engineId: number): Promise<RawResource[]> {
+  return listAll(`/api/v1/engine_fields?engine=${engineId}`);
+}
+
+/** The pretrained catalog: the seeds for engine fields and the generic engine's AI fields. */
+export async function listPreTrainedFields(): Promise<RawResource[]> {
+  const r = await get('/api/v1/engine_fields/pre_trained_fields');
+  return Array.isArray(r) ? r : Array.isArray(r?.results) ? r.results : [];
+}
+
+export function createEngineField(body: Record<string, unknown>): Promise<any> {
+  return request('POST', '/api/v1/engine_fields', body);
+}
+
+export function patchEngineField(id: number, body: Record<string, unknown>): Promise<any> {
+  return request('PATCH', `/api/v1/engine_fields/${id}`, body);
 }
 
 /** The hooks attached to a queue (the Builder keeps the MDH ones). */

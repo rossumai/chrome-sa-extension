@@ -11,11 +11,15 @@ import {
   renamed,
   draftName,
   schemaFabry,
+  engineState,
+  engineChanges,
+  work,
 } from '../store.js';
 import { undoChange, redoChange, discard, renameSchema, openSchemaFabry } from '../index.jsx';
 import EditableCell from './EditableCell.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
 import { navDrawer } from './panels.js';
+import { unusedEngineFields } from '../engine.js';
 import Icon from './icons.jsx';
 import { canUndo, canRedo } from '../history.js';
 import s from './Builder.module.css';
@@ -35,10 +39,51 @@ export function summaryText(
     .join(' · ');
 }
 
+// The queue's extraction engine; for a custom one, its settings and unused fields on hover.
+function EngineBadge() {
+  const es = engineState.value;
+  if (!es || es.kind === 'none') return null;
+  if (es.kind !== 'custom') {
+    return (
+      <span class={s.engineBadge} data-engine={es.kind}>
+        {es.kind === 'generic' ? 'Generic engine' : 'Dedicated engine'}
+      </span>
+    );
+  }
+  const e = es.engine;
+  const unused = e ? unusedEngineFields(work.value, es.fields) : [];
+  return (
+    <span
+      class={s.engineBadge + (es.error ? ' ' + s.warn : '')}
+      data-engine="custom"
+      title={
+        e
+          ? [
+              `use case: ${e.settings?.use_case ?? 'generic_ap'}`,
+              `learning: ${e.learning_enabled ? 'on' : 'off'}`,
+              `${es.fields.length} engine fields`,
+              unused.length ? `not in this schema: ${unused.map((f) => f.name).join(', ')}` : '',
+            ]
+              .filter(Boolean)
+              .join('\n')
+          : (es.error ?? '')
+      }
+    >
+      {e ? `Engine: ${e.name} (${e.id})` : es.error ? 'Engine did not load' : 'Engine…'}
+    </span>
+  );
+}
+
 export default function Toolbar({ onSave }: { onSave: () => void }) {
   const q = selectedQueue.value;
   const ws = workspaces.value.find((w) => w.url === q?.workspace);
-  const text = summaryText(summary.value, renamed.value);
+  const text = [
+    summaryText(summary.value, renamed.value),
+    engineChanges.value &&
+      `${engineChanges.value} engine field${engineChanges.value === 1 ? '' : 's'}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
   return (
     <div class={s.toolbar} data-toolbar="">
       <button
@@ -63,6 +108,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
           </span>
         )}
       </span>
+      <EngineBadge />
       {sharedCount.value > 1 && (
         <span class={s.shared} title="Editing this schema changes every queue that uses it">
           used by {sharedCount.value} queues

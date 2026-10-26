@@ -175,7 +175,7 @@ export type ApplyResult = {
   skipped: { change: SchemaChange; reason: string }[];
 };
 
-const NEVER = ['category', 'children', '__key', '__deleted'];
+const NEVER = ['category', 'children', '__key', '__deleted', '__engine'];
 
 function clean(attrs: unknown, drop: string[] = []): Record<string, unknown> {
   const out: Record<string, unknown> = {};

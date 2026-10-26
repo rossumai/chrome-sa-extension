@@ -24,6 +24,8 @@ import {
   validation,
   onlyMessages,
   flashRowKey,
+  engineState,
+  engineFieldsByName,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
 import { apply, openRuleEditor, openHookEditor } from '../index.jsx';
@@ -47,6 +49,7 @@ import EditableCell from './EditableCell.jsx';
 import Icon, { type IconName } from './icons.jsx';
 import type { ActionMark } from '../rules.js';
 import { panelOpen, panelWide } from './panels.js';
+import { isExtracted, engineStatus } from '../engine.js';
 import { fitColumns, WIDTHS, LABEL_MIN } from './columnFit.js';
 import s from './Builder.module.css';
 
@@ -410,6 +413,40 @@ function HookBadges({ fieldId }: { fieldId: string }) {
   );
 }
 
+// What the engine extracts into this field. Generic engine: its AI fields (rir_field_names).
+// Custom engine: the engine field's state (see engine.ts), red when the API would reject it.
+function AiCell({ node }: { node: Node }) {
+  const es = engineState.value;
+  if (!es || !isExtracted(node)) return null;
+  if (es.kind !== 'custom') {
+    const names: string[] = Array.isArray(node.rir_field_names) ? node.rir_field_names : [];
+    return names.length ? (
+      <span class={s.mono} title={names.join(', ')}>
+        {names.join(', ')}
+      </span>
+    ) : (
+      <span class={s.dim}>—</span>
+    );
+  }
+  if (!es.engine) return null;
+  const rejected = (node.rir_field_names?.length ?? 0) > 0 || node.disable_prediction === true;
+  const st = engineStatus(node, engineFieldsByName.value);
+  return (
+    <span
+      class={s.aiChip + ' ' + (rejected ? s.ai_rejected : s['ai_' + st.state])}
+      data-ai={rejected ? 'rejected' : st.state}
+      title={
+        rejected
+          ? 'The API rejects this on a custom engine: see the field panel'
+          : `${st.state}${st.seed ? ` · catalog seed ${st.seed}` : ''}`
+      }
+    >
+      {rejected ? 'fix' : st.state}
+      {!rejected && st.seed ? ` · ${st.seed}` : ''}
+    </span>
+  );
+}
+
 function Row({
   node,
   depth,
@@ -512,6 +549,11 @@ function Row({
               {kind === 'multivalue' ? 'table' : kind === 'tuple' ? 'row' : ''}
             </span>
           )}
+        </td>
+      )}
+      {on('ai') && (
+        <td data-col="ai">
+          <AiCell node={node} />
         </td>
       )}
       {on('flags') && (
@@ -693,7 +735,7 @@ function renderNode(
 // hook mode) also drops the grip and the row actions. Source and Type always stay. A wide
 // panel leaves only ID and the mode's Rule or MDH column (ID and Label when there is none).
 const EDITING = ['grip', 'actions'];
-const DETAIL = ['flags'];
+const DETAIL = ['flags', 'ai'];
 
 const columns = computed(() => {
   const cols = [
@@ -702,6 +744,7 @@ const columns = computed(() => {
     'label',
     'source',
     'type',
+    ...(engineState.value && engineState.value.kind !== 'none' ? ['ai'] : []),
     'flags',
     'rules',
     'matching',
@@ -730,6 +773,7 @@ const HEAD: Record<string, any> = {
   value: 'Value',
   rule: 'Rule',
   type: 'Type',
+  ai: 'AI',
   source: 'Source',
   grip: '',
   actions: '',

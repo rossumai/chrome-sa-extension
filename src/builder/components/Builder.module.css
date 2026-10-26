@@ -1399,3 +1399,44 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Engine: the toolbar badge and the AI column's state chips (see engine.ts). */
+.engineBadge {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.aiChip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.ai_seeded {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.ai_learning {
+  background: var(--info-bg);
+  color: var(--info-fg);
+}
+
+.ai_new {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.ai_rejected {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}

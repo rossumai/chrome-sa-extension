@@ -6,6 +6,7 @@ import { setAttr, findByKey, type Node } from '../model.js';
 import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
 import FieldLinks from './FieldLinks.jsx';
+import Extraction from './Extraction.jsx';
 import WideButton from './WideButton.jsx';
 import s from './Builder.module.css';
 
@@ -329,7 +330,9 @@ export default function Inspector() {
             label="Edit mode"
             options={['enabled', 'enabled_without_warning', 'disabled']}
           />
-          <List node={node} path={['rir_field_names']} label="AI fields (rir_field_names)" />
+          <Extraction node={node}>
+            <List node={node} path={['rir_field_names']} label="AI fields (rir_field_names)" />
+          </Extraction>
           <Text node={node} path={['default_value']} label="Default value" />
           <Num node={node} path={['score_threshold']} label="Score threshold" />
           <Num node={node} path={['width']} label="Width" />

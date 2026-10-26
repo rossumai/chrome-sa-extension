@@ -62,7 +62,8 @@ export function cleanAttrs(node: Node): Node {
 
 export function stripForSave(nodes: Node[]): any[] {
   const walk = (n: Node): Node => {
-    const { __key, __deleted, ...rest } = n;
+    // __engine: a staged engine-field edit (see engine.ts), sent to /engine_fields, not here
+    const { __key, __deleted, __engine, ...rest } = n;
     const out = cleanAttrs(rest);
     if (n.children !== undefined) {
       const ks = kids(n)

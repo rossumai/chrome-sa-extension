@@ -27,6 +27,10 @@ vi.mock('../src/builder/api.js', () => ({
   deleteQueue: vi.fn(),
   deleteSchema: vi.fn(),
   get: vi.fn(),
+  listEngineFields: vi.fn(async () => []),
+  listPreTrainedFields: vi.fn(async () => []),
+  createEngineField: vi.fn(async () => ({})),
+  patchEngineField: vi.fn(async () => ({})),
 }));
 vi.mock('../src/agent/agentApi.js', () => ({
   createChat: vi.fn(async () => 'chat-9'),
@@ -109,6 +113,103 @@ describe('save', () => {
     vi.mocked(api.patchSchema).mockResolvedValue({});
     await save();
     expect(store.generalErrors.value.join(' ')).toContain('[0].label');
+  });
+});
+
+describe('custom engine', () => {
+  const ENGINE = 'https://x/api/v1/engines/5';
+  const content = () => [
+    {
+      category: 'section',
+      id: 's',
+      label: 's',
+      children: [
+        { category: 'datapoint', id: 'doc_id', label: 'Doc', type: 'string' },
+        { category: 'datapoint', id: 'po', label: 'PO', type: 'string' },
+      ],
+    },
+  ];
+  const calls: string[] = [];
+  beforeEach(async () => {
+    calls.length = 0;
+    store.queues.value = [
+      {
+        id: 3,
+        name: 'C',
+        schema: 'https://x/api/v1/schemas/33',
+        engine: ENGINE,
+        generic_engine: null,
+      },
+    ];
+    vi.mocked(api.get).mockResolvedValue({ id: 5, url: ENGINE, name: 'Invoices engine' });
+    vi.mocked(api.listEngineFields).mockImplementation(async () => {
+      calls.push('list');
+      return [{ id: 1, name: 'doc_id', type: 'string', pre_trained_field_id: 'document_id' }];
+    });
+    vi.mocked(api.listPreTrainedFields).mockResolvedValue([
+      { name: 'document_id', type: 'string' },
+    ]);
+    vi.mocked(api.createEngineField).mockImplementation(async (b: any) => {
+      calls.push(`create ${b.name}`);
+      return {};
+    });
+    vi.mocked(api.validateSchema).mockImplementation(async () => {
+      calls.push('validate');
+      return {};
+    });
+    vi.mocked(api.patchSchema).mockImplementation(async () => {
+      calls.push('patch schema');
+      return {};
+    });
+    vi.mocked(api.getSchema).mockResolvedValue({
+      id: 33,
+      name: 'Invoices',
+      modified_at: 't0',
+      content: content(),
+    });
+    await openQueue(3);
+    await new Promise((r) => setTimeout(r));
+    calls.length = 0;
+  });
+
+  it('loads the engine and its fields with the queue', () => {
+    expect(store.engineState.value).toMatchObject({ kind: 'custom', engine: { id: 5 } });
+    expect(store.engineState.value!.fields.map((f) => f.name)).toEqual(['doc_id']);
+    expect(store.engineCatalog.value.map((c) => c.name)).toEqual(['document_id']);
+  });
+
+  it('a field without an engine field makes the schema dirty; Save creates it first', async () => {
+    expect(store.engineChanges.value).toBe(1);
+    expect(store.dirty.value).toBe(true);
+    await save();
+    expect(calls.slice(0, 3)).toEqual(['create po', 'list', 'validate']);
+    expect(calls).toContain('patch schema');
+  });
+
+  it('stops before any call when the API would reject the schema', async () => {
+    const key = flatten(store.work.value).find((r) => r.node.id === 'doc_id')!.key;
+    const { apply } = await import('../src/builder/index.jsx');
+    const { setAttr } = await import('../src/builder/model.js');
+    apply(setAttr(store.work.value, key, ['rir_field_names'], ['document_id']));
+    const r = await save();
+    expect(r).toMatchObject({ ok: false, stage: 'local' });
+    expect(calls).toEqual([]);
+    expect(store.rowErrors.value.get(key)?.[0]).toContain('must be empty');
+  });
+
+  it('an empty schema name stops before any engine field is written', async () => {
+    renameSchema('');
+    const r = await save();
+    expect(r).toMatchObject({ ok: false, stage: 'local' });
+    expect(calls).toEqual([]);
+  });
+
+  it('a failed engine-field write stops before the schema save', async () => {
+    vi.mocked(api.createEngineField).mockRejectedValueOnce(new Error('type is invalid'));
+    const r = await save();
+    expect(r).toMatchObject({ ok: false, stage: 'engine' });
+    expect(calls).not.toContain('validate');
+    expect(store.generalErrors.value.join(' ')).toContain('Engine fields: type is invalid');
   });
 });
 

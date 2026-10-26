@@ -99,6 +99,8 @@ afterEach(() => {
 beforeEach(() => {
   document.body.innerHTML = '';
   navDrawer.value = false;
+  store.engineState.value = null;
+  store.engineCatalog.value = [];
   panelWide.value = false;
   root = document.createElement('div');
   document.body.appendChild(root);
@@ -1423,6 +1425,108 @@ describe('Builder field panel: used by', () => {
     open('vendor');
     expect(links().textContent).toContain('Rules (0)');
     expect(links().querySelectorAll('[data-action="open-field-rule"]').length).toBe(0);
+  });
+});
+
+describe('Builder engine', () => {
+  const ai = (id: string) =>
+    (row(id).querySelector('td[data-col="ai"] [data-ai]') as HTMLElement | null)?.dataset.ai;
+  const catalog = [
+    { name: 'document_id', label: 'Document ID', type: 'string', tabular: false },
+    { name: 'table_column_description', label: 'Description', type: 'string', tabular: true },
+  ];
+  const custom = () =>
+    act(() => {
+      store.engineCatalog.value = catalog;
+      store.engineState.value = {
+        kind: 'custom',
+        engine: {
+          id: 5,
+          url: 'https://x/api/v1/engines/5',
+          name: 'Inv engine',
+          learning_enabled: true,
+        },
+        fields: [
+          { id: 1, name: 'doc_id', type: 'string', pre_trained_field_id: 'document_id' },
+          { id: 9, name: 'unused_f', type: 'string', pre_trained_field_id: null },
+        ],
+        error: null,
+      };
+    });
+
+  it('the toolbar names the engine; hover lists engine fields the schema does not use', () => {
+    custom();
+    const badge = root.querySelector('[data-engine="custom"]') as HTMLElement;
+    expect(badge.textContent).toBe('Engine: Inv engine (5)');
+    expect(badge.title).toContain('not in this schema: unused_f');
+  });
+
+  it('the AI column shows each extracted field as seeded, learning or new', () => {
+    custom();
+    expect([ai('doc_id'), ai('vendor'), ai('item_desc')]).toEqual(['seeded', 'new', 'new']);
+    expect(root.querySelector('[data-toolbar]')!.textContent).toContain('2 engine fields');
+  });
+
+  it('picking no seed in the field panel is one undoable edit', () => {
+    custom();
+    act(() => {
+      row('doc_id').click();
+    });
+    expect(root.querySelector('[data-extraction="seeded"]')).not.toBeNull();
+    pickIn('engine-seed', '');
+    expect(root.querySelector('[data-extraction="learning"]')).not.toBeNull();
+    expect(row('doc_id').dataset.status).toBe('edited');
+    act(() => {
+      (root.querySelector('[data-action="undo"]') as HTMLElement).click();
+    });
+    expect(root.querySelector('[data-extraction="seeded"]')).not.toBeNull();
+  });
+
+  it('a table column is offered only table-column seeds', () => {
+    custom();
+    act(() => {
+      row('item_desc').click();
+    });
+    openPicker('engine-seed');
+    expect(pickerOptions('engine-seed')).toEqual([
+      'none — learns from documents',
+      'table_column_description · Description',
+    ]);
+  });
+
+  it('AI fields on a custom engine are marked and can be cleared from the panel', () => {
+    custom();
+    act(() => {
+      apply(setAttr(store.work.value, keyOf('doc_id'), ['rir_field_names'], ['document_id']));
+    });
+    expect(row('doc_id').querySelector('[data-ai="rejected"]')).not.toBeNull();
+    act(() => {
+      row('doc_id').click();
+    });
+    act(() => {
+      (root.querySelector('[data-action="clear-rir"]') as HTMLElement).click();
+    });
+    act(() => {
+      store.selectedKey.value = null; // the AI column shows again once the panel closes
+    });
+    expect(ai('doc_id')).toBe('seeded');
+  });
+
+  it('on the generic engine, shows AI fields and adds one from the catalog', () => {
+    act(() => {
+      store.engineCatalog.value = catalog;
+      store.engineState.value = { kind: 'generic', engine: null, fields: [], error: null };
+    });
+    expect(root.querySelector('[data-engine="generic"]')!.textContent).toBe('Generic engine');
+    act(() => {
+      row('doc_id').click();
+    });
+    pickIn('ai-catalog', 'document_id');
+    expect(row('doc_id').querySelector('td[data-col="ai"]')).toBeNull(); // compact while open
+    act(() => {
+      store.selectedKey.value = null;
+    });
+    expect(row('doc_id').querySelector('td[data-col="ai"]')!.textContent).toBe('document_id');
   });
 });
 

@@ -11,7 +11,7 @@ export type RowError = { key: string | null; message: string };
 
 export type SaveResult =
   | { ok: true; schema: any; warnings: string[] }
-  | { ok: false; stage: 'local' | 'stale' | 'validate' | 'patch'; errors: RowError[] };
+  | { ok: false; stage: 'local' | 'engine' | 'stale' | 'validate' | 'patch'; errors: RowError[] };
 
 export type SaveDeps = {
   getSchema: (id: number) => Promise<any>;
@@ -95,6 +95,15 @@ export function landedDiff(sent: any, got: any, path = ''): string[] {
   return JSON.stringify(sent) === JSON.stringify(got) ? [] : [path];
 }
 
+/** The checks that need no network: an empty name, an empty or duplicate ID. */
+export function localStage(work: Node[], name?: string): SaveResult | null {
+  if (name !== undefined && !name.trim()) {
+    return { ok: false, stage: 'local', errors: [{ key: null, message: 'Schema name is empty' }] };
+  }
+  const local = localErrors(work);
+  return local.length ? { ok: false, stage: 'local', errors: local } : null;
+}
+
 export async function saveSchema(
   {
     schemaId,
@@ -113,11 +122,8 @@ export async function saveSchema(
   },
   deps: SaveDeps,
 ): Promise<SaveResult> {
-  if (name !== undefined && !name.trim()) {
-    return { ok: false, stage: 'local', errors: [{ key: null, message: 'Schema name is empty' }] };
-  }
-  const local = localErrors(work);
-  if (local.length) return { ok: false, stage: 'local', errors: local };
+  const local = localStage(work, name);
+  if (local) return local;
   const renamed = name !== undefined && name !== baseName;
 
   const current = await deps.getSchema(schemaId);

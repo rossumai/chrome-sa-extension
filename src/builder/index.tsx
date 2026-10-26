@@ -15,7 +15,8 @@ import {
   flatten,
   type Node,
 } from './model.js';
-import { saveSchema, mapValidateErrors, type SaveResult } from './save.js';
+import { saveSchema, localStage, mapValidateErrors, type SaveResult } from './save.js';
+import { engineKind, bindingErrors } from './engine.js';
 import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { annotationValues } from './values.js';
@@ -152,6 +153,7 @@ async function load(queueId: number | null, schemaId: number | null) {
   store.rules.value = [];
   store.ruleId.value = null;
   store.selectedKey.value = null;
+  store.engineState.value = null;
   store.schema.value = null;
   store.loading.value = true;
   store.error.value = null;
@@ -165,6 +167,7 @@ async function load(queueId: number | null, schemaId: number | null) {
       loadAnnotations(queueId);
       loadRules(queueId);
       loadHooks(queueId);
+      loadEngine(queueId);
     }
   } catch (err: any) {
     if (seq !== openSeq) return;
@@ -211,17 +214,21 @@ export async function save(force = false): Promise<SaveResult | null> {
   store.error.value = null;
   store.retryable.value = false;
   try {
-    const r = await saveSchema(
-      {
-        schemaId: schema.id,
-        baseModifiedAt: schema.modified_at ?? null,
-        work: store.work.value,
-        force,
-        name: store.draftName.value,
-        baseName: store.baseName.value,
-      },
-      api,
-    );
+    // Engine fields are written before the schema, so the schema's own local checks go first.
+    const r =
+      localStage(store.work.value, store.draftName.value) ??
+      (await saveEngineFields()) ??
+      (await saveSchema(
+        {
+          schemaId: schema.id,
+          baseModifiedAt: schema.modified_at ?? null,
+          work: store.work.value,
+          force,
+          name: store.draftName.value,
+          baseName: store.baseName.value,
+        },
+        api,
+      ));
     const byRow = new Map<string, string[]>();
     const general: string[] = [];
     if (!r.ok) {
@@ -287,6 +294,78 @@ async function loadRules(queueId: number) {
   } catch {
     store.rules.value = [];
   }
+}
+
+// The queue's engine; for a custom one also its engine fields. A failure shows on the badge.
+async function loadEngine(queueId: number) {
+  const q = store.queues.value.find((x) => x.id === queueId);
+  const kind = engineKind(q);
+  store.engineState.value = { kind, engine: null, fields: [], error: null };
+  if (kind === 'custom' || kind === 'generic') loadCatalog();
+  if (kind !== 'custom') return;
+  try {
+    const engine = await api.get(q!.engine);
+    const fields = await api.listEngineFields(engine.id);
+    if (store.selectedQueueId.value !== queueId) return;
+    store.engineState.value = { kind, engine, fields, error: null };
+  } catch (err: any) {
+    if (store.selectedQueueId.value !== queueId) return;
+    store.engineState.value = {
+      kind,
+      engine: null,
+      fields: [],
+      error: String(err?.message ?? err),
+    };
+  }
+}
+
+let catalogLoading = false;
+async function loadCatalog() {
+  if (catalogLoading || store.engineCatalog.value.length) return;
+  catalogLoading = true;
+  try {
+    store.engineCatalog.value = await api.listPreTrainedFields();
+  } catch {
+    // no catalog: the seed picker is empty, the AI-fields text box still works
+  } finally {
+    catalogLoading = false;
+  }
+}
+
+/**
+ * On a custom engine, before the schema: stop on what the API would reject, then create and
+ * patch the engine fields the schema needs (it rejects a datapoint with no engine field).
+ * Returns a failed SaveResult, or null to go on.
+ */
+async function saveEngineFields(): Promise<SaveResult | null> {
+  const es = store.engineState.value;
+  if (es?.kind !== 'custom') return null;
+  const local = bindingErrors(store.work.value);
+  if (local.length) return { ok: false, stage: 'local', errors: local };
+  if (!es.engine) {
+    return {
+      ok: false,
+      stage: 'engine',
+      errors: [{ key: null, message: `The queue's engine did not load: ${es.error ?? ''}` }],
+    };
+  }
+  const plan = store.enginePlanNow.value!;
+  let failed: SaveResult | null = null;
+  try {
+    for (const body of plan.create) await api.createEngineField(body);
+    for (const p of plan.patch) await api.patchEngineField(p.id, p.body);
+  } catch (err: any) {
+    if (isRateLimited(err)) throw err;
+    failed = {
+      ok: false,
+      stage: 'engine',
+      errors: [{ key: null, message: `Engine fields: ${err?.message ?? err}` }],
+    };
+  }
+  // Re-read what landed, whether or not all of it did, so the next Save plans from there.
+  const fields = await api.listEngineFields(es.engine.id);
+  store.engineState.value = { ...es, fields };
+  return failed;
 }
 
 let pickSeq = 0;

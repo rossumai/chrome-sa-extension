@@ -13,6 +13,7 @@ import {
   globalActionMarks,
 } from './rules.js';
 import { sameDraft, type RuleDraft } from './ruleDraft.js';
+import { enginePlan, type EngineKind } from './engine.js';
 
 export const domain = signal('');
 export const token = signal('');
@@ -58,7 +59,31 @@ export const status = computed(() => rowStatus(base.value, work.value));
 export const summary = computed(() => changeSummary(base.value, work.value));
 export const dirty = computed(() => {
   const s = summary.value;
-  return renamed.value || s.added + s.edited + s.deleted + s.moved > 0;
+  return renamed.value || s.added + s.edited + s.deleted + s.moved > 0 || engineChanges.value > 0;
+});
+
+// The open queue's extraction engine (engine.ts). `engine` and `fields` load for a custom
+// engine only; null while no queue is open.
+export const engineState = signal<{
+  kind: EngineKind;
+  engine: any | null;
+  fields: any[];
+  error: string | null;
+} | null>(null);
+// The pretrained catalog (loaded once): seeds for engine fields, AI fields on the generic engine.
+export const engineCatalog = signal<any[]>([]);
+export const engineFieldsByName = computed(
+  () => new Map((engineState.value?.fields ?? []).map((f) => [String(f.name), f])),
+);
+// Engine fields Save creates or patches before it saves the schema (custom engine only).
+export const enginePlanNow = computed(() => {
+  const es = engineState.value;
+  if (es?.kind !== 'custom' || !es.engine) return null;
+  return enginePlan(work.value, es.fields, es.engine.url, engineCatalog.value);
+});
+export const engineChanges = computed(() => {
+  const p = enginePlanNow.value;
+  return p ? p.create.length + p.patch.length : 0;
 });
 
 export const selectedQueue = computed(

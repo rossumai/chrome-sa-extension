@@ -5,7 +5,7 @@
 import { extractJson, fieldLines, type FieldInfo } from './assist.js';
 
 const FORMULA_MAX = 2000;
-const NEVER = ['category', 'children', '__key', '__deleted'];
+const NEVER = ['category', 'children', '__key', '__deleted', '__engine'];
 
 const CONTRACT = [
   'You change ONE field of a Rossum schema. Do not create or change anything in Rossum — only propose.',
@@ -21,7 +21,7 @@ const CONTRACT = [
 
 /** The field as the API holds it (untyped), without Builder's internal markers. */
 function plain(field: any): any {
-  const { __key, __deleted, children, ...rest } = field || {};
+  const { __key, __deleted, __engine, children, ...rest } = field || {};
   return rest;
 }
 
