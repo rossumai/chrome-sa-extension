@@ -1,4 +1,5 @@
 import { h } from 'preact';
+import { useEffect } from 'preact/hooks';
 import {
   hookEditor,
   hookDirty,
@@ -17,7 +18,7 @@ import {
   askHookAssistant,
 } from '../index.jsx';
 import CodeEditor from './CodeEditor.jsx';
-import { hookEditorRef } from './hookJump.js';
+import { hookEditorRef, revealPendingConfig } from './hookJump.js';
 import AskFabry from './AskFabry.jsx';
 import WideButton from './WideButton.jsx';
 import s from './Builder.module.css';
@@ -27,6 +28,7 @@ const formatJson = async (src: string) => JSON.stringify(JSON.parse(src), null, 
 
 // Hook mode's right panel: one MDH hook's settings as JSON, Mr. Fabry, and its own Save.
 export default function HookEditor() {
+  useEffect(revealPendingConfig, []); // after the code editor below has mounted
   const ed = hookEditor.value!;
   const hook = hooks.value.find((h) => h.id === ed.hookId);
   const refs = hookRefs.value;

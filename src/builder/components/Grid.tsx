@@ -807,7 +807,8 @@ export default function Grid() {
   const ruleOn = !!ruleMarks.value;
   const cols = columns.value;
   // Before the first measurement (and in tests): base widths, Label takes the rest.
-  const fit = avail ? fitColumns(cols, avail) : null;
+  // 2px less: the collapsed table borders add a pixel past the columns, enough for a scrollbar.
+  const fit = avail ? fitColumns(cols, avail - 2) : null;
   const tableStyle = fit
     ? { width: `${cols.reduce((sum, c) => sum + fit[c], 0)}px` }
     : {

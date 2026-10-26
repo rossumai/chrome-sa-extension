@@ -5,6 +5,7 @@ import { apply, askFieldAssistant } from '../index.jsx';
 import { setAttr, findByKey, type Node } from '../model.js';
 import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
+import FieldLinks from './FieldLinks.jsx';
 import WideButton from './WideButton.jsx';
 import s from './Builder.module.css';
 
@@ -380,7 +381,9 @@ export default function Inspector() {
           <Num node={node} path={['max_occurrences']} label="Max rows" />
         </div>
       )}
-      <div class={s.later}>Rules and hooks for this field (later)</div>
+      {node.id && kind !== 'section' && kind !== 'tuple' && (
+        <FieldLinks fieldId={String(node.id)} />
+      )}
     </Fragment>,
   );
 }

@@ -1354,6 +1354,78 @@ describe('Builder cut-off cells', () => {
   });
 });
 
+describe('Builder field panel: used by', () => {
+  const links = () => root.querySelector('[data-field-links]') as HTMLElement;
+  const open = (id: string) =>
+    act(() => {
+      row(id).click();
+    });
+
+  it('lists the rules and MDH configurations that use the field', () => {
+    open('doc_id');
+    const rule = links().querySelector('[data-action="open-field-rule"]') as HTMLElement;
+    expect(rule.dataset.rule).toBe('40');
+    expect(rule.textContent).toContain('Doc ID present (40)');
+    expect(rule.textContent).toContain('if');
+    const cfg = links().querySelector('[data-hook="70"] [data-action="open-field-config"]')!;
+    expect(cfg.textContent).toContain('1 · Configuration 1');
+    expect(cfg.textContent).toContain('in');
+  });
+
+  it('a rule opens in the rule editor; + New rule starts one from the field', () => {
+    open('doc_id');
+    act(() => {
+      (links().querySelector('[data-action="open-field-rule"]') as HTMLElement).click();
+    });
+    expect(store.ruleEditor.value!.ruleId).toBe(40);
+    act(() => {
+      (root.querySelector('[data-action="clear-rule"]') as HTMLElement).click();
+    });
+    open('doc_id');
+    act(() => {
+      (links().querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
+    });
+    expect(store.ruleEditor.value!.draft.trigger_condition).toBe('field.doc_id');
+  });
+
+  it('a configuration opens the hook narrowed to it, with the editor on its {', async () => {
+    act(() => {
+      store.hooks.value = [
+        {
+          id: 72,
+          name: 'Jump',
+          settings: {
+            configurations: [
+              { name: 'A', source: { queries: [{ find: { x: '{vendor}' } }] } },
+              { name: 'B', source: { queries: [{ find: { y: '{doc_id}' } }] } },
+            ],
+          },
+        },
+      ];
+    });
+    open('doc_id');
+    act(() => {
+      (links().querySelector('[data-config="1"]') as HTMLElement).click();
+    });
+    expect(store.hookEditor.value!.hookId).toBe(72);
+    expect(store.hookConfigIndex.value).toBe(1);
+    const { EditorView } = await import('@codemirror/view');
+    const view = EditorView.findFromDOM(
+      root.querySelector('[data-code="hook"] .cm-editor') as HTMLElement,
+    )!;
+    const text = view.state.doc.toString();
+    expect(
+      text.slice(view.state.selection.main.head, view.state.selection.main.head + 20),
+    ).toContain('"name": "B"');
+  });
+
+  it('shows Rules (0) for a field no rule uses', () => {
+    open('vendor');
+    expect(links().textContent).toContain('Rules (0)');
+    expect(links().querySelectorAll('[data-action="open-field-rule"]').length).toBe(0);
+  });
+});
+
 describe('Builder MDH hook filter', () => {
   it('picking a hook opens hook mode; the configuration filter appears; clearing closes it', () => {
     expect(root.querySelector('select[data-picker="config"]')).toBeNull();
