@@ -75,6 +75,22 @@ const PATHS = {
       <path d="M4 18h16" />
     </g>
   ),
+  maximize: (
+    <g>
+      <polyline points="15 3 21 3 21 9" />
+      <polyline points="9 21 3 21 3 15" />
+      <path d="M21 3l-7 7" />
+      <path d="M3 21l7-7" />
+    </g>
+  ),
+  minimize: (
+    <g>
+      <polyline points="4 14 10 14 10 20" />
+      <polyline points="20 10 14 10 14 4" />
+      <path d="M14 10l7-7" />
+      <path d="M3 21l7-7" />
+    </g>
+  ),
   mail: (
     <g>
       <rect width="20" height="16" x="2" y="4" rx="2" />

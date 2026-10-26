@@ -9,7 +9,7 @@ import { annotationValues } from '../src/builder/values.js';
 import type { PlacedMessage } from '../src/builder/validation.js';
 import { apply } from '../src/builder/index.jsx';
 import { setAttr } from '../src/builder/model.js';
-import { navDrawer } from '../src/builder/components/panels.js';
+import { navDrawer, panelWide } from '../src/builder/components/panels.js';
 
 function content(): any[] {
   return [
@@ -99,6 +99,7 @@ afterEach(() => {
 beforeEach(() => {
   document.body.innerHTML = '';
   navDrawer.value = false;
+  panelWide.value = false;
   root = document.createElement('div');
   document.body.appendChild(root);
   store.workspaces.value = [{ id: 10, url: 'https://x/api/v1/workspaces/10', name: 'AP' }];
@@ -1292,6 +1293,43 @@ describe('Builder searchable rule picker', () => {
     expect(root.querySelector('[data-picker="rule"] [role="listbox"]')).toBeNull();
     expect(input().value).toBe('Doc ID present (40)');
     expect(store.ruleEditor.value!.ruleId).toBe(40);
+  });
+});
+
+describe('Builder wide panel', () => {
+  const heads = () =>
+    [...root.querySelectorAll('th[data-col]')].map((th) => th.getAttribute('data-col'));
+  const wide = () => root.querySelector('[data-action="panel-wide"]') as HTMLElement;
+
+  it('widens the hook panel, leaving ID and the MDH column; remembered; narrows back', () => {
+    pickIn('hook', '70');
+    act(() => wide().click());
+    expect(heads()).toEqual(['id', 'mdh']);
+    expect(wide().getAttribute('aria-pressed')).toBe('true');
+    expect(chromeSet).toHaveBeenCalledWith({ builderPanelWide: true });
+    act(() => wide().click());
+    expect(heads()).toContain('label');
+  });
+
+  it('a field panel leaves ID and Label; closing the panel brings every column back', () => {
+    act(() => {
+      row('doc_id').click();
+    });
+    act(() => wide().click());
+    expect(heads()).toEqual(['id', 'label']);
+    act(() => {
+      store.selectedKey.value = null;
+    });
+    expect(heads()).toContain('flags');
+  });
+});
+
+describe('Builder cut-off cells', () => {
+  it('hovering the ID or the label shows both in full', () => {
+    const id = row('doc_id').querySelector('td[data-col="id"]') as HTMLElement;
+    const label = row('doc_id').querySelector('td[data-col="label"]') as HTMLElement;
+    expect(id.title).toBe(`doc_id · ${label.textContent}`);
+    expect(label.title).toBe(id.title);
   });
 });
 

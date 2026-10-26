@@ -837,8 +837,22 @@
 
 .ruleHead {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 4px;
+}
+
+.ruleHead > h4 {
+  flex: 1;
+  min-width: 0;
+}
+
+.wideBtn {
+  display: inline-flex;
+}
+
+/* Wide panel: the grid keeps 360px — ID plus the mode's column (see Grid's columns). */
+.bodyWide > .inspector {
+  width: calc(100% - 360px);
 }
 
 .actionCard {

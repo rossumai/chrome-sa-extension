@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { schemaFabry, fabryChangedKeys, onlyFabryChanges } from '../store.js';
 import { askSchemaFabry, closeSchemaFabry, fixWithFabry } from '../index.jsx';
 import AskFabry from './AskFabry.jsx';
+import WideButton from './WideButton.jsx';
 import s from './Builder.module.css';
 
 // Mr. Fabry for the whole schema: the conversation, what each answer changed, what is still
@@ -13,6 +14,7 @@ export default function SchemaFabryPanel() {
     <aside class={s.inspector} data-panel="schema-fabry">
       <div class={s.ruleHead}>
         <h4 class={s.inspTitle}>Mr. Fabry · schema</h4>
+        <WideButton />
         <button
           type="button"
           class={s.iconBtn}

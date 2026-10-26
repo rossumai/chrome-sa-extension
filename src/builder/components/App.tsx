@@ -36,7 +36,7 @@ import SchemaFabryPanel from './SchemaFabryPanel.jsx';
 import ValidationPanel from './ValidationPanel.jsx';
 import SaveDialog from './SaveDialog.jsx';
 import FilterBar from './FilterBar.jsx';
-import { navDrawer } from './panels.js';
+import { navDrawer, panelOpen, panelWide, loadPanelWide } from './panels.js';
 import s from './Builder.module.css';
 
 function inField(t: EventTarget | null): boolean {
@@ -50,6 +50,7 @@ function inField(t: EventTarget | null): boolean {
 
 export default function App({ connected }: { connected: boolean | null }) {
   const [saveOpen, setSaveOpen] = useState(false);
+  useEffect(loadPanelWide, []);
 
   // ⌘Z / Ctrl+Z undo, ⇧⌘Z / Ctrl+Shift+Z / Ctrl+Y redo — not while typing in a field.
   useEffect(() => {
@@ -123,7 +124,7 @@ export default function App({ connected }: { connected: boolean | null }) {
           <div class={s.editor}>
             <Toolbar onSave={() => setSaveOpen(true)} />
             <FilterBar />
-            <div class={s.body}>
+            <div class={s.body + (panelWide.value && panelOpen.value ? ' ' + s.bodyWide : '')}>
               <div
                 class={s.gridWrap}
                 data-grid-wrap=""

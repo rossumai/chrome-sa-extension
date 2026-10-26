@@ -13,3 +13,25 @@ export const panelOpen = computed(
     !!hookEditor.value ||
     selectedKey.value != null,
 );
+
+// Wide: the right panel takes all but a narrow grid (for long code). One choice for every
+// panel, remembered per browser.
+const WIDE_KEY = 'builderPanelWide';
+export const panelWide = signal(false);
+let wideLoaded = false;
+
+export function loadPanelWide() {
+  if (wideLoaded) return;
+  wideLoaded = true;
+  globalThis.chrome?.storage?.local
+    ?.get([WIDE_KEY])
+    .then((v) => {
+      panelWide.value = v?.[WIDE_KEY] === true;
+    })
+    .catch(() => {});
+}
+
+export function setPanelWide(v: boolean) {
+  panelWide.value = v;
+  globalThis.chrome?.storage?.local?.set({ [WIDE_KEY]: v })?.catch(() => {});
+}

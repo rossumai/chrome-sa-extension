@@ -5,6 +5,7 @@ import { apply, askFieldAssistant } from '../index.jsx';
 import { setAttr, findByKey, type Node } from '../model.js';
 import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
+import WideButton from './WideButton.jsx';
 import s from './Builder.module.css';
 
 function get(node: Node, path: string[]): any {
@@ -274,6 +275,7 @@ export default function Inspector() {
   const head = (
     <div class={s.ruleHead}>
       <h4 class={s.mono + ' ' + s.inspTitle}>{node.id}</h4>
+      <WideButton />
       <button
         type="button"
         class={s.iconBtn}

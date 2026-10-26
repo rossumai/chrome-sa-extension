@@ -10,6 +10,7 @@ import {
 import { ACTION_TYPES, ACTION_EVENTS, newAction, withActionType } from '../ruleDraft.js';
 import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
+import WideButton from './WideButton.jsx';
 import s from './Builder.module.css';
 
 function setAction(i: number, next: any) {
@@ -172,6 +173,7 @@ export default function RuleEditor() {
     <aside class={s.inspector} data-panel="rule">
       <div class={s.ruleHead}>
         <h4 class={s.inspTitle}>{ed.ruleId != null ? `Rule (${ed.ruleId})` : 'New rule'}</h4>
+        <WideButton />
         <button
           type="button"
           class={s.iconBtn}

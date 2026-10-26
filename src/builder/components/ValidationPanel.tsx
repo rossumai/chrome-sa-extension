@@ -32,6 +32,7 @@ import {
 } from '../provenance.js';
 import { pickHookConfig } from './hookJump.js';
 import Icon from './icons.jsx';
+import WideButton from './WideButton.jsx';
 import s from './Builder.module.css';
 
 const ICON = { error: 'error', warning: 'warning', info: 'info' } as const;
@@ -422,6 +423,7 @@ export default function ValidationPanel() {
     <aside class={s.inspector} data-panel="validation">
       <div class={s.ruleHead}>
         <h4 class={s.inspTitle}>Validation · annotation ({annotationId.value})</h4>
+        <WideButton />
         <button type="button" class={s.iconBtn} title="Close (Esc)" onClick={closeValidationPanel}>
           ✕
         </button>

@@ -46,7 +46,7 @@ import {
 import EditableCell from './EditableCell.jsx';
 import Icon, { type IconName } from './icons.jsx';
 import type { ActionMark } from '../rules.js';
-import { panelOpen } from './panels.js';
+import { panelOpen, panelWide } from './panels.js';
 import s from './Builder.module.css';
 
 export const TYPES = ['string', 'number', 'date', 'enum', 'button'];
@@ -427,6 +427,8 @@ function Row({
   const dp = kind === 'datapoint';
   const locked = schemaLocked.value;
   const role = kind === 'section' ? undefined : ruleRoleById.value?.get(node.id);
+  // Hovering a cut-off ID or label shows both in full.
+  const full = [node.id, node.label].filter(Boolean).join(' · ');
   const cls = [
     s.row,
     role ? s.ruleHit : '',
@@ -464,7 +466,7 @@ function Row({
           {kind === 'tuple' ? '' : '⋮⋮'}
         </td>
       )}
-      <td data-col="id" style={{ paddingLeft: `${6 + depth * 16}px` }}>
+      <td data-col="id" title={full} style={{ paddingLeft: `${6 + depth * 16}px` }}>
         {kind === 'section' && <span class={s.caret}>▾ </span>}
         {locked ? (
           <span class={s.mono}>{String(node.id ?? '')}</span>
@@ -487,26 +489,30 @@ function Row({
           </div>
         )}
       </td>
-      <td data-col="label">
-        {locked ? (
-          String(node.label ?? '')
-        ) : (
-          <EditableCell
-            value={String(node.label ?? '')}
-            onCommit={(v) => edit(key, ['label'], v)}
-          />
-        )}
-      </td>
+      {on('label') && (
+        <td data-col="label" title={full}>
+          {locked ? (
+            String(node.label ?? '')
+          ) : (
+            <EditableCell
+              value={String(node.label ?? '')}
+              onCommit={(v) => edit(key, ['label'], v)}
+            />
+          )}
+        </td>
+      )}
       {on('source') && <td data-col="source">{dp ? <SourceCell node={node} /> : null}</td>}
-      <td data-col="type">
-        {dp ? (
-          <TypeCell node={node} />
-        ) : (
-          <span class={s.kind}>
-            {kind === 'multivalue' ? 'table' : kind === 'tuple' ? 'row' : ''}
-          </span>
-        )}
-      </td>
+      {on('type') && (
+        <td data-col="type">
+          {dp ? (
+            <TypeCell node={node} />
+          ) : (
+            <span class={s.kind}>
+              {kind === 'multivalue' ? 'table' : kind === 'tuple' ? 'row' : ''}
+            </span>
+          )}
+        </td>
+      )}
       {on('flags') && (
         <td data-col="flags">
           <span class={s.flags}>
@@ -584,7 +590,7 @@ function Row({
           ) : null}
         </td>
       )}
-      {ruleMarks.value && (
+      {on('rule') && (
         <td data-col="rule">
           {role === 'condition' || role === 'both' ? (
             <span class={s.ruleBadge} data-mark="if" title="The rule condition reads this field">
@@ -592,16 +598,16 @@ function Row({
             </span>
           ) : null}
           {kind !== 'section' && (
-            <MarkIcons marks={ruleMarks.value.get(String(node.id ?? '')) || []} />
+            <MarkIcons marks={ruleMarks.value?.get(String(node.id ?? '')) || []} />
           )}
         </td>
       )}
-      {hookRoleById.value && (
+      {on('mdh') && (
         <td data-col="mdh">
           {kind !== 'section' && <HookBadges fieldId={String(node.id ?? '')} />}
         </td>
       )}
-      {values.value && (
+      {on('value') && (
         <td data-col="value" class={s.value}>
           <ValueCell node={node} tableId={tableId} />
         </td>
@@ -683,7 +689,8 @@ function renderNode(
 
 // Fixed widths; Label has none, so it takes the rest of the row. While a right panel is
 // open the grid drops the flags (the field inspector has them); a read-only schema (rule or
-// hook mode) also drops the grip and the row actions. Source and Type always stay.
+// hook mode) also drops the grip and the row actions. Source and Type always stay. A wide
+// panel leaves only ID and the mode's Rule or MDH column (ID and Label when there is none).
 const WIDTHS: Record<string, number> = {
   grip: 22,
   id: 200,
@@ -701,8 +708,8 @@ const LABEL_MIN = 160;
 const EDITING = ['grip', 'actions'];
 const DETAIL = ['flags'];
 
-const columns = computed(() =>
-  [
+const columns = computed(() => {
+  const cols = [
     'grip',
     'id',
     'label',
@@ -717,8 +724,11 @@ const columns = computed(() =>
     ...(values.value ? ['value'] : []),
   ].filter(
     (c) => !(panelOpen.value && DETAIL.includes(c)) && !(schemaLocked.value && EDITING.includes(c)),
-  ),
-);
+  );
+  if (!(panelOpen.value && panelWide.value)) return cols;
+  const mode = cols.some((c) => c === 'rule' || c === 'mdh');
+  return cols.filter((c) => c === 'id' || c === 'rule' || c === 'mdh' || (!mode && c === 'label'));
+});
 
 function on(col: string): boolean {
   return columns.value.includes(col);
@@ -770,9 +780,9 @@ export default function Grid() {
   }
   // The annotation's values go after every editing column, the row actions included.
   const ruleOn = !!ruleMarks.value;
-  const hookOn = !!hookRoleById.value;
   const cols = columns.value;
-  const minWidth = LABEL_MIN + cols.reduce((sum, c) => sum + (WIDTHS[c] ?? 0), 0);
+  const minWidth =
+    (cols.includes('label') ? LABEL_MIN : 0) + cols.reduce((sum, c) => sum + (WIDTHS[c] ?? 0), 0);
   const lead = cols.filter((c) => c !== 'rule' && c !== 'mdh' && c !== 'value').length;
   return (
     <table class={s.grid} style={{ minWidth: `${minWidth}px` }}>
@@ -792,13 +802,13 @@ export default function Grid() {
         {(ruleOn || docMessages.length > 0) && (
           <tr class={s.row + ' ' + s.sectionRow + ' ' + s.docRow} data-doc-row="">
             <td colSpan={lead}>Whole document</td>
-            {ruleOn && (
+            {on('rule') && (
               <td data-col="rule">
                 <MarkIcons marks={ruleGlobalMarks.value || []} />
               </td>
             )}
-            {hookOn && <td />}
-            {values.value && (
+            {on('mdh') && <td />}
+            {on('value') && (
               <td data-col="value" class={s.docMessages}>
                 {docMessages.map((m) => (
                   <div>

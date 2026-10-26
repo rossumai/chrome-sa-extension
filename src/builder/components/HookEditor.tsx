@@ -19,6 +19,7 @@ import {
 import CodeEditor from './CodeEditor.jsx';
 import { hookEditorRef } from './hookJump.js';
 import AskFabry from './AskFabry.jsx';
+import WideButton from './WideButton.jsx';
 import s from './Builder.module.css';
 
 // "Format" for JSON: parse and print with two-space indent. A parse error is the message.
@@ -35,6 +36,7 @@ export default function HookEditor() {
         <h4 class={s.inspTitle}>
           {hook?.name ?? 'Hook'} ({ed.hookId})
         </h4>
+        <WideButton />
         <button
           type="button"
           class={s.iconBtn}
