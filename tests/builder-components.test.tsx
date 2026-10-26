@@ -226,14 +226,23 @@ describe('Builder screen', () => {
     expect(width('id')).toBe('200px');
   });
 
-  it('a right panel drops Source and the flags, which the inspector shows', () => {
+  it('a right panel drops the flags, which the inspector shows', () => {
     const heads = () =>
       [...root.querySelectorAll('th[data-col]')].map((th) => th.getAttribute('data-col'));
     act(() => {
       row('doc_id').click();
     });
     expect(root.querySelector('aside[data-panel="field"]')).not.toBeNull();
-    expect(heads()).toEqual(['grip', 'id', 'label', 'type', 'rules', 'matching', 'actions']);
+    expect(heads()).toEqual([
+      'grip',
+      'id',
+      'label',
+      'source',
+      'type',
+      'rules',
+      'matching',
+      'actions',
+    ]);
     act(() => {
       store.selectedKey.value = null;
     });
@@ -923,7 +932,7 @@ describe('Builder rule column and whole-document row', () => {
       ];
     });
     pickRule('60');
-    expect(heads()).toEqual(['id', 'label', 'type', 'rules', 'matching', 'rule']);
+    expect(heads()).toEqual(['id', 'label', 'source', 'type', 'rules', 'matching', 'rule']);
     const doc = root.querySelector('[data-doc-row]') as HTMLElement;
     expect(doc.textContent).toContain('Whole document');
     expect(
@@ -938,14 +947,16 @@ describe('Builder rule column and whole-document row', () => {
 });
 
 describe('Builder grid is read-only in rule mode', () => {
-  it('no delete, no Source or flags, a disabled type, no ID editing, no drag; Rules still works', () => {
+  it('no delete, no flags, disabled selects, no ID editing, no drag; Rules still works', () => {
     pickRule('40');
     const r = row('doc_id');
     expect(r.querySelector('[data-action="delete"]')).toBeNull();
     expect((r.querySelector('td[data-col="type"] select') as HTMLSelectElement).disabled).toBe(
       true,
     );
-    expect(r.querySelector('td[data-col="source"]')).toBeNull();
+    expect((r.querySelector('td[data-col="source"] select') as HTMLSelectElement).disabled).toBe(
+      true,
+    );
     expect(r.querySelector('button[data-col="visible"]')).toBeNull();
     expect(r.querySelector('[data-edit]')).toBeNull();
     expect(r.querySelector('[draggable="true"]')).toBeNull();

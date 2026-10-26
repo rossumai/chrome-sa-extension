@@ -682,8 +682,8 @@ function renderNode(
 }
 
 // Fixed widths; Label has none, so it takes the rest of the row. While a right panel is
-// open the grid drops Source and the flags (the field inspector has both); a read-only
-// schema (rule or hook mode) also drops the grip and the row actions.
+// open the grid drops the flags (the field inspector has them); a read-only schema (rule or
+// hook mode) also drops the grip and the row actions. Source and Type always stay.
 const WIDTHS: Record<string, number> = {
   grip: 22,
   id: 200,
@@ -699,7 +699,7 @@ const WIDTHS: Record<string, number> = {
 };
 const LABEL_MIN = 160;
 const EDITING = ['grip', 'actions'];
-const DETAIL = ['source', 'flags'];
+const DETAIL = ['flags'];
 
 const columns = computed(() =>
   [
