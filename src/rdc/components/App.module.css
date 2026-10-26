@@ -1,0 +1,91 @@
+/* rdc (experimental): a column of cards under the connection bar. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  overflow: auto;
+  min-height: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+}
+
+.card > button {
+  align-self: flex-start;
+}
+
+.title {
+  font-weight: 600;
+}
+
+.question {
+  white-space: pre-wrap;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+.tree {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.log {
+  /* The 16 basic ANSI colours (src/rdc/ansi.ts), on the Console's own palette where it has one. */
+  --rdc-ansi-0: var(--text-primary);
+  --rdc-ansi-1: var(--danger);
+  --rdc-ansi-2: var(--success);
+  --rdc-ansi-3: var(--warning);
+  --rdc-ansi-4: var(--accent);
+  --rdc-ansi-5: #a03fb0;
+  --rdc-ansi-6: #11808f;
+  --rdc-ansi-7: var(--text-secondary);
+  --rdc-ansi-8: var(--text-secondary);
+  --rdc-ansi-9: var(--danger);
+  --rdc-ansi-10: var(--success);
+  --rdc-ansi-11: var(--warning);
+  --rdc-ansi-12: var(--accent);
+  --rdc-ansi-13: #a03fb0;
+  --rdc-ansi-14: #11808f;
+  --rdc-ansi-15: var(--text-primary);
+  max-height: 360px;
+  overflow: auto;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg-code);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .log {
+    --rdc-ansi-5: #d58fe0;
+    --rdc-ansi-6: #4cc6d6;
+  }
+}
+
+/* Wraps long lines, keeps rdc's own column padding. */
+.logLine {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

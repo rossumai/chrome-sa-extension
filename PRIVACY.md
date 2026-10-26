@@ -113,6 +113,7 @@ once per document — the extension deliberately does not count repeatedly.
 | `sa_console_app_fabry` | Mr. Fabry became the active app |
 | `sa_console_app_cib` | CIB deploy became the active app |
 | `sa_console_app_academy` | the Academy became the active app |
+| `sa_console_app_rdc` | the experimental rdc app became the active app |
 | `sa_mdh_query_run` | the dataset query surface was used (at most once per Console session) |
 | `sa_mdh_export` | a dataset export started |
 | `sa_mdh_import` | a dataset import started |

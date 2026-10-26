@@ -42,6 +42,7 @@ export const EVENT_NAMES = [
   'sa_console_app_fabry',
   'sa_console_app_cib',
   'sa_console_app_academy',
+  'sa_console_app_rdc',
   // Console apps — the actions worth ranking
   'sa_mdh_query_run',
   'sa_mdh_export',

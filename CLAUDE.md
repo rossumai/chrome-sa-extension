@@ -35,7 +35,8 @@ Prettier owns `src/` and `tests/`, and only `*.ts` / `*.tsx` / `*.css` there. Co
   `format:check` fails that update rather than a tree nobody touched.
 - **Deliberately NOT formatted**: every `.md` (so `CLAUDE.md`, `PRIVACY.md` and the whole dated
   record under `docs/superpowers/` keep their hand-wrapped prose), the 12 `.html`, the JSON and
-  YAML, and — a consequence worth knowing — `build.js` and `vitest.config.mjs`, the only two
+  YAML, and — a consequence worth knowing — `build.js`, `vitest.config.mjs` and the rdc proof
+  of concept's `scripts/rdc-vendor.cjs` and `scripts/build-rdc-wasm.sh`, the only
   non-TypeScript code files in the repo.
 - **`tests/fixtures/` is in `.prettierignore`.** They are golden inputs: `expected/*.html` is
   the byte-exact rendering of those `.md` files, so reformatting an input silently invalidates
@@ -198,7 +199,7 @@ Nine entry points, plus two bundles nothing imports that are script-injected on 
 |---|---|
 | `src/rossum/index.ts` · `src/netsuite/index.ts` · `src/coupa/index.ts` | content scripts |
 | `src/popup/popup.tsx` | extension popup (Preact) |
-| `src/console/index.tsx` | Console page — an app rail over seven apps |
+| `src/console/index.tsx` | Console page — an app rail over eight apps |
 | `src/background/index.ts` | MV3 service worker |
 | `src/devtools/devtools.ts` · `src/devtools/panel.tsx` | DevTools "Rossum" panel |
 | `src/sidepanel/index.tsx` | Chrome side panel |
@@ -280,7 +281,7 @@ Reloading the extension does NOT re-inject content scripts into open tabs — re
 
 ### Console apps (`src/console/`)
 
-An app-switcher rail over seven apps. Adding one touches three hardcoded switch points
+An app-switcher rail over eight apps. Adding one touches three hardcoded switch points
 (`Rail.tsx` APPS, `Console.tsx` render switch, `boot.ts` `isValidApp`) plus `console/index.tsx`.
 `Console.tsx` unmounts the app you leave — except CIB deploy, which stays mounted (hidden) once
 opened, because its form, log and a deploy in flight live in component state.
@@ -326,7 +327,28 @@ opened, because its form, log and a deploy in flight live in component state.
   so a re-run with the same run id resumes, and it is deleted once a deploy is complete. The
   optional Coupa check function is a hook the user deploys and tears down by hand.
 - **Academy** (`src/academy/`) — the onboarding training track; behind `experimentalUnlocked`.
-
+- **rdc** (`src/rdc/`) — a **proof of concept**, behind `experimentalUnlocked` like the Academy
+  (`gated` in `Rail.tsx`; `boot.ts` keeps the gated set, so a locked boot or re-lock falls back
+  to Dataset Management). It runs rdc's sync engine, compiled to WebAssembly, against the
+  connected org: ONE `sync` with `noPush: true` (nothing is written to the org) into a project
+  held in component memory only — nothing is persisted, a reload loses it — then shows rdc's
+  log (ANSI colour rendered by `ansi.ts`) and the pulled tree. A prompt rdc raises is shown with
+  its choices; Cancel answers `null`. `apiBase` is `${consoleDomain}/api/v1`; the org id is the
+  one organization `GET /organizations` lists (`currentOrg`), else it refuses.
+  **The wasm is not in the repo.** `scripts/build-rdc-wasm.sh <rdc checkout>` (or `RDC_DIR`)
+  builds rdc's `wasm/` crate and runs `wasm-bindgen --target web` (the exact version the crate
+  pins, or it fails) into the git-ignored `vendor/rdc/`. Only when that exists does `build.js`
+  copy the glue and module to `dist/console/rdc/` **and add
+  `"content_security_policy": {"extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"}`
+  to `dist/manifest.json`** (`scripts/rdc-vendor.cjs`, pinned by `tests/rdc-vendor-build.test.ts`):
+  the default MV3 CSP refuses to compile any WebAssembly (measured in Chrome for Testing 156).
+  A clean checkout — CI, every Web Store release — has no vendor build, keeps the default CSP,
+  and the app says the build is missing. The glue is loaded at run time with
+  `import(chrome.runtime.getURL(…))`, which esbuild leaves alone in the iife bundle, so
+  `src/rdc/wasm.ts` carries a hand-kept subset of the generated `rdc_wasm.d.ts` (the source of
+  truth). **Shipping this app for real needs that CSP relaxation in `manifest.json` itself —
+  an open decision**, and the reason the rules above still say the Console runs under the
+  default CSP. 
 Auth: the popup (or the worker) runs `readAuthInfo` in the Rossum tab via
 `chrome.scripting.executeScript`, stages a single-use `consoleAuth_<uuid>` in
 `chrome.storage.local`, and opens `console/console.html?authId=…`. The Console reads and
@@ -488,7 +510,7 @@ Enforced by tests, not by convention. Do not weaken them.
 - **Usage** — `usageConsent` (`true`/`false`/**absent**, where absent means never answered),
   `usageClientId` (minted lazily by the worker on the first event, deleted on revoke),
   `usageAsked`; plus `usageSessionId` in `chrome.storage.session`.
-- Galaxy and CIB deploy persist nothing on the device (CIB keeps its credentials in component
+- Galaxy, CIB deploy and rdc persist nothing on the device (CIB keeps its credentials in component
   state only; its checkpoint lives in the org). Chat content, and Architect deliverable text, versions and
   transcripts, never touch storage — they live in the org's own Data Storage collection.
 - **Orphaned** keys, read and written by nothing, deliberately left in existing profiles:
