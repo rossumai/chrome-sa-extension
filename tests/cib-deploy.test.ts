@@ -637,6 +637,8 @@ test('deployCib onProgress: checks -> objects -> patches -> memorisation -> impo
   assert.equal(p.filter((x) => x.phase === 'imports').at(-1).done, 12);
 });
 
+// On a cold cache (every CI run, after `npm ci`) this downloads three releases from GitHub
+// one after another, measured at ~20s, so the suite's 20s timeout failed it.
 test('every CIB release on GitHub deploys into a clean fake org', async () => {
   for (const v of ['v1.0.0', 'v1.1.0', 'v2.0.0', 'v2.0.1']) {
     const { plan, hooksCsv, requiredScopes } = await realRelease(v);
@@ -652,7 +654,7 @@ test('every CIB release on GitHub deploys into a clean fake org', async () => {
     assert.equal(f.db.hooks.length, plan.ops.filter((o: any) => o.type === 'hooks').length, v);
     assert.deepEqual(r.pendingImports, [], v);
   }
-});
+}, 120_000);
 
 // the Coupa check from a deployed function hook: the fake answers the invoke with `answer`;
 // `wrap` may put a layer over the fake's fetch
