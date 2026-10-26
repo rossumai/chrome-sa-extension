@@ -154,6 +154,7 @@ async function load(queueId: number | null, schemaId: number | null) {
   store.ruleId.value = null;
   store.selectedKey.value = null;
   store.engineState.value = null;
+  store.codeView.value = null;
   store.schema.value = null;
   store.loading.value = true;
   store.error.value = null;
@@ -368,6 +369,22 @@ async function saveEngineFields(): Promise<SaveResult | null> {
   return failed;
 }
 
+/** Show a hook read-only in the right panel, at the first place it mentions the field. */
+export function openCodeView(hookId: number, fieldId: string) {
+  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
+  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
+  store.validationPanel.value = null;
+  store.ruleEditor.value = null;
+  store.hookEditor.value = null;
+  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
+  store.selectedKey.value = null;
+  store.codeView.value = { hookId, fieldId };
+}
+
+export function closeCodeView() {
+  store.codeView.value = null;
+}
+
 let pickSeq = 0;
 
 export function clearAnnotation() {
@@ -548,6 +565,7 @@ export async function deleteSchema(id: number) {
 /** Open a rule from the queue's list, or a new one (null) — started from `fieldId` if given. */
 export function openRuleEditor(id: number | null, fieldId?: string) {
   store.validationPanel.value = null;
+  store.codeView.value = null;
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
   store.hookEditor.value = null;
@@ -726,6 +744,7 @@ export async function askFieldAssistant(key: string, request: string) {
 
 export function openSchemaFabry() {
   store.validationPanel.value = null;
+  store.codeView.value = null;
   if (store.ruleEditor.value) closeRuleEditor();
   if (store.hookEditor.value) closeHookEditor();
   if (store.ruleEditor.value || store.hookEditor.value) return; // the user kept unsaved work open
@@ -843,6 +862,7 @@ const IDLE_ASSIST = { chatId: null, busy: false, error: null, reply: null, warni
 
 export function openHookEditor(id: number) {
   store.validationPanel.value = null;
+  store.codeView.value = null;
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
   const hook = store.hooks.value.find((h) => h.id === id);
@@ -1032,6 +1052,7 @@ export async function revalidate() {
 /** Show the results in the right panel — unless an edited rule or hook is open there. */
 export function openValidationPanel(tab: 'rules' | 'provenance' = 'rules') {
   if (store.ruleDirty.value || store.hookDirty.value) return; // keep unsaved work in view
+  store.codeView.value = null;
   store.ruleEditor.value = null;
   store.hookEditor.value = null;
   store.schemaFabry.value = { ...store.schemaFabry.value, open: false };

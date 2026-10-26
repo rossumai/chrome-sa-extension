@@ -71,6 +71,7 @@ export default function CodeEditor({
   language = 'python',
   formatter = ruffFormat,
   handleRef,
+  readOnly = false,
 }: {
   value: string;
   onCommit: (v: string) => void;
@@ -81,6 +82,8 @@ export default function CodeEditor({
   /** What Format runs; Ruff for Python. A syntax error comes back as a message. */
   formatter?: PythonFormatter;
   handleRef?: { current: CodeEditorHandle | null };
+  /** A view, not an editor: no typing, no Format (the hook view). */
+  readOnly?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -101,6 +104,7 @@ export default function CodeEditor({
           flashField,
           flashTheme,
           ...(expanded ? [] : [collapsed]),
+          ...(readOnly ? [EditorState.readOnly.of(true)] : []),
           ...(prefersDark() ? [oneDark] : []),
           EditorView.domEventHandlers({
             blur: (_e, ed) => {
@@ -152,20 +156,22 @@ export default function CodeEditor({
     <div data-code={name} class={expanded ? s.codeFill : undefined}>
       <div ref={host} class={expanded ? s.codeHost : undefined} />
       <div class={s.codeBar}>
-        <button
-          type="button"
-          class={s.linkBtn}
-          data-action={`format-${name}`}
-          disabled={busy}
-          onClick={format}
-          title={
-            language === 'json'
-              ? 'Format the JSON'
-              : 'Format with Ruff (loads the formatter on first use)'
-          }
-        >
-          {busy ? 'Formatting…' : 'Format'}
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            class={s.linkBtn}
+            data-action={`format-${name}`}
+            disabled={busy}
+            onClick={format}
+            title={
+              language === 'json'
+                ? 'Format the JSON'
+                : 'Format with Ruff (loads the formatter on first use)'
+            }
+          >
+            {busy ? 'Formatting…' : 'Format'}
+          </button>
+        )}
         {onToggleExpand && (
           <button
             type="button"

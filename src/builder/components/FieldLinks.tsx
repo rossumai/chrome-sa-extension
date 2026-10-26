@@ -1,6 +1,6 @@
 import { h } from 'preact';
-import { fieldRules, fieldHooks, validation } from '../store.js';
-import { openRuleEditor } from '../index.jsx';
+import { fieldRules, fieldHooks, fieldCodeHooks, validation } from '../store.js';
+import { openRuleEditor, openCodeView } from '../index.jsx';
 import { fieldConfigs } from '../matching.js';
 import { openHookAtConfig } from './hookJump.js';
 import s from './Builder.module.css';
@@ -12,6 +12,7 @@ const RULE_ROLE = { condition: 'if', action: 'action', both: 'if + action' } as 
 export default function FieldLinks({ fieldId }: { fieldId: string }) {
   const rules = fieldRules.value.get(fieldId) || [];
   const hooks = fieldHooks.value.get(fieldId) || [];
+  const code = fieldCodeHooks.value.get(fieldId) || [];
   return (
     <div class={s.field} data-field-links="">
       <div class={s.linksHead}>
@@ -66,6 +67,24 @@ export default function FieldLinks({ fieldId }: { fieldId: string }) {
             </button>
           ))}
         </div>
+      ))}
+      <div class={s.linksHead}>
+        <span class={s.fieldLabel}>Other hooks ({code.length})</span>
+      </div>
+      {code.map(({ hook, inCode, inSettings }) => (
+        <button
+          type="button"
+          class={s.linkRow}
+          data-action="open-field-code-hook"
+          data-hook={String(hook.id)}
+          onClick={() => openCodeView(hook.id, fieldId)}
+        >
+          <span class={s.linkName}>
+            {hook.name} ({hook.id})
+          </span>
+          {inCode && <span class={s.ruleBadge}>code</span>}
+          {inSettings && <span class={s.ruleBadge}>settings</span>}
+        </button>
       ))}
     </div>
   );

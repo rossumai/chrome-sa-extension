@@ -1,7 +1,7 @@
 // src/builder/store.ts
 import { signal, computed } from '@preact/signals';
 import { initHistory, type History } from './history.js';
-import { changeSummary, rowStatus, movedKeys, type Node } from './model.js';
+import { changeSummary, rowStatus, movedKeys, flatten, type Node } from './model.js';
 import type { AnnotationValues } from './values.js';
 import type { PlacedMessages } from './validation.js';
 import { mdhHooks, hooksByField, hookFieldRefs, hookRoles, fieldConfigs } from './matching.js';
@@ -14,6 +14,7 @@ import {
 } from './rules.js';
 import { sameDraft, type RuleDraft } from './ruleDraft.js';
 import { enginePlan, type EngineKind } from './engine.js';
+import { hooksByFieldText } from './codeRefs.js';
 
 export const domain = signal('');
 export const token = signal('');
@@ -231,6 +232,17 @@ export const onlyFabryChanges = signal(false);
 // The queue's hooks; the MDH ones feed the Matching column. Hook mode edits one hook's
 // settings as JSON text in the right panel (base = as saved, draft = in the editor).
 export const hooks = signal<any[]>([]);
+// Per field id: the queue's other hooks (not MDH) whose code or settings mention it.
+export const fieldCodeHooks = computed(() =>
+  hooksByFieldText(
+    hooks.value,
+    flatten(work.value)
+      .map((r) => String(r.node.id ?? ''))
+      .filter(Boolean),
+  ),
+);
+// The read-only hook view in the right panel: one hook, at the first mention of one field.
+export const codeView = signal<{ hookId: number; fieldId: string } | null>(null);
 export const fieldHooks = computed(() => hooksByField(mdhHooks(hooks.value)));
 export type HookEditorState = { hookId: number; base: string; draft: string };
 export const hookEditor = signal<HookEditorState | null>(null);

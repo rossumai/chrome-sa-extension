@@ -100,6 +100,7 @@ beforeEach(() => {
   document.body.innerHTML = '';
   navDrawer.value = false;
   store.engineState.value = null;
+  store.codeView.value = null;
   store.engineCatalog.value = [];
   panelWide.value = false;
   root = document.createElement('div');
@@ -206,6 +207,7 @@ describe('Builder screen', () => {
       'flags',
       'rules',
       'matching',
+      'hooks',
       'actions',
     ]);
     const flags = row('doc_id').querySelector('td[data-col="flags"]')!;
@@ -409,6 +411,7 @@ describe('Builder annotation values', () => {
       'flags',
       'rules',
       'matching',
+      'hooks',
       'actions',
       'value',
     ]);
@@ -1527,6 +1530,87 @@ describe('Builder engine', () => {
       store.selectedKey.value = null;
     });
     expect(row('doc_id').querySelector('td[data-col="ai"]')!.textContent).toBe('document_id');
+  });
+});
+
+describe('Builder hooks that mention a field', () => {
+  beforeEach(() => {
+    act(() => {
+      store.hooks.value = [
+        ...store.hooks.value,
+        {
+          id: 80,
+          type: 'function',
+          name: 'Totals check',
+          config: { code: 'def check(payload):\n    a = field.doc_id\n    b = field.doc_id\n' },
+          settings: {},
+        },
+        { id: 81, type: 'webhook', name: 'ERP', config: {}, settings: { send: ['doc_id'] } },
+      ];
+    });
+  });
+  const cell = () => row('doc_id').querySelector('td[data-col="hooks"]') as HTMLElement;
+
+  it('counts the non-MDH hooks that mention the field, leaving MDH to Matching', () => {
+    expect(cell().textContent).toBe('2');
+    expect(row('vendor').querySelector('td[data-col="hooks"]')!.textContent).toBe('');
+  });
+
+  it('picking one opens it read-only at the first mention; ↓ steps to the next', async () => {
+    act(() => {
+      (cell().querySelector('[data-action="field-code-hooks"]') as HTMLElement).click();
+    });
+    act(() => {
+      (cell().querySelector('[data-code-hook-option="80"]') as HTMLElement).click();
+    });
+    const panel = root.querySelector('aside[data-panel="code"]') as HTMLElement;
+    expect(panel.textContent).toContain('Totals check (80)');
+    expect(panel.querySelector('[data-match]')!.textContent).toContain('1 of 2');
+    expect(panel.querySelector('[data-action^="format-"]')).toBeNull(); // read-only: no Format
+    const { EditorView } = await import('@codemirror/view');
+    const view = () =>
+      EditorView.findFromDOM(
+        panel.querySelector('[data-code="hook-view"] .cm-editor') as HTMLElement,
+      )!;
+    const text = view().state.doc.toString();
+    expect(view().state.selection.main.head).toBe(text.indexOf('doc_id'));
+    act(() => {
+      (panel.querySelector('[data-action="next-match"]') as HTMLElement).click();
+    });
+    expect(view().state.selection.main.head).toBe(text.lastIndexOf('doc_id'));
+    expect(view().state.readOnly).toBe(true);
+  });
+
+  it('a click on a grid row closes the hook view and shows that field', () => {
+    act(() => {
+      (cell().querySelector('[data-action="field-code-hooks"]') as HTMLElement).click();
+    });
+    act(() => {
+      (cell().querySelector('[data-code-hook-option="80"]') as HTMLElement).click();
+    });
+    act(() => {
+      row('vendor').click();
+    });
+    expect(root.querySelector('aside[data-panel="code"]')).toBeNull();
+    expect(root.querySelector('aside[data-panel="field"]')).not.toBeNull();
+  });
+
+  it('a webhook opens on its settings and says its code is not visible', () => {
+    act(() => {
+      row('doc_id').click();
+    });
+    act(() => {
+      (
+        root.querySelector('[data-action="open-field-code-hook"][data-hook="81"]') as HTMLElement
+      ).click();
+    });
+    const panel = root.querySelector('aside[data-panel="code"]') as HTMLElement;
+    expect(panel.textContent).toContain('only its settings are searched');
+    expect(panel.querySelector('[data-tab="settings"]')!.className).toContain('tabOn');
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(root.querySelector('aside[data-panel="code"]')).toBeNull();
   });
 });
 

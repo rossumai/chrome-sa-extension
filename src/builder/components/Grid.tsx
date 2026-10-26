@@ -26,9 +26,11 @@ import {
   flashRowKey,
   engineState,
   engineFieldsByName,
+  fieldCodeHooks,
+  codeView,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
-import { apply, openRuleEditor, openHookEditor } from '../index.jsx';
+import { apply, openRuleEditor, openHookEditor, openCodeView } from '../index.jsx';
 import {
   setAttr,
   setDeleted,
@@ -392,6 +394,23 @@ function MarkIcons({ marks }: { marks: ActionMark[] }) {
 }
 
 // In hook mode: which configuration matches ON this field (in N) or fills it (out N).
+// The queue's other hooks whose code or settings mention the field (codeRefs.ts).
+function CodeHooksCell({ fieldId }: { fieldId: string }) {
+  const items = (fieldCodeHooks.value.get(fieldId) || []).map((x) => ({
+    id: x.hook.id,
+    label: `${x.hook.name} (${x.hook.id}) · ${[x.inCode && 'code', x.inSettings && 'settings'].filter(Boolean).join(' + ')}`,
+  }));
+  return (
+    <PickCell
+      menuKey={`code:${fieldId}`}
+      action="field-code-hooks"
+      optionAttr="data-code-hook-option"
+      items={items}
+      onPick={(id) => openCodeView(id, fieldId)}
+    />
+  );
+}
+
 function HookBadges({ fieldId }: { fieldId: string }) {
   const list = hookFieldConfigs.value?.get(fieldId);
   if (!list) return null;
@@ -484,7 +503,10 @@ function Row({
       data-status={st === 'deleted' ? undefined : st}
       data-deleted={deleted ? 'true' : undefined}
       data-rule={role}
-      onClick={() => (selectedKey.value = key)}
+      onClick={() => {
+        codeView.value = null; // a row click shows that field, not the hook being read
+        selectedKey.value = key;
+      }}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
@@ -600,6 +622,13 @@ function Row({
         <td data-col="matching" class={s.rulesCell}>
           {kind !== 'section' && kind !== 'tuple' && node.id && (
             <HooksCell fieldId={String(node.id)} />
+          )}
+        </td>
+      )}
+      {on('hooks') && (
+        <td data-col="hooks" class={s.rulesCell}>
+          {kind !== 'section' && kind !== 'tuple' && node.id && (
+            <CodeHooksCell fieldId={String(node.id)} />
           )}
         </td>
       )}
@@ -735,7 +764,7 @@ function renderNode(
 // hook mode) also drops the grip and the row actions. Source and Type always stay. A wide
 // panel leaves only ID and the mode's Rule or MDH column (ID and Label when there is none).
 const EDITING = ['grip', 'actions'];
-const DETAIL = ['flags', 'ai'];
+const DETAIL = ['flags', 'ai', 'hooks'];
 
 const columns = computed(() => {
   const cols = [
@@ -748,6 +777,7 @@ const columns = computed(() => {
     'flags',
     'rules',
     'matching',
+    'hooks',
     'actions',
     ...(ruleMarks.value ? ['rule'] : []),
     ...(hookRoleById.value ? ['mdh'] : []),
@@ -769,6 +799,7 @@ const HEAD: Record<string, any> = {
   label: 'Label',
   rules: 'Rules',
   matching: 'Matching',
+  hooks: 'Hooks',
   mdh: 'MDH',
   value: 'Value',
   rule: 'Rule',

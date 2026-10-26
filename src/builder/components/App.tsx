@@ -14,6 +14,7 @@ import {
   schemaFabry,
   hookEditor,
   validationPanel,
+  codeView,
 } from '../store.js';
 import {
   undoChange,
@@ -25,6 +26,7 @@ import {
   closeSchemaFabry,
   closeHookEditor,
   closeValidationPanel,
+  closeCodeView,
 } from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
@@ -34,6 +36,7 @@ import RuleEditor from './RuleEditor.jsx';
 import HookEditor from './HookEditor.jsx';
 import SchemaFabryPanel from './SchemaFabryPanel.jsx';
 import ValidationPanel from './ValidationPanel.jsx';
+import HookCodeView from './HookCodeView.jsx';
 import SaveDialog from './SaveDialog.jsx';
 import FilterBar from './FilterBar.jsx';
 import { navDrawer, panelOpen, panelWide, loadPanelWide } from './panels.js';
@@ -61,6 +64,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         else if (validationPanel.value) closeValidationPanel();
         else if (ruleEditor.value) closeRuleEditor();
         else if (hookEditor.value) closeHookEditor();
+        else if (codeView.value) closeCodeView();
         else selectedKey.value = null; // closes the inspector
         return;
       }
@@ -147,6 +151,8 @@ export default function App({ connected }: { connected: boolean | null }) {
                 <RuleEditor />
               ) : hookEditor.value ? (
                 <HookEditor />
+              ) : codeView.value ? (
+                <HookCodeView key={`${codeView.value.hookId}:${codeView.value.fieldId}`} />
               ) : (
                 <Inspector />
               )}
