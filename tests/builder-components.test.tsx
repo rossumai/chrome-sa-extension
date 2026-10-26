@@ -1325,11 +1325,32 @@ describe('Builder wide panel', () => {
 });
 
 describe('Builder cut-off cells', () => {
-  it('hovering the ID or the label shows both in full', () => {
+  const hover = (td: HTMLElement, cut: boolean) => {
+    Object.defineProperty(td, 'scrollWidth', { value: cut ? 300 : 100, configurable: true });
+    Object.defineProperty(td, 'clientWidth', { value: 100, configurable: true });
+    act(() => {
+      td.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    });
+  };
+  const tip = () => root.querySelector('[data-cell-tip]');
+
+  it('hovering a cut-off ID or label shows both in full at once', () => {
     const id = row('doc_id').querySelector('td[data-col="id"]') as HTMLElement;
     const label = row('doc_id').querySelector('td[data-col="label"]') as HTMLElement;
-    expect(id.title).toBe(`doc_id · ${label.textContent}`);
-    expect(label.title).toBe(id.title);
+    hover(label, true);
+    expect(tip()!.textContent).toBe(`doc_id · ${label.textContent}`);
+    expect(id.dataset.full).toBe(label.dataset.full);
+  });
+
+  it('shows nothing over a cell that fits, and hides when the mouse leaves the grid', () => {
+    const label = row('doc_id').querySelector('td[data-col="label"]') as HTMLElement;
+    hover(label, false);
+    expect(tip()).toBeNull();
+    hover(label, true);
+    act(() => {
+      root.querySelector('table')!.dispatchEvent(new MouseEvent('mouseleave'));
+    });
+    expect(tip()).toBeNull();
   });
 });
 

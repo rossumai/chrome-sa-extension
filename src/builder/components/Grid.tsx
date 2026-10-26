@@ -1,6 +1,6 @@
 import { h, Fragment } from 'preact';
 import { signal, computed } from '@preact/signals';
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import {
   work,
   status,
@@ -47,6 +47,7 @@ import EditableCell from './EditableCell.jsx';
 import Icon, { type IconName } from './icons.jsx';
 import type { ActionMark } from '../rules.js';
 import { panelOpen, panelWide } from './panels.js';
+import { fitColumns, WIDTHS, LABEL_MIN } from './columnFit.js';
 import s from './Builder.module.css';
 
 export const TYPES = ['string', 'number', 'date', 'enum', 'button'];
@@ -427,7 +428,7 @@ function Row({
   const dp = kind === 'datapoint';
   const locked = schemaLocked.value;
   const role = kind === 'section' ? undefined : ruleRoleById.value?.get(node.id);
-  // Hovering a cut-off ID or label shows both in full.
+  // Hovering a cut-off ID or label shows both in full (see CellTip).
   const full = [node.id, node.label].filter(Boolean).join(' · ');
   const cls = [
     s.row,
@@ -466,7 +467,7 @@ function Row({
           {kind === 'tuple' ? '' : '⋮⋮'}
         </td>
       )}
-      <td data-col="id" title={full} style={{ paddingLeft: `${6 + depth * 16}px` }}>
+      <td data-col="id" data-full={full} style={{ paddingLeft: `${6 + depth * 16}px` }}>
         {kind === 'section' && <span class={s.caret}>▾ </span>}
         {locked ? (
           <span class={s.mono}>{String(node.id ?? '')}</span>
@@ -490,7 +491,7 @@ function Row({
         )}
       </td>
       {on('label') && (
-        <td data-col="label" title={full}>
+        <td data-col="label" data-full={full}>
           {locked ? (
             String(node.label ?? '')
           ) : (
@@ -687,24 +688,10 @@ function renderNode(
   return out;
 }
 
-// Fixed widths; Label has none, so it takes the rest of the row. While a right panel is
+// Widths come from columnFit for the grid's measured width. While a right panel is
 // open the grid drops the flags (the field inspector has them); a read-only schema (rule or
 // hook mode) also drops the grip and the row actions. Source and Type always stay. A wide
 // panel leaves only ID and the mode's Rule or MDH column (ID and Label when there is none).
-const WIDTHS: Record<string, number> = {
-  grip: 22,
-  id: 200,
-  source: 96,
-  type: 84,
-  flags: 110,
-  rules: 56,
-  matching: 72,
-  actions: 60,
-  rule: 110,
-  mdh: 110,
-  value: 160,
-};
-const LABEL_MIN = 160;
 const EDITING = ['grip', 'actions'];
 const DETAIL = ['flags'];
 
@@ -755,7 +742,45 @@ const HEAD: Record<string, any> = {
   ),
 };
 
+// One tooltip for the grid, shown at once over a cut-off ID or label. A signal, so a hover
+// re-renders only the tooltip, not a grid of several hundred rows.
+const cellTip = signal<{ text: string; x: number; y: number } | null>(null);
+
+function CellTip() {
+  useEffect(() => {
+    const off = () => (cellTip.value = null);
+    window.addEventListener('scroll', off, true);
+    return () => window.removeEventListener('scroll', off, true);
+  }, []);
+  const tip = cellTip.value;
+  return tip ? (
+    <div class={s.cellTip} data-cell-tip="" style={{ left: `${tip.x}px`, top: `${tip.y}px` }}>
+      {tip.text}
+    </div>
+  ) : null;
+}
+
+function showTip(e: MouseEvent) {
+  const td = (e.target as Element).closest?.('td[data-full]') as HTMLElement | null;
+  if (!td || td.scrollWidth <= td.clientWidth) {
+    if (cellTip.value) cellTip.value = null;
+    return;
+  }
+  const r = td.getBoundingClientRect();
+  cellTip.value = { text: td.dataset.full ?? '', x: r.left, y: r.bottom + 2 };
+}
+
 export default function Grid() {
+  // The grid's width, measured, so columnFit can size the columns to it.
+  const tableRef = useRef<HTMLTableElement>(null);
+  const [avail, setAvail] = useState(0);
+  useEffect(() => {
+    const wrap = tableRef.current?.parentElement;
+    if (!wrap || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(() => setAvail(wrap.clientWidth));
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, []);
   let show = visibleKeys(
     work.value,
     fieldFilter.value,
@@ -781,67 +806,90 @@ export default function Grid() {
   // The annotation's values go after every editing column, the row actions included.
   const ruleOn = !!ruleMarks.value;
   const cols = columns.value;
-  const minWidth =
-    (cols.includes('label') ? LABEL_MIN : 0) + cols.reduce((sum, c) => sum + (WIDTHS[c] ?? 0), 0);
+  // Before the first measurement (and in tests): base widths, Label takes the rest.
+  const fit = avail ? fitColumns(cols, avail) : null;
+  const tableStyle = fit
+    ? { width: `${cols.reduce((sum, c) => sum + fit[c], 0)}px` }
+    : {
+        minWidth: `${(cols.includes('label') ? LABEL_MIN : 0) + cols.reduce((sum, c) => sum + (WIDTHS[c] ?? 0), 0)}px`,
+      };
   const lead = cols.filter((c) => c !== 'rule' && c !== 'mdh' && c !== 'value').length;
   return (
-    <table class={s.grid} style={{ minWidth: `${minWidth}px` }}>
-      <colgroup>
-        {cols.map((c) => (
-          <col data-col={c} style={c === 'label' ? undefined : { width: `${WIDTHS[c]}px` }} />
-        ))}
-      </colgroup>
-      <thead>
-        <tr>
+    <Fragment>
+      <table
+        ref={tableRef}
+        class={s.grid}
+        style={tableStyle}
+        onMouseOver={(e) => showTip(e as MouseEvent)}
+        onMouseLeave={() => (cellTip.value = null)}
+      >
+        <colgroup>
           {cols.map((c) => (
-            <th data-col={c}>{HEAD[c]}</th>
+            <col
+              data-col={c}
+              style={
+                fit
+                  ? { width: `${fit[c]}px` }
+                  : c === 'label'
+                    ? undefined
+                    : { width: `${WIDTHS[c]}px` }
+              }
+            />
           ))}
-        </tr>
-      </thead>
-      <tbody>
-        {(ruleOn || docMessages.length > 0) && (
-          <tr class={s.row + ' ' + s.sectionRow + ' ' + s.docRow} data-doc-row="">
-            <td colSpan={lead}>Whole document</td>
-            {on('rule') && (
-              <td data-col="rule">
-                <MarkIcons marks={ruleGlobalMarks.value || []} />
-              </td>
-            )}
-            {on('mdh') && <td />}
-            {on('value') && (
-              <td data-col="value" class={s.docMessages}>
-                {docMessages.map((m) => (
-                  <div>
-                    <MarkIcons marks={[{ kind: m.type, text: m.content, event: 'validation' }]} />
-                    {m.content}
-                  </div>
-                ))}
-                {validation.value && (
-                  <details>
-                    <summary class={s.dim}>raw response</summary>
-                    <pre class={s.code}>{JSON.stringify(validation.value.raw, null, 2)}</pre>
-                  </details>
-                )}
-              </td>
-            )}
+        </colgroup>
+        <thead>
+          <tr>
+            {cols.map((c) => (
+              <th data-col={c}>{HEAD[c]}</th>
+            ))}
           </tr>
-        )}
-        {work.value.flatMap((n) => renderNode(n, 0, false, null, show))}
-        {!show && (
-          <tr class={s.addSectionRow}>
-            <td colSpan={cols.length}>
-              <button
-                type="button"
-                class={s.linkBtn}
-                data-action="add-section"
-                onClick={addNewSection}
-              >
-                + Add section
-              </button>
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {(ruleOn || docMessages.length > 0) && (
+            <tr class={s.row + ' ' + s.sectionRow + ' ' + s.docRow} data-doc-row="">
+              <td colSpan={lead}>Whole document</td>
+              {on('rule') && (
+                <td data-col="rule">
+                  <MarkIcons marks={ruleGlobalMarks.value || []} />
+                </td>
+              )}
+              {on('mdh') && <td />}
+              {on('value') && (
+                <td data-col="value" class={s.docMessages}>
+                  {docMessages.map((m) => (
+                    <div>
+                      <MarkIcons marks={[{ kind: m.type, text: m.content, event: 'validation' }]} />
+                      {m.content}
+                    </div>
+                  ))}
+                  {validation.value && (
+                    <details>
+                      <summary class={s.dim}>raw response</summary>
+                      <pre class={s.code}>{JSON.stringify(validation.value.raw, null, 2)}</pre>
+                    </details>
+                  )}
+                </td>
+              )}
+            </tr>
+          )}
+          {work.value.flatMap((n) => renderNode(n, 0, false, null, show))}
+          {!show && (
+            <tr class={s.addSectionRow}>
+              <td colSpan={cols.length}>
+                <button
+                  type="button"
+                  class={s.linkBtn}
+                  data-action="add-section"
+                  onClick={addNewSection}
+                >
+                  + Add section
+                </button>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <CellTip />
+    </Fragment>
   );
 }
