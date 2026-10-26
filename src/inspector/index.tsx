@@ -8,12 +8,43 @@ import * as agentApi from '../agent/agentApi.js';
 import { orchestrateAttributions } from './orchestrate.js';
 import { buildEvidence } from './evidence.js';
 import { runSynthesis, continueSynthesis } from './synthesize.js';
+import { createRequestScope } from './requestScope.js';
+import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 
 let loadId = 0;
-const safe = (fn: any) =>
-  Promise.resolve()
+// One request per list per annotation load (spec 2026-10-13 §4.2); replaced with loadId.
+let scope = createRequestScope();
+const listHooksOnce = (queueId: string) =>
+  scope.get(`hooks:${queueId}`, () => api.listHooks(queueId));
+const listRulesOnce = (queueId: string) =>
+  scope.get(`rules:${queueId}`, () => api.listRules(queueId));
+const listLabelsOnce = () => scope.get('labels', () => api.listLabels());
+// Best-effort: any failure reads as null. A 429 is also recorded on the load it belongs
+// to, so the report says "rate-limited" instead of reading missing lists as empty.
+const safe = (fn: any) => {
+  const myId = loadId;
+  return Promise.resolve()
     .then(fn)
-    .catch(() => null);
+    .catch((err) => {
+      if (isRateLimited(err) && myId === loadId)
+        store.rateLimited.value = { retryAfter: err.retryAfter };
+      return null;
+    });
+};
+// Like safe(), for the queue lists: a 429 comes back as RATE_LIMITED instead of null, so
+// a loader tells its own throttling apart from another request's. The load-wide
+// store.rateLimited flag cannot: a 429 on labels and a 500 on hooks both left it set.
+const RATE_LIMITED = Symbol('rate-limited');
+const safeList = <T,>(fn: () => Promise<T>): Promise<T | null | typeof RATE_LIMITED> => {
+  const myId = loadId;
+  return Promise.resolve()
+    .then(fn)
+    .catch((err) => {
+      if (!isRateLimited(err)) return null;
+      if (myId === loadId) store.rateLimited.value = { retryAfter: err.retryAfter };
+      return RATE_LIMITED;
+    });
+};
 function idFromUrl(url: any) {
   const m = String(url || '').match(/\/(\d+)\/?$/);
   return m ? m[1] : null;
@@ -87,7 +118,9 @@ async function prefetchAndOrchestrate() {
     if (signal.aborted) return;
   }
   store.setInvestigation({ stage: 'attributing' });
-  await orchestrateAttributions({ store, api, agentApi, signal });
+  // The attribution fallback lists hooks too (attributionContext.ts): give it the load's list.
+  const scopedApi = { ...api, listHooks: (queueId: string) => listHooksOnce(String(queueId)) };
+  await orchestrateAttributions({ store, api: scopedApi, agentApi, signal });
   if (signal.aborted) return;
   recomputeEvidence();
   if (!store.aiAvailable.value) {
@@ -156,7 +189,9 @@ export async function initInspector() {
   try {
     await api.whoami();
   } catch (err: any) {
-    store.error.value = err.message || 'Failed to verify session';
+    store.error.value = isRateLimited(err)
+      ? rateLimitMessage(err)
+      : err.message || 'Failed to verify session';
     store.connected.value = false;
     return;
   }
@@ -176,6 +211,7 @@ export async function initInspector() {
 
 export async function loadAnnotation(id: any) {
   const myId = ++loadId;
+  scope = createRequestScope();
   if (attrController) attrController.abort();
   store.loading.value = true;
   store.error.value = null;
@@ -217,7 +253,10 @@ export async function loadAnnotation(id: any) {
     prefetchAndOrchestrate().catch(() => {}); // not awaited; swallow (attribution is best-effort)
     loadPagePreviews().catch(() => {}); // not awaited; decoration, not an investigation source
   } catch (err: any) {
-    if (myId === loadId) store.error.value = err.message || 'Failed to load annotation';
+    if (myId === loadId)
+      store.error.value = isRateLimited(err)
+        ? rateLimitMessage(err)
+        : err.message || 'Failed to load annotation';
   } finally {
     if (myId === loadId) store.loading.value = false;
   }
@@ -302,9 +341,13 @@ export async function loadEnrichment(
     store.enrichment.value = { ...store.enrichment.value, [kind]: v };
   } catch (err: any) {
     if (myId !== loadId) return;
+    // A 429 is not "no logs" and not a 403: record it, and mark the kind rate-limited so
+    // no panel concludes from it or refetches it.
+    const limited = isRateLimited(err);
+    if (limited) store.rateLimited.value = { retryAfter: err.retryAfter };
     store.enrichment.value = {
       ...store.enrichment.value,
-      [kind]: err.featureUnavailable ? 'unavailable' : [],
+      [kind]: limited ? 'rate-limited' : err.featureUnavailable ? 'unavailable' : [],
     };
   }
 }
@@ -314,11 +357,17 @@ export async function loadQueueHooks() {
   const d = store.data.value;
   if (!d || !d.annotation.queue || d.resolved._hooksLoaded) return;
   const myId = loadId;
-  const hooks = (await safe(() => api.listHooks(idFromUrl(d.annotation.queue) as string))) || [];
-  const hooksById: Record<string, any> = {};
-  for (const hk of hooks as any[]) hooksById[hk.id] = hk;
+  const hooks = await safeList(() => listHooksOnce(idFromUrl(d.annotation.queue) as string));
   const cur = store.data.value;
   if (!cur || myId !== loadId) return; // superseded by a newer annotation → don't contaminate it
+  // Rate-limited is not "this queue has no hooks": leave them unloaded (spec 2026-10-13 §4.2),
+  // and say so, or Extension runs waits for them for ever.
+  if (hooks === RATE_LIMITED) {
+    store.data.value = { ...cur, resolved: { ...cur.resolved, _hooksRateLimited: true } };
+    return;
+  }
+  const hooksById: Record<string, any> = {};
+  for (const hk of (hooks || []) as any[]) hooksById[hk.id] = hk;
   store.data.value = { ...cur, resolved: { ...cur.resolved, hooksById, _hooksLoaded: true } };
 }
 
@@ -330,18 +379,23 @@ export async function loadLabelContext() {
   const myId = loadId;
   const queueId = idFromUrl(d.annotation.queue);
   const [labels, rules, hooks] = await Promise.all([
-    safe(() => api.listLabels()),
-    queueId ? safe(() => api.listRules(queueId)) : Promise.resolve(null),
-    queueId ? safe(() => api.listHooks(queueId)) : Promise.resolve(null),
+    safeList(() => listLabelsOnce()),
+    queueId ? safeList(() => listRulesOnce(queueId)) : Promise.resolve(null),
+    queueId ? safeList(() => listHooksOnce(queueId)) : Promise.resolve(null),
   ]);
+  const cur = store.data.value;
+  if (!cur || myId !== loadId) return; // superseded → don't merge stale label context into another annotation
+  // Rate-limited: no half-empty label context, and say so, or Labels waits for ever.
+  if (labels === RATE_LIMITED || rules === RATE_LIMITED || hooks === RATE_LIMITED) {
+    store.data.value = { ...cur, resolved: { ...cur.resolved, _labelsRateLimited: true } };
+    return;
+  }
   const labelsById: Record<string, any> = {};
   for (const l of (labels || []) as any[])
     labelsById[String(l.id)] = { id: String(l.id), name: l.name, color: l.color, url: l.url };
   const labelRules = extractLabelRules(rules || []);
   const hooksById: Record<string, any> = {};
   for (const hk of (hooks || []) as any[]) hooksById[hk.id] = hk;
-  const cur = store.data.value;
-  if (!cur || myId !== loadId) return; // superseded → don't merge stale label context into another annotation
   store.data.value = {
     ...cur,
     resolved: {
@@ -360,10 +414,14 @@ export async function loadQueueRules() {
   const d = store.data.value;
   if (!d || !d.annotation.queue || d.resolved._rulesLoaded) return;
   const myId = loadId;
-  const rules = (await safe(() => api.listRules(idFromUrl(d.annotation.queue) as string))) || [];
+  const rules = await safeList(() => listRulesOnce(idFromUrl(d.annotation.queue) as string));
   const cur = store.data.value;
   if (!cur || myId !== loadId) return; // superseded → skip stale write
-  store.data.value = { ...cur, resolved: { ...cur.resolved, rules, _rulesLoaded: true } };
+  if (rules === RATE_LIMITED) return; // rate-limited, not "no rules"
+  store.data.value = {
+    ...cur,
+    resolved: { ...cur.resolved, rules: rules || [], _rulesLoaded: true },
+  };
 }
 
 // Intake context: parent document, duplicate relations, source email — all best-effort.
@@ -440,6 +498,7 @@ export function recomputeEvidence() {
 // bump loadId so in-flight loaders no-op, abort streams, clear the annotation.
 export function closeAnnotation() {
   loadId++;
+  scope = createRequestScope();
   if (attrController) attrController.abort();
   store.setAnnotationId(null);
   loadRecents()
