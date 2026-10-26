@@ -1,5 +1,5 @@
 import { h, Fragment } from 'preact';
-import { signal } from '@preact/signals';
+import { signal, computed } from '@preact/signals';
 import { useEffect, useRef } from 'preact/hooks';
 import {
   work,
@@ -46,6 +46,7 @@ import {
 import EditableCell from './EditableCell.jsx';
 import Icon, { type IconName } from './icons.jsx';
 import type { ActionMark } from '../rules.js';
+import { panelOpen } from './panels.js';
 import s from './Builder.module.css';
 
 export const TYPES = ['string', 'number', 'date', 'enum', 'button'];
@@ -453,14 +454,16 @@ function Row({
         if (from && t) apply(move(work.value, from, t.parent, t.index));
       }}
     >
-      <td
-        class={s.grip}
-        draggable={!locked && !deleted && kind !== 'tuple'}
-        onDragStart={(e) => e.dataTransfer?.setData('text/plain', key)}
-        title="Drag to reorder"
-      >
-        {kind === 'tuple' ? '' : '⋮⋮'}
-      </td>
+      {on('grip') && (
+        <td
+          class={s.grip}
+          draggable={!locked && !deleted && kind !== 'tuple'}
+          onDragStart={(e) => e.dataTransfer?.setData('text/plain', key)}
+          title="Drag to reorder"
+        >
+          {kind === 'tuple' ? '' : '⋮⋮'}
+        </td>
+      )}
       <td data-col="id" style={{ paddingLeft: `${6 + depth * 16}px` }}>
         {kind === 'section' && <span class={s.caret}>▾ </span>}
         {locked ? (
@@ -494,7 +497,7 @@ function Row({
           />
         )}
       </td>
-      <td data-col="source">{dp ? <SourceCell node={node} /> : null}</td>
+      {on('source') && <td data-col="source">{dp ? <SourceCell node={node} /> : null}</td>}
       <td data-col="type">
         {dp ? (
           <TypeCell node={node} />
@@ -504,75 +507,83 @@ function Row({
           </span>
         )}
       </td>
-      <td data-col="flags">
-        <span class={s.flags}>
-          <span>
-            {(dp || kind === 'multivalue') && (
-              <FlagButton
-                flag="visible"
-                on={!node.hidden}
-                onToggle={(v) => edit(key, ['hidden'], !v)}
-              />
-            )}
+      {on('flags') && (
+        <td data-col="flags">
+          <span class={s.flags}>
+            <span>
+              {(dp || kind === 'multivalue') && (
+                <FlagButton
+                  flag="visible"
+                  on={!node.hidden}
+                  onToggle={(v) => edit(key, ['hidden'], !v)}
+                />
+              )}
+            </span>
+            <span>
+              {dp && (
+                <FlagButton
+                  flag="export"
+                  on={node.can_export !== false}
+                  onToggle={(v) => edit(key, ['can_export'], v)}
+                />
+              )}
+            </span>
+            <span>
+              {dp && (
+                <FlagButton
+                  flag="required"
+                  on={!!node.constraints?.required}
+                  onToggle={(v) => edit(key, ['constraints', 'required'], v)}
+                />
+              )}
+            </span>
           </span>
-          <span>
-            {dp && (
-              <FlagButton
-                flag="export"
-                on={node.can_export !== false}
-                onToggle={(v) => edit(key, ['can_export'], v)}
-              />
-            )}
-          </span>
-          <span>
-            {dp && (
-              <FlagButton
-                flag="required"
-                on={!!node.constraints?.required}
-                onToggle={(v) => edit(key, ['constraints', 'required'], v)}
-              />
-            )}
-          </span>
-        </span>
-      </td>
-      <td data-col="rules" class={s.rulesCell}>
-        {kind !== 'section' && kind !== 'tuple' && node.id && (
-          <RulesCell fieldId={String(node.id)} />
-        )}
-      </td>
-      <td data-col="matching" class={s.rulesCell}>
-        {kind !== 'section' && kind !== 'tuple' && node.id && (
-          <HooksCell fieldId={String(node.id)} />
-        )}
-      </td>
-      <td class={s.actions}>
-        {locked ? null : node.__deleted ? (
-          <button
-            type="button"
-            class={s.linkBtn}
-            data-action="restore"
-            onClick={(e) => {
-              e.stopPropagation();
-              apply(setDeleted(work.value, key, false));
-            }}
-          >
-            Restore
-          </button>
-        ) : !deleted && kind !== 'tuple' ? (
-          <button
-            type="button"
-            class={s.iconBtn}
-            data-action="delete"
-            title="Delete"
-            onClick={(e) => {
-              e.stopPropagation();
-              apply(setDeleted(work.value, key, true));
-            }}
-          >
-            ✕
-          </button>
-        ) : null}
-      </td>
+        </td>
+      )}
+      {on('rules') && (
+        <td data-col="rules" class={s.rulesCell}>
+          {kind !== 'section' && kind !== 'tuple' && node.id && (
+            <RulesCell fieldId={String(node.id)} />
+          )}
+        </td>
+      )}
+      {on('matching') && (
+        <td data-col="matching" class={s.rulesCell}>
+          {kind !== 'section' && kind !== 'tuple' && node.id && (
+            <HooksCell fieldId={String(node.id)} />
+          )}
+        </td>
+      )}
+      {on('actions') && (
+        <td class={s.actions}>
+          {locked ? null : node.__deleted ? (
+            <button
+              type="button"
+              class={s.linkBtn}
+              data-action="restore"
+              onClick={(e) => {
+                e.stopPropagation();
+                apply(setDeleted(work.value, key, false));
+              }}
+            >
+              Restore
+            </button>
+          ) : !deleted && kind !== 'tuple' ? (
+            <button
+              type="button"
+              class={s.iconBtn}
+              data-action="delete"
+              title="Delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                apply(setDeleted(work.value, key, true));
+              }}
+            >
+              ✕
+            </button>
+          ) : null}
+        </td>
+      )}
       {ruleMarks.value && (
         <td data-col="rule">
           {role === 'condition' || role === 'both' ? (
@@ -622,11 +633,9 @@ function AddRow({
   );
   return (
     <tr class={s.addRow}>
-      <td />
+      {on('grip') && <td />}
       <td
-        colSpan={
-          8 + (ruleMarks.value ? 1 : 0) + (hookRoleById.value ? 1 : 0) + (values.value ? 1 : 0)
-        }
+        colSpan={columns.value.length - (on('grip') ? 1 : 0)}
         style={{ paddingLeft: `${6 + depth * 16}px` }}
       >
         <span class={s.addLinks}>
@@ -672,52 +681,47 @@ function renderNode(
   return out;
 }
 
-const WIDTHS_KEY = 'builderColumnWidths';
-const COLS = ['id', 'label', 'source', 'type', 'flags', 'rules', 'matching'];
-const DEFAULT_WIDTHS: Record<string, number> = {
-  id: 220,
-  label: 200,
-  type: 90,
-  source: 110,
+// Fixed widths; Label has none, so it takes the rest of the row. While a right panel is
+// open the grid drops Source and the flags (the field inspector has both); a read-only
+// schema (rule or hook mode) also drops the grip and the row actions.
+const WIDTHS: Record<string, number> = {
+  grip: 22,
+  id: 200,
+  source: 96,
+  type: 84,
   flags: 110,
-  rules: 64,
+  rules: 56,
   matching: 72,
-  mdh: 110,
-  value: 180,
+  actions: 60,
   rule: 110,
+  mdh: 110,
+  value: 160,
 };
-const MIN_WIDTH = 50;
-const widths = signal<Record<string, number>>({ ...DEFAULT_WIDTHS });
-let widthsLoaded = false;
+const LABEL_MIN = 160;
+const EDITING = ['grip', 'actions'];
+const DETAIL = ['source', 'flags'];
 
-function loadWidths() {
-  if (widthsLoaded) return;
-  widthsLoaded = true;
-  globalThis.chrome?.storage?.local
-    ?.get([WIDTHS_KEY])
-    .then((v) => {
-      const saved = v?.[WIDTHS_KEY];
-      if (saved && typeof saved === 'object') widths.value = { ...DEFAULT_WIDTHS, ...saved };
-    })
-    .catch(() => {});
-}
+const columns = computed(() =>
+  [
+    'grip',
+    'id',
+    'label',
+    'source',
+    'type',
+    'flags',
+    'rules',
+    'matching',
+    'actions',
+    ...(ruleMarks.value ? ['rule'] : []),
+    ...(hookRoleById.value ? ['mdh'] : []),
+    ...(values.value ? ['value'] : []),
+  ].filter(
+    (c) => !(panelOpen.value && DETAIL.includes(c)) && !(schemaLocked.value && EDITING.includes(c)),
+  ),
+);
 
-// Drag a header's right edge; the width is saved when the drag ends.
-function startResize(col: string, e: MouseEvent) {
-  e.preventDefault();
-  e.stopPropagation();
-  const startX = e.clientX;
-  const startW = widths.value[col];
-  const onMove = (m: MouseEvent) => {
-    widths.value = { ...widths.value, [col]: Math.max(MIN_WIDTH, startW + m.clientX - startX) };
-  };
-  const onUp = () => {
-    window.removeEventListener('mousemove', onMove);
-    window.removeEventListener('mouseup', onUp);
-    globalThis.chrome?.storage?.local?.set({ [WIDTHS_KEY]: widths.value })?.catch(() => {});
-  };
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('mouseup', onUp);
+function on(col: string): boolean {
+  return columns.value.includes(col);
 }
 
 const HEAD: Record<string, any> = {
@@ -730,6 +734,8 @@ const HEAD: Record<string, any> = {
   rule: 'Rule',
   type: 'Type',
   source: 'Source',
+  grip: '',
+  actions: '',
   flags: (
     <span class={s.flags}>
       <span title="Visible">Vis</span>
@@ -740,8 +746,6 @@ const HEAD: Record<string, any> = {
 };
 
 export default function Grid() {
-  useEffect(loadWidths, []);
-  const w = widths.value;
   let show = visibleKeys(
     work.value,
     fieldFilter.value,
@@ -767,46 +771,27 @@ export default function Grid() {
   // The annotation's values go after every editing column, the row actions included.
   const ruleOn = !!ruleMarks.value;
   const hookOn = !!hookRoleById.value;
-  const cols = [
-    ...COLS,
-    ...(ruleOn ? ['rule'] : []),
-    ...(hookOn ? ['mdh'] : []),
-    ...(values.value ? ['value'] : []),
-  ];
-  const total = 22 + 60 + cols.reduce((sum, c) => sum + w[c], 0);
-  const head = (c: string) => (
-    <th data-col={c} class={s.resizable}>
-      {HEAD[c]}
-      <span class={s.resizer} data-resize="" onMouseDown={(e) => startResize(c, e as MouseEvent)} />
-    </th>
-  );
+  const cols = columns.value;
+  const minWidth = LABEL_MIN + cols.reduce((sum, c) => sum + (WIDTHS[c] ?? 0), 0);
+  const lead = cols.filter((c) => c !== 'rule' && c !== 'mdh' && c !== 'value').length;
   return (
-    <table class={s.grid} style={{ width: `${total}px` }}>
+    <table class={s.grid} style={{ minWidth: `${minWidth}px` }}>
       <colgroup>
-        <col style={{ width: '22px' }} />
-        {COLS.map((c) => (
-          <col data-col={c} style={{ width: `${w[c]}px` }} />
+        {cols.map((c) => (
+          <col data-col={c} style={c === 'label' ? undefined : { width: `${WIDTHS[c]}px` }} />
         ))}
-        <col style={{ width: '60px' }} />
-        {ruleOn && <col data-col="rule" style={{ width: `${w.rule}px` }} />}
-        {hookOn && <col data-col="mdh" style={{ width: `${w.mdh}px` }} />}
-        {values.value && <col data-col="value" style={{ width: `${w.value}px` }} />}
       </colgroup>
       <thead>
         <tr>
-          <th />
-          {COLS.map(head)}
-          <th />
-          {ruleOn && head('rule')}
-          {hookOn && head('mdh')}
-          {values.value && head('value')}
+          {cols.map((c) => (
+            <th data-col={c}>{HEAD[c]}</th>
+          ))}
         </tr>
       </thead>
       <tbody>
         {(ruleOn || docMessages.length > 0) && (
           <tr class={s.row + ' ' + s.sectionRow + ' ' + s.docRow} data-doc-row="">
-            <td />
-            <td colSpan={COLS.length + 1}>Whole document</td>
+            <td colSpan={lead}>Whole document</td>
             {ruleOn && (
               <td data-col="rule">
                 <MarkIcons marks={ruleGlobalMarks.value || []} />
@@ -834,7 +819,7 @@ export default function Grid() {
         {work.value.flatMap((n) => renderNode(n, 0, false, null, show))}
         {!show && (
           <tr class={s.addSectionRow}>
-            <td colSpan={cols.length + 2}>
+            <td colSpan={cols.length}>
               <button
                 type="button"
                 class={s.linkBtn}

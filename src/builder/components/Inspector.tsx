@@ -5,7 +5,6 @@ import { apply, askFieldAssistant } from '../index.jsx';
 import { setAttr, findByKey, type Node } from '../model.js';
 import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
-import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
 
 function get(node: Node, path: string[]): any {
@@ -234,11 +233,9 @@ function ReadOnlyJson({ label, value }: { label: string; value: unknown }) {
   );
 }
 
-const panel = rightPanel;
 const IDLE: AssistState = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
 
 export default function Inspector() {
-  useEffect(panel.load, []);
   const [expanded, setExpanded] = useState(false);
   const key = selectedKey.value;
   useEffect(() => setExpanded(false), [key]); // a new selection starts collapsed
@@ -246,16 +243,9 @@ export default function Inspector() {
   const shell = (children: any, fill = false) => (
     <aside
       class={s.inspector + (fill ? ' ' + s.inspectorFill : '')}
-      style={{ width: `${panel.width.value}px` }}
       data-expanded={fill ? 'true' : undefined}
       data-panel="field"
     >
-      <div
-        class={s.inspectorResizer}
-        data-resize="inspector"
-        title="Drag to resize"
-        onMouseDown={(e) => panel.start(e as MouseEvent, -1)}
-      />
       {children}
     </aside>
   );

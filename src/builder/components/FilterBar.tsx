@@ -18,10 +18,11 @@ import { countMatches } from '../fieldFilter.js';
 import { openRuleEditor, closeRuleEditor, openHookEditor, closeHookEditor } from '../index.jsx';
 import { mdhHooks, configSummaries } from '../matching.js';
 import { pickHookConfig } from './hookJump.js';
+import AnnotationPicker from './AnnotationPicker.jsx';
 import s from './Builder.module.css';
 
 // The bar above the grid: its filters — text (id or label), a rule, an MDH hook and one of
-// the hook's configurations. Picking a rule or a hook opens it in the right panel and shows
+// the hook's configurations — and, at the right end, the annotation whose values show. Picking a rule or a hook opens it in the right panel and shows
 // only its fields; the text filter then adds matches.
 export default function FilterBar() {
   const editing = ruleEditor.value;
@@ -61,8 +62,7 @@ export default function FilterBar() {
             checked={onlyMessages.value}
             onChange={(e) => (onlyMessages.value = (e.currentTarget as HTMLInputElement).checked)}
           />
-          Only fields with messages ({msgFields}) · {validation.value.fired.size} rule
-          {validation.value.fired.size === 1 ? '' : 's'} fired
+          With messages ({msgFields}) · {validation.value.fired.size} fired
         </label>
       )}
       {selectedQueueId.value != null && (
@@ -110,7 +110,7 @@ export default function FilterBar() {
       )}
       {selectedQueueId.value != null && (
         <Fragment>
-          <span class={s.dim}>MDH hook</span>
+          <span class={s.dim}>MDH</span>
           <select
             class={s.select}
             data-picker="hook"
@@ -160,6 +160,8 @@ export default function FilterBar() {
           )}
         </Fragment>
       )}
+      <span class={s.spacer} />
+      <AnnotationPicker />
     </div>
   );
 }

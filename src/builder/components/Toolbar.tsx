@@ -15,7 +15,8 @@ import {
 import { undoChange, redoChange, discard, renameSchema, openSchemaFabry } from '../index.jsx';
 import EditableCell from './EditableCell.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
-import AnnotationPicker from './AnnotationPicker.jsx';
+import { navDrawer } from './panels.js';
+import Icon from './icons.jsx';
 import { canUndo, canRedo } from '../history.js';
 import s from './Builder.module.css';
 
@@ -40,6 +41,15 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
   const text = summaryText(summary.value, renamed.value);
   return (
     <div class={s.toolbar} data-toolbar="">
+      <button
+        type="button"
+        class={s.iconBtn + ' ' + s.navOpen}
+        data-action="open-nav"
+        title="Queues and schemas"
+        onClick={() => (navDrawer.value = true)}
+      >
+        <Icon name="menu" />
+      </button>
       <span class={s.crumb}>
         {ws ? `${ws.name} › ` : ''}
         <b>{q ? `${q.name} (${q.id})` : 'No queue'}</b>
@@ -53,7 +63,6 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
           </span>
         )}
       </span>
-      <AnnotationPicker />
       {sharedCount.value > 1 && (
         <span class={s.shared} title="Editing this schema changes every queue that uses it">
           used by {sharedCount.value} queues
@@ -68,27 +77,27 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
         title="Ask Mr. Fabry to change the schema"
         onClick={openSchemaFabry}
       >
-        <FabryMark size={14} animated={schemaFabry.value.busy} /> Mr. Fabry
+        <FabryMark size={14} animated={schemaFabry.value.busy} />
       </button>
       <button
         type="button"
-        class={s.btn}
+        class={s.btn + ' ' + s.fabryBtn}
         data-action="undo"
         disabled={!canUndo(history.value)}
         onClick={undoChange}
         title="Undo (⌘Z)"
       >
-        ↶ Undo
+        <Icon name="undo" size={14} />
       </button>
       <button
         type="button"
-        class={s.btn}
+        class={s.btn + ' ' + s.fabryBtn}
         data-action="redo"
         disabled={!canRedo(history.value)}
         onClick={redoChange}
         title="Redo (⇧⌘Z)"
       >
-        ↷ Redo
+        <Icon name="redo" size={14} />
       </button>
       <button
         type="button"

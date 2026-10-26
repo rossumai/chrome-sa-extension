@@ -36,6 +36,7 @@ import SchemaFabryPanel from './SchemaFabryPanel.jsx';
 import ValidationPanel from './ValidationPanel.jsx';
 import SaveDialog from './SaveDialog.jsx';
 import FilterBar from './FilterBar.jsx';
+import { navDrawer } from './panels.js';
 import s from './Builder.module.css';
 
 function inField(t: EventTarget | null): boolean {
@@ -54,7 +55,8 @@ export default function App({ connected }: { connected: boolean | null }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !inField(e.target)) {
-        if (schemaFabry.value.open) closeSchemaFabry();
+        if (navDrawer.value) navDrawer.value = false;
+        else if (schemaFabry.value.open) closeSchemaFabry();
         else if (validationPanel.value) closeValidationPanel();
         else if (ruleEditor.value) closeRuleEditor();
         else if (hookEditor.value) closeHookEditor();

@@ -1,5 +1,4 @@
 import { h } from 'preact';
-import { useEffect } from 'preact/hooks';
 import { ruleEditor, ruleDirty, ruleErrors, ruleSaving, assist, assistRev } from '../store.js';
 import {
   updateRuleDraft,
@@ -11,7 +10,6 @@ import {
 import { ACTION_TYPES, ACTION_EVENTS, newAction, withActionType } from '../ruleDraft.js';
 import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
-import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
 
 function setAction(i: number, next: any) {
@@ -168,16 +166,10 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
 
 // Rule mode's right panel: the open rule's name, condition and actions, with its own Save.
 export default function RuleEditor() {
-  useEffect(rightPanel.load, []);
   const ed = ruleEditor.value!;
   const d = ed.draft;
   return (
-    <aside class={s.inspector} style={{ width: `${rightPanel.width.value}px` }} data-panel="rule">
-      <div
-        class={s.inspectorResizer}
-        data-resize="inspector"
-        onMouseDown={(e) => rightPanel.start(e as MouseEvent, -1)}
-      />
+    <aside class={s.inspector} data-panel="rule">
       <div class={s.ruleHead}>
         <h4 class={s.inspTitle}>{ed.ruleId != null ? `Rule (${ed.ruleId})` : 'New rule'}</h4>
         <button

@@ -1,6 +1,5 @@
-import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { signal } from '@preact/signals';
+import { h, Fragment } from 'preact';
+import { useState } from 'preact/hooks';
 import {
   queues,
   workspaces,
@@ -12,31 +11,8 @@ import {
 import { openQueue, openSchema, deleteQueue, deleteSchema } from '../index.jsx';
 import { queueGroups, orphanSchemas } from '../links.js';
 import CreateDialog, { type CreateTarget } from './CreateDialog.jsx';
-import { widthPref } from './widthPref.js';
+import { navDrawer } from './panels.js';
 import s from './Builder.module.css';
-
-const nav = widthPref('builderNavWidth', 260, 180, 640);
-
-// Folded into a thin strip while a schema is open; remembered per browser.
-const COLLAPSED_KEY = 'builderNavCollapsed';
-const collapsed = signal(false);
-let collapsedLoaded = false;
-
-function loadCollapsed() {
-  if (collapsedLoaded) return;
-  collapsedLoaded = true;
-  globalThis.chrome?.storage?.local
-    ?.get([COLLAPSED_KEY])
-    .then((v) => {
-      collapsed.value = v?.[COLLAPSED_KEY] === true;
-    })
-    .catch(() => {});
-}
-
-function setCollapsed(v: boolean) {
-  collapsed.value = v;
-  globalThis.chrome?.storage?.local?.set({ [COLLAPSED_KEY]: v })?.catch(() => {});
-}
 
 function DeleteBtn({
   onClick,
@@ -67,157 +43,151 @@ function DeleteBtn({
 // Left panel: queues by workspace, then the schemas no queue uses. Every queue that shares
 // the open schema is highlighted, so it is plain which queues an edit changes.
 export default function Navigator() {
-  useEffect(nav.load, []);
-  useEffect(loadCollapsed, []);
   const [filter, setFilter] = useState('');
   const [creating, setCreating] = useState<CreateTarget | null>(null);
   const groups = queueGroups(workspaces.value, queues.value, filter);
   const orphans = orphanSchemas(schemas.value, queues.value, filter);
   const shared = sharedQueueIds.value;
-  // Only collapsible while something is open: with nothing open, the list is the way in.
-  const canCollapse = selectedQueueId.value != null || selectedSchemaId.value != null;
-  if (canCollapse && collapsed.value) {
-    return (
-      <nav class={s.nav + ' ' + s.navCollapsed} data-collapsed="true">
-        <button
-          type="button"
-          class={s.iconBtn}
-          data-action="expand-nav"
-          title="Show queues and schemas"
-          onClick={() => setCollapsed(false)}
-        >
-          »
-        </button>
-      </nav>
-    );
-  }
+  // With nothing open the list is the way in and stays put; once a schema is open it is a
+  // drawer over the grid, opened from the breadcrumb and closed by a pick or a click away.
+  const drawer = selectedQueueId.value != null || selectedSchemaId.value != null;
+  if (drawer && !navDrawer.value) return null;
+  const close = () => (navDrawer.value = false);
+  const pickQueue = (id: number) => {
+    close();
+    openQueue(id);
+  };
+  const pickSchema = (id: number) => {
+    close();
+    openSchema(id);
+  };
   return (
-    <nav class={s.nav} style={{ width: `${nav.width.value}px` }}>
-      <div class={s.navTop}>
-        <input
-          class={s.input}
-          placeholder="Filter queues and schemas"
-          value={filter}
-          onInput={(e) => setFilter((e.currentTarget as HTMLInputElement).value)}
-        />
-        {canCollapse && (
-          <button
-            type="button"
-            class={s.iconBtn}
-            data-action="collapse-nav"
-            title="Hide this panel"
-            onClick={() => setCollapsed(true)}
-          >
-            «
-          </button>
-        )}
-      </div>
-      <div class={s.navScroll}>
-        <div class={s.groupTitle}>
-          Queues
-          <button
-            type="button"
-            class={s.linkBtn}
-            data-action="new-workspace"
-            onClick={() => setCreating({ kind: 'workspace' })}
-          >
-            + Workspace
-          </button>
+    <Fragment>
+      {drawer && <div class={s.navBackdrop} data-nav-backdrop="" onClick={close} />}
+      <nav
+        class={s.nav + (drawer ? ' ' + s.navDrawer : '')}
+        data-nav-drawer={drawer ? '' : undefined}
+      >
+        <div class={s.navTop}>
+          <input
+            class={s.input}
+            placeholder="Filter queues and schemas"
+            value={filter}
+            onInput={(e) => setFilter((e.currentTarget as HTMLInputElement).value)}
+          />
+          {drawer && (
+            <button
+              type="button"
+              class={s.iconBtn}
+              data-action="close-nav"
+              title="Close (Esc)"
+              onClick={close}
+            >
+              ✕
+            </button>
+          )}
         </div>
-        {groups.map(({ ws, qs }) => (
-          <div key={ws.id}>
-            <div class={s.wsName}>
-              <span>
-                {ws.name} ({ws.id})
-              </span>
-              <button
-                type="button"
-                class={s.linkBtn}
-                data-action="new-queue"
-                data-workspace={ws.url}
-                onClick={() =>
-                  setCreating({ kind: 'queue', workspaceUrl: ws.url, workspaceName: ws.name })
-                }
-              >
-                + Queue
-              </button>
-            </div>
-            {qs.map((q) => {
-              const on = selectedQueueId.value === q.id;
-              const isShared = !on && shared.has(q.id);
-              return (
-                <div
-                  key={q.id}
-                  class={
-                    s.navRow + (on ? ' ' + s.queueOn : '') + (isShared ? ' ' + s.sharedOn : '')
-                  }
-                >
-                  <button
-                    type="button"
-                    data-queue-id={String(q.id)}
-                    data-shared={isShared ? 'true' : undefined}
-                    class={s.queue}
-                    onClick={() => openQueue(q.id)}
-                    title={isShared ? 'Uses the schema you are editing' : undefined}
-                  >
-                    {q.name} ({q.id})
-                  </button>
-                  <DeleteBtn
-                    action="delete-queue"
-                    data={{ 'data-queue': String(q.id) }}
-                    onClick={() => deleteQueue(q.id)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        ))}
-        <div>
+        <div class={s.navScroll}>
           <div class={s.groupTitle}>
-            Schemas without a queue
+            Queues
             <button
               type="button"
               class={s.linkBtn}
-              data-action="new-schema"
-              onClick={() => setCreating({ kind: 'schema' })}
+              data-action="new-workspace"
+              onClick={() => setCreating({ kind: 'workspace' })}
             >
-              + Schema
+              + Workspace
             </button>
           </div>
-          {orphans.map((x) => (
-            <div
-              key={x.id}
-              class={
-                s.navRow +
-                (selectedQueueId.value == null && selectedSchemaId.value === x.id
-                  ? ' ' + s.queueOn
-                  : '')
-              }
-            >
-              <button
-                type="button"
-                data-schema-id={String(x.id)}
-                class={s.queue}
-                onClick={() => openSchema(x.id)}
-              >
-                {x.name} ({x.id})
-              </button>
-              <DeleteBtn
-                action="delete-schema"
-                data={{ 'data-schema': String(x.id) }}
-                onClick={() => deleteSchema(x.id)}
-              />
+          {groups.map(({ ws, qs }) => (
+            <div key={ws.id}>
+              <div class={s.wsName}>
+                <span>
+                  {ws.name} ({ws.id})
+                </span>
+                <button
+                  type="button"
+                  class={s.linkBtn}
+                  data-action="new-queue"
+                  data-workspace={ws.url}
+                  onClick={() =>
+                    setCreating({ kind: 'queue', workspaceUrl: ws.url, workspaceName: ws.name })
+                  }
+                >
+                  + Queue
+                </button>
+              </div>
+              {qs.map((q) => {
+                const on = selectedQueueId.value === q.id;
+                const isShared = !on && shared.has(q.id);
+                return (
+                  <div
+                    key={q.id}
+                    class={
+                      s.navRow + (on ? ' ' + s.queueOn : '') + (isShared ? ' ' + s.sharedOn : '')
+                    }
+                  >
+                    <button
+                      type="button"
+                      data-queue-id={String(q.id)}
+                      data-shared={isShared ? 'true' : undefined}
+                      class={s.queue}
+                      onClick={() => pickQueue(q.id)}
+                      title={isShared ? 'Uses the schema you are editing' : undefined}
+                    >
+                      {q.name} ({q.id})
+                    </button>
+                    <DeleteBtn
+                      action="delete-queue"
+                      data={{ 'data-queue': String(q.id) }}
+                      onClick={() => deleteQueue(q.id)}
+                    />
+                  </div>
+                );
+              })}
             </div>
           ))}
+          <div>
+            <div class={s.groupTitle}>
+              Schemas without a queue
+              <button
+                type="button"
+                class={s.linkBtn}
+                data-action="new-schema"
+                onClick={() => setCreating({ kind: 'schema' })}
+              >
+                + Schema
+              </button>
+            </div>
+            {orphans.map((x) => (
+              <div
+                key={x.id}
+                class={
+                  s.navRow +
+                  (selectedQueueId.value == null && selectedSchemaId.value === x.id
+                    ? ' ' + s.queueOn
+                    : '')
+                }
+              >
+                <button
+                  type="button"
+                  data-schema-id={String(x.id)}
+                  class={s.queue}
+                  onClick={() => pickSchema(x.id)}
+                >
+                  {x.name} ({x.id})
+                </button>
+                <DeleteBtn
+                  action="delete-schema"
+                  data={{ 'data-schema': String(x.id) }}
+                  onClick={() => deleteSchema(x.id)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <div
-        class={s.navResizer}
-        data-resize="nav"
-        title="Drag to resize"
-        onMouseDown={(e) => nav.start(e as MouseEvent)}
-      />
-      {creating && <CreateDialog target={creating} onClose={() => setCreating(null)} />}
-    </nav>
+        {creating && <CreateDialog target={creating} onClose={() => setCreating(null)} />}
+      </nav>
+    </Fragment>
   );
 }

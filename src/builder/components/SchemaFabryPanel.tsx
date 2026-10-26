@@ -1,28 +1,16 @@
 import { h } from 'preact';
-import { useEffect } from 'preact/hooks';
 import { schemaFabry, fabryChangedKeys, onlyFabryChanges } from '../store.js';
 import { askSchemaFabry, closeSchemaFabry, fixWithFabry } from '../index.jsx';
 import AskFabry from './AskFabry.jsx';
-import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
 
 // Mr. Fabry for the whole schema: the conversation, what each answer changed, what is still
 // wrong (with "Ask Mr. Fabry to fix"), and a filter down to the rows it touched.
 export default function SchemaFabryPanel() {
-  useEffect(rightPanel.load, []);
   const st = schemaFabry.value;
   const changed = fabryChangedKeys.value.size;
   return (
-    <aside
-      class={s.inspector}
-      style={{ width: `${rightPanel.width.value}px` }}
-      data-panel="schema-fabry"
-    >
-      <div
-        class={s.inspectorResizer}
-        data-resize="inspector"
-        onMouseDown={(e) => rightPanel.start(e as MouseEvent, -1)}
-      />
+    <aside class={s.inspector} data-panel="schema-fabry">
       <div class={s.ruleHead}>
         <h4 class={s.inspTitle}>Mr. Fabry · schema</h4>
         <button

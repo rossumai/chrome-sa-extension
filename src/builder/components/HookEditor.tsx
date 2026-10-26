@@ -1,5 +1,4 @@
 import { h } from 'preact';
-import { useEffect } from 'preact/hooks';
 import {
   hookEditor,
   hookDirty,
@@ -20,7 +19,6 @@ import {
 import CodeEditor from './CodeEditor.jsx';
 import { hookEditorRef } from './hookJump.js';
 import AskFabry from './AskFabry.jsx';
-import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
 
 // "Format" for JSON: parse and print with two-space indent. A parse error is the message.
@@ -28,21 +26,11 @@ const formatJson = async (src: string) => JSON.stringify(JSON.parse(src), null, 
 
 // Hook mode's right panel: one MDH hook's settings as JSON, Mr. Fabry, and its own Save.
 export default function HookEditor() {
-  useEffect(rightPanel.load, []);
   const ed = hookEditor.value!;
   const hook = hooks.value.find((h) => h.id === ed.hookId);
   const refs = hookRefs.value;
   return (
-    <aside
-      class={s.inspector + ' ' + s.inspectorFill}
-      style={{ width: `${rightPanel.width.value}px` }}
-      data-panel="hook"
-    >
-      <div
-        class={s.inspectorResizer}
-        data-resize="inspector"
-        onMouseDown={(e) => rightPanel.start(e as MouseEvent, -1)}
-      />
+    <aside class={s.inspector + ' ' + s.inspectorFill} data-panel="hook">
       <div class={s.ruleHead}>
         <h4 class={s.inspTitle}>
           {hook?.name ?? 'Hook'} ({ed.hookId})

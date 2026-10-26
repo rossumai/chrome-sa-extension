@@ -9,6 +9,7 @@ import { annotationValues } from '../src/builder/values.js';
 import type { PlacedMessage } from '../src/builder/validation.js';
 import { apply } from '../src/builder/index.jsx';
 import { setAttr } from '../src/builder/model.js';
+import { navDrawer } from '../src/builder/components/panels.js';
 
 function content(): any[] {
   return [
@@ -85,6 +86,7 @@ afterEach(() => {
 
 beforeEach(() => {
   document.body.innerHTML = '';
+  navDrawer.value = false;
   root = document.createElement('div');
   document.body.appendChild(root);
   store.workspaces.value = [{ id: 10, url: 'https://x/api/v1/workspaces/10', name: 'AP' }];
@@ -180,7 +182,17 @@ describe('Builder screen', () => {
     const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
       th.getAttribute('data-col'),
     );
-    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules', 'matching']);
+    expect(heads).toEqual([
+      'grip',
+      'id',
+      'label',
+      'source',
+      'type',
+      'flags',
+      'rules',
+      'matching',
+      'actions',
+    ]);
     const flags = row('doc_id').querySelector('td[data-col="flags"]')!;
     expect(
       [...flags.querySelectorAll('button[data-col]')].map((e) => e.getAttribute('data-col')),
@@ -194,19 +206,26 @@ describe('Builder screen', () => {
     ]);
   });
 
-  it('dragging a header edge resizes that column and remembers the width', () => {
-    const col = () => root.querySelector('col[data-col="label"]') as HTMLElement;
-    const before = parseInt(col().style.width, 10);
-    const handle = root.querySelector('th[data-col="label"] [data-resize]') as HTMLElement;
+  it('columns have fixed widths except Label, which takes the rest of the row', () => {
+    expect(root.querySelector('[data-resize]')).toBeNull();
+    const width = (c: string) =>
+      (root.querySelector(`col[data-col="${c}"]`) as HTMLElement).style.width;
+    expect(width('label')).toBe('');
+    expect(width('id')).toBe('200px');
+  });
+
+  it('a right panel drops Source and the flags, which the inspector shows', () => {
+    const heads = () =>
+      [...root.querySelectorAll('th[data-col]')].map((th) => th.getAttribute('data-col'));
     act(() => {
-      handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, bubbles: true }));
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 160 }));
-      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 160 }));
+      row('doc_id').click();
     });
-    expect(parseInt(col().style.width, 10)).toBe(before + 60);
-    expect(chromeSet).toHaveBeenCalledWith({
-      builderColumnWidths: expect.objectContaining({ label: before + 60 }),
+    expect(root.querySelector('aside[data-panel="field"]')).not.toBeNull();
+    expect(heads()).toEqual(['grip', 'id', 'label', 'type', 'rules', 'matching', 'actions']);
+    act(() => {
+      store.selectedKey.value = null;
     });
+    expect(heads()).toContain('flags');
   });
 
   it('a label edit is one history entry, marks the row edited, and undoes', () => {
@@ -357,7 +376,18 @@ describe('Builder annotation values', () => {
     const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
       th.getAttribute('data-col'),
     );
-    expect(heads).toEqual(['id', 'label', 'source', 'type', 'flags', 'rules', 'matching', 'value']);
+    expect(heads).toEqual([
+      'grip',
+      'id',
+      'label',
+      'source',
+      'type',
+      'flags',
+      'rules',
+      'matching',
+      'actions',
+      'value',
+    ]);
   });
 
   it('shows header values, a row count on the table, and steps through table rows', () => {
@@ -389,7 +419,14 @@ describe('Builder annotation values', () => {
   });
 });
 
+const openNav = () =>
+  act(() => {
+    (root.querySelector('[data-action="open-nav"]') as HTMLElement).click();
+  });
+
 describe('Builder left panel', () => {
+  beforeEach(openNav);
+
   it('lists queues with their ids, then schemas no queue uses', () => {
     const queues = [...root.querySelectorAll('[data-queue-id]')].map((e) => e.textContent);
     expect(queues).toEqual(['Invoices (1)', 'Invoices US (2)', 'Orders (3)']);
@@ -425,19 +462,8 @@ describe('Builder schema rename', () => {
   });
 });
 
-describe('Builder panel width', () => {
-  it('dragging the panel edge resizes it and remembers the width', () => {
-    const nav = root.querySelector('nav') as HTMLElement;
-    const before = parseInt(nav.style.width, 10);
-    const handle = root.querySelector('[data-resize="nav"]') as HTMLElement;
-    act(() => {
-      handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 200, bubbles: true }));
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 280 }));
-      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 280 }));
-    });
-    expect(parseInt(nav.style.width, 10)).toBe(before + 80);
-    expect(chromeSet).toHaveBeenCalledWith({ builderNavWidth: before + 80 });
-  });
+describe('Builder left panel actions', () => {
+  beforeEach(openNav);
 
   it('has create buttons for workspaces and queues, and delete buttons', () => {
     expect(root.querySelector('[data-action="new-workspace"]')).not.toBeNull();
@@ -533,24 +559,6 @@ describe('Builder formula editor', () => {
   });
 });
 
-describe('Builder inspector width', () => {
-  it('dragging the inspector edge left widens it and remembers the width', () => {
-    act(() => {
-      row('doc_id').click();
-    });
-    const aside = root.querySelector('aside') as HTMLElement;
-    const before = parseInt(aside.style.width, 10);
-    const handle = root.querySelector('[data-resize="inspector"]') as HTMLElement;
-    act(() => {
-      handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 500, bubbles: true }));
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 420 }));
-      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 420 }));
-    });
-    expect(parseInt(aside.style.width, 10)).toBe(before + 80);
-    expect(chromeSet).toHaveBeenCalledWith({ builderInspectorWidth: before + 80 });
-  });
-});
-
 describe('Builder field filter', () => {
   it('typing narrows the grid to matches and their parents, and hides the add links', () => {
     const input = root.querySelector('input[data-filter="fields"]') as HTMLInputElement;
@@ -573,30 +581,41 @@ describe('Builder field filter', () => {
   });
 });
 
-describe('Builder panel collapse', () => {
-  it('collapses the left panel to a strip and expands it back, remembering the state', () => {
-    act(() => {
-      (root.querySelector('[data-action="collapse-nav"]') as HTMLElement).click();
-    });
-    const nav = () => root.querySelector('nav') as HTMLElement;
-    expect(nav().dataset.collapsed).toBe('true');
-    expect(root.querySelector('[data-queue-id]')).toBeNull();
-    expect(chromeSet).toHaveBeenCalledWith({ builderNavCollapsed: true });
-    act(() => {
-      (root.querySelector('[data-action="expand-nav"]') as HTMLElement).click();
-    });
-    expect(nav().dataset.collapsed).toBeUndefined();
+describe('Builder queue drawer', () => {
+  const nav = () => root.querySelector('nav');
+
+  it('is hidden while a schema is open; ☰ opens it over the grid', () => {
+    expect(nav()).toBeNull();
+    openNav();
+    expect(nav()!.hasAttribute('data-nav-drawer')).toBe(true);
     expect(root.querySelector('[data-queue-id]')).not.toBeNull();
   });
 
-  it('stays expanded, with no collapse button, while nothing is open', () => {
+  it('closes on ✕, on a click beside it, and on Esc', () => {
+    openNav();
     act(() => {
-      (root.querySelector('[data-action="collapse-nav"]') as HTMLElement).click();
+      (root.querySelector('[data-action="close-nav"]') as HTMLElement).click();
+    });
+    expect(nav()).toBeNull();
+    openNav();
+    act(() => {
+      (root.querySelector('[data-nav-backdrop]') as HTMLElement).click();
+    });
+    expect(nav()).toBeNull();
+    openNav();
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(nav()).toBeNull();
+  });
+
+  it('stays in place, with no close button, while nothing is open', () => {
+    act(() => {
       store.selectedQueueId.value = null;
       store.selectedSchemaId.value = null;
     });
-    expect((root.querySelector('nav') as HTMLElement).dataset.collapsed).toBeUndefined();
-    expect(root.querySelector('[data-action="collapse-nav"]')).toBeNull();
+    expect(nav()!.hasAttribute('data-nav-drawer')).toBe(false);
+    expect(root.querySelector('[data-action="close-nav"]')).toBeNull();
     expect(root.querySelector('[data-queue-id]')).not.toBeNull();
   });
 });
@@ -780,14 +799,13 @@ describe('Builder rule filter', () => {
     expect(shown().length).toBe(flatten(store.work.value).length);
   });
 
-  it('the filter bar holds text, rule, hook (and configuration); the annotation is in the toolbar', () => {
+  it('the filter bar holds text, rule, hook (and configuration), then the annotation', () => {
     const bar = root.querySelector('input[data-filter="fields"]')!.parentElement!;
     const order = [...bar.querySelectorAll('input[data-filter], select[data-picker]')].map(
       (e) => e.getAttribute('data-filter') || e.getAttribute('data-picker'),
     );
-    expect(order).toEqual(['fields', 'rule', 'hook']);
-    expect(root.querySelector('[data-toolbar] select[data-picker="annotation"]')).not.toBeNull();
-    expect(bar.querySelector('select[data-picker="annotation"]')).toBeNull();
+    expect(order).toEqual(['fields', 'rule', 'hook', 'annotation']);
+    expect(root.querySelector('[data-toolbar] select[data-picker="annotation"]')).toBeNull();
   });
 });
 
@@ -886,16 +904,7 @@ describe('Builder rule column and whole-document row', () => {
       ];
     });
     pickRule('60');
-    expect(heads()).toEqual([
-      'id',
-      'label',
-      'source',
-      'type',
-      'flags',
-      'rules',
-      'matching',
-      'rule',
-    ]);
+    expect(heads()).toEqual(['id', 'label', 'type', 'rules', 'matching', 'rule']);
     const doc = root.querySelector('[data-doc-row]') as HTMLElement;
     expect(doc.textContent).toContain('Whole document');
     expect(
@@ -910,19 +919,15 @@ describe('Builder rule column and whole-document row', () => {
 });
 
 describe('Builder grid is read-only in rule mode', () => {
-  it('no delete, disabled selects and flags, no ID editing, no drag; Rules column still works', () => {
+  it('no delete, no Source or flags, a disabled type, no ID editing, no drag; Rules still works', () => {
     pickRule('40');
     const r = row('doc_id');
     expect(r.querySelector('[data-action="delete"]')).toBeNull();
     expect((r.querySelector('td[data-col="type"] select') as HTMLSelectElement).disabled).toBe(
       true,
     );
-    expect((r.querySelector('td[data-col="source"] select') as HTMLSelectElement).disabled).toBe(
-      true,
-    );
-    expect((r.querySelector('button[data-col="visible"]') as HTMLButtonElement).disabled).toBe(
-      true,
-    );
+    expect(r.querySelector('td[data-col="source"]')).toBeNull();
+    expect(r.querySelector('button[data-col="visible"]')).toBeNull();
     expect(r.querySelector('[data-edit]')).toBeNull();
     expect(r.querySelector('[draggable="true"]')).toBeNull();
     expect(r.querySelector('[data-action="new-rule-for-field"]')).not.toBeNull();

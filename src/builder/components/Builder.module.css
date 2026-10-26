@@ -1,4 +1,5 @@
 .root {
+  position: relative;
   min-height: 0;
   height: 100vh;
   font-size: 13px;
@@ -9,6 +10,7 @@
 .nav {
   position: relative;
   flex: none;
+  width: 280px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -47,21 +49,6 @@
 .schemaCrumb {
   padding: 0 2px;
   border-radius: 3px;
-}
-
-.navResizer {
-  position: absolute;
-  top: 0;
-  right: -3px;
-  bottom: 0;
-  width: 6px;
-  cursor: col-resize;
-  z-index: 2;
-}
-
-.navResizer:hover {
-  background: var(--accent);
-  opacity: 0.4;
 }
 
 .navRow {
@@ -155,17 +142,42 @@
 
 .toolbar {
   display: flex;
-  flex-wrap: wrap; /* crumb + annotation picker + buttons wrap rather than clip on narrow windows */
-  row-gap: 6px;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  height: 40px;
+  padding: 0 12px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
 }
 
 .crumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-secondary);
+}
+
+/* Once a schema is open the queue list is a drawer over the grid (see Navigator). */
+.navDrawer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.18);
+}
+
+.navBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 19;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.navOpen {
+  flex: none;
+  display: inline-flex;
 }
 
 .crumb b {
@@ -231,6 +243,7 @@
 }
 
 .grid {
+  width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
 }
@@ -256,28 +269,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.resizable {
-  position: relative;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.resizer {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 6px;
-  cursor: col-resize;
-  user-select: none;
-}
-
-.resizer:hover {
-  background: var(--accent);
-  opacity: 0.4;
 }
 
 .flags {
@@ -606,6 +597,7 @@
   animation: inspectorIn 0.14s ease-out;
   position: relative;
   flex: none;
+  width: 400px;
   overflow-y: auto;
   padding: 12px;
   background: var(--bg-card);
@@ -670,6 +662,13 @@
   align-items: center;
 }
 
+/* Selects and inputs share the row; the remove button stays inside the fixed-width panel. */
+.optRow > .select,
+.optRow > .input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .later {
   margin-top: 16px;
   padding: 10px;
@@ -730,8 +729,9 @@
 
 .pickBar {
   display: flex;
+  flex-wrap: wrap; /* only when every filter and the annotation are in use at once */
   align-items: center;
-  gap: 8px;
+  gap: 6px 8px;
   padding: 6px 12px;
   background: var(--bg-sidebar);
   border-bottom: 1px solid var(--border);
@@ -741,7 +741,7 @@
 .pickBar .select,
 .pickBar .input {
   width: auto;
-  max-width: 360px;
+  max-width: 200px;
 }
 
 .codeBar {
@@ -749,21 +749,6 @@
   gap: 8px;
   align-items: baseline;
   margin-top: 3px;
-}
-
-.inspectorResizer {
-  position: absolute;
-  top: 0;
-  left: -3px;
-  bottom: 0;
-  width: 6px;
-  cursor: col-resize;
-  z-index: 2;
-}
-
-.inspectorResizer:hover {
-  background: var(--accent);
-  opacity: 0.4;
 }
 
 /* Expanded formula: the editor takes every pixel the inspector has. */
@@ -807,7 +792,7 @@
 }
 
 .pickBar .fieldFilter {
-  width: 240px;
+  width: 200px;
 }
 
 .barGap {
@@ -820,12 +805,6 @@
 .navTop {
   display: flex;
   gap: 4px;
-  align-items: center;
-}
-
-.navCollapsed {
-  width: 28px;
-  padding: 8px 2px;
   align-items: center;
 }
 
@@ -1046,16 +1025,11 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-left: 6px;
   font-size: 12px;
 }
 
-.annoPick .select {
-  max-width: 240px;
-}
-
 .pasteId {
-  width: 150px;
+  width: 130px;
 }
 
 .rulesCountFired {

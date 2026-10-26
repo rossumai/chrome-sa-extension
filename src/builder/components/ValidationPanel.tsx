@@ -32,7 +32,6 @@ import {
 } from '../provenance.js';
 import { pickHookConfig } from './hookJump.js';
 import Icon from './icons.jsx';
-import { rightPanel } from './panels.js';
 import s from './Builder.module.css';
 
 const ICON = { error: 'error', warning: 'warning', info: 'info' } as const;
@@ -418,19 +417,9 @@ function ProvenanceTab() {
 }
 
 export default function ValidationPanel() {
-  useEffect(rightPanel.load, []);
   const tab = validationPanel.value!;
   return (
-    <aside
-      class={s.inspector}
-      style={{ width: `${rightPanel.width.value}px` }}
-      data-panel="validation"
-    >
-      <div
-        class={s.inspectorResizer}
-        data-resize="inspector"
-        onMouseDown={(e) => rightPanel.start(e as MouseEvent, -1)}
-      />
+    <aside class={s.inspector} data-panel="validation">
       <div class={s.ruleHead}>
         <h4 class={s.inspTitle}>Validation · annotation ({annotationId.value})</h4>
         <button type="button" class={s.iconBtn} title="Close (Esc)" onClick={closeValidationPanel}>
