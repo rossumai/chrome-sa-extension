@@ -322,7 +322,7 @@ opened, because its form, log and a deploy in flight live in component state.
   `raw.githubusercontent.com` and compiles it in the browser into a create plan (`release.ts`;
   v1.x releases take their deploy settings from the public deploy tool's `_config/`). `cib.ts` checks (read-only), then creates, patches and invokes — **the extension's one
   bulk WRITE path into an org**, used only on the user's Deploy click. Progress is a checkpoint
-  document in the org's `_cib_deploy_runs` collection (the Coupa secret only as a placeholder),
+  document in the org's `_SA_EXTENSION__cib_deploy_runs` collection (the Coupa secret only as a placeholder),
   so a re-run with the same run id resumes, and it is deleted once a deploy is complete. The
   optional Coupa check function is a hook the user deploys and tears down by hand.
 - **Academy** (`src/academy/`) — the onboarding training track; behind `experimentalUnlocked`.
