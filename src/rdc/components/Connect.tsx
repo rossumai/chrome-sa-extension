@@ -12,6 +12,8 @@ import styles from './Deploy.module.css';
 type Props = {
   source: Source;
   fetchOrgs?: FetchOrgs;
+  // Why reading cannot start (rdc is not available), or empty.
+  blocked?: string;
   onConnected: (token: string) => void;
   onBack: () => void;
   onCancel: () => void;
@@ -20,6 +22,7 @@ type Props = {
 export default function Connect({
   source,
   fetchOrgs: fetcher = defaultFetch,
+  blocked = '',
   onConnected,
   onBack,
   onCancel,
@@ -51,7 +54,7 @@ export default function Connect({
       setError(
         isRateLimited(e)
           ? rateLimitMessage(e)
-          : `Could not check the token: ${(e as Error).message}`,
+          : `Could not check the token: ${(e as Error)?.message || String(e)}`,
       );
     } finally {
       if (mine === edits.current) setBusy(false);
@@ -120,6 +123,11 @@ export default function Connect({
           </div>
         </div>
       </div>
+      {blocked && (
+        <div class={styles.note} role="status">
+          {blocked}
+        </div>
+      )}
       <div class={styles.foot}>
         <button class="btn btn-secondary" onClick={onBack}>
           Back
@@ -128,7 +136,12 @@ export default function Connect({
         <button class="btn btn-secondary" onClick={onCancel}>
           Cancel
         </button>
-        <button class="btn btn-primary" disabled={!checked} onClick={() => onConnected(checked)}>
+        <button
+          class="btn btn-primary"
+          disabled={!checked || !!blocked}
+          title={blocked || undefined}
+          onClick={() => onConnected(checked)}
+        >
           Read both orgs
         </button>
       </div>

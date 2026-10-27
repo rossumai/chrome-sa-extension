@@ -69,7 +69,7 @@ const readProps = (rdc: Rdc | null, over: any = {}) => ({
   sourceToken: 'stok',
   domain: 'https://acme.rossum.app',
   token: 'ttok',
-  organizations: async () => orgs,
+  organizations: orgs,
   onDone: vi.fn(),
   onBack: vi.fn(),
   onCancel: vi.fn(),
@@ -160,30 +160,19 @@ describe('Read', () => {
 
   it('says so when the session lists more than one organization', async () => {
     const { rdc, create } = fakeRdc(async () => outcome);
-    mount(
-      <Read
-        {...readProps(rdc, { organizations: async () => ({ results: [{ id: 1 }, { id: 2 }] }) })}
-      />,
-    );
+    mount(<Read {...readProps(rdc, { organizations: { results: [{ id: 1 }, { id: 2 }] } })} />);
     await flush();
     expect(root.textContent).toContain('does not list exactly one organization');
     expect(create).not.toHaveBeenCalled();
   });
 
-  it('shows a rate limit as such', async () => {
-    const { rdc } = fakeRdc(async () => outcome);
-    const limited = rateLimitError({ headers: { get: () => '7' } }, 'HTTP 429');
-    mount(
-      <Read
-        {...readProps(rdc, {
-          organizations: async () => {
-            throw limited;
-          },
-        })}
-      />,
-    );
+  it('shows loading as a neutral status, not an error alert', async () => {
+    mount(<Read {...readProps(null, { rdcLoading: true, rdcError: '' })} />);
     await flush();
-    expect(root.textContent).toContain('rate-limiting');
+    expect(root.querySelector('[role="alert"]')).toBeNull();
+    const status = root.querySelector('[role="status"]')!;
+    expect(status.textContent).toContain('Loading rdc');
+    expect(status.className).not.toContain('err');
   });
 
   it('answers a pending prompt with null on unmount', async () => {
@@ -275,6 +264,45 @@ describe('Connect', () => {
     act(() => byText('button', 'Read both orgs').click());
     expect(onConnected).toHaveBeenCalledWith('tok');
     expect(root.querySelector('[role="note"]')).not.toBeNull();
+  });
+
+  it('shows a thrown non-Error value, not undefined', async () => {
+    mount(
+      <Connect
+        source={source}
+        fetchOrgs={async () => {
+          throw 'boom';
+        }}
+        onConnected={vi.fn()}
+        onBack={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+    await type('rdc-conn-token', 'tok');
+    act(() => byText('button', 'Check token').click());
+    await flush();
+    expect(root.textContent).toContain('Could not check the token: boom');
+    expect(root.textContent).not.toContain('undefined');
+  });
+
+  it('disables Read both orgs, with the reason, when rdc is blocked', async () => {
+    mount(
+      <Connect
+        source={source}
+        fetchOrgs={async () => ({ results: [{ id: 20412, name: 'Acme Test' }] })}
+        blocked="rdc is not in this build."
+        onConnected={vi.fn()}
+        onBack={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+    await type('rdc-conn-token', 'tok');
+    act(() => byText('button', 'Check token').click());
+    await flush();
+    const btn = byText('button', 'Read both orgs') as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    expect(btn.title).toBe('rdc is not in this build.');
+    expect(root.textContent).toContain('rdc is not in this build.');
   });
 
   it('shows a 429 as rate limited, not as no organizations', async () => {

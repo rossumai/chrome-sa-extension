@@ -14,6 +14,7 @@ const source = {
   orgId: 20412,
   orgName: 'Acme Test',
 };
+const target = { targetDomain: 'https://acme.rossum.app', targetOrgId: 31007 };
 let root: HTMLElement;
 const mount = (el: any) => act(() => void render(el, root));
 const flush = () => act(async () => {});
@@ -63,11 +64,32 @@ describe('Overview', () => {
       />,
     );
     expect(root.textContent).toContain('Acme deploys from');
+    expect(root.textContent).toContain('Values a deployment will never overwrite.');
     act(() => byText('button', 'Deploy from test').click());
     expect(onDeploy).toHaveBeenCalled();
     const notes = root.querySelectorAll('[role="note"]');
     expect(notes).toHaveLength(3);
     notes.forEach((n) => expect(n.textContent).toContain('Not available yet.'));
+  });
+});
+
+describe('Overview blocked', () => {
+  it('disables Deploy with the reason when rdc is blocked', () => {
+    const onDeploy = vi.fn();
+    mount(
+      <Overview
+        source={source}
+        targetName="Acme"
+        onChooseSource={vi.fn()}
+        onDeploy={onDeploy}
+        blocked="rdc is not in this build."
+        onEditOwn={vi.fn()}
+      />,
+    );
+    const btn = byText('button', 'Deploy from test') as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    expect(btn.title).toBe('rdc is not in this build.');
+    expect(root.textContent).toContain('rdc is not in this build.');
   });
 });
 
@@ -77,7 +99,9 @@ describe('ChooseSource', () => {
       results: [{ id: 20412, name: 'Acme Test' }],
     }));
     const onChosen = vi.fn();
-    mount(<ChooseSource onCancel={vi.fn()} onChosen={onChosen} fetchOrgs={fetchOrgs} />);
+    mount(
+      <ChooseSource {...target} onCancel={vi.fn()} onChosen={onChosen} fetchOrgs={fetchOrgs} />,
+    );
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'tok');
     act(() => byText('button', 'Find organizations').click());
@@ -87,11 +111,71 @@ describe('ChooseSource', () => {
     expect(onChosen).toHaveBeenCalledWith(source);
   });
 
+  it('refuses the connected org itself as the source', async () => {
+    const fetchOrgs = vi.fn(async (_d: string, _t: string) => ({
+      results: [{ id: 31007, name: 'Acme' }],
+    }));
+    const onChosen = vi.fn();
+    mount(
+      <ChooseSource {...target} onCancel={vi.fn()} onChosen={onChosen} fetchOrgs={fetchOrgs} />,
+    );
+    await type('rdc-src-address', 'https://acme.rossum.app/');
+    await type('rdc-src-token', 'tok');
+    act(() => byText('button', 'Find organizations').click());
+    await flush();
+    act(() => byText('button', 'Deploy from test').click());
+    expect(root.textContent).toContain(
+      'This is the org you are signed into. Choose another org to deploy from.',
+    );
+    expect(onChosen).not.toHaveBeenCalled();
+  });
+
+  it('allows the same org id on another host', async () => {
+    const fetchOrgs = vi.fn(async (_d: string, _t: string) => ({
+      results: [{ id: 31007, name: 'Acme' }],
+    }));
+    const onChosen = vi.fn();
+    mount(
+      <ChooseSource {...target} onCancel={vi.fn()} onChosen={onChosen} fetchOrgs={fetchOrgs} />,
+    );
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'tok');
+    act(() => byText('button', 'Find organizations').click());
+    await flush();
+    act(() => byText('button', 'Deploy from test').click());
+    expect(onChosen).toHaveBeenCalled();
+  });
+
+  it('shows a thrown non-Error value, not undefined', async () => {
+    const fetchOrgs = vi.fn(async () => {
+      throw 'boom';
+    });
+    mount(<ChooseSource {...target} onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'tok');
+    act(() => byText('button', 'Find organizations').click());
+    await flush();
+    expect(root.textContent).toContain('Could not read the organizations: boom');
+    expect(root.textContent).not.toContain('undefined');
+  });
+
+  it('says the short name is shown on this page', async () => {
+    const fetchOrgs = vi.fn(async (_d: string, _t: string) => ({
+      results: [{ id: 20412, name: 'Acme Test' }],
+    }));
+    mount(<ChooseSource {...target} onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'tok');
+    act(() => byText('button', 'Find organizations').click());
+    await flush();
+    expect(root.textContent).toContain('Shown on this page.');
+  });
+
   it('shows a 429 as rate limited, with no organization list', async () => {
     const fetchOrgs = vi.fn(async () => {
       throw rateLimitError({ headers: null }, 'HTTP 429');
     });
-    mount(<ChooseSource onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
+    mount(<ChooseSource {...target} onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'tok');
     act(() => byText('button', 'Find organizations').click());
@@ -102,7 +186,7 @@ describe('ChooseSource', () => {
 
   it('refuses a non-Rossum address without calling out', async () => {
     const fetchOrgs = vi.fn(async (_d: string, _t: string) => ({}));
-    mount(<ChooseSource onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
+    mount(<ChooseSource {...target} onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
     await type('rdc-src-address', 'ftp://x');
     await type('rdc-src-token', 'tok');
     act(() => byText('button', 'Find organizations').click());
@@ -116,7 +200,9 @@ describe('ChooseSource', () => {
       results: [{ id: 20412, name: 'Acme Test' }],
     }));
     const onChosen = vi.fn();
-    mount(<ChooseSource onCancel={vi.fn()} onChosen={onChosen} fetchOrgs={fetchOrgs} />);
+    mount(
+      <ChooseSource {...target} onCancel={vi.fn()} onChosen={onChosen} fetchOrgs={fetchOrgs} />,
+    );
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'tok');
     act(() => byText('button', 'Find organizations').click());
@@ -132,7 +218,7 @@ describe('ChooseSource', () => {
 
   it('re-enables Find when an edit outdates a read in flight', async () => {
     const fetchOrgs = vi.fn(() => new Promise<unknown>(() => {}));
-    mount(<ChooseSource onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
+    mount(<ChooseSource {...target} onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'tok');
     act(() => byText('button', 'Find organizations').click());
@@ -146,7 +232,7 @@ describe('ChooseSource', () => {
     const fetchOrgs = vi.fn(async (_d: string, _t: string) => ({
       results: [{ id: 1, name: 'x' }],
     }));
-    mount(<ChooseSource onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
+    mount(<ChooseSource {...target} onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
     await type('rdc-src-address', ' https://partner-sandbox.rossum.app ');
     await type('rdc-src-token', 'tok \n');
     act(() => byText('button', 'Find organizations').click());

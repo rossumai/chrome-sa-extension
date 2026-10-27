@@ -18,16 +18,29 @@ export const fetchOrgs: FetchOrgs = async (domain, token) => {
   return res.json();
 };
 
+const originOf = (domain: string) => {
+  try {
+    return new URL(domain).origin;
+  } catch {
+    return domain;
+  }
+};
+
 type Props = {
   onCancel: () => void;
   onChosen: (s: Source) => void;
   fetchOrgs?: FetchOrgs;
+  // The connected org is the target; it cannot also be the source.
+  targetDomain: string;
+  targetOrgId: number;
 };
 
 export default function ChooseSource({
   onCancel,
   onChosen,
   fetchOrgs: fetcher = fetchOrgs,
+  targetDomain,
+  targetOrgId,
 }: Props) {
   const [address, setAddress] = useState('');
   const [token, setToken] = useState('');
@@ -79,7 +92,7 @@ export default function ChooseSource({
       setError(
         isRateLimited(e)
           ? rateLimitMessage(e)
-          : `Could not read the organizations: ${(e as Error).message}`,
+          : `Could not read the organizations: ${(e as Error)?.message || String(e)}`,
       );
     } finally {
       if (mine === edits.current) setBusy(false);
@@ -90,6 +103,11 @@ export default function ChooseSource({
   const shortName = name.trim();
   const confirm = () => {
     if (!chosen || !shortName || !foundDomain) return;
+    if (chosen.id === targetOrgId && foundDomain === originOf(targetDomain)) {
+      setError('This is the org you are signed into. Choose another org to deploy from.');
+      return;
+    }
+    setError('');
     onChosen({
       name: shortName,
       domain: foundDomain,
@@ -171,7 +189,7 @@ export default function ChooseSource({
                 value={name}
                 onInput={(e) => setName((e.target as HTMLInputElement).value)}
               />
-              <small>Shown on the page and in the history.</small>
+              <small>Shown on this page.</small>
             </div>
           )}
         </div>

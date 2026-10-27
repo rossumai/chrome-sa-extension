@@ -254,12 +254,37 @@ describe('rdc App', () => {
     await type('rdc-src-token', 'stok');
     await click('button', 'Find organizations');
     await click('button', 'Deploy from test');
-    await click('button', 'Deploy from test');
-    await type('rdc-conn-token', 'stok');
-    await click('button', 'Check token');
-    await click('button', 'Read both orgs');
+    const deploy = byText('button', 'Deploy from test') as HTMLButtonElement;
+    expect(deploy.disabled).toBe(true);
+    expect(deploy.title).toContain('rdc_wasm.js is not in this build');
     expect(root.textContent).toContain('rdc_wasm.js is not in this build');
-    expect(byText('button', 'Plan the deployment').hasAttribute('disabled')).toBe(true);
+  });
+
+  it('disables Read both orgs on Connect when rdc is not in the build', async () => {
+    let fail!: (e: Error) => void;
+    const loading = new Promise<Rdc>((_r, rej) => (fail = rej));
+    mount(<App connected={true} loadRdc={() => loading} fetchOrgs={fetchOrgs} />);
+    await flush();
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Deploy from test');
+    // still loading: blocked with the loading text
+    expect((byText('button', 'Deploy from test') as HTMLButtonElement).disabled).toBe(true);
+    act(() => fail(new Error('gone')));
+    await flush();
+    expect((byText('button', 'Deploy from test') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('asks GET /organizations once for the connected org across a whole read', async () => {
+    const { rdc } = fakeRdc();
+    const f = vi.fn(fetchOrgs);
+    mount(<App connected={true} loadRdc={async () => rdc} fetchOrgs={f} />);
+    await flush();
+    await toPlan();
+    const forTarget = f.mock.calls.filter(([d]) => d === 'https://acme.rossum.app');
+    expect(forTarget).toHaveLength(1);
   });
 
   it('previews Done without claiming a deployment', () => {

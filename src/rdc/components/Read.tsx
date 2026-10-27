@@ -54,11 +54,14 @@ export type ReadResult = {
 type Props = {
   rdc: Rdc | null;
   rdcError: string;
+  // rdc is still loading: shown as a neutral status, not an error.
+  rdcLoading?: boolean;
   source: Source;
   sourceToken: string;
   domain: string;
   token: string;
-  organizations: () => Promise<unknown>;
+  // The `GET /organizations` answer the page already resolved the target from.
+  organizations: unknown;
   // A finished read to show instead of syncing; "Read again" starts a fresh one.
   kept?: ReadResult | null;
   onDone: (result: ReadResult) => void;
@@ -73,6 +76,7 @@ const total = (c: Record<Kind, number>) => KINDS.reduce((n, k) => n + c[k.kind],
 export default function Read({
   rdc,
   rdcError,
+  rdcLoading = false,
   source,
   sourceToken,
   domain,
@@ -94,9 +98,6 @@ export default function Read({
   const skipFirst = useRef(!!kept);
   const [pending, setPending] = useState<Pending | null>(null);
   const pendingRef = useRef<Pending | null>(null);
-  // The latest callbacks, so a read started once is not restarted by a parent re-render.
-  const latest = useRef({ organizations });
-  latest.current = { organizations };
 
   useEffect(() => {
     if (!rdc) return;
@@ -124,11 +125,9 @@ export default function Read({
       setSourceLog([]);
       setTargetLog([]);
       try {
-        const orgs = await latest.current.organizations();
-        if (!alive) return;
-        const target = envInputFor(domain, token, orgs, TARGET_ENV);
+        const target = envInputFor(domain, token, organizations, TARGET_ENV);
         if (typeof target === 'string') throw new Error(target);
-        setTargetName(currentOrg(orgs)?.name ?? '');
+        setTargetName(currentOrg(organizations)?.name ?? '');
         const src = sourceEnvInput(source, sourceToken);
         if (typeof src === 'string') throw new Error(src);
         const project = rdc.Project.create('console', target);
@@ -165,7 +164,7 @@ export default function Read({
   }, [rdc, attempt, source, sourceToken, domain, token]);
 
   const noRdc = !rdc;
-  const noRdcText = rdcError || 'rdc is not in this build.';
+  const noRdcText = rdcLoading ? `Loading rdc${'…'}` : rdcError || 'rdc is not in this build.';
   const panel = (title: string, log: string[], c: Record<Kind, number> | null) => (
     <div class={styles.panel}>
       <div class={styles.panelHead}>
@@ -201,7 +200,12 @@ export default function Read({
           {targetName || 'this org'}. Nothing is written yet.
         </p>
       </div>
-      {noRdc && (
+      {noRdc && rdcLoading && (
+        <div class={styles.note} role="status">
+          {noRdcText}
+        </div>
+      )}
+      {noRdc && !rdcLoading && (
         <div class={`${styles.note} ${styles.err}`} role="alert">
           {noRdcText}
         </div>

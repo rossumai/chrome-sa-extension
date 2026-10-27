@@ -49,6 +49,8 @@ export default function App({
   // The target: the one organization the session lists. undefined while loading.
   const [target, setTarget] = useState<BandTarget | null | undefined>(undefined);
   const [targetError, setTargetError] = useState('');
+  // What the target was resolved from, handed to Read so it asks the API nothing again.
+  const [targetOrgs, setTargetOrgs] = useState<unknown>(null);
   const [screen, setScreen] = useState<Screen>('overview');
   // The source and its token live here only; a reload loses both.
   const [source, setSource] = useState<Source | null>(null);
@@ -79,6 +81,7 @@ export default function App({
           );
           return;
         }
+        setTargetOrgs(orgs);
         // env: the Console has no Sandbox/Production flag at hand, so the band shows no chip
         setTarget({ name: org.name, host: hostOf(domain.value), orgId: org.id, env: null });
       },
@@ -143,6 +146,13 @@ export default function App({
     toOverview();
   };
 
+  // Why nothing that needs rdc can start; the same text Read shows.
+  const rdcBlock = rdc
+    ? ''
+    : rdc === undefined
+      ? `Loading rdc${'…'}`
+      : rdcError || 'rdc is not in this build.';
+
   let page;
   if (screen === 'own') page = <OwnValues targetName={name} onBack={toOverview} />;
   else if (source && screen === 'connect')
@@ -150,6 +160,7 @@ export default function App({
       <Connect
         source={source}
         fetchOrgs={fetchOrgs}
+        blocked={rdcBlock}
         onBack={leaveSource}
         onCancel={leaveSource}
         onConnected={(t) => {
@@ -163,12 +174,13 @@ export default function App({
     page = (
       <Read
         rdc={rdc ?? null}
-        rdcError={rdc === undefined ? `Loading rdc${'…'}` : rdcError}
+        rdcError={rdcError}
+        rdcLoading={rdc === undefined}
         source={source}
         sourceToken={sourceToken}
         domain={domain.value}
         token={token.value}
-        organizations={() => fetchOrgs(domain.value, token.value)}
+        organizations={targetOrgs}
         kept={readResult}
         onDone={(r) => {
           setReadResult(r);
@@ -203,6 +215,7 @@ export default function App({
         targetName={name}
         onChooseSource={() => setScreen('choose')}
         onDeploy={() => setScreen('connect')}
+        blocked={rdcBlock}
         onEditOwn={() => setScreen('own')}
       />
     );
@@ -223,6 +236,8 @@ export default function App({
         {screen === 'choose' && (
           <ChooseSource
             fetchOrgs={fetchOrgs}
+            targetDomain={domain.value}
+            targetOrgId={target.orgId}
             onCancel={toOverview}
             onChosen={(s) => {
               setSource(s);

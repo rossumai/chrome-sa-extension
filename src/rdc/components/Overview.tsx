@@ -10,6 +10,8 @@ type Props = {
   targetName: string;
   onChooseSource: () => void;
   onDeploy: () => void;
+  // Why a deployment cannot start (rdc is not available), or empty.
+  blocked?: string;
   onEditOwn: () => void;
 };
 
@@ -18,6 +20,7 @@ export default function Overview({
   targetName,
   onChooseSource,
   onDeploy,
+  blocked = '',
   onEditOwn,
 }: Props) {
   if (!source) {
@@ -59,10 +62,20 @@ export default function Overview({
                   {source.orgName}, org {source.orgId}, {hostOf(source.domain)}
                 </div>
               </div>
-              <button class="btn btn-primary" onClick={onDeploy}>
+              <button
+                class="btn btn-primary"
+                disabled={!!blocked}
+                title={blocked || undefined}
+                onClick={onDeploy}
+              >
                 Deploy from {source.name}
               </button>
             </div>
+            {blocked && (
+              <div class={styles.srcFoot} role="status">
+                {blocked}
+              </div>
+            )}
             <div class={styles.srcFoot}>
               {targetName} has one source.
               <button class={styles.link} onClick={onChooseSource}>
@@ -93,7 +106,7 @@ export default function Overview({
             </div>
             <div class={styles.panelB}>
               <p class={styles.muted}>
-                A deployment never overwrites these. Everything else comes from the source.
+                Values a deployment will never overwrite. Everything else comes from the source.
               </p>
               <Wip feature="ownValues" />
             </div>
