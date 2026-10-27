@@ -89,6 +89,12 @@ export const engineChanges = computed(() => {
 // The engine panel (custom engine only): the grid shows only extracted fields, each with its
 // seed picker in the AI column.
 export const enginePanel = signal(false);
+// For the engine panel: engine field name -> the other queues on this engine that use it,
+// read from their schemas when the panel first opens. null until then.
+export const engineUsers = signal<{
+  byName: Map<string, string[]> | null;
+  error: string | null;
+} | null>(null);
 export const engineMode = computed(() => enginePanel.value && engineState.value?.kind === 'custom');
 
 export const selectedQueue = computed(

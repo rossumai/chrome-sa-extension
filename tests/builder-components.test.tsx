@@ -102,6 +102,7 @@ beforeEach(() => {
   store.engineState.value = null;
   store.codeView.value = null;
   store.enginePanel.value = false;
+  store.engineUsers.value = null;
   store.engineCatalog.value = [];
   panelWide.value = false;
   root = document.createElement('div');
@@ -1588,6 +1589,36 @@ describe('Builder engine', () => {
       'its 1 table column stays empty',
     );
     expect(panel()!.querySelector('[data-engine-unused]')!.textContent).toContain('unused_f');
+  });
+
+  it('lists engine fields one per line: to write, used by other queues, used by none', () => {
+    custom();
+    act(() => {
+      store.engineState.value = {
+        ...store.engineState.value!,
+        fields: [
+          ...store.engineState.value!.fields,
+          { id: 10, name: 'credit_ref', type: 'string', pre_trained_field_id: null },
+        ],
+      };
+      store.engineUsers.value = {
+        byName: new Map([['credit_ref', ['Credit notes (6)']]]),
+        error: null,
+      };
+      store.enginePanel.value = true;
+    });
+    const rows = (sel: string) =>
+      [...panel()!.querySelectorAll(`${sel} [data-engine-field]`)].map((r) => r.textContent);
+    expect(rows('[data-engine-save]')).toEqual([
+      'vendorcreate · learning',
+      'item_desccreate · learning',
+    ]);
+    expect(rows('[data-engine-elsewhere]')).toEqual(['credit_refCredit notes (6)']);
+    expect(rows('[data-engine-nowhere]')).toEqual(['unused_flearning']);
+    act(() => {
+      (panel()!.querySelector('[data-engine-field="vendor"]') as HTMLElement).click();
+    });
+    expect(store.selectedKey.value).toBe(keyOf('vendor'));
   });
 
   it('Esc closes it without opening the field panel; the badge toggles it', () => {

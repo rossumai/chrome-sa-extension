@@ -8,6 +8,7 @@ import {
   bindingErrors,
   unusedEngineFields,
   renamedFrom,
+  engineFieldUsers,
 } from '../src/builder/engine.js';
 
 const dp = (id: string, extra: any = {}) => ({
@@ -148,5 +149,23 @@ describe('a staged engine edit', () => {
     let nodes = schema();
     nodes = setAttr(nodes, keyOf(nodes, 'doc_id'), ['__engine', 'pre_trained_field_id'], null);
     expect(JSON.stringify(stripForSave(nodes))).not.toContain('__engine');
+  });
+});
+
+describe('engineFieldUsers', () => {
+  it('maps each extracted field id to the queues whose schema has it, once per queue', () => {
+    const content = [
+      {
+        category: 'section',
+        id: 's',
+        children: [dp('a'), dp('a'), dp('f', { ui_configuration: { type: 'formula' } })],
+      },
+    ] as any;
+    const m = engineFieldUsers([
+      { queue: 'Q1 (1)', content },
+      { queue: 'Q2 (2)', content },
+    ]);
+    expect(m.get('a')).toEqual(['Q1 (1)', 'Q2 (2)']);
+    expect(m.has('f')).toBe(false);
   });
 });

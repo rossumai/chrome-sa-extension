@@ -57,6 +57,7 @@ import {
   askSchemaFabry,
   fixWithFabry,
   openHookEditor,
+  openEnginePanel,
   updateHookDraft,
   saveHook,
   discardHook,
@@ -202,6 +203,36 @@ describe('custom engine', () => {
     const r = await save();
     expect(r).toMatchObject({ ok: false, stage: 'local' });
     expect(calls).toEqual([]);
+  });
+
+  it('the engine panel reads the other queues on the engine, skipping a shared schema', async () => {
+    store.queues.value = [
+      ...store.queues.value,
+      { id: 4, name: 'Shared', schema: 'https://x/api/v1/schemas/33', engine: ENGINE },
+      { id: 6, name: 'Credit notes', schema: 'https://x/api/v1/schemas/66', engine: ENGINE },
+      { id: 7, name: 'Other engine', schema: 'https://x/api/v1/schemas/77', engine: 'e/9' },
+    ];
+    vi.mocked(api.getSchema).mockClear();
+    vi.mocked(api.getSchema).mockResolvedValueOnce({
+      id: 66,
+      content: [
+        {
+          category: 'section',
+          id: 's',
+          children: [
+            { category: 'datapoint', id: 'old_po', type: 'string' },
+            { category: 'datapoint', id: 'calc', ui_configuration: { type: 'formula' } },
+          ],
+        },
+      ],
+    });
+    openEnginePanel();
+    await new Promise((r) => setTimeout(r));
+    expect(api.getSchema).toHaveBeenCalledTimes(1);
+    expect(api.getSchema).toHaveBeenCalledWith(66);
+    const byName = store.engineUsers.value!.byName!;
+    expect(byName.get('old_po')).toEqual(['Credit notes (6)']);
+    expect(byName.has('calc')).toBe(false); // a formula does not use an engine field
   });
 
   it('a failed engine-field write stops before the schema save', async () => {

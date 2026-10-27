@@ -16,7 +16,7 @@ import {
   type Node,
 } from './model.js';
 import { saveSchema, localStage, mapValidateErrors, type SaveResult } from './save.js';
-import { engineKind, bindingErrors } from './engine.js';
+import { engineKind, bindingErrors, engineFieldUsers } from './engine.js';
 import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { annotationValues } from './values.js';
@@ -156,6 +156,7 @@ async function load(queueId: number | null, schemaId: number | null) {
   store.engineState.value = null;
   store.codeView.value = null;
   store.enginePanel.value = false;
+  store.engineUsers.value = null;
   store.schema.value = null;
   store.loading.value = true;
   store.error.value = null;
@@ -398,6 +399,42 @@ export function openEnginePanel(key?: string) {
   store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
   store.selectedKey.value = key ?? null;
   store.enginePanel.value = true;
+  if (!store.engineUsers.value) loadEngineUsers();
+}
+
+// The other queues bound to this engine, and the engine fields their schemas use. Queues that
+// share this schema are not "other": their fields are this schema's.
+async function loadEngineUsers() {
+  const es = store.engineState.value;
+  const queueId = store.selectedQueueId.value;
+  const mine = store.selectedQueue.value?.schema;
+  if (!es?.engine) return;
+  store.engineUsers.value = { byName: null, error: null };
+  const others = store.queues.value.filter(
+    (q) => q.engine === es.engine.url && q.id !== queueId && q.schema !== mine,
+  );
+  try {
+    const bySchema = new Map<string, any[]>();
+    for (const q of others) bySchema.set(q.schema, [...(bySchema.get(q.schema) ?? []), q]);
+    const loaded = await Promise.all(
+      [...bySchema.keys()].map(async (url) => ({
+        url,
+        schema: await api.getSchema(idFromUrl(url)!),
+      })),
+    );
+    if (store.selectedQueueId.value !== queueId) return;
+    const byName = engineFieldUsers(
+      loaded.flatMap(({ url, schema }) =>
+        bySchema
+          .get(url)!
+          .map((q) => ({ queue: `${q.name} (${q.id})`, content: schema.content ?? [] })),
+      ),
+    );
+    store.engineUsers.value = { byName, error: null };
+  } catch (err: any) {
+    if (store.selectedQueueId.value !== queueId) return;
+    store.engineUsers.value = { byName: null, error: String(err?.message ?? err) };
+  }
 }
 
 /** Closing also drops the selection, so the field panel does not take the engine's place. */

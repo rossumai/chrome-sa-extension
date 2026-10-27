@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
 import {
   work,
   queues,
@@ -6,6 +6,7 @@ import {
   engineState,
   engineFieldsByName,
   enginePlanNow,
+  engineUsers,
 } from '../store.js';
 import { closeEnginePanel } from '../index.jsx';
 import { flatten } from '../model.js';
@@ -22,6 +23,90 @@ const HEADER_ONLY = ['generic_ap'];
 function queueName(url: string): string {
   const q = queues.value.find((x) => x.url === url);
   return q ? `${q.name} (${q.id})` : url.split('/').filter(Boolean).pop() || url;
+}
+
+function seedText(f: any): string {
+  return f.pre_trained_field_id ? `seed ${f.pre_trained_field_id}` : 'learning';
+}
+
+function changeText(body: Record<string, unknown>): string {
+  const out: string[] = [];
+  if ('pre_trained_field_id' in body) {
+    out.push(body.pre_trained_field_id ? `seed ${body.pre_trained_field_id}` : 'no seed');
+  }
+  if ('type' in body) out.push(`type ${body.type}`);
+  return out.join(' · ');
+}
+
+/** One engine field per line; a click selects its row in the grid, when it has one. */
+function FieldRow({ name, detail }: { name: string; detail: string }) {
+  const row = flatten(work.value).find((r) => String(r.node.id) === name);
+  const text = (
+    <Fragment>
+      <span class={s.linkName + ' ' + s.mono}>{name}</span>
+      <span class={s.dim}>{detail}</span>
+    </Fragment>
+  );
+  return row ? (
+    <button
+      type="button"
+      class={s.linkRow}
+      data-engine-field={name}
+      title={`${name} · ${detail}`}
+      onClick={() => (selectedKey.value = row.key)}
+    >
+      {text}
+    </button>
+  ) : (
+    <div class={s.engineRow} data-engine-field={name} title={`${name} · ${detail}`}>
+      {text}
+    </div>
+  );
+}
+
+// Engine fields this schema does not use: those other queues on the engine use, and those no
+// queue uses (left over from a rename or a removed field).
+function Unused({ fields }: { fields: any[] }) {
+  const users = engineUsers.value;
+  if (!users?.byName) {
+    return (
+      <div class={s.field + ' ' + s.engineList} data-engine-unused="">
+        <span class={s.fieldLabel}>Engine fields not in this schema ({fields.length})</span>
+        {users?.error ? (
+          <div class={s.warn}>Could not read the other queues on this engine: {users.error}</div>
+        ) : (
+          <div class={s.dim}>Checking the other queues on this engine…</div>
+        )}
+        {fields.map((f) => (
+          <FieldRow name={String(f.name)} detail={seedText(f)} />
+        ))}
+      </div>
+    );
+  }
+  const byName = users.byName;
+  const elsewhere = fields.filter((f) => byName.has(String(f.name)));
+  const nowhere = fields.filter((f) => !byName.has(String(f.name)));
+  return (
+    <Fragment>
+      {elsewhere.length > 0 && (
+        <div class={s.field + ' ' + s.engineList} data-engine-elsewhere="">
+          <span class={s.fieldLabel}>Used by other queues ({elsewhere.length})</span>
+          {elsewhere.map((f) => (
+            <FieldRow name={String(f.name)} detail={byName.get(String(f.name))!.join(', ')} />
+          ))}
+        </div>
+      )}
+      {nowhere.length > 0 && (
+        <div class={s.field + ' ' + s.engineList} data-engine-nowhere="">
+          <span class={s.fieldLabel}>Not used by any queue ({nowhere.length})</span>
+          {nowhere.map((f) => (
+            <FieldRow name={String(f.name)} detail={seedText(f)} />
+          ))}
+          <div class={s.dim}>Save leaves them on the engine.</div>
+        </div>
+      )}
+    </Fragment>
+  );
 }
 
 // The custom engine of the open queue. The grid shows only extracted fields, each with its
@@ -82,21 +167,6 @@ export default function EnginePanel() {
       ) : (
         <div class={s.dim}>Pick a seed in the AI column, or click a row for its details.</div>
       )}
-      {plan && plan.create.length + plan.patch.length > 0 && (
-        <div class={s.field} data-engine-save="">
-          <span class={s.fieldLabel}>Save writes to the engine first</span>
-          {plan.create.length > 0 && (
-            <div>
-              create: <span class={s.mono}>{plan.create.map((c) => c.name).join(', ')}</span>
-            </div>
-          )}
-          {plan.patch.length > 0 && (
-            <div>
-              update: <span class={s.mono}>{plan.patch.map((p) => p.name).join(', ')}</span>
-            </div>
-          )}
-        </div>
-      )}
       <div class={s.field} data-engine-settings="">
         <span class={s.fieldLabel}>Settings (read-only)</span>
         <div>
@@ -115,13 +185,23 @@ export default function EnginePanel() {
         </div>
         {e.description && <div class={s.dim}>{e.description}</div>}
       </div>
-      {unused.length > 0 && (
-        <div class={s.field} data-engine-unused="">
-          <span class={s.fieldLabel}>Not in this schema ({unused.length})</span>
-          <div class={s.mono}>{unused.map((f) => f.name).join(', ')}</div>
-          <div class={s.dim}>Other queues on this engine may use them. Save leaves them.</div>
+      {plan && plan.create.length + plan.patch.length > 0 && (
+        <div class={s.field + ' ' + s.engineList} data-engine-save="">
+          <span class={s.fieldLabel}>
+            Save writes to the engine first ({plan.create.length + plan.patch.length})
+          </span>
+          {plan.create.map((c) => (
+            <FieldRow
+              name={String(c.name)}
+              detail={`create · ${c.pre_trained_field_id ? `seed ${c.pre_trained_field_id}` : 'learning'}`}
+            />
+          ))}
+          {plan.patch.map((p) => (
+            <FieldRow name={p.name} detail={`update · ${changeText(p.body)}`} />
+          ))}
         </div>
       )}
+      {unused.length > 0 && <Unused fields={unused} />}
     </aside>
   );
 }
