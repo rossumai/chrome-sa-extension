@@ -7,8 +7,8 @@ export const activeApp = signal<AppId>('mdh');
 
 // The extension's one hidden-features gate (popup-owned; 5 quick clicks on the
 // version hash). Mirrored from chrome.storage.local at boot and live via
-// onChanged. It hides exactly one app today — the Academy — and Mr. Fabry is
-// public. The separate `trainingUnlocked` signal was folded into this one on
+// onChanged. It hides two apps today — the Academy and the rdc proof of concept —
+// and Mr. Fabry is public. The separate `trainingUnlocked` signal was folded into this one on
 // 2026-08-11; see src/training/gate.js for why the split stopped buying safety.
 export const experimentalUnlocked = signal(false);
 

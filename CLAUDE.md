@@ -14,7 +14,8 @@ esbuild bundles ES modules from `src/` into `dist/`. No transpilation, no other 
 `build.js` also copies static assets and injects the version (see Versioning). Config:
 `format: 'iife'`, `minify: true`, `jsxFactory: 'h'`, `jsxFragment: 'Fragment'` (Preact JSX).
 
-- `npm run build` — clean build into `dist/`
+- `npm run build` — clean build into `dist/`; includes the rdc wasm only when its optional
+  package is installed (see rdc under Console apps)
 - `npm run dev` — watch mode (JS only; re-run the full build for CSS/HTML changes)
 - `npm run typecheck` — `tsc --noEmit` for `src/`, then `-p tsconfig.tests.json` for `tests/`.
   Two programs, not one: see TypeScript below for why.
@@ -35,7 +36,7 @@ Prettier owns `src/` and `tests/`, and only `*.ts` / `*.tsx` / `*.css` there. Co
   `format:check` fails that update rather than a tree nobody touched.
 - **Deliberately NOT formatted**: every `.md` (so `CLAUDE.md`, `PRIVACY.md` and the whole dated
   record under `docs/superpowers/` keep their hand-wrapped prose), the 12 `.html`, the JSON and
-  YAML, and — a consequence worth knowing — `build.js` and `vitest.config.mjs`, the only two
+  YAML, and — a consequence worth knowing — `build.js` and `vitest.config.mjs`, the only
   non-TypeScript code files in the repo.
 - **`tests/fixtures/` is in `.prettierignore`.** They are golden inputs: `expected/*.html` is
   the byte-exact rendering of those `.md` files, so reformatting an input silently invalidates
@@ -198,7 +199,7 @@ Nine entry points, plus two bundles nothing imports that are script-injected on 
 |---|---|
 | `src/rossum/index.ts` · `src/netsuite/index.ts` · `src/coupa/index.ts` | content scripts |
 | `src/popup/popup.tsx` | extension popup (Preact) |
-| `src/console/index.tsx` | Console page — an app rail over seven apps |
+| `src/console/index.tsx` | Console page — an app rail over eight apps |
 | `src/background/index.ts` | MV3 service worker |
 | `src/devtools/devtools.ts` · `src/devtools/panel.tsx` | DevTools "Rossum" panel |
 | `src/sidepanel/index.tsx` | Chrome side panel |
@@ -280,7 +281,7 @@ Reloading the extension does NOT re-inject content scripts into open tabs — re
 
 ### Console apps (`src/console/`)
 
-An app-switcher rail over seven apps. Adding one touches three hardcoded switch points
+An app-switcher rail over eight apps. Adding one touches three hardcoded switch points
 (`Rail.tsx` APPS, `Console.tsx` render switch, `boot.ts` `isValidApp`) plus `console/index.tsx`.
 `Console.tsx` unmounts the app you leave — except CIB deploy, which stays mounted (hidden) once
 opened, because its form, log and a deploy in flight live in component state.
@@ -326,6 +327,26 @@ opened, because its form, log and a deploy in flight live in component state.
   so a re-run with the same run id resumes, and it is deleted once a deploy is complete. The
   optional Coupa check function is a hook the user deploys and tears down by hand.
 - **Academy** (`src/academy/`) — the onboarding training track; behind `experimentalUnlocked`.
+- **rdc** (`src/rdc/`) — a **proof of concept**, behind `experimentalUnlocked` like the Academy
+  (`gated` in `Rail.tsx`; `boot.ts` keeps the gated set, so a locked boot or re-lock falls back
+  to Dataset Management). It runs rdc's sync engine, compiled to WebAssembly, against the
+  connected org: ONE `sync` with `noPush: true` (nothing is written to the org) into a project
+  held in component memory only — nothing is persisted, a reload loses it — then shows rdc's
+  log (ANSI colour rendered by `ansi.ts`) and the pulled tree. A prompt rdc raises is shown with
+  its choices; Cancel answers `null`. `apiBase` is `${consoleDomain}/api/v1`; the org id is the
+  one organization `GET /organizations` lists (`currentOrg`), else it refuses.
+  **The wasm is an OPTIONAL dependency**, `@mrtnzlml/rdc-wasm` on GitHub Packages (`.npmrc`
+  maps the `@mrtnzlml` scope there). That registry needs a token even to install a public
+  package, so without one `npm ci` skips it and exits 0, and `build.js` builds without it: CI
+  and the Web Store release ship NO rdc wasm, and the app says it is not in this build. To
+  have it locally, put a classic token with `read:packages` in `~/.npmrc` as
+  `//npm.pkg.github.com/:_authToken=<token>` (never in the repo's `.npmrc`), then `npm
+  install` and build. `build.js` copies `rdc_wasm.js` + `rdc_wasm_bg.wasm` to
+  `dist/console/rdc/`. **To bump**: `npm install @mrtnzlml/rdc-wasm@<version>` with the token,
+  and re-read the package's `rdc_wasm.d.ts` — `src/rdc/wasm.ts` keeps a hand-written subset of
+  it, because tsc must pass without the package. For the same reason the glue is loaded at
+  run time with `import(chrome.runtime.getURL(…))`, which esbuild leaves alone in the iife
+  bundle.
 
 Auth: the popup (or the worker) runs `readAuthInfo` in the Rossum tab via
 `chrome.scripting.executeScript`, stages a single-use `consoleAuth_<uuid>` in
@@ -488,7 +509,7 @@ Enforced by tests, not by convention. Do not weaken them.
 - **Usage** — `usageConsent` (`true`/`false`/**absent**, where absent means never answered),
   `usageClientId` (minted lazily by the worker on the first event, deleted on revoke),
   `usageAsked`; plus `usageSessionId` in `chrome.storage.session`.
-- Galaxy and CIB deploy persist nothing on the device (CIB keeps its credentials in component
+- Galaxy, CIB deploy and rdc persist nothing on the device (CIB keeps its credentials in component
   state only; its checkpoint lives in the org). Chat content, and Architect deliverable text, versions and
   transcripts, never touch storage — they live in the org's own Data Storage collection.
 - **Orphaned** keys, read and written by nothing, deliberately left in existing profiles:
@@ -586,8 +607,16 @@ and all their classes are prefixed `rossum-sa-extension-*`.
 - **esbuild** (dev)
 
 All are CSP-clean (no `eval`, no `new Function`) — check the BUILT bundles, and note that
-`\beval\(` also matches `chrome.devtools.inspectedWindow.eval(`, a DevTools API method. The
-Console runs under the default MV3 CSP — keep it that way.
+`\beval\(` also matches `chrome.devtools.inspectedWindow.eval(`, a DevTools API method.
+
+**The extension-page CSP is the MV3 default plus `'wasm-unsafe-eval'` and nothing else**
+(`manifest.json`: `script-src 'self' 'wasm-unsafe-eval'; object-src 'self';`, pinned by
+`tests/rdc-csp.test.ts`). It is there for the rdc app's WebAssembly only: the default
+`script-src 'self'` refuses to compile any wasm (measured in Chrome for Testing 156; Chrome's
+CSP docs say the same). It allows compiling wasm and nothing more — `eval`, `new Function` and
+remote scripts are still refused, so every bundle must stay CSP-clean exactly as before. It
+applies to every extension page (Console, popup, DevTools panel, side panel). Never add
+`'unsafe-eval'` (Chrome rejects it for extension pages anyway).
 
 ## JSX escape sequences
 

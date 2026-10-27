@@ -9,6 +9,7 @@ import InspectorApp from '../../inspector/components/App.jsx';
 import FabryApp from '../../fabry/components/App.jsx';
 import AcademyApp from '../../academy/components/App.jsx';
 import CibApp from '../../cib/components/App.jsx';
+import RdcApp from '../../rdc/components/App.jsx';
 import * as mdhStore from '../../mdh/store.js';
 import * as auditStore from '../../audit/store.js';
 import * as galaxyStore from '../../galaxy/store.js';
@@ -16,6 +17,7 @@ import * as inspectorStore from '../../inspector/store.js';
 import * as fabryStore from '../../fabry/store.js';
 import * as academyStore from '../../academy/store.js';
 import * as cibStore from '../../cib/store.js';
+import * as rdcStore from '../../rdc/store.js';
 
 function Connecting() {
   return (
@@ -49,6 +51,9 @@ export default function Console() {
     view = c === null ? <Connecting /> : <FabryApp connected={c} />;
   } else if (app === 'cib') {
     view = cibC === null ? <Connecting /> : null;
+  } else if (app === 'rdc') {
+    const c = rdcStore.connected.value;
+    view = c === null ? <Connecting /> : <RdcApp connected={c} />;
   } else if (app === 'academy') {
     const c = academyStore.connected.value;
     view = c === null ? <Connecting /> : <AcademyApp connected={c} />;

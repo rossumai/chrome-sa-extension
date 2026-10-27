@@ -48,5 +48,8 @@
       "128": "icons/128-blue-crunch.png"
     }
   },
-  "devtools_page": "devtools/devtools.html"
+  "devtools_page": "devtools/devtools.html",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  }
 }

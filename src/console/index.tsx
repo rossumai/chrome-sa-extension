@@ -30,6 +30,7 @@ import { initFabry } from '../fabry/index.jsx';
 import * as academyStore from '../academy/store.js';
 import { initAcademy } from '../academy/index.jsx';
 import * as cibStore from '../cib/store.js';
+import * as rdcStore from '../rdc/store.js';
 
 const AUTH_TTL_MS = 24 * 60 * 60 * 1000;
 const TITLES = {
@@ -40,6 +41,7 @@ const TITLES = {
   fabry: 'Mr. Fabry — Rossum SA',
   cib: 'CIB deploy — Rossum SA',
   academy: 'Onboarding training — Rossum SA',
+  rdc: 'rdc (experimental) — Rossum SA',
 };
 
 // Opt-in usage counting: which apps get opened at all. No ids, no org, no
@@ -52,6 +54,7 @@ const APP_EVENTS: Record<string, any> = {
   fabry: 'sa_console_app_fabry',
   cib: 'sa_console_app_cib',
   academy: 'sa_console_app_academy',
+  rdc: 'sa_console_app_rdc',
 };
 
 async function purgeStaleAuthEntries() {
@@ -127,8 +130,8 @@ async function boot() {
       experimentalUnlocked.value = !!changes.experimentalUnlocked.newValue;
     }
   });
-  // Re-locking the gate while the Academy is active falls back to Dataset
-  // Management; any other active app is unaffected. Subscribes only to the gate
+  // Re-locking the gate while a gated app (the Academy, rdc) is active falls back
+  // to Dataset Management; any other active app is unaffected. Subscribes only to the gate
   // signal (via .value) and reads activeApp with .peek() so this effect doesn't
   // re-run on every app switch — just on gate changes.
   effect(() => {
@@ -185,6 +188,7 @@ async function boot() {
     fabryStore.connected.value = false;
     academyStore.connected.value = false;
     cibStore.connected.value = false;
+    rdcStore.connected.value = false;
     render(<Console />, document.getElementById('app')!);
     return;
   }
@@ -230,6 +234,10 @@ async function boot() {
   cibStore.domain.value = domain;
   cibStore.token.value = token;
   cibStore.connected.value = true;
+
+  rdcStore.domain.value = domain;
+  rdcStore.token.value = token;
+  rdcStore.connected.value = true;
 
   effect(() => {
     writeTabState('consoleActiveApp', activeApp.value);
