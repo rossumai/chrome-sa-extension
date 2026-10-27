@@ -5703,7 +5703,7 @@ tbody.uploads-row-failed tr {
   font-size: 13px;
   font-weight: 600;
 }
-.inspector-step .dt {
+.inspector-step .inspector-step-dt {
   font-size: 11px;
   color: var(--text-secondary);
   font-family: var(--font-mono);

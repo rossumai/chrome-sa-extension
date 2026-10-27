@@ -78,7 +78,7 @@ export default function Timeline() {
               {g ? <span class="inspector-step-gap">{g}</span> : null}
               <span class="inspector-step-dot">{isCurrent ? null : CHECK}</span>
               <div class="inspector-step-label">{s.label}</div>
-              <div class="dt">{fmt(s.ts)}</div>
+              <div class="inspector-step-dt">{fmt(s.ts)}</div>
               {isCurrent ? (
                 <span class="inspector-step-now">{String(a.status).replace(/_/g, ' ')}</span>
               ) : null}
