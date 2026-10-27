@@ -1,11 +1,23 @@
 import { h } from 'preact';
-import { ruleEditor, ruleDirty, ruleErrors, ruleSaving, assist, assistRev } from '../store.js';
+import { useEffect } from 'preact/hooks';
+import {
+  ruleEditor,
+  ruleDirty,
+  ruleErrors,
+  ruleSaving,
+  assist,
+  assistRev,
+  ruleEval,
+  annotationId,
+  annotationContent,
+} from '../store.js';
 import {
   updateRuleDraft,
   closeRuleEditor,
   saveRule,
   askRuleAssistant,
   discardRule,
+  scheduleRuleEval,
 } from '../index.jsx';
 import { ACTION_TYPES, ACTION_EVENTS, newAction, withActionType } from '../ruleDraft.js';
 import CodeEditor from './CodeEditor.jsx';
@@ -169,6 +181,15 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
 export default function RuleEditor() {
   const ed = ruleEditor.value!;
   const d = ed.draft;
+  // Re-evaluate on the picked annotation whenever what the evaluation reads changes.
+  const actionsKey = JSON.stringify(d.actions);
+  useEffect(scheduleRuleEval, [
+    d.trigger_condition,
+    actionsKey,
+    annotationId.value,
+    annotationContent.value,
+  ]);
+  const ev = ruleEval.value;
   return (
     <aside class={s.inspector} data-panel="rule">
       <div class={s.ruleHead}>
@@ -229,6 +250,13 @@ export default function RuleEditor() {
           value={d.trigger_condition}
           onCommit={(v) => updateRuleDraft({ trigger_condition: v })}
         />
+        {ev && (ev.error || ev.errors.length > 0) && (
+          <div class={s.warn} data-rule-eval-error="">
+            {ev.error
+              ? `Could not evaluate on this annotation: ${ev.error}`
+              : ev.errors.join(' · ')}
+          </div>
+        )}
       </div>
       <div class={s.field}>
         <span class={s.fieldLabel}>Actions</span>

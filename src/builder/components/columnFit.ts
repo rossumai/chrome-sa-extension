@@ -14,6 +14,7 @@ export const WIDTHS: Record<string, number> = {
   hooks: 56,
   actions: 60,
   rule: 110,
+  eval: 80,
   mdh: 110,
   value: 160,
 };

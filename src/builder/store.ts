@@ -14,6 +14,7 @@ import {
 } from './rules.js';
 import { sameDraft, type RuleDraft } from './ruleDraft.js';
 import { enginePlan, deletableFields, isHiddenCaptured, type EngineKind } from './engine.js';
+import type { RuleEval } from './ruleEval.js';
 import { hooksByFieldText } from './codeRefs.js';
 
 export const domain = signal('');
@@ -345,3 +346,6 @@ export const flashRowKey = signal<string | null>(null);
 
 // The picked annotation's content tree as fetched (the provenance replay reads it).
 export const annotationContent = signal<any[]>([]);
+// The open rule's condition evaluated on the picked annotation (ruleEval.ts); null when there
+// is no rule, no annotation or no condition.
+export const ruleEval = signal<(RuleEval & { busy: boolean; error: string | null }) | null>(null);

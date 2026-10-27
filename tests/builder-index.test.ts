@@ -32,6 +32,7 @@ vi.mock('../src/builder/api.js', () => ({
   createEngineField: vi.fn(async () => ({})),
   patchEngineField: vi.fn(async () => ({})),
   deleteEngineField: vi.fn(async () => null),
+  evaluateRules: vi.fn(),
 }));
 vi.mock('../src/agent/agentApi.js', () => ({
   createChat: vi.fn(async () => 'chat-9'),
@@ -60,6 +61,7 @@ import {
   openHookEditor,
   openEnginePanel,
   toggleEngineDelete,
+  scheduleRuleEval,
   updateHookDraft,
   saveHook,
   discardHook,
@@ -978,5 +980,63 @@ describe('revalidate', () => {
     await revalidate();
     expect(api.cancelAnnotation).toHaveBeenCalledWith(5);
     expect(store.revalidateError.value).toBe('boom');
+  });
+});
+
+describe('rule evaluation on the picked annotation', () => {
+  it('sends the unsaved draft with the annotation content, debounced, and keeps the result', async () => {
+    vi.useFakeTimers();
+    try {
+      store.queues.value = [{ id: 3, name: 'C', url: 'https://x/api/v1/queues/3' }];
+      store.selectedQueueId.value = 3;
+      store.annotationId.value = 55;
+      store.annotationContent.value = [{ category: 'section', schema_id: 's', children: [] }];
+      store.ruleEditor.value = {
+        ruleId: 40,
+        base: { name: 'R', description: '', enabled: true, trigger_condition: 'x', actions: [] },
+        draft: {
+          name: 'R',
+          description: '',
+          enabled: true,
+          trigger_condition: 'field.a > 1',
+          actions: [],
+        },
+        fromField: null,
+      };
+      vi.mocked(api.evaluateRules).mockResolvedValue({
+        condition_values: [[false, true]],
+        messages: [],
+        actions: [],
+      });
+      scheduleRuleEval();
+      scheduleRuleEval(); // a second change within the delay sends one request
+      expect(store.ruleEval.value!.busy).toBe(true);
+      await vi.advanceTimersByTimeAsync(500);
+      expect(api.evaluateRules).toHaveBeenCalledTimes(1);
+      expect(api.evaluateRules).toHaveBeenCalledWith({
+        queue: 'https://x/api/v1/queues/3',
+        annotation: 'https://x/api/v1/annotations/55',
+        annotation_content: store.annotationContent.value,
+        schema_rules: [
+          {
+            name: 'R',
+            description: '',
+            enabled: true,
+            trigger_condition: 'field.a > 1',
+            actions: [],
+            queues: ['https://x/api/v1/queues/3'],
+          },
+        ],
+      });
+      expect(store.ruleEval.value).toEqual({
+        values: [false, true],
+        errors: [],
+        busy: false,
+        error: null,
+      });
+    } finally {
+      vi.useRealTimers();
+      store.ruleEditor.value = null;
+    }
   });
 });

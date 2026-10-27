@@ -21,6 +21,7 @@ import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { annotationValues } from './values.js';
 import { placeMessages, firedRuleIds } from './validation.js';
+import { ruleEvalBody, parseRuleEval } from './ruleEval.js';
 import * as agentApi from '../agent/agentApi.js';
 import { buildRulePrompt, buildFollowupPrompt, parseRuleReply } from './ruleAssist.js';
 import { runAssist, schemaFieldList } from './assist.js';
@@ -659,11 +660,48 @@ export function updateRuleDraft(patch: Partial<RuleDraft>) {
   store.ruleEditor.value = { ...ed, draft: { ...ed.draft, ...patch } };
 }
 
+// The open rule on the picked annotation, through Rossum's preview endpoint. Debounced: the
+// rule editor calls this on every change of the condition, the actions or the annotation.
+const RULE_EVAL_DELAY_MS = 400;
+let ruleEvalTimer: ReturnType<typeof setTimeout> | undefined;
+let ruleEvalSeq = 0;
+
+export function scheduleRuleEval() {
+  clearTimeout(ruleEvalTimer);
+  ruleEvalSeq++;
+  const ed = store.ruleEditor.value;
+  const queueUrl = store.selectedQueue.value?.url;
+  const id = store.annotationId.value;
+  if (!ed?.draft.trigger_condition.trim() || !queueUrl || id == null) {
+    store.ruleEval.value = null;
+    return;
+  }
+  if (!store.annotationContent.value.length) return; // its content is still loading
+  const prev = store.ruleEval.value;
+  store.ruleEval.value = { values: prev?.values ?? [], errors: [], busy: true, error: null };
+  const seq = ruleEvalSeq;
+  ruleEvalTimer = setTimeout(async () => {
+    const annotationUrl = String(queueUrl).replace(/\/queues\/\d+\/?$/, `/annotations/${id}`);
+    try {
+      const res = await api.evaluateRules(
+        ruleEvalBody(ed.draft, queueUrl, annotationUrl, store.annotationContent.value),
+      );
+      if (seq !== ruleEvalSeq) return;
+      store.ruleEval.value = { ...parseRuleEval(res), busy: false, error: null };
+    } catch (err: any) {
+      if (seq !== ruleEvalSeq) return;
+      const msg = isRateLimited(err) ? rateLimitMessage(err) : err?.message || 'Evaluation failed';
+      store.ruleEval.value = { values: [], errors: [], busy: false, error: msg };
+    }
+  }, RULE_EVAL_DELAY_MS);
+}
+
 export function closeRuleEditor() {
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
   store.ruleEditor.value = null;
   store.ruleErrors.value = [];
   store.ruleId.value = null;
+  scheduleRuleEval();
 }
 
 export async function saveRule() {

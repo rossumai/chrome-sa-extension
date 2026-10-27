@@ -219,6 +219,14 @@ export function validateAnnotation(id: number): Promise<any> {
   });
 }
 
+/**
+ * Evaluate rules on annotation content without saving them: Rossum's internal endpoint behind
+ * its rule editor preview (undocumented; see ruleEval.ts).
+ */
+export function evaluateRules(body: Record<string, unknown>): Promise<any> {
+  return request('POST', '/api/v1/internal/rules/evaluate_rules', body);
+}
+
 /** Hands a started annotation back (to `to_review`). */
 export function cancelAnnotation(id: number): Promise<any> {
   return request('POST', `/api/v1/annotations/${id}/cancel`);

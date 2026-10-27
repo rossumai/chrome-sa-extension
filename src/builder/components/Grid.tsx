@@ -31,6 +31,7 @@ import {
   fieldCodeHooks,
   codeView,
   engineMode,
+  ruleEval,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
 import { apply, openRuleEditor, openHookEditor, openCodeView, openEnginePanel } from '../index.jsx';
@@ -62,6 +63,7 @@ import {
   HIDDEN_CAPTURED,
 } from '../engine.js';
 import { SeedPicker } from './Extraction.jsx';
+import { evalForRow, evalSummary } from '../ruleEval.js';
 import { fitColumns, WIDTHS, LABEL_MIN } from './columnFit.js';
 import s from './Builder.module.css';
 
@@ -248,6 +250,53 @@ function ValueCell({ node, tableId }: { node: Node; tableId: string | null }) {
       {val === undefined ? <span class={s.dim}>—</span> : <span title={val}>{val}</span>}
     </span>
   );
+}
+
+// The open rule's condition on the picked annotation, on each field the condition reads: the
+// one result of a header rule, or the result for the row a table's stepper shows.
+function EvalCell({ tableId }: { tableId: string | null }) {
+  const ev = ruleEval.value;
+  if (!ev || ev.error || ev.errors.length) return null; // the rule editor says why
+  if (ev.busy) return <span class={s.dim}>…</span>;
+  const rows = tableId ? (values.value?.rows.get(tableId) ?? null) : null;
+  const row = tableId ? (lineRow.value[tableId] ?? 0) : 0;
+  const v = evalForRow(ev.values, rows, row);
+  if (v == null) {
+    return ev.values.length ? (
+      <span class={s.dim} title="One result per table row, but not this table's rows">
+        {evalSummary(ev.values)}
+      </span>
+    ) : null;
+  }
+  return <EvalValue v={v} />;
+}
+
+function EvalValue({ v }: { v: boolean }) {
+  return (
+    <span
+      class={v ? s.evalTrue : s.dim}
+      data-eval={String(v)}
+      title={v ? 'The condition is True: the rule fires' : 'The condition is False'}
+    >
+      {String(v)}
+    </span>
+  );
+}
+
+// The whole-document result: one value, or how many table rows the condition is True on.
+function DocEval() {
+  const ev = ruleEval.value;
+  if (!ev) return null;
+  if (ev.busy) return <span class={s.dim}>…</span>;
+  if (ev.error || ev.errors.length) {
+    return (
+      <span class={s.warn} data-eval="error" title={ev.error ?? ev.errors.join('\n')}>
+        error
+      </span>
+    );
+  }
+  if (ev.values.length === 1) return <EvalValue v={ev.values[0]} />;
+  return ev.values.length ? <span data-eval="rows">{evalSummary(ev.values)}</span> : null;
 }
 
 // A count of the rules (or MDH hooks) that use a field: one opens it in the right panel,
@@ -703,6 +752,11 @@ function Row({
           )}
         </td>
       )}
+      {on('eval') && (
+        <td data-col="eval">
+          {dp && (role === 'condition' || role === 'both') && <EvalCell tableId={tableId} />}
+        </td>
+      )}
       {on('mdh') && (
         <td data-col="mdh">
           {kind !== 'section' && <HookBadges fieldId={String(node.id ?? '')} />}
@@ -795,8 +849,8 @@ function renderNode(
 // there is none).
 const EDITING = ['grip', 'actions'];
 const DETAIL = ['flags', 'ai', 'hooks'];
-// Engine mode makes room on a 13" screen for the AI column's seed pickers.
-const ENGINE_DROPS = ['rules', 'matching'];
+// Engine mode drops Rules and Matching, rule mode Matching, to fit a 13" screen beside the
+// panel: room for the AI seed pickers, and for Rule config with Rule eval.
 
 const columns = computed(() => {
   const cols = [
@@ -812,16 +866,19 @@ const columns = computed(() => {
     'hooks',
     'actions',
     ...(ruleMarks.value ? ['rule'] : []),
+    ...(ruleMarks.value && values.value ? ['eval'] : []),
     ...(hookRoleById.value ? ['mdh'] : []),
     ...(values.value ? ['value'] : []),
   ].filter(
     (c) =>
       !(panelOpen.value && DETAIL.includes(c) && !(c === 'ai' && engineMode.value)) &&
-      !(engineMode.value && ENGINE_DROPS.includes(c)) &&
+      !(engineMode.value && ['rules', 'matching'].includes(c)) &&
+      !(ruleMarks.value && c === 'matching') &&
       !(schemaLocked.value && EDITING.includes(c)),
   );
   if (!(panelOpen.value && panelWide.value)) return cols;
-  const modeCol = (c: string) => c === 'rule' || c === 'mdh' || (c === 'ai' && engineMode.value);
+  const modeCol = (c: string) =>
+    c === 'rule' || c === 'eval' || c === 'mdh' || (c === 'ai' && engineMode.value);
   const mode = cols.some(modeCol);
   return cols.filter((c) => c === 'id' || modeCol(c) || (!mode && c === 'label'));
 });
@@ -838,7 +895,8 @@ const HEAD: Record<string, any> = {
   hooks: 'Hooks',
   mdh: 'MDH',
   value: 'Value',
-  rule: 'Rule',
+  rule: 'Rule config',
+  eval: 'Rule eval',
   type: 'Type',
   ai: 'AI',
   source: 'Source',
@@ -986,7 +1044,9 @@ export default function Grid() {
     : {
         minWidth: `${(cols.includes('label') ? LABEL_MIN : 0) + cols.reduce((sum, c) => sum + (WIDTHS[c] ?? 0), 0)}px`,
       };
-  const lead = cols.filter((c) => c !== 'rule' && c !== 'mdh' && c !== 'value').length;
+  const lead = cols.filter(
+    (c) => c !== 'rule' && c !== 'eval' && c !== 'mdh' && c !== 'value',
+  ).length;
   return (
     <Fragment>
       <table
@@ -1024,6 +1084,11 @@ export default function Grid() {
               {on('rule') && (
                 <td data-col="rule">
                   <MarkIcons marks={ruleGlobalMarks.value || []} />
+                </td>
+              )}
+              {on('eval') && (
+                <td data-col="eval">
+                  <DocEval />
                 </td>
               )}
               {on('mdh') && <td />}

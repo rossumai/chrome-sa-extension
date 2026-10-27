@@ -604,6 +604,11 @@
   border: 1px dashed var(--info-border);
 }
 
+.evalTrue {
+  color: var(--warning-fg);
+  font-weight: 600;
+}
+
 .warnMark {
   display: inline-block;
   width: 14px;

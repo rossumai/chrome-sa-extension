@@ -103,6 +103,7 @@ beforeEach(() => {
   store.codeView.value = null;
   store.enginePanel.value = false;
   store.onlyWarnings.value = false;
+  store.ruleEval.value = null;
   store.engineUsers.value = null;
   store.engineCatalog.value = [];
   panelWide.value = false;
@@ -398,6 +399,32 @@ describe('Builder annotation values', () => {
     });
   }
   const value = (id: string) => row(id).querySelector('td[data-col="value"]')!.textContent;
+
+  it('rule mode: "Rule config" and, with an annotation, "Rule eval" per row and overall', () => {
+    pick();
+    pickRule('40'); // is_empty(field.doc_id) or field.ghost_field
+    const head = (c: string) => root.querySelector(`th[data-col="${c}"]`)?.textContent;
+    expect([head('rule'), head('eval')]).toEqual(['Rule config', 'Rule eval']);
+    const ev = (id: string) => row(id).querySelector('td[data-col="eval"]')!.textContent;
+    const doc = () => root.querySelector('[data-doc-row] td[data-col="eval"]')!.textContent;
+    act(() => {
+      store.ruleEval.value = { values: [true], errors: [], busy: false, error: null };
+    });
+    expect(ev('doc_id')).toBe('true'); // a field the condition reads
+    expect(doc()).toBe('true');
+    act(() => {
+      store.ruleEval.value = {
+        values: [],
+        errors: ['Trigger condition: bad'],
+        busy: false,
+        error: null,
+      };
+    });
+    expect(doc()).toBe('error');
+    expect(root.querySelector('[data-rule-eval-error]')!.textContent).toContain(
+      'Trigger condition: bad',
+    );
+  });
 
   it('has no Value column until an annotation is picked', () => {
     expect(root.querySelector('th[data-col="value"]')).toBeNull();
@@ -941,7 +968,7 @@ describe('Builder rule column and whole-document row', () => {
       ];
     });
     pickRule('60');
-    expect(heads()).toEqual(['id', 'label', 'source', 'type', 'rules', 'matching', 'rule']);
+    expect(heads()).toEqual(['id', 'label', 'source', 'type', 'rules', 'rule']); // Matching makes room
     const doc = root.querySelector('[data-doc-row]') as HTMLElement;
     expect(doc.textContent).toContain('Whole document');
     expect(
