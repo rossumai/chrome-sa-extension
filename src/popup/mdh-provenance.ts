@@ -839,13 +839,14 @@ export async function loadMdhHooksForQueue(
   domain: string,
   token: string,
   queueId: string | number,
-  onAttached?: (hookIds: string[]) => void,
+  onAttached?: (hookIds: string[] | null) => void,
 ): Promise<any[]> {
   const hooksResp = await fetchJson(`${domain}/api/v1/hooks?queue=${queueId}&page_size=100`, token);
   const all: any[] = hooksResp?.results || [];
   // Every attached hook, MDH or not: the popup cache compares these ids with the
-  // queue's own `hooks` list to notice a newly attached hook (spec 2026-10-13 §4.4).
-  if (onAttached) onAttached(all.map((h) => String(h.id)));
+  // queue's own `hooks` list to notice a newly attached hook (spec 2026-10-13 §4.4). One
+  // page of a longer list would never match that list, so it reports none (null).
+  if (onAttached) onAttached(hooksResp?.next ? null : all.map((h) => String(h.id)));
   return all.filter((h) => h.active !== false && h.type === 'webhook').filter(isMdhHook);
 }
 

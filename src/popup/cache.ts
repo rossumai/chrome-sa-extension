@@ -49,7 +49,7 @@ export async function setCachedHookEntries(
   domain: string,
   queueId: string | number,
   entries: any[],
-  meta: { hadHooks: boolean; hookIds: string[] },
+  meta: { hadHooks: boolean; hookIds: string[] | null },
 ): Promise<void> {
   // Persist only the fields the popup uses; avoid the full hook detail blob.
   const trimmed = entries.map(({ hook, cfgs }: { hook: any; cfgs: any }) => ({

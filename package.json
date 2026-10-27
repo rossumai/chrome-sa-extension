@@ -54,5 +54,8 @@
     "markdown-it-github-alerts": "^1.0.1",
     "preact": "^11.0.1",
     "three": "^0.186.1"
+  },
+  "optionalDependencies": {
+    "@mrtnzlml/rdc-wasm": "^0.15.0"
   }
 }

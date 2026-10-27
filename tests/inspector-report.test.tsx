@@ -46,6 +46,28 @@ beforeEach(() => {
   store.investigation.value = { stage: 'gathering', sourcesDone: 1, sourcesTotal: 9, activity: '' };
 });
 
+// The status chip of one report section.
+const sectionStatus = (el: HTMLElement, id: string) =>
+  el.querySelector(`[data-evidence-section="${id}"] .inspector-sst`)?.textContent;
+
+describe('Report under a 429', () => {
+  it('stops gathering Extension runs when the hooks were throttled', () => {
+    const d = baseAnnotation();
+    store.data.value = {
+      ...d,
+      resolved: { ...d.resolved, _hooksLoaded: false, _hooksRateLimited: true },
+    };
+    expect(sectionStatus(mount(), 'pipeline')).toBe('unavailable');
+  });
+
+  it('stops gathering Labels when the label context was throttled', () => {
+    const d = baseAnnotation();
+    const { labelsById: _, ...resolved } = d.resolved;
+    store.data.value = { ...d, resolved: { ...resolved, _labelsRateLimited: true } };
+    expect(sectionStatus(mount(), 'labels')).toBe('unavailable');
+  });
+});
+
 describe('Report', () => {
   it('assembles header, strip, verdict, diagnosis and all sections in order', () => {
     store.data.value = baseAnnotation();

@@ -19,6 +19,7 @@
     "https://*.r8.lol/*",
     "https://*.rossum.cloud/*"
   ],
+  "optional_host_permissions": ["https://*.coupahost.com/*", "https://*.coupacloud.com/*"],
   "content_scripts": [
     {
       "js": ["scripts/rossum.js"],
@@ -47,5 +48,8 @@
       "128": "icons/128-blue-crunch.png"
     }
   },
-  "devtools_page": "devtools/devtools.html"
+  "devtools_page": "devtools/devtools.html",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  }
 }

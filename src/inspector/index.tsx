@@ -31,6 +31,20 @@ const safe = (fn: any) => {
       return null;
     });
 };
+// Like safe(), for the queue lists: a 429 comes back as RATE_LIMITED instead of null, so
+// a loader tells its own throttling apart from another request's. The load-wide
+// store.rateLimited flag cannot: a 429 on labels and a 500 on hooks both left it set.
+const RATE_LIMITED = Symbol('rate-limited');
+const safeList = <T,>(fn: () => Promise<T>): Promise<T | null | typeof RATE_LIMITED> => {
+  const myId = loadId;
+  return Promise.resolve()
+    .then(fn)
+    .catch((err) => {
+      if (!isRateLimited(err)) return null;
+      if (myId === loadId) store.rateLimited.value = { retryAfter: err.retryAfter };
+      return RATE_LIMITED;
+    });
+};
 function idFromUrl(url: any) {
   const m = String(url || '').match(/\/(\d+)\/?$/);
   return m ? m[1] : null;
@@ -343,11 +357,15 @@ export async function loadQueueHooks() {
   const d = store.data.value;
   if (!d || !d.annotation.queue || d.resolved._hooksLoaded) return;
   const myId = loadId;
-  const hooks = await safe(() => listHooksOnce(idFromUrl(d.annotation.queue) as string));
+  const hooks = await safeList(() => listHooksOnce(idFromUrl(d.annotation.queue) as string));
   const cur = store.data.value;
   if (!cur || myId !== loadId) return; // superseded by a newer annotation → don't contaminate it
-  // Rate-limited is not "this queue has no hooks": leave them unloaded (spec 2026-10-13 §4.2).
-  if (hooks === null && store.rateLimited.value) return;
+  // Rate-limited is not "this queue has no hooks": leave them unloaded (spec 2026-10-13 §4.2),
+  // and say so, or Extension runs waits for them for ever.
+  if (hooks === RATE_LIMITED) {
+    store.data.value = { ...cur, resolved: { ...cur.resolved, _hooksRateLimited: true } };
+    return;
+  }
   const hooksById: Record<string, any> = {};
   for (const hk of (hooks || []) as any[]) hooksById[hk.id] = hk;
   store.data.value = { ...cur, resolved: { ...cur.resolved, hooksById, _hooksLoaded: true } };
@@ -361,20 +379,23 @@ export async function loadLabelContext() {
   const myId = loadId;
   const queueId = idFromUrl(d.annotation.queue);
   const [labels, rules, hooks] = await Promise.all([
-    safe(() => listLabelsOnce()),
-    queueId ? safe(() => listRulesOnce(queueId)) : Promise.resolve(null),
-    queueId ? safe(() => listHooksOnce(queueId)) : Promise.resolve(null),
+    safeList(() => listLabelsOnce()),
+    queueId ? safeList(() => listRulesOnce(queueId)) : Promise.resolve(null),
+    queueId ? safeList(() => listHooksOnce(queueId)) : Promise.resolve(null),
   ]);
+  const cur = store.data.value;
+  if (!cur || myId !== loadId) return; // superseded → don't merge stale label context into another annotation
+  // Rate-limited: no half-empty label context, and say so, or Labels waits for ever.
+  if (labels === RATE_LIMITED || rules === RATE_LIMITED || hooks === RATE_LIMITED) {
+    store.data.value = { ...cur, resolved: { ...cur.resolved, _labelsRateLimited: true } };
+    return;
+  }
   const labelsById: Record<string, any> = {};
   for (const l of (labels || []) as any[])
     labelsById[String(l.id)] = { id: String(l.id), name: l.name, color: l.color, url: l.url };
   const labelRules = extractLabelRules(rules || []);
   const hooksById: Record<string, any> = {};
   for (const hk of (hooks || []) as any[]) hooksById[hk.id] = hk;
-  const cur = store.data.value;
-  if (!cur || myId !== loadId) return; // superseded → don't merge stale label context into another annotation
-  const failed = labels === null || (!!queueId && (rules === null || hooks === null));
-  if (failed && store.rateLimited.value) return; // rate-limited: no half-empty label context
   store.data.value = {
     ...cur,
     resolved: {
@@ -393,10 +414,10 @@ export async function loadQueueRules() {
   const d = store.data.value;
   if (!d || !d.annotation.queue || d.resolved._rulesLoaded) return;
   const myId = loadId;
-  const rules = await safe(() => listRulesOnce(idFromUrl(d.annotation.queue) as string));
+  const rules = await safeList(() => listRulesOnce(idFromUrl(d.annotation.queue) as string));
   const cur = store.data.value;
   if (!cur || myId !== loadId) return; // superseded → skip stale write
-  if (rules === null && store.rateLimited.value) return; // rate-limited, not "no rules"
+  if (rules === RATE_LIMITED) return; // rate-limited, not "no rules"
   store.data.value = {
     ...cur,
     resolved: { ...cur.resolved, rules: rules || [], _rulesLoaded: true },

@@ -30,14 +30,22 @@ export default function Report() {
   const attrs = Object.values(store.attributions.value);
   const attributing = attrs.some((x) => x.status === 'loading');
   const logs = store.enrichment.value.hookLogs;
-  const pipelineStatus =
-    logs === null || !d.resolved?._hooksLoaded
+  // A throttled list (_hooksRateLimited / _labelsRateLimited) is never retried within the
+  // load, so it reads as unavailable rather than gathering for ever.
+  const pipelineStatus = d.resolved?._hooksRateLimited
+    ? 'unavailable'
+    : logs === null || !d.resolved?._hooksLoaded
       ? 'pending'
       : logs === 'unavailable' || logs === 'rate-limited'
         ? 'unavailable'
         : 'sparse';
-  const labelsStatus =
-    d.resolved?.labelsById === undefined ? 'pending' : attributing ? 'attributing' : 'loaded';
+  const labelsStatus = d.resolved?._labelsRateLimited
+    ? 'unavailable'
+    : d.resolved?.labelsById === undefined
+      ? 'pending'
+      : attributing
+        ? 'attributing'
+        : 'loaded';
   const rejectionStatus =
     store.enrichment.value.workflow === null || store.enrichment.value.notes === null
       ? 'pending'

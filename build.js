@@ -1,6 +1,6 @@
 const esbuild = require('esbuild');
 const { execSync } = require('child_process');
-const { cpSync, rmSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
+const { cpSync, existsSync, rmSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
 
 const isWatch = process.argv.includes('--watch');
 
@@ -113,6 +113,20 @@ function hljsCombinedCss() {
 }
 
 
+// The experimental rdc app's wasm, from the OPTIONAL dependency @mrtnzlml/rdc-wasm. It lives on
+// GitHub Packages, which needs a token even to install, so a clone without one (CI and the
+// Web Store release included) has no package and builds without it; the app then says so.
+const RDC_PKG = 'node_modules/@mrtnzlml/rdc-wasm';
+function copyRdcWasm() {
+  if (!existsSync(`${RDC_PKG}/rdc_wasm_bg.wasm`)) {
+    console.log('rdc wasm: @mrtnzlml/rdc-wasm is not installed, building without the rdc app');
+    return;
+  }
+  mkdirSync('dist/console/rdc', { recursive: true });
+  for (const f of ['rdc_wasm.js', 'rdc_wasm_bg.wasm']) cpSync(`${RDC_PKG}/${f}`, `dist/console/rdc/${f}`);
+}
+
+copyRdcWasm();
 if (isWatch) {
   // Once, up front: the watcher rebuilds JS only, so re-run `npm run build` after editing a
   // stylesheet or an HTML page.

@@ -83,6 +83,33 @@ describe('Inspector under a 429', () => {
     expect(store.rateLimited.value).toEqual({ retryAfter: 7 });
   });
 
+  it('marks throttled hooks, so Extension runs can stop waiting for them', async () => {
+    vi.mocked(api.listHooks).mockRejectedValue(throttled(9));
+    await openAnnotation();
+    await settled();
+    expect(store.data.value.resolved._hooksRateLimited).toBe(true);
+  });
+
+  it('marks a throttled label context, so Labels can stop waiting for it', async () => {
+    vi.mocked(api.listLabels).mockRejectedValue(throttled(2));
+    await openAnnotation();
+    await settled();
+    expect(store.data.value.resolved._labelsRateLimited).toBe(true);
+  });
+
+  it('reads a 500 as a failure even when another request was throttled', async () => {
+    // The 429 belongs to labels; the hooks' own failure is a 500, which loads as "none".
+    vi.mocked(api.listLabels).mockRejectedValue(throttled(2));
+    vi.mocked(api.listHooks).mockRejectedValue(
+      Object.assign(new Error('API error 500'), { status: 500 }),
+    );
+    await openAnnotation();
+    await settled();
+    expect(store.rateLimited.value).toEqual({ retryAfter: 2 });
+    expect(store.data.value.resolved._hooksLoaded).toBe(true);
+    expect(store.data.value.resolved._hooksRateLimited).not.toBe(true);
+  });
+
   it('keeps today’s behaviour for a non-429 failure', async () => {
     vi.mocked(api.listHooks).mockRejectedValue(
       Object.assign(new Error('API error 500'), { status: 500 }),

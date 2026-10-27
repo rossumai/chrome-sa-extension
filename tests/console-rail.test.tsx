@@ -22,7 +22,7 @@ describe('Rail', () => {
 
   it('renders one button per app', () => {
     const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(6);
+    expect(root.querySelectorAll('.app-rail-item').length).toBe(7); // only the Academy is gated
   });
 
   it('renders the Inspector app button and switches to it on click', () => {
@@ -45,16 +45,17 @@ describe('Rail', () => {
     expect(idx('Annotation Inspector')).toBeLessThan(idx('Org Galaxy')); // above Galaxy
   });
 
-  it('renders Galaxy as the last rail item, after the now-public Fabry item', () => {
-    // Assert with the gate LOCKED. Fabry is public, so it is on the rail either
-    // way, while the Academy — which sits after Galaxy — is hidden, which is
-    // what makes "Galaxy is last" a real assertion rather than a trivial one.
-    experimentalUnlocked.value = false;
+  // CIB sits after Galaxy and before the Academy (visible once the gate is unlocked).
+  it('orders CIB after Galaxy and before Academy when the gate is unlocked', () => {
+    experimentalUnlocked.value = true;
     const items = [...mount().querySelectorAll('.app-rail-item')];
     const title = (b: any) => b.getAttribute('title');
     const idx = (t: any) => items.findIndex((b) => title(b) === t);
-    expect(title(items[items.length - 1])).toBe('Org Galaxy');
     expect(idx('Mr. Fabry')).toBeLessThan(idx('Org Galaxy'));
+    expect(idx('Org Galaxy')).toBeLessThan(idx('CIB deploy (Coupa Integration Baseline)'));
+    expect(idx('CIB deploy (Coupa Integration Baseline)')).toBeLessThan(
+      idx('Onboarding training — experimental'),
+    );
   });
 
   it('renders the Galaxy app button and switches to it on click', () => {
@@ -131,7 +132,7 @@ describe('Rail — academy (experimental) gate', () => {
   it('hides Academy while the gate is locked', () => {
     experimentalUnlocked.value = false;
     const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(6);
+    expect(root.querySelectorAll('.app-rail-item').length).toBe(7); // the Academy is the only gated app
     expect(
       [...root.querySelectorAll('.app-rail-item')].some(
         (b) => b.getAttribute('title') === ACADEMY_TITLE,
@@ -153,22 +154,38 @@ describe('Rail — academy (experimental) gate', () => {
     expect(activeApp.value).toBe('academy');
   });
 
-  // The consolidation itself: ONE key now drives the Academy and nothing else.
+  // The consolidation itself: ONE key now drives the Academy, not Fabry or CIB.
   // Before 2026-08-11 two keys drove two apps, and the pair of tests here
   // asserted they could not cross-unlock. The risk now runs the other way — that
   // the surviving gate quietly re-acquires Fabry — so that is what this pins.
-  it('drives the Academy alone; Fabry is present in both gate states', () => {
+  it('drives the Academy; Fabry and CIB are present in both gate states', () => {
     experimentalUnlocked.value = false;
     let titles = [...mount().querySelectorAll('.app-rail-item')].map((b) =>
       b.getAttribute('title'),
     );
     expect(titles).toContain('Mr. Fabry');
     expect(titles).not.toContain(ACADEMY_TITLE);
+    expect(titles).toContain('CIB deploy (Coupa Integration Baseline)');
 
     experimentalUnlocked.value = true;
     titles = [...mount().querySelectorAll('.app-rail-item')].map((b) => b.getAttribute('title'));
     expect(titles).toContain('Mr. Fabry');
     expect(titles).toContain(ACADEMY_TITLE);
+    expect(titles).toContain('CIB deploy (Coupa Integration Baseline)');
+  });
+});
+
+describe('Rail — CIB is public', () => {
+  it('shows CIB with its beta badge while the experimental gate is LOCKED, and switches on click', () => {
+    experimentalUnlocked.value = false;
+    const btn = [...mount().querySelectorAll('.app-rail-item')].find(
+      (b) => b.getAttribute('title') === 'CIB deploy (Coupa Integration Baseline)',
+    )!;
+    expect(btn).toBeTruthy();
+    expect(btn.querySelector('.app-rail-beta')!.textContent).toBe('beta');
+    expect(btn.querySelector('.app-rail-exp')).toBeNull();
+    (btn as HTMLElement).click();
+    expect(activeApp.value).toBe('cib');
   });
 
   it('marks the Builder as beta', () => {

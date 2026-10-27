@@ -12,6 +12,7 @@
 // the editor to that stage while Auto-scroll is on.
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { h, render } from 'preact';
+import { act } from 'preact/test-utils';
 
 const mock = vi.hoisted(() => ({ text: '', onCursorStage: null as any }));
 const scrollMock = vi.hoisted(() => ({ animateScrollTop: vi.fn() }));
@@ -111,8 +112,14 @@ function mount() {
 // flush an effect after the environment is torn down — surfacing as
 // "cancelAnimationFrame is not defined", blamed on whichever unrelated file the
 // runner happened to be in. Observed while writing this file.
+// Inside act(), because Preact 11 defers an unmounted component's useEffect
+// cleanups to after paint (a 100ms timer under jsdom): unmounted bare, the
+// StageLinkOverlay cleanup can still fire after teardown, as "document is not
+// defined" (CI on 7bf66e7). act() flushes those cleanups before it returns.
 afterEach(() => {
-  for (const r of roots) render(null, r);
+  act(() => {
+    for (const r of roots) render(null, r);
+  });
   roots = [];
   document.body.innerHTML = '';
 });

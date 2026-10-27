@@ -2,8 +2,9 @@
 // Pure helpers for the console shell boot. Kept side-effect-free so they can be
 // unit-tested without chrome / DOM / sessionStorage.
 
-/** The seven apps on the rail. Adding one touches this, Rail.jsx and Console.jsx. */
-export type AppId = 'mdh' | 'audit' | 'builder' | 'galaxy' | 'inspector' | 'fabry' | 'academy';
+/** The nine apps on the rail. Adding one touches this, Rail.jsx and Console.jsx. */
+export type AppId =
+  'mdh' | 'audit' | 'builder' | 'galaxy' | 'inspector' | 'fabry' | 'cib' | 'academy' | 'rdc';
 
 export function isValidApp(v: unknown): v is AppId {
   return (
@@ -13,30 +14,39 @@ export function isValidApp(v: unknown): v is AppId {
     v === 'galaxy' ||
     v === 'inspector' ||
     v === 'fabry' ||
-    v === 'academy'
+    v === 'cib' ||
+    v === 'academy' ||
+    v === 'rdc'
   );
 }
 
+// The apps behind the experimental gate (`gated: true` in Rail.tsx): the Academy and the rdc
+// proof of concept. Everything else, Mr. Fabry included, is always available.
+const GATED_APPS: readonly AppId[] = ['academy', 'rdc'];
+
+function isGatedApp(app: AppId): boolean {
+  return GATED_APPS.includes(app);
+}
+
 // Which app to show on boot. Precedence: staging entry (a popup button click)
-// wins, then the persisted last-used app, then Dataset Management. The Academy
-// is the ONE gated app — everything else, Mr. Fabry included, is always
-// available. `unlocked` defaults to locked so a caller that forgets the flag
-// hides the Academy rather than revealing it.
+// wins, then the persisted last-used app, then Dataset Management. A gated app
+// is only picked when unlocked. `unlocked` defaults to locked so a caller that
+// forgets the flag hides the gated apps rather than revealing them.
 export function pickInitialApp({
   stagingApp,
   persistedApp,
   unlocked = false,
 }: { stagingApp?: unknown; persistedApp?: unknown; unlocked?: boolean } = {}): AppId {
-  const ok = (v: unknown): v is AppId => isValidApp(v) && (v !== 'academy' || unlocked);
+  const ok = (v: unknown): v is AppId => isValidApp(v) && (!isGatedApp(v) || unlocked);
   if (ok(stagingApp)) return stagingApp;
   if (ok(persistedApp)) return persistedApp;
   return 'mdh';
 }
 
-// Re-locking the gate while the Academy is active falls back to Dataset
+// Re-locking the gate while a gated app is active falls back to Dataset
 // Management; every other app is unaffected.
 export function appAfterGateChange(activeApp: AppId, unlocked: boolean): AppId {
-  if (activeApp === 'academy' && !unlocked) return 'mdh';
+  if (isGatedApp(activeApp) && !unlocked) return 'mdh';
   return activeApp;
 }
 

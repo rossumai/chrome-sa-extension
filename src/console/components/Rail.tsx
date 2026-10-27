@@ -95,6 +95,23 @@ const INSPECTOR_ICON = (
 // size; fill inherits the rail's currentColor (incl. white-when-active).
 const FABRY_ICON = <FabryMark size={20} animated={false} />;
 
+const CIB_ICON = (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M12 2 3 7l9 5 9-5-9-5z" />
+    <path d="M3 12l9 5 9-5" />
+    <path d="M3 17l9 5 9-5" />
+  </svg>
+);
+
 const ACADEMY_ICON = (
   <svg
     width="20"
@@ -108,6 +125,23 @@ const ACADEMY_ICON = (
   >
     <path d="M12 3 2 8l10 5 10-5-10-5z" />
     <path d="M6 10.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5" />
+  </svg>
+);
+
+const RDC_ICON = (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <polyline points="1 4 1 10 7 10" />
+    <polyline points="23 20 23 14 17 14" />
+    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15" />
   </svg>
 );
 
@@ -135,6 +169,13 @@ const APPS: RailApp[] = [
   },
   { id: 'fabry', label: 'Fabry', title: 'Mr. Fabry', icon: FABRY_ICON, beta: true },
   { id: 'galaxy', label: 'Galaxy', title: 'Org Galaxy', icon: GALAXY_ICON },
+  {
+    id: 'cib',
+    label: 'CIB',
+    title: 'CIB deploy (Coupa Integration Baseline)',
+    icon: CIB_ICON,
+    beta: true,
+  },
   // `gated` hides the row unless experimentalUnlocked is set; `exp` is the
   // badge that names that gate. The title spells the abbreviation out, since
   // "EXP" alone does not tell a first-time reader what it means.
@@ -143,6 +184,14 @@ const APPS: RailApp[] = [
     label: 'Academy',
     title: 'Onboarding training — experimental',
     icon: ACADEMY_ICON,
+    exp: true,
+    gated: true,
+  },
+  {
+    id: 'rdc',
+    label: 'rdc',
+    title: 'rdc in the browser (proof of concept) — experimental',
+    icon: RDC_ICON,
     exp: true,
     gated: true,
   },
