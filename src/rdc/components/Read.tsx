@@ -86,6 +86,8 @@ export default function Read({
     let alive = true;
     const ask = (prompt: Prompt) =>
       new Promise<string | null>((resolve) => {
+        // a run the page has left asks nothing: it reads as "no answer" at once
+        if (!alive) return resolve(null);
         const p: Pending = {
           prompt,
           answer: (key) => {
@@ -117,6 +119,7 @@ export default function Read({
           await project.sync(SOURCE_ENV, { noPush: true }, ask, (l) => {
             if (alive) setSourceLog((x) => [...x, l]);
           });
+          if (!alive) return;
           await project.sync(TARGET_ENV, { noPush: true }, ask, (l) => {
             if (alive) setTargetLog((x) => [...x, l]);
           });

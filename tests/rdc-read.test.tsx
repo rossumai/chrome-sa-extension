@@ -170,6 +170,27 @@ describe('Read', () => {
     await expect(answer).resolves.toBeNull();
   });
 
+  it('answers null to a prompt raised after unmount and skips the target', async () => {
+    const prompt: Prompt = { kind: 'k', question: 'Which?', choices: [{ key: 'a', label: 'A' }] };
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    let late: Promise<string | null> | undefined;
+    const { rdc, project } = fakeRdc(async (_e, _o, ask) => {
+      await gate;
+      late = ask(prompt);
+      return outcome;
+    });
+    mount(<Read {...readProps(rdc)} />);
+    await flush();
+    act(() => void render(null, root));
+    release();
+    await flush();
+    await flush();
+    await expect(late).resolves.toBeNull();
+    expect(project.sync).toHaveBeenCalledTimes(1);
+    expect(project.free).toHaveBeenCalledTimes(1);
+  });
+
   it('sends a chosen answer', async () => {
     const prompt: Prompt = { kind: 'k', question: 'Which?', choices: [{ key: 'a', label: 'A' }] };
     let answer: Promise<string | null> | undefined;
