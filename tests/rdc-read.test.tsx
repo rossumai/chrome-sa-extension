@@ -71,6 +71,7 @@ const readProps = (rdc: Rdc | null, over: any = {}) => ({
   token: 'ttok',
   organizations: async () => orgs,
   onDone: vi.fn(),
+  onBack: vi.fn(),
   ...over,
 });
 

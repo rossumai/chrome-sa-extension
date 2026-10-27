@@ -1,54 +1,99 @@
-// rdc (experimental): rdc's sync engine, built to WebAssembly, run in the Console against the
-// connected organization. ONE pull — `sync` with `noPush: true`, so nothing is written to the
-// org — into a project held only in memory, then the pulled tree and the log. A prompt rdc
-// raises is shown with its choices and waits for the user; Cancel answers "no answer".
-// Proof of concept behind the experimental gate; see src/rdc/wasm.ts for how the build loads.
+// rdc (experimental): deployments into the connected org. The connected org is the target; the
+// admin chooses one source org, gives a token for it, and rdc's sync engine (WebAssembly) reads
+// both into a project held in memory only, with `noPush: true`, so nothing is written to either
+// org. Plan, Review, Write, Done and the org's own values are shown as work in progress until
+// rdc can do them in the browser. Nothing is kept: a reload starts over.
 import { h } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { domain, token } from '../store.js';
 import { connectedOrg } from '../../console/store.js';
-import { ENV, answerFor, envInputFor, treeRows, type TreeRow } from '../core.js';
-import { LogLine } from './Read.jsx';
-import { loadRdc, type CycleOutcome, type Prompt, type Rdc } from '../wasm.js';
+import { hostOf, type Source, type StepId } from '../deploy.js';
+import { loadRdc as defaultLoadRdc, type Rdc } from '../wasm.js';
+import { currentOrg } from '../../rossum/orgName.js';
+import { isRateLimited, rateLimitMessage } from '../../net/rateLimit.js';
+import Band, { type BandTarget } from './Band.jsx';
+import Overview from './Overview.jsx';
+import ChooseSource, { fetchOrgs as defaultFetchOrgs, type FetchOrgs } from './ChooseSource.jsx';
+import Connect from './Connect.jsx';
+import Read from './Read.jsx';
+import { OwnValues, WipStep } from './WipSteps.jsx';
 import styles from './App.module.css';
 
-const host = (d: string) => {
-  try {
-    return new URL(d).host;
-  } catch {
-    return d;
-  }
+type Screen =
+  'overview' | 'choose' | 'connect' | 'read' | 'plan' | 'review' | 'write' | 'done' | 'own';
+
+// The band's step for each screen; the overview, its modal, own values and Done show the belt.
+const STEP_OF: Partial<Record<Screen, StepId>> = {
+  connect: 'connect',
+  read: 'read',
+  plan: 'plan',
+  review: 'review',
+  write: 'write',
 };
 
-type Pending = { prompt: Prompt; answer: (key: string | null) => void };
+type Props = {
+  connected: boolean | null;
+  // Injectable for tests; production uses the real loader and `GET /organizations`.
+  loadRdc?: () => Promise<Rdc>;
+  fetchOrgs?: FetchOrgs;
+};
 
-async function organizations(d: string, t: string): Promise<unknown> {
-  const res = await fetch(`${d}/api/v1/organizations`, {
-    headers: { Authorization: `Bearer ${t}` },
-  });
-  if (!res.ok) throw new Error(`GET /api/v1/organizations: HTTP ${res.status}`);
-  return res.json();
-}
-
-export default function App({ connected }: { connected: boolean | null }) {
-  // undefined while loading, null when it failed to load (the error says why)
+export default function App({
+  connected,
+  loadRdc = defaultLoadRdc,
+  fetchOrgs = defaultFetchOrgs,
+}: Props) {
+  // undefined while loading, null when it failed to load (rdcError says why)
   const [rdc, setRdc] = useState<Rdc | null | undefined>(undefined);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [log, setLog] = useState<string[]>([]);
-  const [rows, setRows] = useState<TreeRow[] | null>(null);
-  const [outcome, setOutcome] = useState<CycleOutcome | null>(null);
-  const [pending, setPending] = useState<Pending | null>(null);
-  const pendingRef = useRef<Pending | null>(null);
+  const [rdcError, setRdcError] = useState('');
+  // The target: the one organization the session lists. undefined while loading.
+  const [target, setTarget] = useState<BandTarget | null | undefined>(undefined);
+  const [targetError, setTargetError] = useState('');
+  const [screen, setScreen] = useState<Screen>('overview');
+  // The source and its token live here only; a reload loses both.
+  const [source, setSource] = useState<Source | null>(null);
+  const [sourceToken, setSourceToken] = useState('');
 
   useEffect(() => {
     loadRdc().then(setRdc, (e: any) => {
       setRdc(null);
-      setError(`rdc wasm did not load: ${e?.message || e}`);
+      setRdcError(`rdc wasm did not load: ${e?.message || e}`);
     });
-    // a prompt left open when the app unmounts reads as "no answer", so a sync never hangs
-    return () => pendingRef.current?.answer(null);
   }, []);
+
+  useEffect(() => {
+    if (!connected) return;
+    let alive = true;
+    setTarget(undefined);
+    setTargetError('');
+    fetchOrgs(domain.value, token.value).then(
+      (orgs) => {
+        if (!alive) return;
+        const org = currentOrg(orgs);
+        if (!org || org.id === null) {
+          setTarget(null);
+          setTargetError(
+            'The session does not list exactly one organization, so which one to deploy into is unknown.',
+          );
+          return;
+        }
+        // env: the Console has no Sandbox/Production flag at hand, so the band shows no chip
+        setTarget({ name: org.name, host: hostOf(domain.value), orgId: org.id, env: null });
+      },
+      (e) => {
+        if (!alive) return;
+        setTarget(null);
+        setTargetError(
+          isRateLimited(e)
+            ? rateLimitMessage(e)
+            : `Could not read this organization: ${(e as Error)?.message || e}`,
+        );
+      },
+    );
+    return () => {
+      alive = false;
+    };
+  }, [connected]);
 
   if (!connected)
     return (
@@ -62,124 +107,117 @@ export default function App({ connected }: { connected: boolean | null }) {
       </div>
     );
 
-  const ask = (prompt: Prompt) =>
-    new Promise<string | null>((resolve) => {
-      const p: Pending = {
-        prompt,
-        answer: (key) => {
-          pendingRef.current = null;
-          setPending(null);
-          resolve(answerFor(prompt, key));
-        },
-      };
-      pendingRef.current = p;
-      setPending(p);
-    });
+  const bar = (
+    <div class="connection-bar">
+      <span class="connection-dot"></span>
+      rdc (experimental) · Connected to {hostOf(domain.value)}
+      {connectedOrg.value ? ` · ${connectedOrg.value}` : ''}
+      {rdc ? ` · rdc ${rdc.version()}` : ''}
+    </div>
+  );
 
-  const pull = async () => {
-    if (!rdc) return;
-    setBusy(true);
-    setError('');
-    setLog([]);
-    setRows(null);
-    setOutcome(null);
-    try {
-      const env = envInputFor(
-        domain.value,
-        token.value,
-        await organizations(domain.value, token.value),
-        ENV,
-      );
-      if (typeof env === 'string') throw new Error(env);
-      const project = rdc.Project.create('console', env);
-      try {
-        const o = await project.sync(ENV, { noPush: true }, ask, (line) =>
-          setLog((l) => [...l, line]),
-        );
-        setOutcome(o);
-        setRows(treeRows(project.files()));
-      } finally {
-        project.free();
-      }
-    } catch (e: any) {
-      setError(String(e?.message || e));
-    } finally {
-      setBusy(false);
-    }
+  if (!target)
+    return (
+      <div class="app-root">
+        <main class="main">
+          {bar}
+          {target === undefined ? (
+            <div class="empty-state">Loading{'…'}</div>
+          ) : (
+            <div class="error-banner">
+              <span>{targetError}</span>
+            </div>
+          )}
+        </main>
+      </div>
+    );
+
+  const name = target.name;
+  const toOverview = () => setScreen('overview');
+  const leaveSource = () => {
+    setSourceToken('');
+    toOverview();
   };
+
+  let page;
+  if (screen === 'own') page = <OwnValues targetName={name} onBack={toOverview} />;
+  else if (source && screen === 'connect')
+    page = (
+      <Connect
+        source={source}
+        fetchOrgs={fetchOrgs}
+        onBack={leaveSource}
+        onConnected={(t) => {
+          setSourceToken(t);
+          setScreen('read');
+        }}
+      />
+    );
+  else if (source && screen === 'read')
+    page = (
+      <Read
+        rdc={rdc ?? null}
+        rdcError={rdc === undefined ? `Loading rdc${'…'}` : rdcError}
+        source={source}
+        sourceToken={sourceToken}
+        domain={domain.value}
+        token={token.value}
+        organizations={() => fetchOrgs(domain.value, token.value)}
+        onDone={() => setScreen('plan')}
+        onBack={() => setScreen('connect')}
+      />
+    );
+  else if (source && (screen === 'plan' || screen === 'review' || screen === 'write'))
+    page = (
+      <WipStep
+        step={screen}
+        sourceName={source.name}
+        targetName={name}
+        onBack={() =>
+          setScreen(screen === 'plan' ? 'read' : screen === 'review' ? 'plan' : 'review')
+        }
+        onNext={() =>
+          setScreen(screen === 'plan' ? 'review' : screen === 'review' ? 'write' : 'done')
+        }
+      />
+    );
+  else if (source && screen === 'done')
+    page = <WipStep step="done" sourceName={source.name} targetName={name} onBack={leaveSource} />;
+  else
+    page = (
+      <Overview
+        source={source}
+        targetName={name}
+        onChooseSource={() => setScreen('choose')}
+        onDeploy={() => setScreen('connect')}
+        onEditOwn={() => setScreen('own')}
+      />
+    );
 
   return (
     <div class="app-root">
       <main class="main">
-        <div class="connection-bar">
-          <span class={'connection-dot' + (busy ? ' busy' : '')}></span>
-          rdc (experimental) · Connected to {host(domain.value)}
-          {connectedOrg.value ? ` · ${connectedOrg.value}` : ''}
-          {rdc ? ` · rdc ${rdc.version()}` : ''}
-        </div>
-        {error && (
-          <div class="error-banner">
-            <span>{error}</span>
-          </div>
-        )}
+        {bar}
         <div class={styles.body}>
-          {rdc === undefined && <div class="empty-state">Loading rdc{'…'}</div>}
-          {rdc && (
-            <section class={styles.card}>
-              <p class={styles.muted}>
-                Pulls the connected organization into a project held in memory only. Nothing is
-                written to the organization, nothing is kept after a reload.
-              </p>
-              <button class="btn btn-primary" disabled={busy} onClick={pull}>
-                {busy ? 'Pulling…' : 'Pull'}
-              </button>
-            </section>
-          )}
-          {pending && (
-            <section class={styles.card} role="dialog" aria-label="rdc asks">
-              <div class={styles.question}>{pending.prompt.question}</div>
-              <div class={styles.choices}>
-                {pending.prompt.choices.map((c) => (
-                  <button class="btn btn-secondary" onClick={() => pending.answer(c.key)}>
-                    {c.label}
-                  </button>
-                ))}
-                <button class="btn btn-secondary" onClick={() => pending.answer(null)}>
-                  Cancel
-                </button>
-              </div>
-            </section>
-          )}
-          {outcome && (
-            <section class={styles.card}>
-              Pulled {outcome.itemsPulled} items · {outcome.fileCount} files · {outcome.conflicts}{' '}
-              conflicts
-            </section>
-          )}
-          {log.length > 0 && (
-            <section class={styles.card}>
-              <div class={styles.title}>Log</div>
-              <div class={styles.log}>
-                {log.map((line) => (
-                  <LogLine line={line} />
-                ))}
-              </div>
-            </section>
-          )}
-          {rows && (
-            <section class={styles.card}>
-              <div class={styles.title}>Files</div>
-              <ul class={styles.tree}>
-                {rows.map((r) => (
-                  <li key={r.key} style={{ paddingLeft: `${r.depth * 16}px` }}>
-                    {r.dir ? `${r.name}/` : r.name}
-                    {!r.dir && <span class={styles.muted}> {r.size} B</span>}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          <Band
+            source={source}
+            target={target}
+            step={STEP_OF[screen] ?? null}
+            lastDeployment={null}
+          />
+          {page}
         </div>
+        {screen === 'choose' && (
+          <ChooseSource
+            fetchOrgs={fetchOrgs}
+            onCancel={toOverview}
+            onChosen={(s) => {
+              setSource(s);
+              setSourceToken('');
+              toOverview();
+            }}
+          />
+        )}
       </main>
     </div>
   );

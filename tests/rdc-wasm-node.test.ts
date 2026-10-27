@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
-import { envInputFor, ENV } from '../src/rdc/core.js';
+import { envInputFor } from '../src/rdc/core.js';
 import { sourceEnvInput, TARGET_ENV } from '../src/rdc/deploy.js';
 
 // Loads the real rdc wasm in Node from the optional @mrtnzlml/rdc-wasm package. Skipped when
@@ -20,14 +20,14 @@ describe.skipIf(!present)('rdc wasm package (Node)', () => {
       'https://acme.rossum.app',
       'tok',
       { results: [{ id: 42, name: 'Acme' }] },
-      ENV,
+      TARGET_ENV,
     );
     if (typeof env === 'string') throw new Error(env);
     const project = glue.Project.create('console', env);
     const files: Map<string, Uint8Array> = project.files();
     expect(files.has('rdc.toml')).toBe(true);
     const toml = new TextDecoder().decode(files.get('rdc.toml'));
-    expect(toml).toContain(`[envs.${ENV}]`);
+    expect(toml).toContain(`[envs.${TARGET_ENV}]`);
     expect(toml).toContain('https://acme.rossum.app/api/v1');
     expect(toml).toContain('42');
     expect(typeof project.sync).toBe('function');

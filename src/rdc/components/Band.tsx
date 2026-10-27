@@ -2,7 +2,7 @@
 // them either the conveyor (no step) or the five steps (a step).
 import { h, Fragment } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
-import { KINDS, STEPS, type Source, type StepId } from '../deploy.js';
+import { KINDS, STEPS, hostOf, type Source, type StepId } from '../deploy.js';
 import { CROSS_MS, FADE, SPAWN_MS, beltStops, stillPositions } from '../conveyor.js';
 import styles from './Band.module.css';
 
@@ -123,15 +123,6 @@ function Stack() {
     </div>
   );
 }
-
-// A malformed domain is shown as it is rather than crashing the band on every screen.
-const hostOf = (domain: string) => {
-  try {
-    return new URL(domain).host;
-  } catch {
-    return domain;
-  }
-};
 
 const pulse = (el: Element | null | undefined, cls: string) => {
   if (!el) return;

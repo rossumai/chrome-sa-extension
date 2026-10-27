@@ -44,6 +44,7 @@ describe('Overview', () => {
         targetName="Acme"
         onChooseSource={onChooseSource}
         onDeploy={vi.fn()}
+        onEditOwn={vi.fn()}
       />,
     );
     act(() => byText('button', 'Choose the org to deploy from').click());
@@ -53,7 +54,13 @@ describe('Overview', () => {
   it('with a source shows it, deploys, and notes the unbuilt parts', () => {
     const onDeploy = vi.fn();
     mount(
-      <Overview source={source} targetName="Acme" onChooseSource={vi.fn()} onDeploy={onDeploy} />,
+      <Overview
+        source={source}
+        targetName="Acme"
+        onChooseSource={vi.fn()}
+        onDeploy={onDeploy}
+        onEditOwn={vi.fn()}
+      />,
     );
     expect(root.textContent).toContain('Acme deploys from');
     act(() => byText('button', 'Deploy from test').click());

@@ -52,6 +52,7 @@ type Props = {
   token: string;
   organizations: () => Promise<unknown>;
   onDone: (counts: Counts) => void;
+  onBack: () => void;
 };
 
 type Pending = { prompt: Prompt; answer: (key: string | null) => void };
@@ -67,6 +68,7 @@ export default function Read({
   token,
   organizations,
   onDone,
+  onBack,
 }: Props) {
   const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -222,6 +224,9 @@ export default function Read({
         </div>
       )}
       <div class={styles.foot}>
+        <button class="btn btn-secondary" onClick={onBack}>
+          Back
+        </button>
         <span class={styles.sp}></span>
         <button
           class="btn btn-primary"

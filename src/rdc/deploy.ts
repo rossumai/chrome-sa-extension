@@ -49,6 +49,15 @@ export function countKinds(files: Map<string, Uint8Array>, env: string): Record<
 
 export type Source = { name: string; domain: string; orgId: number; orgName: string };
 
+// The host of an org's address, for display. A malformed address is shown as it is.
+export function hostOf(domain: string): string {
+  try {
+    return new URL(domain).host;
+  } catch {
+    return domain;
+  }
+}
+
 export function sourceEnvInput(source: Source, token: string): EnvInput | string {
   const apiBase = apiBaseOf(source.domain);
   if (!apiBase) return `Not a Rossum URL: ${source.domain}`;

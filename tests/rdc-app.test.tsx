@@ -1,0 +1,198 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { h, render } from 'preact';
+import { act } from 'preact/test-utils';
+import App from '../src/rdc/components/App.jsx';
+import { domain, token } from '../src/rdc/store.js';
+import type { Rdc } from '../src/rdc/wasm.js';
+
+const outcome = {
+  itemsPushed: 0,
+  itemsPulled: 1,
+  conflicts: 0,
+  remoteDeletesResolved: 0,
+  fileCount: 1,
+};
+
+function fakeRdc() {
+  const project = {
+    addEnv: vi.fn(),
+    sync: vi.fn(async (_env: string, _opts: any, _ask: any, log: (l: string) => void) => {
+      log('pulled');
+      return outcome;
+    }),
+    files: vi.fn(() => new Map<string, Uint8Array>()),
+    free: vi.fn(),
+  };
+  return { version: () => '1.0.0', Project: { create: vi.fn(() => project) } } as unknown as Rdc;
+}
+
+// The session sees Acme; the source token sees Acme Test.
+const fetchOrgs = vi.fn(async (d: string, _t: string) =>
+  d === 'https://acme.rossum.app'
+    ? { results: [{ id: 31007, name: 'Acme' }] }
+    : { results: [{ id: 20412, name: 'Acme Test' }] },
+);
+
+let root: HTMLElement;
+let chromeSet: ReturnType<typeof vi.fn>;
+let sessionSet: ReturnType<typeof vi.spyOn>;
+const mount = (el: any) => act(() => void render(el, root));
+const flush = () => act(async () => {});
+const byText = (sel: string, text: string) =>
+  [...root.querySelectorAll<HTMLElement>(sel)].find((e) => e.textContent?.trim() === text)!;
+const click = async (sel: string, text: string) => {
+  act(() => byText(sel, text).click());
+  await flush();
+};
+const type = (id: string, value: string) =>
+  act(() => {
+    const el = root.querySelector<HTMLInputElement>('#' + id)!;
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+const controls = () => [...root.querySelectorAll<HTMLInputElement>('input, select')];
+
+beforeEach(() => {
+  root = document.createElement('div');
+  document.body.appendChild(root);
+  domain.value = 'https://acme.rossum.app';
+  token.value = 'ttok';
+  chromeSet = vi.fn();
+  (globalThis as any).chrome = { storage: { local: { set: chromeSet } } };
+  sessionSet = vi.spyOn(Storage.prototype, 'setItem');
+});
+afterEach(() => {
+  render(null, root);
+  root.remove();
+  sessionSet.mockRestore();
+  delete (globalThis as any).chrome;
+});
+
+const loadRdc = () => Promise.resolve(fakeRdc());
+
+describe('rdc App', () => {
+  it('says so when not connected', () => {
+    mount(<App connected={false} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    expect(root.textContent).toContain('Not connected');
+  });
+
+  it('shows the overview for the connected org', async () => {
+    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    expect(root.textContent).toContain('Bring tested configuration into Acme');
+    expect(root.querySelector('[data-role="target"]')!.textContent).toContain('org 31007');
+  });
+
+  it('refuses a session that does not list exactly one organization', async () => {
+    const two = vi.fn(async () => ({
+      results: [
+        { id: 1, name: 'x' },
+        { id: 2, name: 'y' },
+      ],
+    }));
+    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={two} />);
+    await flush();
+    expect(root.textContent).toContain('does not list exactly one organization');
+    expect(byText('button', 'Choose the org to deploy from')).toBeUndefined();
+  });
+
+  it('walks from choosing a source through the work-in-progress steps', async () => {
+    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Deploy from test');
+    expect(root.textContent).toContain('Acme deploys from');
+
+    await click('button', 'Deploy from test');
+    expect(root.textContent).toContain('Connect to test');
+    expect(root.querySelector('[data-step="connect"]')!.getAttribute('data-state')).toBe('current');
+    await type('rdc-conn-token', 'stok');
+    await click('button', 'Check token');
+    await click('button', 'Read both orgs');
+    await flush();
+    expect(root.textContent).toContain('Reading both orgs');
+    expect(root.textContent).toContain('pulled');
+
+    await click('button', 'Plan the deployment');
+    expect(root.textContent).toContain('Plan what to bring');
+    expect(root.textContent).toContain(
+      'Not available yet. Planning needs rdc migrate in the browser build',
+    );
+    expect(root.textContent).toContain('rdc migrate source target');
+    expect(root.textContent).toContain('rdc sync target --dry-run');
+    expect(controls().length).toBeGreaterThan(0);
+    controls().forEach((c) => expect(c.disabled).toBe(true));
+
+    await click('button', 'Review the changes');
+    expect(root.textContent).toContain('Review the changes to Acme');
+    expect(root.textContent).toContain("Not available yet. Reviewing needs rdc's list");
+    controls().forEach((c) => expect(c.disabled).toBe(true));
+
+    await click('button', 'Continue to write');
+    expect(root.textContent).toContain('Write to Acme');
+    expect(
+      root.querySelector<HTMLInputElement>('[aria-label="Type Acme to confirm"]')!.disabled,
+    ).toBe(true);
+    expect(byText('button', 'Write the changes to Acme').hasAttribute('disabled')).toBe(true);
+    controls().forEach((c) => expect(c.disabled).toBe(true));
+
+    expect(chromeSet).not.toHaveBeenCalled();
+    expect(sessionSet).not.toHaveBeenCalled();
+    expect(root.textContent).not.toMatch(/\d+ changes/);
+  });
+
+  it('goes back from Read to Connect', async () => {
+    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Deploy from test');
+    await click('button', 'Deploy from test');
+    await type('rdc-conn-token', 'stok');
+    await click('button', 'Check token');
+    await click('button', 'Read both orgs');
+    await click('button', 'Back');
+    expect(root.textContent).toContain('Connect to test');
+  });
+
+  it('opens own values from the overview, with the work-in-progress note', async () => {
+    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Deploy from test');
+    await click('button', 'Edit');
+    expect(root.textContent).toContain('What Acme keeps for itself');
+    expect(root.textContent).toContain('Not available yet. Own values are stored with the project');
+    controls().forEach((c) => expect(c.disabled).toBe(true));
+    expect(byText('button', 'Save changes').hasAttribute('disabled')).toBe(true);
+    expect(chromeSet).not.toHaveBeenCalled();
+    expect(sessionSet).not.toHaveBeenCalled();
+  });
+
+  it('says rdc is not in this build when it does not load', async () => {
+    const missing = () => Promise.reject(new Error('console/rdc/rdc_wasm.js is not in this build'));
+    mount(<App connected={true} loadRdc={missing} fetchOrgs={fetchOrgs} />);
+    await flush();
+    expect(root.textContent).toContain('Bring tested configuration into Acme');
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Deploy from test');
+    await click('button', 'Deploy from test');
+    await type('rdc-conn-token', 'stok');
+    await click('button', 'Check token');
+    await click('button', 'Read both orgs');
+    expect(root.textContent).toContain('rdc_wasm.js is not in this build');
+    expect(byText('button', 'Plan the deployment').hasAttribute('disabled')).toBe(true);
+  });
+});

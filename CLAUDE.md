@@ -364,14 +364,21 @@ opened, because its form, log and a deploy in flight live in component state.
   so a re-run with the same run id resumes, and it is deleted once a deploy is complete. The
   optional Coupa check function is a hook the user deploys and tears down by hand.
 - **Academy** (`src/academy/`) — the onboarding training track; behind `experimentalUnlocked`.
-- **rdc** (`src/rdc/`) — a **proof of concept**, behind `experimentalUnlocked` like the Academy
+- **rdc** (`src/rdc/`) — the **deployments UI**, behind `experimentalUnlocked` like the Academy
   (`gated` in `Rail.tsx`; `boot.ts` keeps the gated set, so a locked boot or re-lock falls back
-  to Dataset Management). It runs rdc's sync engine, compiled to WebAssembly, against the
-  connected org: ONE `sync` with `noPush: true` (nothing is written to the org) into a project
-  held in component memory only — nothing is persisted, a reload loses it — then shows rdc's
-  log (ANSI colour rendered by `ansi.ts`) and the pulled tree. A prompt rdc raises is shown with
-  its choices; Cancel answers `null`. `apiBase` is `${consoleDomain}/api/v1`; the org id is the
-  one organization `GET /organizations` lists (`currentOrg`), else it refuses.
+  to Dataset Management). The connected org is the target: the one organization
+  `GET /organizations` lists (`currentOrg`), else the page says so and stops. The admin chooses
+  one source org and gives a token for it (checked with one read, kept in component state only,
+  never stored); rdc's sync engine, compiled to WebAssembly, then reads BOTH orgs into one
+  in-memory project, each with `sync({ noPush: true })` — the only option ever passed — and
+  shows rdc's log (ANSI colour rendered by `ansi.ts`) and the counts per kind. **It writes
+  nothing to either org.** A prompt rdc raises is shown with its choices; Cancel, or leaving the
+  page, answers `null`. Nothing persists: a reload loses the source and the project. Plan,
+  Review, Write, Done, the org's own values, remembering the source and the deployment history
+  are **work in progress pending rdc** (`migrate` in wasm, a structured dry run, storage in the
+  org): they show the design's frames with a "Not available yet" note (`WIP` in `deploy.ts`),
+  every control that would act on data disabled, and no sample data. Design:
+  `2026-10-27-rdc-deployments-design.md`.
   **The wasm is an OPTIONAL dependency**, `@mrtnzlml/rdc-wasm` on GitHub Packages (`.npmrc`
   maps the `@mrtnzlml` scope there). That registry needs a token even to install a public
   package, so without one `npm ci` skips it and exits 0, and `build.js` builds without it (the

@@ -1,10 +1,7 @@
-// The rdc proof of concept's pure core: what the Console hands rdc, and how rdc's in-memory
-// tree is shown. No DOM, no network, no wasm — the component does the I/O.
+// The rdc app's pure core: what the Console hands rdc for an org, and how a prompt is answered.
+// No DOM, no network, no wasm — the component does the I/O.
 import { currentOrg } from '../rossum/orgName.js';
 import type { EnvInput, Prompt } from './wasm.js';
-
-// The one env the in-memory project holds. rdc allows letters, digits, `-` and `_`.
-export const ENV = 'org';
 
 // rdc's `api_base` is the API root, `https://<host>/api/v1` (rdc's config tests), and the
 // Console's domain is the Rossum tab's `location.origin` — the extension calls
@@ -42,30 +39,4 @@ export function envInputFor(
 // too, so the UI never sends a key rdc would silently drop.
 export function answerFor(prompt: Prompt, key: string | null): string | null {
   return key !== null && prompt.choices.some((c) => c.key === key) ? key : null;
-}
-
-export type TreeRow = { key: string; depth: number; name: string; dir: boolean; size?: number };
-
-// The project's flat `path -> bytes` map as an indented tree: each directory once, before
-// its contents, everything in path order.
-export function treeRows(files: Map<string, Uint8Array>): TreeRow[] {
-  const rows: TreeRow[] = [];
-  const seen = new Set<string>();
-  for (const path of [...files.keys()].sort()) {
-    const parts = path.split('/');
-    for (let i = 0; i < parts.length - 1; i++) {
-      const dir = parts.slice(0, i + 1).join('/') + '/';
-      if (seen.has(dir)) continue;
-      seen.add(dir);
-      rows.push({ key: dir, depth: i, name: parts[i], dir: true });
-    }
-    rows.push({
-      key: path,
-      depth: parts.length - 1,
-      name: parts[parts.length - 1],
-      dir: false,
-      size: files.get(path)!.length,
-    });
-  }
-  return rows;
 }

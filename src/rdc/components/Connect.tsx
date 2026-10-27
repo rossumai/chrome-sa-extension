@@ -3,7 +3,7 @@
 // success and never stored.
 import { h } from 'preact';
 import { useRef, useState } from 'preact/hooks';
-import { readableOrgs, type Source } from '../deploy.js';
+import { hostOf, readableOrgs, type Source } from '../deploy.js';
 import { isRateLimited, rateLimitMessage } from '../../net/rateLimit.js';
 import { fetchOrgs as defaultFetch, type FetchOrgs } from './ChooseSource.jsx';
 import Wip from './Wip.jsx';
@@ -14,14 +14,6 @@ type Props = {
   fetchOrgs?: FetchOrgs;
   onConnected: (token: string) => void;
   onBack: () => void;
-};
-
-const host = (d: string) => {
-  try {
-    return new URL(d).host;
-  } catch {
-    return d;
-  }
 };
 
 export default function Connect({
@@ -80,7 +72,7 @@ export default function Connect({
           </div>
           <div class={`${styles.panelB} ${styles.stack}`}>
             <div class={styles.fld}>
-              <label for="rdc-conn-token">API token for {host(source.domain)}</label>
+              <label for="rdc-conn-token">API token for {hostOf(source.domain)}</label>
               <input
                 id="rdc-conn-token"
                 type="password"

@@ -1,7 +1,7 @@
 // The deployments page below the band: the first-visit card with no source, else the source,
 // the history and the values the org keeps for itself (the last two are work in progress).
 import { h } from 'preact';
-import type { Source } from '../deploy.js';
+import { hostOf, type Source } from '../deploy.js';
 import Wip from './Wip.jsx';
 import styles from './Deploy.module.css';
 
@@ -10,17 +10,16 @@ type Props = {
   targetName: string;
   onChooseSource: () => void;
   onDeploy: () => void;
+  onEditOwn: () => void;
 };
 
-const host = (d: string) => {
-  try {
-    return new URL(d).host;
-  } catch {
-    return d;
-  }
-};
-
-export default function Overview({ source, targetName, onChooseSource, onDeploy }: Props) {
+export default function Overview({
+  source,
+  targetName,
+  onChooseSource,
+  onDeploy,
+  onEditOwn,
+}: Props) {
   if (!source) {
     return (
       <div class={styles.wrap}>
@@ -57,7 +56,7 @@ export default function Overview({ source, targetName, onChooseSource, onDeploy 
               <div>
                 <div class={styles.srcName}>{source.name}</div>
                 <div class={styles.srcMeta}>
-                  {source.orgName}, org {source.orgId}, {host(source.domain)}
+                  {source.orgName}, org {source.orgId}, {hostOf(source.domain)}
                 </div>
               </div>
               <button class="btn btn-primary" onClick={onDeploy}>
@@ -85,8 +84,12 @@ export default function Overview({ source, targetName, onChooseSource, onDeploy 
         </div>
         <div class={styles.col}>
           <div class={styles.panel}>
-            <div class={styles.panelH}>
+            <div class={styles.panelHead}>
               <h2>What {targetName} keeps for itself</h2>
+              <span class={styles.sp}></span>
+              <button class="btn btn-secondary" onClick={onEditOwn}>
+                Edit
+              </button>
             </div>
             <div class={styles.panelB}>
               <p class={styles.muted}>
