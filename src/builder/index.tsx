@@ -137,10 +137,8 @@ export async function openSchema(schemaId: number) {
   return load(null, schemaId);
 }
 
-async function load(queueId: number | null, schemaId: number | null) {
-  if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
-  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
-  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
+/** Drop everything that belonged to the open queue or schema. */
+function clearOpen() {
   store.ruleEditor.value = null;
   store.hookEditor.value = null;
   store.hooks.value = [];
@@ -156,9 +154,6 @@ async function load(queueId: number | null, schemaId: number | null) {
   };
   store.fabryTouched.value = new Set();
   store.onlyFabryChanges.value = false;
-  const seq = ++openSeq;
-  store.selectedQueueId.value = queueId;
-  store.selectedSchemaId.value = schemaId;
   clearAnnotation();
   store.annotations.value = [];
   store.rules.value = [];
@@ -170,6 +165,16 @@ async function load(queueId: number | null, schemaId: number | null) {
   store.engineUsers.value = null;
   store.onlyWarnings.value = false;
   store.schema.value = null;
+}
+
+async function load(queueId: number | null, schemaId: number | null) {
+  if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
+  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
+  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
+  const seq = ++openSeq;
+  clearOpen();
+  store.selectedQueueId.value = queueId;
+  store.selectedSchemaId.value = schemaId;
   store.loading.value = true;
   store.error.value = null;
   store.retryable.value = false;
@@ -645,11 +650,11 @@ export async function createUnlinkedSchema(name: string, mode: 'copy' | 'empty')
 
 function closeEditor() {
   openSeq++;
+  clearOpen();
+  store.validationPanel.value = null;
   store.selectedQueueId.value = null;
   store.selectedSchemaId.value = null;
-  store.schema.value = null;
-  store.startDraft('', []);
-  clearAnnotation();
+  setBase(null);
 }
 
 export async function deleteQueue(id: number) {

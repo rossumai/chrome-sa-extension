@@ -493,6 +493,28 @@ describe('create and delete', () => {
     ask.mockRestore();
   });
 
+  it('deleting the open queue closes everything that belonged to it', async () => {
+    store.queues.value = [{ id: 1, name: 'A', schema: 's/7' }];
+    store.selectedQueueId.value = 1;
+    store.rules.value = [{ id: 4, name: 'R', trigger_condition: 'field.a', actions: [] }];
+    store.hooks.value = [{ id: 7, name: 'H', settings: {} }];
+    store.engineState.value = { kind: 'generic', engine: null, fields: [], error: null };
+    store.codeView.value = { hookId: 7, fieldId: 'a' };
+    store.validationPanel.value = 'rules';
+    store.schemaFabry.value = { ...store.schemaFabry.value, chatId: 'c', turns: [] };
+    openRuleEditor(4);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    await deleteQueue(1);
+    expect(store.ruleEditor.value).toBeNull();
+    expect(store.rules.value).toEqual([]);
+    expect(store.hooks.value).toEqual([]);
+    expect(store.engineState.value).toBeNull();
+    expect(store.codeView.value).toBeNull();
+    expect(store.validationPanel.value).toBeNull();
+    expect(store.schemaFabry.value.chatId).toBeNull();
+    vi.mocked(window.confirm).mockRestore();
+  });
+
   it('deleting a schema asks first and calls the API', async () => {
     store.schemas.value = [{ id: 8, url: 's/8', name: 'Old' }];
     const ask = vi.spyOn(window, 'confirm').mockReturnValue(true);
