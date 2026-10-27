@@ -155,6 +155,7 @@ async function load(queueId: number | null, schemaId: number | null) {
   store.selectedKey.value = null;
   store.engineState.value = null;
   store.codeView.value = null;
+  store.enginePanel.value = false;
   store.schema.value = null;
   store.loading.value = true;
   store.error.value = null;
@@ -378,11 +379,31 @@ export function openCodeView(hookId: number, fieldId: string) {
   store.hookEditor.value = null;
   store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
   store.selectedKey.value = null;
+  store.enginePanel.value = false;
   store.codeView.value = { hookId, fieldId };
 }
 
 export function closeCodeView() {
   store.codeView.value = null;
+}
+
+/** The engine panel; `key` selects that row (a click on its AI cell). Custom engine only. */
+export function openEnginePanel(key?: string) {
+  if (store.engineState.value?.kind !== 'custom') return;
+  if (store.ruleEditor.value) closeRuleEditor();
+  if (store.hookEditor.value) closeHookEditor();
+  if (store.ruleEditor.value || store.hookEditor.value) return; // the user kept unsaved work open
+  store.validationPanel.value = null;
+  store.codeView.value = null;
+  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
+  store.selectedKey.value = key ?? null;
+  store.enginePanel.value = true;
+}
+
+/** Closing also drops the selection, so the field panel does not take the engine's place. */
+export function closeEnginePanel() {
+  store.enginePanel.value = false;
+  store.selectedKey.value = null;
 }
 
 let pickSeq = 0;
@@ -581,6 +602,7 @@ export function openRuleEditor(id: number | null, fieldId?: string) {
   store.assist.value = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
   store.ruleErrors.value = [];
   store.selectedKey.value = null;
+  store.enginePanel.value = false;
   if (rule) store.ruleId.value = rule.id;
 }
 
@@ -750,6 +772,7 @@ export function openSchemaFabry() {
   if (store.ruleEditor.value || store.hookEditor.value) return; // the user kept unsaved work open
   store.schemaFabry.value = { ...store.schemaFabry.value, open: true };
   store.selectedKey.value = null;
+  store.enginePanel.value = false;
 }
 
 export function closeSchemaFabry() {
@@ -876,6 +899,7 @@ export function openHookEditor(id: number) {
   store.hookErrors.value = [];
   store.hookAssist.value = IDLE_ASSIST;
   store.selectedKey.value = null;
+  store.enginePanel.value = false;
 }
 
 export function updateHookDraft(text: string) {
@@ -1057,6 +1081,7 @@ export function openValidationPanel(tab: 'rules' | 'provenance' = 'rules') {
   store.hookEditor.value = null;
   store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
   store.selectedKey.value = null;
+  store.enginePanel.value = false;
   store.validationPanel.value = tab;
 }
 

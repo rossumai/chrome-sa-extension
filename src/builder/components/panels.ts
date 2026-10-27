@@ -8,6 +8,7 @@ import {
   hookEditor,
   selectedKey,
   codeView,
+  enginePanel,
 } from '../store.js';
 
 export const navDrawer = signal(false);
@@ -19,6 +20,7 @@ export const panelOpen = computed(
     !!ruleEditor.value ||
     !!hookEditor.value ||
     !!codeView.value ||
+    enginePanel.value ||
     selectedKey.value != null,
 );
 

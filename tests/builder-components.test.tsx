@@ -101,6 +101,7 @@ beforeEach(() => {
   navDrawer.value = false;
   store.engineState.value = null;
   store.codeView.value = null;
+  store.enginePanel.value = false;
   store.engineCatalog.value = [];
   panelWide.value = false;
   root = document.createElement('div');
@@ -1513,6 +1514,97 @@ describe('Builder engine', () => {
       store.selectedKey.value = null; // the AI column shows again once the panel closes
     });
     expect(ai('doc_id')).toBe('seeded');
+  });
+
+  const panel = () => root.querySelector('[data-panel="engine"]') as HTMLElement | null;
+  const pickerValueIn = (el: HTMLElement) =>
+    (el.querySelector('[data-picker="engine-seed"]') as HTMLElement).dataset.value;
+  const pickInRow = (id: string, v: string) => {
+    act(() => {
+      (row(id).querySelector('[data-picker="engine-seed"] input') as HTMLInputElement).focus();
+    });
+    act(() => {
+      row(id)
+        .querySelector(`[data-option="${v}"]`)!
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    });
+  };
+
+  it('a click on an AI cell opens the engine panel on extracted fields only', () => {
+    custom();
+    act(() => {
+      apply(setAttr(store.work.value, keyOf('vendor'), ['ui_configuration'], { type: 'formula' }));
+    });
+    act(() => {
+      (row('doc_id').querySelector('[data-action="open-engine"]') as HTMLElement).click();
+    });
+    expect(panel()!.textContent).toContain('Engine · Inv engine (5)');
+    expect(store.selectedKey.value).toBe(keyOf('doc_id'));
+    expect(panel()!.querySelector('[data-extraction="seeded"]')).not.toBeNull();
+    expect(row('vendor')).toBeNull(); // a formula field: nothing to extract
+    expect(row('item_desc')).not.toBeNull();
+    // The AI column stays while the panel is open, as each row's seed picker.
+    expect(pickerValueIn(row('doc_id'))).toBe('document_id');
+  });
+
+  it('a seed picked in the grid is one undoable edit that Save writes first', () => {
+    custom();
+    act(() => {
+      (root.querySelector('[data-action="toggle-engine"]') as HTMLElement).click();
+    });
+    pickInRow('item_desc', 'table_column_description');
+    expect(row('item_desc').dataset.status).toBe('edited');
+    expect(panel()!.querySelector('[data-engine-save]')!.textContent).toContain('item_desc');
+    expect(
+      store.enginePlanNow.value!.create.find((c) => c.name === 'item_desc')!.pre_trained_field_id,
+    ).toBe('table_column_description');
+    act(() => {
+      (root.querySelector('[data-action="undo"]') as HTMLElement).click();
+    });
+    expect(pickerValueIn(row('item_desc'))).toBe('');
+  });
+
+  it('shows the settings read-only and warns when the use case extracts no tables', () => {
+    custom();
+    act(() => {
+      store.queues.value = [
+        { id: 77, name: 'Training', url: 'https://x/api/v1/queues/77' },
+        ...store.queues.value,
+      ];
+      store.engineState.value = {
+        ...store.engineState.value!,
+        engine: {
+          ...store.engineState.value!.engine,
+          settings: { use_case: 'generic_ap' },
+          training_queues: ['https://x/api/v1/queues/77'],
+        },
+      };
+      store.enginePanel.value = true;
+    });
+    const settings = panel()!.querySelector('[data-engine-settings]')!.textContent;
+    expect(settings).toContain('Use case generic_ap');
+    expect(settings).toContain('Learns from: Training (77)');
+    expect(panel()!.querySelector('[data-engine-warning="use-case"]')!.textContent).toContain(
+      'its 1 table column stays empty',
+    );
+    expect(panel()!.querySelector('[data-engine-unused]')!.textContent).toContain('unused_f');
+  });
+
+  it('Esc closes it without opening the field panel; the badge toggles it', () => {
+    custom();
+    act(() => {
+      (row('doc_id').querySelector('[data-action="open-engine"]') as HTMLElement).click();
+    });
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(panel()).toBeNull();
+    expect(root.querySelector('[data-panel="field"]')).toBeNull();
+    const badge = root.querySelector('[data-action="toggle-engine"]') as HTMLElement;
+    act(() => badge.click());
+    expect(badge.getAttribute('aria-pressed')).toBe('true');
+    act(() => badge.click());
+    expect(panel()).toBeNull();
   });
 
   it('on the generic engine, shows AI fields and adds one from the catalog', () => {

@@ -86,6 +86,10 @@ export const engineChanges = computed(() => {
   const p = enginePlanNow.value;
   return p ? p.create.length + p.patch.length : 0;
 });
+// The engine panel (custom engine only): the grid shows only extracted fields, each with its
+// seed picker in the AI column.
+export const enginePanel = signal(false);
+export const engineMode = computed(() => enginePanel.value && engineState.value?.kind === 'custom');
 
 export const selectedQueue = computed(
   () => queues.value.find((q) => q.id === selectedQueueId.value) || null,

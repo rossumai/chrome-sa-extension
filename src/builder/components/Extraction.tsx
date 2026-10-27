@@ -23,6 +23,29 @@ function catalogOptions(node: Node) {
     .map((c) => ({ value: String(c.name), label: `${c.name} · ${c.label ?? ''}` }));
 }
 
+const NO_SEED = 'none — learns from documents';
+
+/** A datapoint's catalog seed on a custom engine; in the field panel and the engine mode grid. */
+export function SeedPicker({ node }: { node: Node }) {
+  const st = engineStatus(node, engineFieldsByName.value);
+  const pick = (v: string) => {
+    const seed = v || null;
+    // Back to what the engine field already has: drop the staged edit, so the row is clean.
+    if (st.field && (st.field.pre_trained_field_id ?? null) === seed) {
+      edit(node, ['__engine'], undefined);
+    } else edit(node, ['__engine', 'pre_trained_field_id'], seed);
+  };
+  return (
+    <SearchPicker
+      picker="engine-seed"
+      value={st.seed ?? ''}
+      placeholder={NO_SEED}
+      options={[{ value: '', label: NO_SEED }, ...catalogOptions(node)]}
+      onPick={pick}
+    />
+  );
+}
+
 // The field panel's Extraction section. Generic engine: the AI fields (children, the
 // rir_field_names box) plus a catalog picker. Custom engine: the engine field and its seed.
 export default function Extraction({
@@ -71,12 +94,6 @@ export default function Extraction({
   const field = st.field;
   const oldName = renamedFrom(base.value, node, byName);
   const rir: string[] = Array.isArray(node.rir_field_names) ? node.rir_field_names : [];
-  const pickSeed = (v: string) => {
-    const seed = v || null;
-    // Back to what the engine field already has: drop the staged edit, so the row is clean.
-    if (field && (field.pre_trained_field_id ?? null) === seed) edit(node, ['__engine'], undefined);
-    else edit(node, ['__engine', 'pre_trained_field_id'], seed);
-  };
   return (
     <div class={s.field} data-extraction={st.state}>
       <span class={s.fieldLabel}>
@@ -93,13 +110,7 @@ export default function Extraction({
         </div>
       )}
       <span class={s.fieldLabel}>Catalog seed</span>
-      <SearchPicker
-        picker="engine-seed"
-        value={st.seed ?? ''}
-        placeholder="none — learns from documents"
-        options={[{ value: '', label: 'none — learns from documents' }, ...catalogOptions(node)]}
-        onPick={pickSeed}
-      />
+      <SeedPicker node={node} />
       {oldName && (
         <div class={s.warn}>
           Renamed from {oldName}: Save creates a new engine field. What {oldName} learned stays with

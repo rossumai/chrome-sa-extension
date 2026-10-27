@@ -1421,6 +1421,54 @@
   vertical-align: middle;
 }
 
+.aiBtn {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.engineBadge.aiBtn {
+  border: 1px solid var(--border);
+  font-size: 11px;
+  background: none;
+}
+
+.engineBadge[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Engine mode: the seed picker fills the AI cell; a left bar shows the state. The cell must
+   not clip, or the picker's list is cut off at the cell's edge. */
+.grid td:has(> .aiPick) {
+  overflow: visible;
+}
+
+.aiPick {
+  display: flex;
+  padding-left: 4px;
+}
+
+.aiPick .searchPick,
+.aiPick .input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.aiPick[data-ai='seeded'] {
+  box-shadow: inset 3px 0 var(--success-fg);
+}
+
+.aiPick[data-ai='learning'] {
+  box-shadow: inset 3px 0 var(--info-fg);
+}
+
+.aiPick[data-ai='new'] {
+  box-shadow: inset 3px 0 var(--warning-fg);
+}
+
 .ai_seeded {
   background: var(--success-bg);
   color: var(--success-fg);

@@ -13,9 +13,18 @@ import {
   schemaFabry,
   engineState,
   engineChanges,
+  enginePanel,
   work,
 } from '../store.js';
-import { undoChange, redoChange, discard, renameSchema, openSchemaFabry } from '../index.jsx';
+import {
+  undoChange,
+  redoChange,
+  discard,
+  renameSchema,
+  openSchemaFabry,
+  openEnginePanel,
+  closeEnginePanel,
+} from '../index.jsx';
 import EditableCell from './EditableCell.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
 import { navDrawer } from './panels.js';
@@ -39,7 +48,8 @@ export function summaryText(
     .join(' · ');
 }
 
-// The queue's extraction engine; for a custom one, its settings and unused fields on hover.
+// The queue's extraction engine; for a custom one, its settings and unused fields on hover and
+// a click opens the engine panel.
 function EngineBadge() {
   const es = engineState.value;
   if (!es || es.kind === 'none') return null;
@@ -52,10 +62,14 @@ function EngineBadge() {
   }
   const e = es.engine;
   const unused = e ? unusedEngineFields(work.value, es.fields) : [];
+  const open = enginePanel.value;
   return (
-    <span
-      class={s.engineBadge + (es.error ? ' ' + s.warn : '')}
+    <button
+      type="button"
+      class={s.engineBadge + ' ' + s.aiBtn + (es.error ? ' ' + s.warn : '')}
       data-engine="custom"
+      data-action="toggle-engine"
+      aria-pressed={open ? 'true' : 'false'}
       title={
         e
           ? [
@@ -63,14 +77,16 @@ function EngineBadge() {
               `learning: ${e.learning_enabled ? 'on' : 'off'}`,
               `${es.fields.length} engine fields`,
               unused.length ? `not in this schema: ${unused.map((f) => f.name).join(', ')}` : '',
+              open ? 'Click to close the engine panel' : 'Click to edit the engine fields',
             ]
               .filter(Boolean)
               .join('\n')
           : (es.error ?? '')
       }
+      onClick={() => (open ? closeEnginePanel() : openEnginePanel())}
     >
       {e ? `Engine: ${e.name} (${e.id})` : es.error ? 'Engine did not load' : 'Engine…'}
-    </span>
+    </button>
   );
 }
 

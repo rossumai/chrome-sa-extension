@@ -28,9 +28,10 @@ import {
   engineFieldsByName,
   fieldCodeHooks,
   codeView,
+  engineMode,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
-import { apply, openRuleEditor, openHookEditor, openCodeView } from '../index.jsx';
+import { apply, openRuleEditor, openHookEditor, openCodeView, openEnginePanel } from '../index.jsx';
 import {
   setAttr,
   setDeleted,
@@ -51,7 +52,8 @@ import EditableCell from './EditableCell.jsx';
 import Icon, { type IconName } from './icons.jsx';
 import type { ActionMark } from '../rules.js';
 import { panelOpen, panelWide } from './panels.js';
-import { isExtracted, engineStatus } from '../engine.js';
+import { isExtracted, engineStatus, extractedFields } from '../engine.js';
+import { SeedPicker } from './Extraction.jsx';
 import { fitColumns, WIDTHS, LABEL_MIN } from './columnFit.js';
 import s from './Builder.module.css';
 
@@ -433,7 +435,8 @@ function HookBadges({ fieldId }: { fieldId: string }) {
 }
 
 // What the engine extracts into this field. Generic engine: its AI fields (rir_field_names).
-// Custom engine: the engine field's state (see engine.ts), red when the API would reject it.
+// Custom engine: the engine field's state (see engine.ts), red when the API would reject it;
+// a click opens the engine panel, where the cell becomes the seed picker.
 function AiCell({ node }: { node: Node }) {
   const es = engineState.value;
   if (!es || !isExtracted(node)) return null;
@@ -450,19 +453,33 @@ function AiCell({ node }: { node: Node }) {
   if (!es.engine) return null;
   const rejected = (node.rir_field_names?.length ?? 0) > 0 || node.disable_prediction === true;
   const st = engineStatus(node, engineFieldsByName.value);
+  const state = rejected ? 'rejected' : st.state;
+  if (engineMode.value && !rejected) {
+    return (
+      <span class={s.aiPick} data-ai={state} title={`${state}${st.seed ? ` · ${st.seed}` : ''}`}>
+        <SeedPicker node={node} />
+      </span>
+    );
+  }
   return (
-    <span
-      class={s.aiChip + ' ' + (rejected ? s.ai_rejected : s['ai_' + st.state])}
-      data-ai={rejected ? 'rejected' : st.state}
+    <button
+      type="button"
+      class={s.aiChip + ' ' + s.aiBtn + ' ' + s['ai_' + state]}
+      data-ai={state}
+      data-action="open-engine"
       title={
         rejected
-          ? 'The API rejects this on a custom engine: see the field panel'
-          : `${st.state}${st.seed ? ` · catalog seed ${st.seed}` : ''}`
+          ? 'The API rejects this on a custom engine: click to fix it'
+          : `${st.state}${st.seed ? ` · catalog seed ${st.seed}` : ''} · click to edit the engine`
       }
+      onClick={(e) => {
+        e.stopPropagation();
+        openEnginePanel(node.__key);
+      }}
     >
       {rejected ? 'fix' : st.state}
       {!rejected && st.seed ? ` · ${st.seed}` : ''}
-    </span>
+    </button>
   );
 }
 
@@ -762,9 +779,12 @@ function renderNode(
 // Widths come from columnFit for the grid's measured width. While a right panel is
 // open the grid drops the flags (the field inspector has them); a read-only schema (rule or
 // hook mode) also drops the grip and the row actions. Source and Type always stay. A wide
-// panel leaves only ID and the mode's Rule or MDH column (ID and Label when there is none).
+// panel leaves only ID and the mode's Rule, MDH or (engine mode) AI column (ID and Label when
+// there is none).
 const EDITING = ['grip', 'actions'];
 const DETAIL = ['flags', 'ai', 'hooks'];
+// Engine mode makes room on a 13" screen for the AI column's seed pickers.
+const ENGINE_DROPS = ['rules', 'matching'];
 
 const columns = computed(() => {
   const cols = [
@@ -783,11 +803,15 @@ const columns = computed(() => {
     ...(hookRoleById.value ? ['mdh'] : []),
     ...(values.value ? ['value'] : []),
   ].filter(
-    (c) => !(panelOpen.value && DETAIL.includes(c)) && !(schemaLocked.value && EDITING.includes(c)),
+    (c) =>
+      !(panelOpen.value && DETAIL.includes(c) && !(c === 'ai' && engineMode.value)) &&
+      !(engineMode.value && ENGINE_DROPS.includes(c)) &&
+      !(schemaLocked.value && EDITING.includes(c)),
   );
   if (!(panelOpen.value && panelWide.value)) return cols;
-  const mode = cols.some((c) => c === 'rule' || c === 'mdh');
-  return cols.filter((c) => c === 'id' || c === 'rule' || c === 'mdh' || (!mode && c === 'label'));
+  const modeCol = (c: string) => c === 'rule' || c === 'mdh' || (c === 'ai' && engineMode.value);
+  const mode = cols.some(modeCol);
+  return cols.filter((c) => c === 'id' || modeCol(c) || (!mode && c === 'label'));
 });
 
 function on(col: string): boolean {
@@ -881,6 +905,11 @@ export default function Grid() {
         .filter((r) => validation.value!.placed.byField.has(String(r.node.id)))
         .map((r) => r.key),
     );
+    const mine = withAncestors(work.value, keys);
+    show = show ? new Set([...show].filter((k) => mine.has(k))) : mine;
+  }
+  if (engineMode.value) {
+    const keys = new Set(extractedFields(work.value).map((x) => x.node.__key));
     const mine = withAncestors(work.value, keys);
     show = show ? new Set([...show].filter((k) => mine.has(k))) : mine;
   }

@@ -15,6 +15,8 @@ import {
   hookEditor,
   validationPanel,
   codeView,
+  enginePanel,
+  engineMode,
 } from '../store.js';
 import {
   undoChange,
@@ -27,6 +29,7 @@ import {
   closeHookEditor,
   closeValidationPanel,
   closeCodeView,
+  closeEnginePanel,
 } from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
@@ -37,6 +40,7 @@ import HookEditor from './HookEditor.jsx';
 import SchemaFabryPanel from './SchemaFabryPanel.jsx';
 import ValidationPanel from './ValidationPanel.jsx';
 import HookCodeView from './HookCodeView.jsx';
+import EnginePanel from './EnginePanel.jsx';
 import SaveDialog from './SaveDialog.jsx';
 import FilterBar from './FilterBar.jsx';
 import { navDrawer, panelOpen, panelWide, loadPanelWide } from './panels.js';
@@ -65,6 +69,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         else if (ruleEditor.value) closeRuleEditor();
         else if (hookEditor.value) closeHookEditor();
         else if (codeView.value) closeCodeView();
+        else if (enginePanel.value) closeEnginePanel();
         else selectedKey.value = null; // closes the inspector
         return;
       }
@@ -153,6 +158,8 @@ export default function App({ connected }: { connected: boolean | null }) {
                 <HookEditor />
               ) : codeView.value ? (
                 <HookCodeView key={`${codeView.value.hookId}:${codeView.value.fieldId}`} />
+              ) : engineMode.value ? (
+                <EnginePanel />
               ) : (
                 <Inspector />
               )}
