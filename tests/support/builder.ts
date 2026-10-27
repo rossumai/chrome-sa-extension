@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 import { Signal } from '@preact/signals';
 import * as store from '../../src/builder/store.js';
 import * as agentApi from '../../src/agent/agentApi.js';
+import * as api from '../../src/builder/api.js';
 import { flatten } from '../../src/builder/model.js';
 import { emptyDraft } from '../../src/builder/ruleDraft.js';
 
@@ -15,6 +16,36 @@ const initial = Object.values(store)
 /** Put every store signal back to its initial value, so no test inherits another's state. */
 export function resetBuilderStore() {
   for (const [s, v] of initial) s.value = structuredClone(v);
+}
+
+/** Before each test of the glue (src/builder/index.tsx): fresh mocks and store, the defaults
+ *  below, and queues 1 (schema 11) and 2 (schema 22). Needs `vi.mock('../src/builder/api.js')`
+ *  and `vi.mock('../src/agent/agentApi.js')` in the test file. Lists answer empty, the
+ *  annotation and engine-field writes succeed, and a Mr. Fabry chat opens as chat-9. */
+export function resetBuilderGlue() {
+  vi.resetAllMocks();
+  resetBuilderStore();
+  for (const f of [
+    'listRules',
+    'listHooks',
+    'listWorkspaces',
+    'listQueues',
+    'listSchemas',
+    'listEngineFields',
+    'listPreTrainedFields',
+  ] as const) {
+    vi.mocked(api[f]).mockResolvedValue([]);
+  }
+  vi.mocked(api.startAnnotation).mockResolvedValue({});
+  vi.mocked(api.cancelAnnotation).mockResolvedValue({});
+  vi.mocked(api.createEngineField).mockResolvedValue({});
+  vi.mocked(api.patchEngineField).mockResolvedValue({});
+  vi.mocked(api.deleteEngineField).mockResolvedValue(null);
+  vi.mocked(agentApi.createChat).mockResolvedValue('chat-9');
+  store.queues.value = [
+    { id: 1, name: 'A', schema: 'https://x/api/v1/schemas/11' },
+    { id: 2, name: 'B', schema: 'https://x/api/v1/schemas/22' },
+  ];
 }
 
 /** The flattened row of the node with this schema id. */
