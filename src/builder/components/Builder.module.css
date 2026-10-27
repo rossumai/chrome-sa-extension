@@ -46,11 +46,6 @@
   background: var(--warning-bg);
 }
 
-.schemaCrumb {
-  padding: 0 2px;
-  border-radius: 3px;
-}
-
 .navRow {
   display: flex;
   align-items: center;
@@ -181,6 +176,10 @@
   min-width: 120px;
 }
 
+.toolbar > .engineBadge {
+  min-width: 80px;
+}
+
 /* The queue gives way first, so the schema name (and its rename box) stays readable. */
 .crumb > .queueCrumb,
 .crumb > .schemaCrumb {
@@ -196,10 +195,8 @@
 
 .crumb > .schemaCrumb {
   flex: 0 1 auto;
-}
-
-.toolbar > .engineBadge {
-  min-width: 80px;
+  padding: 0 2px;
+  border-radius: 3px;
 }
 
 .crumb {
@@ -390,71 +387,6 @@
   text-decoration: none;
 }
 
-.grip {
-  width: 14px;
-  color: var(--text-secondary);
-  cursor: grab;
-  user-select: none;
-}
-
-.caret {
-  color: var(--text-secondary);
-}
-
-.mono {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 12px;
-}
-
-.dim {
-  color: var(--text-secondary);
-}
-
-.editable {
-  display: inline-block;
-  min-width: 40px;
-  padding: 1px 3px;
-  border-radius: 3px;
-  cursor: text;
-}
-
-.editable:hover {
-  outline: 1px dashed var(--border);
-}
-
-.cellInput {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 1px 4px;
-  border: 1px solid var(--accent);
-  border-radius: 3px;
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font: inherit;
-}
-
-.select {
-  max-width: 100%;
-  padding: 1px 2px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font: inherit;
-  font-size: 12px;
-}
-
-.readonly {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.kind {
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
 .flag {
   display: inline-flex;
   align-items: center;
@@ -480,11 +412,6 @@
   opacity: 1;
 }
 
-.actions {
-  opacity: 1;
-  text-decoration: none;
-}
-
 .grip {
   width: 14px;
   color: var(--text-secondary);
@@ -550,54 +477,11 @@
   color: var(--text-secondary);
 }
 
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 26px;
-  height: 14px;
-  vertical-align: middle;
-}
-
-.switch input {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.switchTrack {
-  position: absolute;
-  inset: 0;
-  border-radius: 7px;
-  background: var(--border);
-  pointer-events: none;
-  transition: background 0.12s;
-}
-
-.switchTrack::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #fff;
-  transition: left 0.12s;
-}
-
-.switch input:checked + .switchTrack {
-  background: var(--accent);
-}
-
-.switch input:checked + .switchTrack::after {
-  left: 14px;
-}
-
 .actions {
   width: 60px;
   text-align: right;
+  opacity: 1;
+  text-decoration: none;
 }
 
 .iconBtn {
@@ -872,13 +756,6 @@
   width: 200px;
 }
 
-.barGap {
-  width: 1px;
-  align-self: stretch;
-  margin: 0 6px;
-  background: var(--border);
-}
-
 .navTop {
   display: flex;
   gap: 4px;
@@ -910,6 +787,7 @@
   font-weight: 700;
   color: var(--bg-card); /* white on violet in light mode, dark on the lighter violet in dark */
   background: var(--mdh-special-bidi);
+  white-space: nowrap;
 }
 
 .ruleHead {
@@ -1106,10 +984,6 @@
 .grid td[data-col='rule'] {
   white-space: normal;
   text-overflow: clip;
-}
-
-.ruleBadge {
-  white-space: nowrap;
 }
 
 .annoPick {
