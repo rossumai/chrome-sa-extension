@@ -10,6 +10,7 @@ import {
   withKeys,
   findByKey,
   mergeAttrs,
+  setAttr,
   localErrors,
   stripForSave,
   rowStatus,
@@ -247,6 +248,11 @@ export function apply(next: Node[]) {
     ...store.history.value.present,
     content: next,
   });
+}
+
+/** One attribute of one row, as one edit. */
+export function editAttr(key: string, path: string[], value: unknown) {
+  apply(setAttr(store.work.value, key, path, value));
 }
 
 /** Stage a new name for the open schema; it is sent with the next Save. */

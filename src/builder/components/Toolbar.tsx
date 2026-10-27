@@ -31,22 +31,8 @@ import { navDrawer } from './panels.js';
 import { unusedEngineFields } from '../engine.js';
 import Icon from './icons.jsx';
 import { canUndo, canRedo } from '../history.js';
+import { summaryText } from '../model.js';
 import s from './Builder.module.css';
-
-export function summaryText(
-  x: { added: number; edited: number; deleted: number; moved: number },
-  renamed = false,
-): string {
-  return [
-    renamed && 'renamed',
-    x.edited && `${x.edited} edited`,
-    x.added && `${x.added} new`,
-    x.deleted && `${x.deleted} deleted`,
-    x.moved && `${x.moved} moved`,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-}
 
 // The queue's extraction engine; for a custom one, its settings and unused fields on hover and
 // a click opens the engine panel.

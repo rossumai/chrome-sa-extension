@@ -12,6 +12,7 @@ import {
   engineFieldUsers,
   otherEngineQueues,
   isHiddenCaptured,
+  isRejected,
 } from '../src/builder/engine.js';
 
 const schema = () =>
@@ -166,6 +167,15 @@ describe('isHiddenCaptured', () => {
       isHiddenCaptured(dp('a', { hidden: true, ui_configuration: { type: 'formula' } }) as any),
     ).toBe(false);
     expect(isHiddenCaptured(dp('a') as any)).toBe(false);
+  });
+});
+
+describe('isRejected', () => {
+  it('is a field with AI fields or prediction disabled', () => {
+    expect(isRejected(dp('a', { rir_field_names: ['x'] }) as any)).toBe(true);
+    expect(isRejected(dp('a', { disable_prediction: true }) as any)).toBe(true);
+    expect(isRejected(dp('a', { rir_field_names: [] }) as any)).toBe(false);
+    expect(isRejected(dp('a') as any)).toBe(false);
   });
 });
 

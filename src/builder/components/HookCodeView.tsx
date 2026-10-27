@@ -105,7 +105,6 @@ export default function HookCodeView() {
           name="hook-view"
           value={tab === 'code' ? text.code : text.settings}
           language={tab === 'code' ? 'python' : 'json'}
-          onCommit={() => {}}
           expanded
           readOnly
           handleRef={handle}

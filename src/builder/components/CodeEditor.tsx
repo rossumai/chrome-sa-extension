@@ -74,7 +74,8 @@ export default function CodeEditor({
   readOnly = false,
 }: {
   value: string;
-  onCommit: (v: string) => void;
+  /** Not for a read-only view. */
+  onCommit?: (v: string) => void;
   name: string;
   expanded?: boolean;
   onToggleExpand?: () => void;
@@ -109,7 +110,7 @@ export default function CodeEditor({
           EditorView.domEventHandlers({
             blur: (_e, ed) => {
               const text = ed.state.doc.toString();
-              if (text !== value) onCommit(text);
+              if (text !== value) onCommit?.(text);
             },
           }),
         ],
@@ -149,7 +150,7 @@ export default function CodeEditor({
       return;
     }
     setError(null);
-    if (r.text !== value) onCommit(r.text);
+    if (r.text !== value) onCommit?.(r.text);
   };
 
   return (

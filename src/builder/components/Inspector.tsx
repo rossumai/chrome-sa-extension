@@ -1,8 +1,8 @@
-import { h, Fragment } from 'preact';
+import { h, Fragment, type ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { work, selectedKey, fieldAssist, type AssistState } from '../store.js';
-import { apply, askFieldAssistant } from '../index.jsx';
-import { setAttr, findByKey, type Node } from '../model.js';
+import { work, selectedKey, fieldAssist, IDLE_ASSIST } from '../store.js';
+import { editAttr, askFieldAssistant } from '../index.jsx';
+import { findByKey, type Node } from '../model.js';
 import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
 import FieldLinks from './FieldLinks.jsx';
@@ -13,10 +13,6 @@ import s from './Builder.module.css';
 
 function get(node: Node, path: string[]): any {
   return path.reduce((o, k) => (o == null ? undefined : o[k]), node as any);
-}
-
-function edit(node: Node, path: string[], value: unknown) {
-  apply(setAttr(work.value, node.__key, path, value));
 }
 
 // Inputs commit on change (blur for text), so one finished edit = one history entry.
@@ -34,7 +30,7 @@ function Text({
   const v = get(node, path);
   const commit = (raw: string) => {
     const next = raw === '' ? undefined : raw;
-    if (next !== v) edit(node, path, next);
+    if (next !== v) editAttr(node.__key, path, next);
   };
   return (
     <label class={s.field}>
@@ -73,7 +69,7 @@ function Num({ node, path, label }: { node: Node; path: string[]; label: string 
         onBlur={(e) => {
           const raw = (e.currentTarget as HTMLInputElement).value;
           const next = raw === '' ? undefined : Number(raw);
-          if (next !== v) edit(node, path, next);
+          if (next !== v) editAttr(node.__key, path, next);
         }}
       />
     </label>
@@ -86,7 +82,7 @@ function Bool({ node, path, label }: { node: Node; path: string[]; label: string
       <input
         type="checkbox"
         checked={!!get(node, path)}
-        onChange={(e) => edit(node, path, (e.currentTarget as HTMLInputElement).checked)}
+        onChange={(e) => editAttr(node.__key, path, (e.currentTarget as HTMLInputElement).checked)}
       />
       {label}
     </label>
@@ -112,7 +108,7 @@ function Pick({
         class={s.select}
         value={v ?? ''}
         onChange={(e) =>
-          edit(node, path, (e.currentTarget as HTMLSelectElement).value || undefined)
+          editAttr(node.__key, path, (e.currentTarget as HTMLSelectElement).value || undefined)
         }
       >
         <option value="">(not set)</option>
@@ -151,7 +147,7 @@ function List({
             .split(lines ? '\n' : ',')
             .map((x) => x.trim())
             .filter(Boolean);
-          if (JSON.stringify(next) !== JSON.stringify(v)) edit(node, path, next);
+          if (JSON.stringify(next) !== JSON.stringify(v)) editAttr(node.__key, path, next);
         }}
       />
     </label>
@@ -160,7 +156,7 @@ function List({
 
 function Options({ node }: { node: Node }) {
   const opts: { value: string; label: string }[] = Array.isArray(node.options) ? node.options : [];
-  const set = (next: { value: string; label: string }[]) => edit(node, ['options'], next);
+  const set = (next: { value: string; label: string }[]) => editAttr(node.__key, ['options'], next);
   const change = (i: number, k: 'value' | 'label', val: string) => {
     if (opts[i][k] === val) return;
     set(opts.map((o, j) => (j === i ? { ...o, [k]: val } : o)));
@@ -237,14 +233,12 @@ function ReadOnlyJson({ label, value }: { label: string; value: unknown }) {
   );
 }
 
-const IDLE: AssistState = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
-
 export default function Inspector() {
   const [expanded, setExpanded] = useState(false);
   const key = selectedKey.value;
   useEffect(() => setExpanded(false), [key]); // a new selection starts collapsed
   const node = key ? findByKey(work.value, key) : null;
-  const shell = (children: any, fill = false) => (
+  const shell = (children: ComponentChildren, fill = false) => (
     <aside
       class={s.inspector + (fill ? ' ' + s.inspectorFill : '')}
       data-expanded={fill ? 'true' : undefined}
@@ -263,7 +257,7 @@ export default function Inspector() {
   const askBox = (
     <AskFabry
       key={`fabry:${node.__key}`}
-      state={fa.forKey === node.__key ? fa : IDLE}
+      state={fa.forKey === node.__key ? fa : IDLE_ASSIST}
       onAsk={(text) => askFieldAssistant(node.__key, text)}
       placeholder={
         src === 'formula'
@@ -297,7 +291,7 @@ export default function Inspector() {
         key={node.__key + ':formula:' + String(node.formula ?? '')}
         name="formula"
         value={String(node.formula ?? '')}
-        onCommit={(v) => edit(node, ['formula'], v === '' ? undefined : v)}
+        onCommit={(v) => editAttr(node.__key, ['formula'], v === '' ? undefined : v)}
         expanded={fill}
         onToggleExpand={() => setExpanded(!fill)}
       />
@@ -328,7 +322,7 @@ export default function Inspector() {
             type="button"
             class="btn-link"
             data-action="show-field"
-            onClick={() => edit(node, ['hidden'], false)}
+            onClick={() => editAttr(node.__key, ['hidden'], false)}
           >
             Make it visible
           </button>

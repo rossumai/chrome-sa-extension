@@ -1,7 +1,7 @@
 import { h, Fragment, type ComponentChildren } from 'preact';
 import { work, base, engineState, engineCatalog, engineFieldsByName } from '../store.js';
-import { apply } from '../index.jsx';
-import { setAttr, type Node } from '../model.js';
+import { editAttr } from '../index.jsx';
+import type { Node } from '../model.js';
 import { isExtracted, engineStatus, isTabular, renamedFrom } from '../engine.js';
 import SearchPicker from './SearchPicker.jsx';
 import s from './Builder.module.css';
@@ -11,10 +11,6 @@ const STATE_TEXT = {
   learning: "No catalog seed: it learns from confirmed documents in the engine's training queues.",
   new: 'No engine field yet: Save creates it before it saves the schema.',
 };
-
-function edit(node: Node, path: string[], value: unknown) {
-  apply(setAttr(work.value, node.__key, path, value));
-}
 
 function catalogOptions(node: Node) {
   const tabular = isTabular(work.value, node.__key);
@@ -32,8 +28,8 @@ export function SeedPicker({ node }: { node: Node }) {
     const seed = v || null;
     // Back to what the engine field already has: drop the staged edit, so the row is clean.
     if (st.field && (st.field.pre_trained_field_id ?? null) === seed) {
-      edit(node, ['__engine'], undefined);
-    } else edit(node, ['__engine', 'pre_trained_field_id'], seed);
+      editAttr(node.__key, ['__engine'], undefined);
+    } else editAttr(node.__key, ['__engine', 'pre_trained_field_id'], seed);
   };
   return (
     <SearchPicker
@@ -54,7 +50,7 @@ export default function Extraction({
   label,
 }: {
   node: Node;
-  children: ComponentChildren;
+  children?: ComponentChildren;
   /** The section's heading; the field panel names the engine, the engine panel the field. */
   label?: ComponentChildren;
 }) {
@@ -70,7 +66,7 @@ export default function Extraction({
             value=""
             placeholder="+ AI field from the catalog"
             options={catalogOptions(node).filter((o) => !names.includes(o.value))}
-            onPick={(v) => edit(node, ['rir_field_names'], [...names, v])}
+            onPick={(v) => editAttr(node.__key, ['rir_field_names'], [...names, v])}
           />
         )}
       </Fragment>
@@ -127,7 +123,7 @@ export default function Extraction({
             type="button"
             class="btn-link"
             data-action="clear-rir"
-            onClick={() => edit(node, ['rir_field_names'], [])}
+            onClick={() => editAttr(node.__key, ['rir_field_names'], [])}
           >
             Clear
           </button>
@@ -140,7 +136,7 @@ export default function Extraction({
             type="button"
             class="btn-link"
             data-action="enable-prediction"
-            onClick={() => edit(node, ['disable_prediction'], undefined)}
+            onClick={() => editAttr(node.__key, ['disable_prediction'], undefined)}
           >
             Turn off
           </button>

@@ -64,6 +64,11 @@ export function isHiddenCaptured(node: Node): boolean {
   );
 }
 
+/** What the API rejects on a custom engine: AI fields set, or prediction disabled. */
+export function isRejected(node: Node): boolean {
+  return (node.rir_field_names?.length ?? 0) > 0 || node.disable_prediction === true;
+}
+
 export type EngineStatus = {
   /** seeded: has a catalog seed; learning: no seed, learns from confirmed documents; new: no
    *  engine field yet — Save creates it (seeded or learning by `seed`). */

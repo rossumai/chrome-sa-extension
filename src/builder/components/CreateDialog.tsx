@@ -1,4 +1,4 @@
-import { h, Fragment } from 'preact';
+import { h, Fragment, type ComponentChildren } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { openModal, closeModal, ModalBody, ModalField, ModalActions } from '../../ui/Modal.jsx';
 import { schema, schemas, saving } from '../store.js';
@@ -53,7 +53,7 @@ export default function CreateDialog({ target }: { target: CreateTarget }) {
     if (ok) closeModal();
   };
 
-  const radio = (value: NewQueue['mode'], label: any, disabled = false) => (
+  const radio = (value: NewQueue['mode'], label: ComponentChildren, disabled = false) => (
     <label class={s.checkField}>
       <input
         type="radio"

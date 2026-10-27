@@ -374,6 +374,22 @@ export function changeSummary(
   return s;
 }
 
+/** The change summary as one line ("2 edited · 1 new"), "renamed" first. */
+export function summaryText(
+  x: { added: number; edited: number; deleted: number; moved: number },
+  renamed = false,
+): string {
+  return [
+    renamed && 'renamed',
+    x.edited && `${x.edited} edited`,
+    x.added && `${x.added} new`,
+    x.deleted && `${x.deleted} deleted`,
+    x.moved && `${x.moved} moved`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 /**
  * Where a drag of `draggedKey` dropped on `targetKey` lands, or null when the drop is not
  * allowed. Sections reorder among sections; header fields and tables move within or across

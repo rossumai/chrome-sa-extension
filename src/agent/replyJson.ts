@@ -1,5 +1,5 @@
 // src/agent/replyJson.ts
-// Finding the JSON an agent reply holds. Pure.
+// Finding the JSON an agent reply holds, and reading a JSON object. Pure.
 
 // The first complete brace-balanced {…} object in the text (string-aware), so a
 // trailing '}' in prose after the JSON can't make extraction overshoot.
@@ -25,4 +25,21 @@ export function firstJsonObject(text: string): string | null {
     }
   }
   return null;
+}
+
+/** Text as a JSON object (not an array or null): the value, or the parse error's message
+ *  (null when it parsed but is not an object). */
+export function parseJsonObject(
+  text: string,
+): { ok: true; value: Record<string, any> } | { ok: false; syntaxError: string | null } {
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch (err: any) {
+    return { ok: false, syntaxError: err?.message || 'parse error' };
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return { ok: false, syntaxError: null };
+  }
+  return { ok: true, value: value as Record<string, any> };
 }

@@ -1,4 +1,4 @@
-import { h, Fragment } from 'preact';
+import { h, Fragment, type ComponentChildren } from 'preact';
 import { signal, computed } from '@preact/signals';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import {
@@ -35,6 +35,7 @@ import {
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
 import {
   apply,
+  editAttr,
   openRuleEditor,
   openHookEditor,
   openCodeView,
@@ -67,6 +68,7 @@ import {
   engineStatus,
   extractedFields,
   isHiddenCaptured,
+  isRejected,
   HIDDEN_CAPTURED,
 } from '../engine.js';
 import { SeedPicker } from './Extraction.jsx';
@@ -74,8 +76,8 @@ import { evalText } from '../ruleEval.js';
 import { fitColumns, WIDTHS, LABEL_MIN } from './columnFit.js';
 import s from './Builder.module.css';
 
-export const TYPES = ['string', 'number', 'date', 'enum', 'button'];
-export const SOURCES = ['captured', 'data', 'manual', 'formula', 'reasoning'];
+const TYPES = ['string', 'number', 'date', 'enum', 'button'];
+const SOURCES = ['captured', 'data', 'manual', 'formula', 'reasoning'];
 
 // The key of a just-added row, whose ID cell opens in edit mode.
 const pendingEdit = signal<string | null>(null);
@@ -85,10 +87,6 @@ function uniqueId(prefix: string): string {
   let i = 1;
   while (ids.has(`${prefix}_${i}`)) i++;
   return `${prefix}_${i}`;
-}
-
-function edit(key: string, path: string[], value: unknown) {
-  apply(setAttr(work.value, key, path, value));
 }
 
 function addFieldTo(parentKey: string) {
@@ -164,7 +162,11 @@ function SourceCell({ node }: { node: Node }) {
       value={src ?? ''}
       onClick={(e) => e.stopPropagation()}
       onChange={(e) =>
-        edit(node.__key, ['ui_configuration', 'type'], (e.currentTarget as HTMLSelectElement).value)
+        editAttr(
+          node.__key,
+          ['ui_configuration', 'type'],
+          (e.currentTarget as HTMLSelectElement).value,
+        )
       }
     >
       {src === undefined && <option value="">(not set)</option>}
@@ -308,7 +310,7 @@ function PickCell({
   optionAttr: string;
   items: PickItem[];
   onPick: (id: number) => void;
-  extra?: any;
+  extra?: ComponentChildren;
 }) {
   const open = pickMenuFor.value === menuKey;
   const wrap = useRef<HTMLSpanElement>(null);
@@ -496,7 +498,7 @@ function AiCell({ node }: { node: Node }) {
     );
   }
   if (!es.engine) return null;
-  const rejected = (node.rir_field_names?.length ?? 0) > 0 || node.disable_prediction === true;
+  const rejected = isRejected(node);
   const st = engineStatus(node, engineFieldsByName.value);
   const state = rejected ? 'rejected' : st.state;
   if (engineMode.value && !rejected) {
@@ -603,7 +605,7 @@ function Row({
             autoEdit={pendingEdit.value === key}
             onCommit={(v) => {
               pendingEdit.value = null;
-              edit(key, ['id'], v.trim());
+              editAttr(key, ['id'], v.trim());
             }}
           />
         )}
@@ -622,7 +624,7 @@ function Row({
           ) : (
             <EditableCell
               value={String(node.label ?? '')}
-              onCommit={(v) => edit(key, ['label'], v)}
+              onCommit={(v) => editAttr(key, ['label'], v)}
             />
           )}
         </td>
@@ -652,7 +654,7 @@ function Row({
                 <FlagButton
                   flag="visible"
                   on={!node.hidden}
-                  onToggle={(v) => edit(key, ['hidden'], !v)}
+                  onToggle={(v) => editAttr(key, ['hidden'], !v)}
                 />
               )}
             </span>
@@ -661,7 +663,7 @@ function Row({
                 <FlagButton
                   flag="export"
                   on={node.can_export !== false}
-                  onToggle={(v) => edit(key, ['can_export'], v)}
+                  onToggle={(v) => editAttr(key, ['can_export'], v)}
                 />
               )}
             </span>
@@ -670,7 +672,7 @@ function Row({
                 <FlagButton
                   flag="required"
                   on={!!node.constraints?.required}
-                  onToggle={(v) => edit(key, ['constraints', 'required'], v)}
+                  onToggle={(v) => editAttr(key, ['constraints', 'required'], v)}
                 />
               )}
             </span>
@@ -868,7 +870,7 @@ function on(col: string): boolean {
   return columns.value.includes(col);
 }
 
-const HEAD: Record<string, any> = {
+const HEAD: Record<string, ComponentChildren> = {
   id: 'ID',
   label: 'Label',
   rules: 'Rules',

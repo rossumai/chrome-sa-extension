@@ -4,7 +4,7 @@
 // agent proposes, the user decides. Injected transport, like src/audit/fabry.ts.
 import { flatten, type Node } from './model.js';
 import { newAcc, foldEvents, replyText } from '../agent/agentStream.js';
-import { firstJsonObject } from '../agent/replyJson.js';
+import { firstJsonObject, parseJsonObject } from '../agent/replyJson.js';
 import { MAX_PROMPT } from '../inspector/promptBudget.js';
 
 export type FieldInfo = { id: string; label: string; type: string; table: string | null };
@@ -58,16 +58,9 @@ export function parseReplyObject(
 ): { ok: true; value: Record<string, any> } | { ok: false; error: string } {
   const raw = extractJson(text);
   if (!raw) return { ok: false, error: errors.none };
-  let value: unknown;
-  try {
-    value = JSON.parse(raw);
-  } catch {
-    return { ok: false, error: errors.invalid };
-  }
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return { ok: false, error: errors.none };
-  }
-  return { ok: true, value: value as Record<string, any> };
+  const r = parseJsonObject(raw);
+  if (r.ok) return r;
+  return { ok: false, error: r.syntaxError != null ? errors.invalid : errors.none };
 }
 
 /**

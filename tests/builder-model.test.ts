@@ -21,6 +21,7 @@ import {
   localErrors,
   rowStatus,
   changeSummary,
+  summaryText,
 } from '../src/builder/model.js';
 import { section, dp, keyOf } from './support/builder.js';
 
@@ -301,6 +302,12 @@ describe('rowStatus / changeSummary', () => {
       deleted: 0,
       moved: 0,
     });
+  });
+
+  it('summaryText lists the non-zero counts, renamed first', () => {
+    const x = { added: 1, edited: 2, deleted: 0, moved: 3 };
+    expect(summaryText(x, true)).toBe('renamed · 2 edited · 1 new · 3 moved');
+    expect(summaryText({ added: 0, edited: 0, deleted: 0, moved: 0 })).toBe('');
   });
 });
 

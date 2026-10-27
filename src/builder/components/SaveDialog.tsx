@@ -11,7 +11,7 @@ import {
 } from '../store.js';
 import { save } from '../index.jsx';
 import type { SaveResult } from '../save.js';
-import { summaryText } from './Toolbar.jsx';
+import { summaryText } from '../model.js';
 import s from './Builder.module.css';
 
 // Opened in the shared modal (title "Save schema"); errors land on the rows and in the banner.

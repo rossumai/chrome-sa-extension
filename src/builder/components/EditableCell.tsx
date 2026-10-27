@@ -9,13 +9,11 @@ export default function EditableCell({
   onCommit,
   mono,
   autoEdit,
-  placeholder,
 }: {
   value: string;
   onCommit: (v: string) => void;
   mono?: boolean;
   autoEdit?: boolean;
-  placeholder?: string;
 }) {
   const [editing, setEditing] = useState(!!autoEdit);
   const done = useRef(false);
@@ -46,7 +44,7 @@ export default function EditableCell({
           setEditing(true);
         }}
       >
-        {value || <span class={s.dim}>{placeholder || '—'}</span>}
+        {value || <span class={s.dim}>—</span>}
       </span>
     );
   }

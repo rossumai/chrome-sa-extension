@@ -13,7 +13,7 @@ import {
 } from '../store.js';
 import { closeEnginePanel, toggleEngineDelete } from '../index.jsx';
 import { flatten } from '../model.js';
-import { extractedFields, engineStatus, unusedEngineFields } from '../engine.js';
+import { extractedFields, engineStatus, unusedEngineFields, isRejected } from '../engine.js';
 import Extraction from './Extraction.jsx';
 import WideButton from './WideButton.jsx';
 import Icon from './icons.jsx';
@@ -162,8 +162,7 @@ export default function EnginePanel() {
   const byName = engineFieldsByName.value;
   const counts: Record<string, number> = { seeded: 0, learning: 0, new: 0, rejected: 0 };
   for (const { node } of extracted) {
-    const rejected = (node.rir_field_names?.length ?? 0) > 0 || node.disable_prediction === true;
-    counts[rejected ? 'rejected' : engineStatus(node, byName).state]++;
+    counts[isRejected(node) ? 'rejected' : engineStatus(node, byName).state]++;
   }
   const unused = unusedEngineFields(work.value, es.fields);
   const plan = enginePlanNow.value;
@@ -188,9 +187,7 @@ export default function EnginePanel() {
               Selected field · <span class={s.idInLabel}>{sel.id}</span>
             </Fragment>
           }
-        >
-          {null}
-        </Extraction>
+        />
       ) : (
         <div class={s.dim}>Pick a seed in the AI column, or click a row for its details.</div>
       )}
