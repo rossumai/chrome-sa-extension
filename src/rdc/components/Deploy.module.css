@@ -1,0 +1,231 @@
+/* Overview, the work-in-progress note and the source modal. Colours come from the Console tokens. */
+.wrap {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 26px 28px 80px;
+}
+.ov {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 22px;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.panelH {
+  padding: 16px 20px 0;
+}
+.panelH h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.panelB {
+  padding: 14px 20px 20px;
+}
+.muted {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+.src {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 20px;
+}
+.badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #dff3f8;
+  color: #0d5d70;
+  font-weight: 800;
+  font-size: 15px;
+}
+.srcName {
+  font-weight: 700;
+  font-size: 16px;
+}
+.srcMeta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+.srcFoot {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 20px;
+  border-top: 1px dashed var(--border);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  padding: 40px 0 80px;
+}
+.hero h1 {
+  font-size: 34px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0;
+  font-weight: 800;
+}
+.hero p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  max-width: 460px;
+  line-height: 1.6;
+}
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 22px 0 26px;
+  counter-reset: s;
+}
+.steps li {
+  counter-increment: s;
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 10px;
+  padding: 7px 0;
+  font-size: 14px;
+}
+.steps li::before {
+  content: counter(s);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--info-bg);
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+}
+.note {
+  display: flex;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  line-height: 1.45;
+  background: var(--info-bg);
+  color: var(--info-fg);
+}
+.wip {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border: 1px solid var(--warning-border);
+  flex-direction: column;
+  gap: 4px;
+}
+.wipBadge {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 20px;
+  background: var(--warning-fg);
+  color: var(--warning-bg);
+}
+.err {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border: 1px solid var(--danger-border);
+}
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 70px 16px;
+  background: rgba(15, 17, 35, 0.5);
+  backdrop-filter: blur(2px);
+}
+.modal {
+  width: 540px;
+  max-width: 100%;
+  background: var(--bg-card);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.mh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 8px 20px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  font-size: 16px;
+  font-weight: 700;
+}
+.mb {
+  padding: 14px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mf {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  background: var(--bg-base);
+}
+.fld label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.fld input,
+.fld select {
+  font: 500 14px var(--font-sans);
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  width: 100%;
+  box-sizing: border-box;
+}
+.fld small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 4px;
+}
+@media (max-width: 900px) {
+  .ov,
+  .hero {
+    grid-template-columns: 1fr;
+  }
+}
