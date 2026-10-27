@@ -6,7 +6,8 @@ all solution architects during customer onboarding. It adds three things:
 - **Overlays in the Rossum, NetSuite and Coupa web apps.** You see the IDs and internal names
   you need for configuration (schema IDs, resource IDs, API field names) directly on the page.
 - **The Rossum Console**, a separate page with tools for one Rossum organization: Data Storage
-  management, the audit log, an annotation inspector, a chat assistant and a 3D map of the org.
+  management, the audit log, a schema builder, an annotation inspector, a chat assistant and a
+  3D map of the org.
 - **A "Rossum" DevTools panel** that shows the API resource behind the current Rossum page.
 
 Install it from the
@@ -25,7 +26,8 @@ on or off, and on a Rossum tab it has two buttons:
 <img src="./assets/popup.png" width="760" alt="The extension popup on a Rossum tab">
 
 Every feature reads and writes with your own Rossum session. The extension has no server, and
-it changes your organization only when you explicitly save or delete something.
+it changes your organization only when you explicitly create, save, delete or deploy something,
+or revalidate a document in the Builder.
 
 ## Features in the Rossum app
 
@@ -67,8 +69,12 @@ A full-page app with a rail of tools for the organization you opened it from:
 - **Audit Log Viewer.** Browse and filter the organization's audit log.
 - **Builder (beta).** Edit a queue's schema as a grid, together with its rules, MDH matching
   hooks and custom AI engine fields. Pick an annotation to see its values, validation results
-  and the open rule evaluated on it. Changes are staged and undoable until you press Save,
-  which changes your organization.
+  and the open rule evaluated on it. Schema and engine field changes are staged and undoable
+  until you press Save. Other actions change your organization at once: creating a
+  workspace, queue or schema; deleting a queue (in 24 hours, or now and for good) or a schema
+  (Undo recreates it under a new ID until you reload); saving a rule or a hook in its own
+  panel; and Revalidate, which runs the document's validation, hooks included, as a
+  reviewer's edit would.
 - **Inspector.** Explains what happened to one annotation, and why, as a diagnosis report.
 - **Fabry.** A chat assistant over the Rossum Agent API. Chat is read-only.
 - **Galaxy.** The organization's workspaces, queues, hooks, engines and their links as a 3D graph.
