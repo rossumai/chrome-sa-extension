@@ -260,7 +260,7 @@ describe('rdc App', () => {
     expect(root.textContent).toContain('rdc_wasm.js is not in this build');
   });
 
-  it('disables Read both orgs on Connect when rdc is not in the build', async () => {
+  it('blocks Deploy while rdc loads and after it fails', async () => {
     let fail!: (e: Error) => void;
     const loading = new Promise<Rdc>((_r, rej) => (fail = rej));
     mount(<App connected={true} loadRdc={() => loading} fetchOrgs={fetchOrgs} />);
