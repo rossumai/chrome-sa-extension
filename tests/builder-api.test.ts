@@ -79,9 +79,27 @@ describe('builder api', () => {
   });
 
   it('listSchemas pages through all schemas', async () => {
-    fetchMock.mockResolvedValue(jsonRes({ results: [{ id: 1 }], pagination: { next: null } }));
-    await api.listSchemas();
-    expect(fetchMock.mock.calls[0][0]).toBe('https://x.rossum.ai/api/v1/schemas/?page_size=100');
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonRes({ results: [{ id: 1 }], pagination: { next: 'https://x.rossum.ai/s2' } }),
+      )
+      .mockResolvedValueOnce(jsonRes({ results: [{ id: 2 }], pagination: { next: null } }));
+    expect((await api.listSchemas()).map((x) => x.id)).toEqual([1, 2]);
+    expect(fetchMock.mock.calls.map((c: any) => c[0])).toEqual([
+      'https://x.rossum.ai/api/v1/schemas/?page_size=100',
+      'https://x.rossum.ai/s2',
+    ]);
+  });
+
+  it('listEngineFields follows the cursor pages (a top-level next)', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonRes({ results: [{ id: 1 }], next: 'https://x.rossum.ai/c2' }))
+      .mockResolvedValueOnce(jsonRes({ results: [{ id: 2 }], next: null }));
+    expect((await api.listEngineFields(5)).map((x) => x.id)).toEqual([1, 2]);
+    expect(fetchMock.mock.calls.map((c: any) => c[0])).toEqual([
+      'https://x.rossum.ai/api/v1/engine_fields?engine=5',
+      'https://x.rossum.ai/c2',
+    ]);
   });
 
   it('creates a workspace, a schema and a queue with the right bodies', async () => {

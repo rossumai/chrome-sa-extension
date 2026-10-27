@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { saveSchema, mapValidateErrors, landedDiff, type SaveDeps } from '../src/builder/save.js';
 import { withKeys, setAttr, setDeleted, stripForSave } from '../src/builder/model.js';
 import { section, dp, keyOf } from './support/builder.js';
+import { rateLimitError } from '../src/net/rateLimit.js';
 
 function fixture(): any[] {
   return [
@@ -156,12 +157,21 @@ describe('saveSchema', () => {
     expect(r).toEqual({ ok: true, schema: landed, warnings: [] });
   });
 
-  it('lets a 429 propagate', async () => {
-    const err = Object.assign(new Error('slow'), { status: 429 });
-    const d = deps({ validateSchema: vi.fn(async () => Promise.reject(err)) });
+  it('lets a 429 on the PATCH propagate', async () => {
+    const err = rateLimitError({}, 'slow');
+    const d = deps({ patchSchema: vi.fn(async () => Promise.reject(err)) });
     await expect(
       saveSchema({ schemaId: 7, baseModifiedAt: 't0', work: withKeys(fixture()), force: false }, d),
     ).rejects.toBe(err);
+  });
+
+  it('reports any other PATCH failure as the patch stage', async () => {
+    const d = deps({ patchSchema: vi.fn(async () => Promise.reject(new Error('conflict'))) });
+    const r = await saveSchema(
+      { schemaId: 7, baseModifiedAt: 't0', work: withKeys(fixture()), force: false },
+      d,
+    );
+    expect(r).toEqual({ ok: false, stage: 'patch', errors: [{ key: null, message: 'conflict' }] });
   });
 
   it('a failed re-fetch after a successful PATCH still reports success', async () => {
