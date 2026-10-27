@@ -4,6 +4,7 @@ import { Signal } from '@preact/signals';
 import * as store from '../../src/builder/store.js';
 import * as agentApi from '../../src/agent/agentApi.js';
 import { flatten } from '../../src/builder/model.js';
+import { emptyDraft } from '../../src/builder/ruleDraft.js';
 
 // Every writable store signal with its initial value. A computed's prototype is not
 // Signal.prototype, so the filter skips them (they cannot be assigned).
@@ -34,6 +35,17 @@ export const dp = (id: string, extra: any = {}) => ({
   label: id,
   type: 'string',
   ...extra,
+});
+
+/** The rule editor's state: a new, untouched rule unless `over` says otherwise. */
+export const ruleEditorState = (
+  over: Partial<store.RuleEditorState> = {},
+): store.RuleEditorState => ({
+  ruleId: null,
+  base: emptyDraft(),
+  draft: emptyDraft(),
+  fromField: null,
+  ...over,
 });
 
 /** Mr. Fabry answers every message with `text`; the persona preamble gets no answer. Needs

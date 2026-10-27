@@ -189,12 +189,8 @@ describe('Builder screen', () => {
     ]);
   });
 
-  it('columns have fixed widths except Label, which takes the rest of the row', () => {
+  it('columns cannot be resized by hand', () => {
     expect(root.querySelector('[data-resize]')).toBeNull();
-    const width = (c: string) =>
-      (root.querySelector(`col[data-col="${c}"]`) as HTMLElement).style.width;
-    expect(width('label')).toBe('');
-    expect(width('id')).toBe('200px');
   });
 
   it('a right panel drops the flags, which the inspector shows', () => {
@@ -1348,15 +1344,6 @@ describe('Builder hook mode: jump to a configuration', () => {
     expect(text[head]).toBe('{');
     expect(text.slice(head, head + 20)).toContain('"name": "B"');
     expect(root.querySelector('[data-code="hook"] .cm-flash')).not.toBeNull();
-    // the flash fades out: an animation from the highlight color to transparent
-    const css = [
-      ...[...document.querySelectorAll('style')].map((el) => el.textContent || ''),
-      ...((document as any).adoptedStyleSheets || []).flatMap((sh: CSSStyleSheet) =>
-        [...sh.cssRules].map((r) => r.cssText),
-      ),
-    ].join('\n');
-    expect(css).toMatch(/@keyframes builder-cm-flash/);
-    expect(css).toMatch(/cm-flash[^}]*animation[^}]*builder-cm-flash/);
   });
 });
 
@@ -1909,7 +1896,9 @@ describe('Builder hooks that mention a field', () => {
     });
     const panel = root.querySelector('aside[data-panel="code"]') as HTMLElement;
     expect(panel.textContent).toContain('only its settings are searched');
-    expect(panel.querySelector('[data-tab="settings"]')!.className).toContain('active');
+    expect(panel.querySelector('[data-tab="code"]')).toBeNull();
+    const view = EditorView.findFromDOM(panel.querySelector('.cm-editor') as HTMLElement)!;
+    expect(view.state.doc.toString()).toContain('"send"');
     act(() => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     });

@@ -10,7 +10,9 @@ import {
   rowOf,
   fabryReply,
   heldFabryReply,
+  ruleEditorState,
 } from './support/builder.js';
+import { draftFromRule } from '../src/builder/ruleDraft.js';
 
 vi.mock('../src/builder/api.js', () => ({
   getSchema: vi.fn(),
@@ -1205,20 +1207,14 @@ describe('rule evaluation on the picked annotation', () => {
       store.selectedQueueId.value = 3;
       store.annotationId.value = 55;
       store.annotationContent.value = [{ category: 'section', schema_id: 's', children: [] }];
+      const draft = draftFromRule({ name: 'R', trigger_condition: 'field.a > 1' });
       store.rightPanel.value = {
         kind: 'rule',
-        editor: {
+        editor: ruleEditorState({
           ruleId: 40,
-          base: { name: 'R', description: '', enabled: true, trigger_condition: 'x', actions: [] },
-          draft: {
-            name: 'R',
-            description: '',
-            enabled: true,
-            trigger_condition: 'field.a > 1',
-            actions: [],
-          },
-          fromField: null,
-        },
+          base: draftFromRule({ name: 'R', trigger_condition: 'x' }),
+          draft,
+        }),
       };
       vi.mocked(api.evaluateRules).mockResolvedValue({
         condition_values: [[false, true]],
@@ -1234,16 +1230,7 @@ describe('rule evaluation on the picked annotation', () => {
         queue: 'https://x/api/v1/queues/3',
         annotation: 'https://x/api/v1/annotations/55',
         annotation_content: store.annotationContent.value,
-        schema_rules: [
-          {
-            name: 'R',
-            description: '',
-            enabled: true,
-            trigger_condition: 'field.a > 1',
-            actions: [],
-            queues: ['https://x/api/v1/queues/3'],
-          },
-        ],
+        schema_rules: [{ ...draft, queues: ['https://x/api/v1/queues/3'] }],
       });
       expect(store.ruleEval.value).toEqual({
         values: [false, true],
