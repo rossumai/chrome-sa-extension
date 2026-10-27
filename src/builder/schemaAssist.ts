@@ -17,6 +17,7 @@ import {
   newSection,
   nextKey,
   freshKeys,
+  kids,
   type Node,
   type Row,
 } from './model.js';
@@ -34,11 +35,6 @@ function fieldEntry(n: Node): Record<string, unknown> {
   if (n.can_export === false) e.export = false;
   if (typeof n.formula === 'string' && n.formula) e.formula = n.formula;
   return e;
-}
-
-function kids(n: Node): Node[] {
-  const c = n.children;
-  return Array.isArray(c) ? c : c && typeof c === 'object' ? [c] : [];
 }
 
 /** The schema as it is now (staged edits included), compact: sections, fields, tables. */

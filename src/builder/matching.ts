@@ -59,12 +59,14 @@ export function configSummaries(hook: any): ConfigSummary[] {
   }));
 }
 
-/** Per field id: which configurations use it, and how (in / out / both). */
+/** Per field id: which configurations (all, or just `index`) use it, and how (in / out / both). */
 export function fieldConfigs(
   hook: any,
+  index?: number,
 ): Map<string, { index: number; name: string; role: HookRole }[]> {
   const out = new Map<string, { index: number; name: string; role: HookRole }[]>();
   hookConfigs(hook).forEach((cfg, i) => {
+    if (index != null && i !== index) return;
     for (const [id, role] of hookRoles(configRefs(cfg))) {
       out.set(id, [...(out.get(id) || []), { index: i, name: configName(cfg, i), role }]);
     }

@@ -8,7 +8,7 @@
 // Staged engine-field edits live on the schema node as `__engine` (stripped on save), so
 // undo, redo and the row's "edited" mark cover them like any other edit.
 
-import { flatten, type Node } from './model.js';
+import { flatten, kids, type Node } from './model.js';
 
 export type EngineKind = 'custom' | 'generic' | 'dedicated' | 'none';
 
@@ -35,9 +35,7 @@ export function extractedFields(nodes: Node[]): { node: Node; tabular: boolean }
         if (isExtracted(n)) out.push({ node: n, tabular });
         continue;
       }
-      const c = n.children;
-      const kids = Array.isArray(c) ? c : c && typeof c === 'object' ? [c] : [];
-      walk(kids, tabular || n.category === 'multivalue');
+      walk(kids(n), tabular || n.category === 'multivalue');
     }
   };
   walk(nodes, false);

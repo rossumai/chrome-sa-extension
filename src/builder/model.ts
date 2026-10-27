@@ -21,7 +21,7 @@ export type Row = {
 };
 
 /** A multivalue's `children` is ONE object in the API; sections and tuples hold arrays. */
-function kids(n: Node): Node[] {
+export function kids(n: Node): Node[] {
   const c = n.children;
   if (Array.isArray(c)) return c;
   return c && typeof c === 'object' ? [c] : [];

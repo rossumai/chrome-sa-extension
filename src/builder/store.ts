@@ -193,25 +193,20 @@ export type AssistState = {
   reply: string | null; // the raw reply, shown when it held no usable rule
   warnings: string[];
 };
-export const assist = signal<AssistState>({
+/** No chat yet, nothing asked. */
+export const IDLE_ASSIST: AssistState = {
   chatId: null,
   busy: false,
   error: null,
   reply: null,
   warnings: [],
-});
+};
+export const assist = signal<AssistState>(IDLE_ASSIST);
 export const assistRev = signal(0);
 
 // Mr. Fabry in the field inspector: one read-only chat per field (forKey).
 export type FieldAssistState = AssistState & { forKey: string | null };
-export const fieldAssist = signal<FieldAssistState>({
-  forKey: null,
-  chatId: null,
-  busy: false,
-  error: null,
-  reply: null,
-  warnings: [],
-});
+export const fieldAssist = signal<FieldAssistState>({ ...IDLE_ASSIST, forKey: null });
 
 // Mr. Fabry for the whole schema: a panel with the conversation; each answer's changes land
 // as one undoable edit.
@@ -273,13 +268,7 @@ export const hookDirty = computed(() =>
 );
 export const hookErrors = signal<string[]>([]);
 export const hookSaving = signal(false);
-export const hookAssist = signal<AssistState>({
-  chatId: null,
-  busy: false,
-  error: null,
-  reply: null,
-  warnings: [],
-});
+export const hookAssist = signal<AssistState>(IDLE_ASSIST);
 export const hookAssistRev = signal(0);
 
 // The hook as edited: settings parsed from the editor (live) — or the saved settings while
@@ -299,18 +288,9 @@ export const hookRefs = computed(() =>
   hookLive.value ? hookFieldRefs(hookLive.value, hookConfigIndex.value ?? undefined) : null,
 );
 // Per field: the configurations (numbered from 1 in the grid) that use it, and how.
-export const hookFieldConfigs = computed(() => {
-  if (!hookLive.value) return null;
-  const all = fieldConfigs(hookLive.value);
-  const i = hookConfigIndex.value;
-  if (i == null) return all;
-  const out = new Map<string, { index: number; name: string; role: string }[]>();
-  for (const [id, list] of all) {
-    const mine = list.filter((x) => x.index === i);
-    if (mine.length) out.set(id, mine);
-  }
-  return out;
-});
+export const hookFieldConfigs = computed(() =>
+  hookLive.value ? fieldConfigs(hookLive.value, hookConfigIndex.value ?? undefined) : null,
+);
 export const hookFilterIds = computed(() =>
   hookRefs.value ? new Set([...hookRefs.value.inputs, ...hookRefs.value.outputs]) : null,
 );

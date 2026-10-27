@@ -4,7 +4,7 @@
 // are unit-tested. A 429 is thrown through untouched: the caller shows it and the user
 // retries (spec 2026-10-13 §4.3).
 
-import { localErrors, stripForSave, type Node } from './model.js';
+import { localErrors, stripForSave, kids, type Node } from './model.js';
 import { isRateLimited } from '../net/rateLimit.js';
 
 export type RowError = { key: string | null; message: string };
@@ -20,10 +20,7 @@ export type SaveDeps = {
 };
 
 function liveKids(n: Node | undefined): Node[] {
-  if (!n) return [];
-  const c = n.children;
-  const list = Array.isArray(c) ? c : c && typeof c === 'object' ? [c] : [];
-  return list.filter((k) => !k.__deleted);
+  return n ? kids(n).filter((k) => !k.__deleted) : [];
 }
 
 // Flatten an error value (string, list, or nested object of lists) into "path: message".

@@ -114,4 +114,10 @@ describe('per configuration', () => {
     expect([...hookFieldRefs(twoConfigs, 1).inputs]).toEqual(['po']);
     expect([...hookFieldRefs(twoConfigs, 1).outputs].sort()).toEqual(['po_match', 'vendor']);
   });
+
+  it('fieldConfigs can be limited to one configuration', () => {
+    const m = fieldConfigs(twoConfigs, 1);
+    expect(m.has('vat')).toBe(false);
+    expect(m.get('vendor')).toEqual([{ index: 1, name: 'Configuration 2', role: 'out' }]);
+  });
 });

@@ -49,6 +49,7 @@ import {
   freshKeys,
   nextKey,
   flatten,
+  kids,
   type Node,
 } from '../model.js';
 import EditableCell from './EditableCell.jsx';
@@ -72,11 +73,6 @@ export const SOURCES = ['captured', 'data', 'manual', 'formula', 'reasoning'];
 
 // The key of a just-added row, whose ID cell opens in edit mode.
 const pendingEdit = signal<string | null>(null);
-
-function kids(n: Node): Node[] {
-  const c = n.children;
-  return Array.isArray(c) ? c : c && typeof c === 'object' ? [c] : [];
-}
 
 function uniqueId(prefix: string): string {
   const ids = new Set(flatten(work.value).map((r) => r.node.id));

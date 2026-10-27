@@ -7,7 +7,8 @@
 export type RuleRefs = { condition: Set<string>; actions: Set<string> };
 export type RuleRole = 'condition' | 'action' | 'both';
 
-const FIELD_RE = /(?<![\w.])field\.([A-Za-z_][A-Za-z0-9_]*)/g;
+/** A `field.<id>` read in TxScript. */
+export const FIELD_RE = /(?<![\w.])field\.([A-Za-z_][A-Za-z0-9_]*)/g;
 
 /** A rule as the API returns it — untyped on the wire. */
 export function ruleFieldRefs(rule: any): RuleRefs {
@@ -15,11 +16,7 @@ export function ruleFieldRefs(rule: any): RuleRefs {
   for (const m of String(rule?.trigger_condition ?? '').matchAll(FIELD_RE)) condition.add(m[1]);
   const actions = new Set<string>();
   for (const a of Array.isArray(rule?.actions) ? rule.actions : []) {
-    const p = a?.payload || {};
-    if (typeof p.schema_id === 'string' && p.schema_id) actions.add(p.schema_id);
-    for (const id of Array.isArray(p.schema_ids) ? p.schema_ids : []) {
-      if (typeof id === 'string' && id) actions.add(id);
-    }
+    for (const id of anchors(a)) actions.add(id);
   }
   return { condition, actions };
 }
@@ -59,6 +56,7 @@ function markOf(a: any): ActionMark {
   return { kind: String(a?.type ?? 'action'), text: event, event };
 }
 
+/** The fields one action targets: its payload's `schema_id` and `schema_ids`. */
 function anchors(a: any): string[] {
   const p = a?.payload || {};
   const ids = [

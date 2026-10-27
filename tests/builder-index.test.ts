@@ -1185,6 +1185,7 @@ describe('rule evaluation on the picked annotation', () => {
   it('sends the unsaved draft with the annotation content, debounced, and keeps the result', async () => {
     vi.useFakeTimers();
     try {
+      store.domain.value = 'https://x';
       store.queues.value = [{ id: 3, name: 'C', url: 'https://x/api/v1/queues/3' }];
       store.selectedQueueId.value = 3;
       store.annotationId.value = 55;

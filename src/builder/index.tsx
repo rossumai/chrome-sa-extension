@@ -19,6 +19,7 @@ import { saveSchema, localStage, mapValidateErrors, type SaveResult } from './sa
 import { engineKind, bindingErrors, engineFieldUsers } from './engine.js';
 import { isRateLimited, errorText } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
+import { idFromUrl } from '../galaxy/graph.js';
 import { annotationValues } from './values.js';
 import { placeMessages, firedRuleIds } from './validation.js';
 import { ruleEvalBody, parseRuleEval } from './ruleEval.js';
@@ -95,11 +96,6 @@ export async function loadQueues() {
   }
 }
 
-function idFromUrl(url: unknown): number | null {
-  const m = /\/(\d+)\/?$/.exec(String(url || ''));
-  return m ? Number(m[1]) : null;
-}
-
 // Each Mr. Fabry assistant's sequence, bumped by a new question and wherever its target is
 // replaced (another rule, hook or schema; a save renumbers row keys): a reply for an older
 // target is dropped, as openQueue drops a stale schema.
@@ -112,14 +108,7 @@ function setBase(schema: any) {
   store.schema.value = schema;
   fieldAssistSeq++;
   // Keys are regenerated per load (k1, k2…), so a field chat must not outlive its schema.
-  store.fieldAssist.value = {
-    forKey: null,
-    chatId: null,
-    busy: false,
-    error: null,
-    reply: null,
-    warnings: [],
-  };
+  store.fieldAssist.value = { ...store.IDLE_ASSIST, forKey: null };
   store.startDraft(schema?.name ?? '', withKeys(schema?.content || []));
   store.rowErrors.value = new Map();
   store.generalErrors.value = [];
@@ -130,8 +119,8 @@ function setBase(schema: any) {
 let openSeq = 0;
 
 export async function openQueue(id: number) {
-  const q = store.queues.value.find((x) => x.id === id);
-  return load(id, idFromUrl(q?.schema));
+  const schemaId = idFromUrl(store.queues.value.find((x) => x.id === id)?.schema);
+  return load(id, schemaId == null ? null : Number(schemaId));
 }
 
 /** Open a schema directly — the way in for a schema no queue uses. */
@@ -486,7 +475,7 @@ async function loadEngineUsers() {
     const loaded = await Promise.all(
       [...bySchema.keys()].map(async (url) => ({
         url,
-        schema: await api.getSchema(idFromUrl(url)!),
+        schema: await api.getSchema(Number(idFromUrl(url))),
       })),
     );
     if (store.selectedQueueId.value !== queueId) return;
@@ -710,7 +699,7 @@ export function openRuleEditor(id: number | null, fieldId?: string) {
     fromField: rule ? null : (fieldId ?? null),
   };
   ruleAssistSeq++;
-  store.assist.value = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
+  store.assist.value = store.IDLE_ASSIST;
   store.ruleErrors.value = [];
   store.selectedKey.value = null;
   store.enginePanel.value = false;
@@ -744,7 +733,7 @@ export function scheduleRuleEval() {
   store.ruleEval.value = { values: prev?.values ?? [], errors: [], busy: true, error: null };
   const seq = ruleEvalSeq;
   ruleEvalTimer = setTimeout(async () => {
-    const annotationUrl = String(queueUrl).replace(/\/queues\/\d+\/?$/, `/annotations/${id}`);
+    const annotationUrl = `${store.domain.value}/api/v1/annotations/${id}`;
     try {
       const res = await api.evaluateRules(
         ruleEvalBody(ed.draft, queueUrl, annotationUrl, store.annotationContent.value),
@@ -1047,7 +1036,6 @@ export function fixWithFabry() {
 // its own Save (PATCH settings), separate from the schema and from rules.
 
 const pretty = (v: unknown) => JSON.stringify(v ?? {}, null, 2);
-const IDLE_ASSIST = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
 
 export function openHookEditor(id: number) {
   store.validationPanel.value = null;
@@ -1064,7 +1052,7 @@ export function openHookEditor(id: number) {
   store.hookConfigIndex.value = null;
   store.hookErrors.value = [];
   hookAssistSeq++;
-  store.hookAssist.value = IDLE_ASSIST;
+  store.hookAssist.value = store.IDLE_ASSIST;
   store.selectedKey.value = null;
   store.enginePanel.value = false;
 }

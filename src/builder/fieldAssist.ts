@@ -3,6 +3,7 @@
 // the attributes to change on ONE field, which the caller applies as one undoable schema
 // edit. Formula rules follow the rossum-sa txscript reference.
 import { extractJson, fieldLines, type FieldInfo } from './assist.js';
+import { FIELD_RE } from './rules.js';
 
 const FORMULA_MAX = 2000;
 const NEVER = ['category', 'children', '__key', '__deleted', '__engine'];
@@ -58,8 +59,6 @@ export function buildFieldFollowup(request: string, field: any): string {
 
 export type ParsedField =
   { ok: true; patch: Record<string, unknown>; warnings: string[] } | { ok: false; error: string };
-
-const FIELD_RE = /(?<![\w.])field\.([A-Za-z_][A-Za-z0-9_]*)/g;
 
 export function parseFieldReply(
   text: string,
