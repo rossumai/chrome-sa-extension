@@ -7,8 +7,8 @@ import SearchPicker from './SearchPicker.jsx';
 import s from './Builder.module.css';
 
 const STATE_TEXT = {
-  seeded: 'Seeded from the catalog: extracts well from the first document.',
-  learning: "No catalog seed: learns from confirmed documents in the engine's training queues.",
+  seeded: 'Has a catalog seed.',
+  learning: "No catalog seed: it learns from confirmed documents in the engine's training queues.",
   new: 'No engine field yet: Save creates it before it saves the schema.',
 };
 
