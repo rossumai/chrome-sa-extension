@@ -1,5 +1,4 @@
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
 import {
   annotations,
   annotationId,
@@ -11,60 +10,35 @@ import {
   validationPanel,
 } from '../store.js';
 import { pickAnnotation, clearAnnotation, revalidate, openValidationPanel } from '../index.jsx';
+import { annotationIdFromInput } from '../../rossum/annotationUrl.js';
+import SearchPicker from './SearchPicker.jsx';
 import s from './Builder.module.css';
 
 // At the right end of the filter bar: one annotation (of the queue's newest, or any pasted
-// ID or URL) whose values show in the grid's Value column. Pasting waits behind "ID…".
+// ID or URL) whose values show in the grid's Value column. One fixed-width field does both,
+// so typing or pasting never widens the bar.
 export default function AnnotationPicker() {
-  const [pasting, setPasting] = useState(false);
   const id = annotationId.value;
-  const listed = annotations.value.some((a) => a.id === id);
+  const options = annotations.value.map((a) => ({ value: String(a.id), label: a.label }));
+  if (id != null && !options.some((o) => o.value === String(id))) {
+    options.push({ value: String(id), label: `annotation (${id})` });
+  }
   return (
     <span class={s.annoPick}>
       <span class={s.dim}>Values</span>
-      <select
-        class={s.select}
-        data-picker="annotation"
-        value={id != null && listed ? String(id) : ''}
-        onChange={(e) => {
-          const v = (e.currentTarget as HTMLSelectElement).value;
-          if (v) pickAnnotation(v);
-          else clearAnnotation();
+      <SearchPicker
+        picker="annotation"
+        value={id != null ? String(id) : ''}
+        placeholder={annotations.value.length ? 'recent, or paste ID / URL' : 'paste ID / URL'}
+        options={options}
+        extra={(text) => {
+          const raw = annotationIdFromInput(text);
+          return raw && !options.some((o) => o.value === raw)
+            ? { value: raw, label: `Open annotation ${raw}` }
+            : null;
         }}
-      >
-        <option value="">
-          {annotations.value.length ? 'no annotation' : 'no recent annotations'}
-        </option>
-        {annotations.value.map((a) => (
-          <option value={String(a.id)}>{a.label}</option>
-        ))}
-      </select>
-      {pasting ? (
-        <input
-          class={s.input + ' ' + s.pasteId}
-          placeholder="paste ID / URL"
-          ref={(el) => el?.focus()}
-          onBlur={() => setPasting(false)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setPasting(false);
-            if (e.key !== 'Enter') return;
-            const el = e.currentTarget as HTMLInputElement;
-            pickAnnotation(el.value);
-            setPasting(false);
-          }}
-        />
-      ) : (
-        <button
-          type="button"
-          class={s.linkBtn}
-          data-action="paste-annotation"
-          title="Pick any annotation by its ID or URL"
-          onClick={() => setPasting(true)}
-        >
-          ID…
-        </button>
-      )}
-      {id != null && !listed && <span>annotation ({id})</span>}
+        onPick={pickAnnotation}
+      />
       {id != null && (
         <button
           type="button"

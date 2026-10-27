@@ -6,25 +6,30 @@ export type PickerOption = { value: string; label: string };
 
 // A select you can type into: the list narrows to options whose label (name and "(id)")
 // contains the text. ↑/↓ move, Enter picks, Esc leaves; clearing is the caller's ✕ button.
+// `extra` may turn the typed text itself into one more option, listed after the matches.
 export default function SearchPicker({
   picker,
   value,
   options,
   placeholder,
   onPick,
+  extra,
 }: {
   picker: string;
   value: string;
   options: PickerOption[];
   placeholder: string;
   onPick: (value: string) => void;
+  extra?: (query: string) => PickerOption | null;
 }) {
   const [query, setQuery] = useState<string | null>(null); // null: closed
   const [active, setActive] = useState(0);
   const input = useRef<HTMLInputElement | null>(null);
   const current = options.find((o) => o.value === value);
   const q = (query ?? '').trim().toLowerCase();
-  const shown = q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
+  const matches = q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
+  const typed = q && extra ? extra(query!.trim()) : null;
+  const shown = typed ? [...matches, typed] : matches;
   const at = Math.min(active, shown.length - 1);
   const pick = (o: PickerOption) => {
     input.current?.blur();

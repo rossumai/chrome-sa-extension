@@ -1097,10 +1097,6 @@
   font-size: 12px;
 }
 
-.pasteId {
-  width: 130px;
-}
-
 .rulesCountFired {
   border-color: var(--danger);
   background: var(--danger-bg);

@@ -474,6 +474,35 @@ describe('Builder annotation values', () => {
     expect(root.querySelector('th[data-col="value"]')).toBeNull();
     expect(root.querySelector('[data-action="clear-annotation"]')).toBeNull();
   });
+
+  it('one field filters the recent annotations and opens a pasted ID or URL', () => {
+    act(() => {
+      store.annotations.value = [
+        { id: 7, label: 'invoice-7.pdf (7)' },
+        { id: 8, label: 'credit-8.pdf (8)' },
+      ];
+    });
+    const input = root.querySelector('[data-picker="annotation"] input') as HTMLInputElement;
+    const type = (v: string) =>
+      act(() => {
+        input.focus();
+        input.value = v;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    const listed = () => [...root.querySelectorAll('[data-picker="annotation"] [role="option"]')];
+    type('credit');
+    expect(listed().map((o) => o.textContent)).toEqual(['credit-8.pdf (8)']);
+    type('https://x.rossum.app/document/123');
+    expect(listed().map((o) => o.textContent)).toEqual(['Open annotation 123']);
+    type('8');
+    expect(listed().map((o) => o.textContent)).toEqual(['credit-8.pdf (8)']);
+    type('https://x.rossum.app/document/123');
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+    expect(store.annotationId.value).toBe(123);
+    expect(input.value).toBe('annotation (123)');
+  });
 });
 
 const openNav = () =>
