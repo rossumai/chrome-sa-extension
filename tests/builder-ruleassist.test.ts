@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { buildRulePrompt, parseRuleReply } from '../src/builder/ruleAssist.js';
 import { withKeys } from '../src/builder/model.js';
 import { runAssist, schemaFieldList } from '../src/builder/assist.js';
+import { MAX_PROMPT } from '../src/inspector/promptBudget.js';
 import { section, dp } from './support/builder.js';
 
 const schema = withKeys([
@@ -127,5 +128,13 @@ describe('runAssist', () => {
     expect(agent.streamMessage.mock.calls.every((c) => !c[2]?.mcpMode)).toBe(true);
     await runAssist({ agentApi: agent, chatId: 'chat-1', content: 'P2' });
     expect(agent.createChat).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses a prompt over the budget before sending anything', async () => {
+    const agent = fakeAgent('ok');
+    await expect(
+      runAssist({ agentApi: agent, chatId: null, content: 'x'.repeat(MAX_PROMPT + 1) }),
+    ).rejects.toThrow(/too large to send/);
+    expect(agent.createChat).not.toHaveBeenCalled();
   });
 });

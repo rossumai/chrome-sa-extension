@@ -5,6 +5,7 @@
 import { flatten, type Node } from './model.js';
 import { newAcc, foldEvents, replyText } from '../agent/agentStream.js';
 import { firstJsonObject } from '../agent/replyJson.js';
+import { MAX_PROMPT } from '../inspector/promptBudget.js';
 
 export type FieldInfo = { id: string; label: string; type: string; table: string | null };
 
@@ -69,7 +70,10 @@ export function parseReplyObject(
   return { ok: true, value: value as Record<string, any> };
 }
 
-/** One turn: a new cautious chat the first time, the same chat for follow-ups. Read-only. */
+/**
+ * One turn: a new cautious chat the first time, the same chat for follow-ups. Read-only.
+ * A prompt over MAX_PROMPT is refused before anything is sent.
+ */
 export async function runAssist({
   agentApi,
   chatId,
@@ -81,6 +85,11 @@ export async function runAssist({
   content: string;
   signal?: AbortSignal;
 }): Promise<{ chatId: string; text: string }> {
+  if (content.length > MAX_PROMPT) {
+    throw new Error(
+      `This is too large to send to Mr. Fabry in one message (${content.length} characters; the limit is ${MAX_PROMPT}).`,
+    );
+  }
   let id = chatId;
   if (!id) {
     id = (await agentApi.createChat()) as string;

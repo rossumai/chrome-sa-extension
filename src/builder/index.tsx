@@ -43,7 +43,6 @@ import {
   problemList,
 } from './schemaAssist.js';
 import { buildHookPrompt, buildHookFollowup, parseHookReply } from './hookAssist.js';
-import { MAX_PROMPT } from '../inspector/promptBudget.js';
 import { draftFromRule, emptyDraft, draftBody, draftErrors, type RuleDraft } from './ruleDraft.js';
 import { parseSettings } from './hookDraft.js';
 
@@ -106,14 +105,42 @@ export async function loadQueues() {
 // Each Mr. Fabry assistant's sequence, bumped by a new question and wherever its target is
 // replaced (another rule, hook or schema; a save renumbers row keys): a reply for an older
 // target is dropped, as openQueue drops a stale schema.
-let ruleAssistSeq = 0;
-let fieldAssistSeq = 0;
-let schemaFabrySeq = 0;
-let hookAssistSeq = 0;
+const assistSeq = { rule: 0, field: 0, schema: 0, hook: 0 };
+
+/**
+ * One read-only Mr. Fabry turn for one assistant. The reply goes to `onReply` unless a newer
+ * question or a new target made it stale, or `stillOpen()` says its panel is gone; `current`
+ * tells the same after a later await. A failure goes to `onError`, if still current.
+ */
+async function assistTurn(
+  who: keyof typeof assistSeq,
+  {
+    chatId,
+    content,
+    stillOpen = () => true,
+    onReply,
+    onError,
+  }: {
+    chatId: string | null;
+    content: string;
+    stillOpen?: () => boolean;
+    onReply: (res: { chatId: string; text: string }, current: () => boolean) => unknown;
+    onError: (message: string) => void;
+  },
+) {
+  const seq = ++assistSeq[who];
+  const current = () => seq === assistSeq[who];
+  try {
+    const res = await runAssist({ agentApi, chatId, content });
+    if (current() && stillOpen()) await onReply(res, current);
+  } catch (err: any) {
+    if (current()) onError(err?.message || 'Mr. Fabry is not available');
+  }
+}
 
 function setBase(schema: any) {
   store.schema.value = schema;
-  fieldAssistSeq++;
+  assistSeq.field++;
   // Keys are regenerated per load (k1, k2…), so a field chat must not outlive its schema.
   store.fieldAssist.value = { ...store.IDLE_ASSIST, forKey: null };
   store.startDraft(schema?.name ?? '', withKeys(schema?.content || []));
@@ -141,7 +168,7 @@ function clearOpen() {
   store.hookEditor.value = null;
   store.hooks.value = [];
   // A new schema, a new conversation: Mr. Fabry's context and its row keys belong to the old one.
-  schemaFabrySeq++;
+  assistSeq.schema++;
   store.schemaFabry.value = {
     ...store.schemaFabry.value,
     chatId: null,
@@ -677,7 +704,7 @@ export function openRuleEditor(id: number | null, fieldId?: string) {
     draft,
     fromField: rule ? null : (fieldId ?? null),
   };
-  ruleAssistSeq++;
+  assistSeq.rule++;
   store.assist.value = store.IDLE_ASSIST;
   store.ruleErrors.value = [];
   store.selectedKey.value = null;
@@ -793,7 +820,6 @@ export async function askRuleAssistant(request: string) {
   const ed = store.ruleEditor.value;
   if (!ed || !request.trim() || store.assist.value.busy) return;
   const prev = store.assist.value;
-  const seq = ++ruleAssistSeq;
   store.assist.value = { ...prev, busy: true, error: null, reply: null, warnings: [] };
   const fields = schemaFieldList(store.work.value);
   const changed = ed.ruleId != null || JSON.stringify(ed.draft) !== JSON.stringify(ed.base);
@@ -805,31 +831,30 @@ export async function askRuleAssistant(request: string) {
         startField: ed.fromField ?? null,
         current: changed ? ed.draft : null,
       });
-  try {
-    const { chatId, text } = await runAssist({ agentApi, chatId: prev.chatId, content });
-    if (seq !== ruleAssistSeq || !store.ruleEditor.value) return; // closed or replaced meanwhile
-    const r = parseRuleReply(text, new Set(fields.map((f) => f.id)));
-    if (!r.ok) {
-      store.assist.value = { chatId, busy: false, error: r.error, reply: text, warnings: [] };
-      return;
-    }
-    updateRuleDraft(r.draft);
-    store.assistRev.value++;
-    store.assist.value = {
-      chatId,
-      busy: false,
-      error: null,
-      reply: null,
-      warnings: r.unknownFields.length ? [`Not in this schema: ${r.unknownFields.join(', ')}`] : [],
-    };
-  } catch (err: any) {
-    if (seq !== ruleAssistSeq) return;
-    const msg =
-      err?.status === 401
-        ? 'Session expired. Open the Console from a Rossum tab again.'
-        : err?.message || 'Mr. Fabry is not available';
-    store.assist.value = { ...store.assist.value, busy: false, error: msg };
-  }
+  await assistTurn('rule', {
+    chatId: prev.chatId,
+    content,
+    stillOpen: () => !!store.ruleEditor.value, // closed or replaced meanwhile
+    onReply: ({ chatId, text }) => {
+      const r = parseRuleReply(text, new Set(fields.map((f) => f.id)));
+      if (!r.ok) {
+        store.assist.value = { chatId, busy: false, error: r.error, reply: text, warnings: [] };
+        return;
+      }
+      updateRuleDraft(r.draft);
+      store.assistRev.value++;
+      store.assist.value = {
+        chatId,
+        busy: false,
+        error: null,
+        reply: null,
+        warnings: r.unknownFields.length
+          ? [`Not in this schema: ${r.unknownFields.join(', ')}`]
+          : [],
+      };
+    },
+    onError: (error) => (store.assist.value = { ...store.assist.value, busy: false, error }),
+  });
 }
 
 /**
@@ -841,7 +866,6 @@ export async function askFieldAssistant(key: string, request: string) {
   if (!node || !request.trim() || store.fieldAssist.value.busy) return;
   const prev = store.fieldAssist.value.forKey === key ? store.fieldAssist.value : null;
   const chatId = prev?.chatId ?? null;
-  const seq = ++fieldAssistSeq;
   store.fieldAssist.value = {
     forKey: key,
     chatId,
@@ -855,41 +879,38 @@ export async function askFieldAssistant(key: string, request: string) {
   const content = chatId
     ? buildFieldFollowup(request, node)
     : buildFieldPrompt({ request, field: node, fields, table: info?.table ?? null });
-  try {
-    const res = await runAssist({ agentApi, chatId, content });
-    if (seq !== fieldAssistSeq) return;
-    const r = parseFieldReply(res.text, {
-      selfId: String(node.id),
-      schemaIds: new Set(fields.map((f) => f.id)),
-    });
-    if (!r.ok) {
+  await assistTurn('field', {
+    chatId,
+    content,
+    onReply: (res) => {
+      const r = parseFieldReply(res.text, {
+        selfId: String(node.id),
+        schemaIds: new Set(fields.map((f) => f.id)),
+      });
+      if (!r.ok) {
+        store.fieldAssist.value = {
+          forKey: key,
+          chatId: res.chatId,
+          busy: false,
+          error: r.error,
+          reply: res.text,
+          warnings: [],
+        };
+        return;
+      }
+      if (findByKey(store.work.value, key)) apply(mergeAttrs(store.work.value, key, r.patch));
       store.fieldAssist.value = {
         forKey: key,
         chatId: res.chatId,
         busy: false,
-        error: r.error,
-        reply: res.text,
-        warnings: [],
+        error: null,
+        reply: null,
+        warnings: r.warnings,
       };
-      return;
-    }
-    if (findByKey(store.work.value, key)) apply(mergeAttrs(store.work.value, key, r.patch));
-    store.fieldAssist.value = {
-      forKey: key,
-      chatId: res.chatId,
-      busy: false,
-      error: null,
-      reply: null,
-      warnings: r.warnings,
-    };
-  } catch (err: any) {
-    if (seq !== fieldAssistSeq) return;
-    const msg =
-      err?.status === 401
-        ? 'Session expired. Open the Console from a Rossum tab again.'
-        : err?.message || 'Mr. Fabry is not available';
-    store.fieldAssist.value = { ...store.fieldAssist.value, busy: false, error: msg };
-  }
+    },
+    onError: (error) =>
+      (store.fieldAssist.value = { ...store.fieldAssist.value, busy: false, error }),
+  });
 }
 
 // ---- Mr. Fabry for the whole schema --------------------------------------------------------
@@ -930,72 +951,67 @@ export async function askSchemaFabry(request: string, fix?: string[]) {
     store.schemaFabry.value = { ...st, error: fitted.error };
     return;
   }
-  const content = fitted.prompt;
   const you = { role: 'you' as const, text: fix ? 'Fix the problems above.' : request };
-  const seq = ++schemaFabrySeq;
   store.schemaFabry.value = { ...st, busy: true, error: null, turns: [...st.turns, you] };
-  try {
-    const res = await runAssist({ agentApi, chatId: st.chatId, content });
-    if (seq !== schemaFabrySeq) return;
-    const parsed = parseSchemaReply(res.text);
-    const cur = store.schemaFabry.value;
-    if (!parsed.ok) {
+  await assistTurn('schema', {
+    chatId: st.chatId,
+    content: fitted.prompt,
+    onReply: async (res, current) => {
+      const parsed = parseSchemaReply(res.text);
+      const cur = store.schemaFabry.value;
+      if (!parsed.ok) {
+        store.schemaFabry.value = {
+          ...cur,
+          chatId: res.chatId,
+          busy: false,
+          turns: [...cur.turns, { role: 'fabry', text: parsed.error, reply: res.text }],
+        };
+        return;
+      }
+      const before = store.work.value;
+      const r = applyChanges(before, parsed.changes);
+      if (r.applied) apply(r.nodes);
+      store.fabryTouched.value = new Set([
+        ...store.fabryTouched.value,
+        ...rowStatus(before, r.nodes).keys(),
+        ...movedKeys(before, r.nodes),
+      ]);
+
+      // Check the exact content Save would send: local rules, then the validate dry run.
+      const errs = localErrors(r.nodes);
+      let unvalidated: string | null = null;
+      const sch = store.schema.value;
+      if (!errs.length && sch) {
+        try {
+          const verdict = await api.validateSchema(sch.id, stripForSave(r.nodes));
+          if (verdict && Object.keys(verdict).length)
+            errs.push(...mapValidateErrors(verdict, r.nodes));
+        } catch (err: any) {
+          unvalidated = `Could not validate: ${err?.message || 'unknown error'}`;
+        }
+        if (!current()) return;
+      }
+      const problems = problemList(r, unvalidated, errs);
+      store.rowErrors.value = errorsByRow(errs).byRow;
       store.schemaFabry.value = {
         ...cur,
         chatId: res.chatId,
         busy: false,
-        turns: [...cur.turns, { role: 'fabry', text: parsed.error, reply: res.text }],
+        problems,
+        turns: [
+          ...cur.turns,
+          {
+            role: 'fabry',
+            text: [parsed.summary || 'Done.', fitted.note].filter(Boolean).join(' '),
+            applied: r.applied,
+            problems,
+          },
+        ],
       };
-      return;
-    }
-    const before = store.work.value;
-    const r = applyChanges(before, parsed.changes);
-    if (r.applied) apply(r.nodes);
-    store.fabryTouched.value = new Set([
-      ...store.fabryTouched.value,
-      ...rowStatus(before, r.nodes).keys(),
-      ...movedKeys(before, r.nodes),
-    ]);
-
-    // Check the exact content Save would send: local rules, then the validate dry run.
-    const errs = localErrors(r.nodes);
-    let unvalidated: string | null = null;
-    const sch = store.schema.value;
-    if (!errs.length && sch) {
-      try {
-        const verdict = await api.validateSchema(sch.id, stripForSave(r.nodes));
-        if (verdict && Object.keys(verdict).length)
-          errs.push(...mapValidateErrors(verdict, r.nodes));
-      } catch (err: any) {
-        unvalidated = `Could not validate: ${err?.message || 'unknown error'}`;
-      }
-      if (seq !== schemaFabrySeq) return;
-    }
-    const problems = problemList(r, unvalidated, errs);
-    store.rowErrors.value = errorsByRow(errs).byRow;
-    store.schemaFabry.value = {
-      ...cur,
-      chatId: res.chatId,
-      busy: false,
-      problems,
-      turns: [
-        ...cur.turns,
-        {
-          role: 'fabry',
-          text: [parsed.summary || 'Done.', fitted.note].filter(Boolean).join(' '),
-          applied: r.applied,
-          problems,
-        },
-      ],
-    };
-  } catch (err: any) {
-    if (seq !== schemaFabrySeq) return;
-    const msg =
-      err?.status === 401
-        ? 'Session expired. Open the Console from a Rossum tab again.'
-        : err?.message || 'Mr. Fabry is not available';
-    store.schemaFabry.value = { ...store.schemaFabry.value, busy: false, error: msg };
-  }
+    },
+    onError: (error) =>
+      (store.schemaFabry.value = { ...store.schemaFabry.value, busy: false, error }),
+  });
 }
 
 /** Send exactly the problems left by the last answer back to the same chat. */
@@ -1025,7 +1041,7 @@ export function openHookEditor(id: number) {
   store.hookEditor.value = { hookId: id, base: text, draft: text };
   store.hookConfigIndex.value = null;
   store.hookErrors.value = [];
-  hookAssistSeq++;
+  assistSeq.hook++;
   store.hookAssist.value = store.IDLE_ASSIST;
   store.selectedKey.value = null;
   store.enginePanel.value = false;
@@ -1097,46 +1113,36 @@ export async function askHookAssistant(request: string) {
   const content = prev.chatId
     ? buildHookFollowup(request, settings)
     : buildHookPrompt({ request, settings, fields, name: String(hook?.name ?? '') });
-  if (content.length > MAX_PROMPT) {
-    store.hookAssist.value = {
-      ...prev,
-      error: 'These settings are too large to send to Mr. Fabry in one message.',
-    };
-    return;
-  }
-  const seq = ++hookAssistSeq;
   store.hookAssist.value = { ...prev, busy: true, error: null, reply: null, warnings: [] };
-  try {
-    const res = await runAssist({ agentApi, chatId: prev.chatId, content });
-    if (seq !== hookAssistSeq || !store.hookEditor.value) return;
-    const r = parseHookReply(res.text, new Set(fields.map((f) => f.id)));
-    if (!r.ok) {
+  await assistTurn('hook', {
+    chatId: prev.chatId,
+    content,
+    stillOpen: () => !!store.hookEditor.value,
+    onReply: (res) => {
+      const r = parseHookReply(res.text, new Set(fields.map((f) => f.id)));
+      if (!r.ok) {
+        store.hookAssist.value = {
+          chatId: res.chatId,
+          busy: false,
+          error: r.error,
+          reply: res.text,
+          warnings: [],
+        };
+        return;
+      }
+      updateHookDraft(pretty(r.settings));
+      store.hookAssistRev.value++;
       store.hookAssist.value = {
         chatId: res.chatId,
         busy: false,
-        error: r.error,
-        reply: res.text,
-        warnings: [],
+        error: null,
+        reply: null,
+        warnings: r.warnings,
       };
-      return;
-    }
-    updateHookDraft(pretty(r.settings));
-    store.hookAssistRev.value++;
-    store.hookAssist.value = {
-      chatId: res.chatId,
-      busy: false,
-      error: null,
-      reply: null,
-      warnings: r.warnings,
-    };
-  } catch (err: any) {
-    if (seq !== hookAssistSeq) return;
-    const msg =
-      err?.status === 401
-        ? 'Session expired. Open the Console from a Rossum tab again.'
-        : err?.message || 'Mr. Fabry is not available';
-    store.hookAssist.value = { ...store.hookAssist.value, busy: false, error: msg };
-  }
+    },
+    onError: (error) =>
+      (store.hookAssist.value = { ...store.hookAssist.value, busy: false, error }),
+  });
 }
 
 // ---- Revalidate -------------------------------------------------------------------------
