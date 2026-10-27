@@ -11,6 +11,8 @@ import styles from './Deploy.module.css';
 
 type Props = {
   source: Source;
+  // A token the source was just found with, in this visit: already checked, so not asked again.
+  knownToken?: string;
   fetchOrgs?: FetchOrgs;
   // Why reading cannot start (rdc is not available), or empty.
   blocked?: string;
@@ -21,16 +23,17 @@ type Props = {
 
 export default function Connect({
   source,
+  knownToken = '',
   fetchOrgs: fetcher = defaultFetch,
   blocked = '',
   onConnected,
   onBack,
   onCancel,
 }: Props) {
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState(knownToken);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [checked, setChecked] = useState('');
+  const [checked, setChecked] = useState(knownToken);
   // Voids a check that an edit of the token has outdated.
   const edits = useRef(0);
   const tok = token.trim();

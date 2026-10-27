@@ -129,6 +129,24 @@ describe('rdc App', () => {
     expect(root.textContent).toContain('Acme deploys from');
   });
 
+  it('does not ask again for the token the source was just found with', async () => {
+    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Use test as the source');
+    await click('button', 'Deploy from test');
+    expect((root.querySelector('#rdc-conn-token') as HTMLInputElement).value).toBe('stok');
+    expect(root.textContent).toContain('The token can read');
+    expect((byText('button', 'Read both orgs') as HTMLButtonElement).disabled).toBe(false);
+    // leaving the deployment forgets it: the next one asks again
+    await click('button', 'Cancel');
+    await click('button', 'Deploy from test');
+    expect((root.querySelector('#rdc-conn-token') as HTMLInputElement).value).toBe('');
+  });
+
   it('walks from choosing a source through the work-in-progress steps', async () => {
     mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();

@@ -251,7 +251,7 @@ export default function Band({
   const compact = step !== null;
   useConveyor(track, srcStack, dstStack, !compact);
 
-  const srcName = source ? source.name : 'Your test org';
+  const srcName = source ? source.name : 'Your source org';
   const srcHost = source ? hostOf(source.domain) : 'for example a Sandbox';
   const stepIdx = STEPS.findIndex((s) => s.id === step);
   const envChip = target.env && (

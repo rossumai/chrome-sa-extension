@@ -108,7 +108,26 @@ describe('ChooseSource', () => {
     await flush();
     expect(fetchOrgs).toHaveBeenCalledWith('https://partner-sandbox.rossum.app', 'tok');
     act(() => byText('button', 'Use test as the source').click());
-    expect(onChosen).toHaveBeenCalledWith(source);
+    expect(onChosen).toHaveBeenCalledWith(source, 'tok');
+  });
+
+  it('expects exactly one organization for the address and token', async () => {
+    const fetchOrgs = vi.fn(async (_d: string, _t: string) => ({
+      results: [
+        { id: 1, name: 'x' },
+        { id: 2, name: 'y' },
+      ],
+    }));
+    const onChosen = vi.fn();
+    mount(
+      <ChooseSource {...target} onCancel={vi.fn()} onChosen={onChosen} fetchOrgs={fetchOrgs} />,
+    );
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'tok');
+    act(() => byText('button', 'Find organizations').click());
+    await flush();
+    expect(root.textContent).toContain('Expected one organization for this token, got 2.');
+    expect((byText('button', 'Use test as the source') as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('refuses the connected org itself as the source', async () => {
@@ -181,7 +200,7 @@ describe('ChooseSource', () => {
     act(() => byText('button', 'Find organizations').click());
     await flush();
     expect(root.textContent).toMatch(/rate.limit/i);
-    expect(root.querySelector('select')).toBeNull();
+    expect(root.textContent).not.toContain('Found ');
   });
 
   it('refuses a non-Rossum address without calling out', async () => {
@@ -207,9 +226,9 @@ describe('ChooseSource', () => {
     await type('rdc-src-token', 'tok');
     act(() => byText('button', 'Find organizations').click());
     await flush();
-    expect(root.querySelector('select')).not.toBeNull();
+    expect(root.textContent).toContain('Found Acme Test, org 20412');
     await type('rdc-src-address', 'https://other.rossum.app');
-    expect(root.querySelector('select')).toBeNull();
+    expect(root.textContent).not.toContain('Found Acme Test');
     const confirm = byText('button', 'Use test as the source') as HTMLButtonElement;
     expect(confirm.disabled).toBe(true);
     act(() => confirm.click());

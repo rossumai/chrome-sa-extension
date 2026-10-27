@@ -29,7 +29,8 @@ const originOf = (domain: string) => {
 
 type Props = {
   onCancel: () => void;
-  onChosen: (s: Source) => void;
+  // The token the org was found with goes along, so step 1 does not ask for it again.
+  onChosen: (s: Source, token: string) => void;
   fetchOrgs?: FetchOrgs;
   // The connected org is the target; it cannot also be the source.
   targetDomain: string;
@@ -45,8 +46,8 @@ export default function ChooseSource({
 }: Props) {
   const [address, setAddress] = useState('');
   const [token, setToken] = useState('');
-  const [orgs, setOrgs] = useState<{ id: number; name: string }[] | null>(null);
-  const [orgId, setOrgId] = useState<number | null>(null);
+  // The API lists exactly one organization for an address and token.
+  const [org, setOrg] = useState<{ id: number; name: string } | null>(null);
   const [name, setName] = useState('test');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -60,15 +61,14 @@ export default function ChooseSource({
 
   const edited = () => {
     edits.current++;
-    setOrgs(null);
-    setOrgId(null);
+    setOrg(null);
     setFoundDomain('');
     setBusy(false);
   };
 
   const find = async () => {
     setError('');
-    setOrgs(null);
+    setOrg(null);
     const addr = address.trim();
     const tok = token.trim();
     const base = apiBaseOf(addr);
@@ -86,10 +86,10 @@ export default function ChooseSource({
     try {
       const list = readableOrgs(await fetcher(origin, tok));
       if (mine !== edits.current) return;
-      if (!list.length) setError('This token can read no organizations.');
+      if (list.length !== 1)
+        setError(`Expected one organization for this token, got ${list.length}.`);
       else {
-        setOrgs(list);
-        setOrgId(list[0].id);
+        setOrg(list[0]);
         setFoundDomain(origin);
       }
     } catch (e) {
@@ -104,7 +104,7 @@ export default function ChooseSource({
     }
   };
 
-  const chosen = orgs?.find((o) => o.id === orgId);
+  const chosen = org;
   const shortName = name.trim();
   const confirm = () => {
     if (!chosen || !shortName || !foundDomain) return;
@@ -113,12 +113,10 @@ export default function ChooseSource({
       return;
     }
     setError('');
-    onChosen({
-      name: shortName,
-      domain: foundDomain,
-      orgId: chosen.id,
-      orgName: chosen.name,
-    });
+    onChosen(
+      { name: shortName, domain: foundDomain, orgId: chosen.id, orgName: chosen.name },
+      token.trim(),
+    );
   };
 
   return (
@@ -162,24 +160,12 @@ export default function ChooseSource({
           {error}
         </div>
       )}
-      {orgs && (
-        <div class={styles.fld}>
-          <label for="rdc-src-org">Organization</label>
-          <select
-            id="rdc-src-org"
-            value={String(orgId)}
-            onChange={(e) => setOrgId(Number((e.target as HTMLSelectElement).value))}
-          >
-            {orgs.map((o) => (
-              <option value={String(o.id)}>
-                {o.name}, org {o.id}
-              </option>
-            ))}
-          </select>
-          <small>The organizations this token can read.</small>
+      {org && (
+        <div class={styles.check} role="status">
+          Found {org.name}, org {org.id}
         </div>
       )}
-      {orgs && (
+      {org && (
         <div class={styles.fld}>
           <label for="rdc-src-name">Short name</label>
           <input

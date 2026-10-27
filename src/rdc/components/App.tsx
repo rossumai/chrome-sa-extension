@@ -159,6 +159,7 @@ export default function App({
     page = (
       <Connect
         source={source}
+        knownToken={sourceToken}
         fetchOrgs={fetchOrgs}
         blocked={rdcBlock}
         onBack={leaveSource}
@@ -224,9 +225,9 @@ export default function App({
               targetDomain={domain.value}
               targetOrgId={target.orgId}
               onCancel={toOverview}
-              onChosen={(s) => {
+              onChosen={(s, t) => {
                 setSource(s);
-                setSourceToken('');
+                setSourceToken(t);
                 setReadResult(null);
                 toOverview();
               }}

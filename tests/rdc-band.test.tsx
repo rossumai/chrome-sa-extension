@@ -37,7 +37,7 @@ describe('Band', () => {
     stubMotion(true);
     mount(<Band source={null} target={target} step={null} lastDeployment={null} />);
     const card = root.querySelector('[data-role="source"]')!;
-    expect(card.textContent).toContain('Your test org');
+    expect(card.textContent).toContain('Your source org');
     expect(card.textContent).toContain('Another org, only read');
     expect(card.textContent).toContain('for example a Sandbox');
   });
