@@ -13,7 +13,7 @@ import {
   globalActionMarks,
 } from './rules.js';
 import { sameDraft, type RuleDraft } from './ruleDraft.js';
-import { enginePlan, deletableFields, type EngineKind } from './engine.js';
+import { enginePlan, deletableFields, isHiddenCaptured, type EngineKind } from './engine.js';
 import { hooksByFieldText } from './codeRefs.js';
 
 export const domain = signal('');
@@ -327,6 +327,16 @@ export const revalidateError = signal<string | null>(null);
 
 // After a Revalidate: show only the fields that got a message (and their parents).
 export const onlyMessages = signal(false);
+// Fields with a warning mark (today: captured but hidden), and the filter to show only them.
+export const warningKeys = computed(
+  () =>
+    new Set(
+      flatten(work.value)
+        .filter((r) => !r.node.__deleted && isHiddenCaptured(r.node))
+        .map((r) => r.key),
+    ),
+);
+export const onlyWarnings = signal(false);
 
 // The validation panel (right side) and its tab; null = closed. A row briefly flashed after
 // a jump from the panel.

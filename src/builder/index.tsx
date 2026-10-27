@@ -157,6 +157,7 @@ async function load(queueId: number | null, schemaId: number | null) {
   store.codeView.value = null;
   store.enginePanel.value = false;
   store.engineUsers.value = null;
+  store.onlyWarnings.value = false;
   store.schema.value = null;
   store.loading.value = true;
   store.error.value = null;

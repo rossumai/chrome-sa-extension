@@ -12,6 +12,8 @@ import {
   hookConfigIndex,
   validation,
   onlyMessages,
+  onlyWarnings,
+  warningKeys,
 } from '../store.js';
 import { flatten } from '../model.js';
 import { countMatches } from '../fieldFilter.js';
@@ -55,6 +57,23 @@ export default function FilterBar() {
         <span class={s.dim}>
           {matchCount} {matchCount === 1 ? 'match' : 'matches'}
         </span>
+      )}
+      {(warningKeys.value.size > 0 || onlyWarnings.value) && (
+        <button
+          type="button"
+          class={s.btn + ' ' + s.warnFilter}
+          data-action="only-warnings"
+          aria-pressed={onlyWarnings.value ? 'true' : 'false'}
+          title={
+            onlyWarnings.value
+              ? 'Show all fields'
+              : 'Show only fields with a warning (captured but hidden)'
+          }
+          onClick={() => (onlyWarnings.value = !onlyWarnings.value)}
+        >
+          <span class={s.warnMark}>!</span>
+          {warningKeys.value.size}
+        </button>
       )}
       {validation.value && (
         <label class={s.checkField + ' ' + s.barToggle}>

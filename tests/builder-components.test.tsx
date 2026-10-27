@@ -102,6 +102,7 @@ beforeEach(() => {
   store.engineState.value = null;
   store.codeView.value = null;
   store.enginePanel.value = false;
+  store.onlyWarnings.value = false;
   store.engineUsers.value = null;
   store.engineCatalog.value = [];
   panelWide.value = false;
@@ -1705,6 +1706,21 @@ describe('Builder hidden captured fields', () => {
       (root.querySelector('[data-action="show-field"]') as HTMLElement).click();
     });
     expect(mark('doc_id')).toBeNull();
+  });
+
+  it('the ! button next to the find box shows only fields with a warning', () => {
+    const btn = () => root.querySelector('[data-action="only-warnings"]') as HTMLElement | null;
+    expect(btn()).toBeNull(); // nothing to warn about
+    act(() => {
+      apply(setAttr(store.work.value, keyOf('doc_id'), ['hidden'], true));
+    });
+    expect(btn()!.textContent).toBe('!1');
+    act(() => btn()!.click());
+    expect(row('doc_id')).not.toBeNull();
+    expect(row('vendor')).toBeNull();
+    expect(row('basic_section')).not.toBeNull(); // its section stays, as the path to it
+    act(() => btn()!.click());
+    expect(row('vendor')).not.toBeNull();
   });
 
   it('a hidden field with another source is not marked', () => {

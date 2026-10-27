@@ -1102,6 +1102,19 @@
   color: var(--danger-fg);
 }
 
+.warnFilter {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.warnFilter[aria-pressed='true'] {
+  border-color: var(--warning-fg);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
 .barToggle {
   margin-top: 0;
   white-space: nowrap;

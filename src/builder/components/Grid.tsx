@@ -23,6 +23,8 @@ import {
   hookFieldConfigs,
   validation,
   onlyMessages,
+  onlyWarnings,
+  warningKeys,
   flashRowKey,
   engineState,
   engineFieldsByName,
@@ -944,6 +946,10 @@ export default function Grid() {
   if (engineMode.value) {
     const keys = new Set(extractedFields(work.value).map((x) => x.node.__key));
     const mine = withAncestors(work.value, keys);
+    show = show ? new Set([...show].filter((k) => mine.has(k))) : mine;
+  }
+  if (onlyWarnings.value) {
+    const mine = withAncestors(work.value, warningKeys.value);
     show = show ? new Set([...show].filter((k) => mine.has(k))) : mine;
   }
   if (onlyFabryChanges.value) {
