@@ -4,8 +4,7 @@
 // edit. Formula rules follow the rossum-sa txscript reference.
 import { parseReplyObject, fieldLines, NEVER_SET, type FieldInfo } from './assist.js';
 import { FIELD_RE } from './rules.js';
-
-const FORMULA_MAX = 2000;
+import { formulaError } from './model.js';
 
 const CONTRACT = [
   'You change ONE field of a Rossum schema. Do not create or change anything in Rossum — only propose.',
@@ -76,15 +75,9 @@ export function parseFieldReply(
   const warnings: string[] = [];
   if (typeof patch.formula === 'string') {
     const f = patch.formula;
-    if (f.length > FORMULA_MAX) {
-      return {
-        ok: false,
-        error: `The formula is ${f.length} characters; the limit is ${FORMULA_MAX}`,
-      };
-    }
+    const error = formulaError(selfId, f);
+    if (error) return { ok: false, error };
     const refs = [...f.matchAll(FIELD_RE)].map((m) => m[1]);
-    if (refs.includes(selfId))
-      return { ok: false, error: `The formula reads its own field (${selfId})` };
     const unknown = [...new Set(refs)].filter((id) => !schemaIds.has(id));
     if (typeof patch.id === 'string' && patch.id !== selfId) {
       warnings.push(`This renames the field to ${patch.id}`);

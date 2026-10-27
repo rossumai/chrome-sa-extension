@@ -237,6 +237,24 @@ describe('localErrors', () => {
     empty = setDeleted(empty, keyOf(t, 'line_items_section'), true);
     expect(localErrors(empty)).toEqual([{ key: null, message: 'The schema would be empty' }]);
   });
+
+  it('reports a formula over 2000 characters or reading its own field', () => {
+    const formula = (f: string) => ({ formula: f, ui_configuration: { type: 'formula' } });
+    const t = withKeys([
+      section('s', [dp('a', formula('field.a + 1')), dp('b', formula('x'.repeat(2001))), dp('c')]),
+    ]);
+    expect(localErrors(t)).toEqual([
+      { key: keyOf(t, 'a'), message: 'The formula reads its own field (a)' },
+      { key: keyOf(t, 'b'), message: 'The formula is 2001 characters; the limit is 2000' },
+    ]);
+  });
+
+  it('ignores a formula Save would not send (the source is not formula)', () => {
+    const t = withKeys([
+      section('s', [dp('a', { formula: 'field.a', ui_configuration: { type: 'manual' } })]),
+    ]);
+    expect(localErrors(t)).toEqual([]);
+  });
 });
 
 describe('rowStatus / changeSummary', () => {

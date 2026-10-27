@@ -8,6 +8,8 @@
 // Both markers are stripped by `stripForSave` — the API silently drops unknown keys,
 // so a leaked marker would not fail, it would just make the sent-vs-landed check noisy.
 
+import { FIELD_RE } from './rules.js';
+
 /** A schema node (raw API shape — untyped on the wire) plus the internal markers. */
 export type Node = Record<string, any>;
 export type Kind = 'section' | 'datapoint' | 'multivalue' | 'tuple';
@@ -258,6 +260,20 @@ export function nextKey(nodes: Node[]): string {
   return `k${max + 1}`;
 }
 
+const FORMULA_MAX = 2000;
+
+/** What Rossum refuses in a formula: over 2000 characters, or reading its own field `id`. */
+export function formulaError(id: string, formula: unknown): string | null {
+  if (typeof formula !== 'string') return null;
+  if (formula.length > FORMULA_MAX) {
+    return `The formula is ${formula.length} characters; the limit is ${FORMULA_MAX}`;
+  }
+  if ([...formula.matchAll(FIELD_RE)].some((m) => m[1] === id)) {
+    return `The formula reads its own field (${id})`;
+  }
+  return null;
+}
+
 export function localErrors(nodes: Node[]): { key: string | null; message: string }[] {
   const live = flatten(nodes).filter((r) => !r.deleted);
   if (!live.some((r) => r.kind === 'section')) {
@@ -271,6 +287,9 @@ export function localErrors(nodes: Node[]): { key: string | null; message: strin
       errs.push({ key: r.key, message: 'ID is empty' });
       continue;
     }
+    // The formula Save would send (cleanAttrs drops it from a field whose source is not formula).
+    const formula = r.kind === 'datapoint' ? formulaError(id, cleanAttrs(r.node).formula) : null;
+    if (formula) errs.push({ key: r.key, message: formula });
     byId.set(id, [...(byId.get(id) || []), r]);
   }
   for (const [id, rows] of byId) {
