@@ -15,7 +15,7 @@ import Band, { type BandTarget } from './Band.jsx';
 import Overview from './Overview.jsx';
 import ChooseSource, { fetchOrgs as defaultFetchOrgs, type FetchOrgs } from './ChooseSource.jsx';
 import Connect from './Connect.jsx';
-import Read from './Read.jsx';
+import Read, { type ReadResult } from './Read.jsx';
 import { OwnValues, WipStep } from './WipSteps.jsx';
 import styles from './App.module.css';
 
@@ -53,6 +53,8 @@ export default function App({
   // The source and its token live here only; a reload loses both.
   const [source, setSource] = useState<Source | null>(null);
   const [sourceToken, setSourceToken] = useState('');
+  // The last finished read, so Back from Plan shows it without syncing both orgs again.
+  const [readResult, setReadResult] = useState<ReadResult | null>(null);
 
   useEffect(() => {
     loadRdc().then(setRdc, (e: any) => {
@@ -134,8 +136,10 @@ export default function App({
 
   const name = target.name;
   const toOverview = () => setScreen('overview');
+  // Leaving the deployment forgets the token and the read made with it.
   const leaveSource = () => {
     setSourceToken('');
+    setReadResult(null);
     toOverview();
   };
 
@@ -147,8 +151,10 @@ export default function App({
         source={source}
         fetchOrgs={fetchOrgs}
         onBack={leaveSource}
+        onCancel={leaveSource}
         onConnected={(t) => {
           setSourceToken(t);
+          setReadResult(null);
           setScreen('read');
         }}
       />
@@ -163,8 +169,13 @@ export default function App({
         domain={domain.value}
         token={token.value}
         organizations={() => fetchOrgs(domain.value, token.value)}
-        onDone={() => setScreen('plan')}
+        kept={readResult}
+        onDone={(r) => {
+          setReadResult(r);
+          setScreen('plan');
+        }}
         onBack={() => setScreen('connect')}
+        onCancel={leaveSource}
       />
     );
   else if (source && (screen === 'plan' || screen === 'review' || screen === 'write'))
@@ -176,9 +187,11 @@ export default function App({
         onBack={() =>
           setScreen(screen === 'plan' ? 'read' : screen === 'review' ? 'plan' : 'review')
         }
+        // From Write, onNext leads to Done; its button stays disabled until writing works.
         onNext={() =>
           setScreen(screen === 'plan' ? 'review' : screen === 'review' ? 'write' : 'done')
         }
+        onCancel={leaveSource}
       />
     );
   else if (source && screen === 'done')
@@ -214,6 +227,7 @@ export default function App({
             onChosen={(s) => {
               setSource(s);
               setSourceToken('');
+              setReadResult(null);
               toOverview();
             }}
           />

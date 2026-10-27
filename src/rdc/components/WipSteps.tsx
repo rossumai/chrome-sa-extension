@@ -14,6 +14,8 @@ type StepProps = {
   targetName: string;
   onBack: () => void;
   onNext?: () => void;
+  // Plan, Review and Write: leave the deployment for the overview.
+  onCancel?: () => void;
 };
 
 // What the admin can run today instead of the Plan step, with rdc's env names.
@@ -184,7 +186,8 @@ function Write({ targetName, onNext }: { targetName: string; onNext?: () => void
               deployment, and the changes already written stay in {targetName}.
             </span>
           </div>
-          {/* nothing was written, so there is no result to see until writing works */}
+          {/* Nothing was written, so this stays disabled; onNext leads to Done, which becomes
+              reachable once writing works. */}
           <div class={styles.foot}>
             <span class={styles.sp}></span>
             <button class="btn btn-secondary" disabled onClick={onNext}>
@@ -215,8 +218,9 @@ const NEXT: Partial<Record<WipStepId, string>> = {
   review: 'Continue to write',
 };
 
-export function WipStep({ step, sourceName, targetName, onBack, onNext }: StepProps) {
+export function WipStep({ step, sourceName, targetName, onBack, onNext, onCancel }: StepProps) {
   const [title, lead] = HEAD[step](sourceName, targetName);
+  // Done is a preview only: the App reaches it from Write, once writing works.
   if (step === 'done') {
     return (
       <div class={styles.wrap}>
@@ -258,6 +262,11 @@ export function WipStep({ step, sourceName, targetName, onBack, onNext }: StepPr
           Back
         </button>
         <span class={styles.sp}></span>
+        {onCancel && (
+          <button class="btn btn-secondary" onClick={onCancel}>
+            Cancel
+          </button>
+        )}
         {next && onNext && (
           <button class="btn btn-primary" onClick={onNext}>
             {next}
@@ -267,14 +276,6 @@ export function WipStep({ step, sourceName, targetName, onBack, onNext }: StepPr
     </div>
   );
 }
-
-// The groups rdc keeps for the target unless one deployment's Plan says otherwise.
-const ALWAYS: [string, string][] = [
-  ['Score thresholds of fields and queues', 'kept'],
-  ['Inbox addresses', 'kept'],
-  ['Automation level and spot-check share', 'kept'],
-  ['Queue training', 'always kept'],
-];
 
 export function OwnValues({ targetName, onBack }: { targetName: string; onBack: () => void }) {
   return (
@@ -303,16 +304,6 @@ export function OwnValues({ targetName, onBack }: { targetName: string; onBack: 
           <h2>Values you set</h2>
         </div>
         <div class={`${styles.panelB} ${styles.stack}`}>
-          <table class={styles.ownt}>
-            <thead>
-              <tr>
-                <th>Object</th>
-                <th>Setting</th>
-                <th>Value in {targetName}</th>
-                <th>Value in the source</th>
-              </tr>
-            </thead>
-          </table>
           <Wip feature="ownValues" />
           <div class={styles.addv}>
             <select aria-label="Object" disabled>
@@ -324,38 +315,6 @@ export function OwnValues({ targetName, onBack }: { targetName: string; onBack: 
             <button class="btn btn-secondary" disabled>
               Add value
             </button>
-          </div>
-        </div>
-      </div>
-      <div class={`${styles.grid2} ${styles.spaced}`}>
-        <div class={styles.panel}>
-          <div class={styles.panelHead}>
-            <h2>Always {targetName}'s own</h2>
-          </div>
-          <div class={styles.panelB}>
-            <p class={styles.muted}>
-              These stay as they are in {targetName}. A single deployment can still overwrite them,
-              in its Plan step.
-            </p>
-            <div class={styles.pins}>
-              {ALWAYS.map(([what, tag]) => (
-                <div>
-                  <span>{what}</span>
-                  <span class={styles.pinTag}>{tag}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div class={styles.panel}>
-          <div class={styles.panelHead}>
-            <h2>Hook secrets</h2>
-          </div>
-          <div class={styles.panelB}>
-            <p class={styles.muted}>
-              Secrets are not listed here. Rossum never shows them, and the Console never stores
-              them. You type a secret during a deployment, only when {targetName} needs a new one.
-            </p>
           </div>
         </div>
       </div>

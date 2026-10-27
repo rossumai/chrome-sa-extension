@@ -501,19 +501,6 @@
 .wzRow p {
   margin-bottom: 0;
 }
-.ownt {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.ownt th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: 12px;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--border);
-}
 .addv {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
@@ -528,29 +515,6 @@
   border-radius: 6px;
   background: var(--bg-input);
   color: var(--text-primary);
-}
-.pins div {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-  padding: 8px 0;
-  border-top: 1px solid var(--border);
-  font-size: 13px;
-}
-.pins div:first-child {
-  border-top: 0;
-}
-.pinTag {
-  padding: 1px 8px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  background: var(--bg-base);
-  color: var(--text-secondary);
-}
-.spaced {
-  margin-top: 18px;
 }
 @media (max-width: 900px) {
   .review,

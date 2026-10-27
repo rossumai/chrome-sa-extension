@@ -14,6 +14,7 @@ type Props = {
   fetchOrgs?: FetchOrgs;
   onConnected: (token: string) => void;
   onBack: () => void;
+  onCancel: () => void;
 };
 
 export default function Connect({
@@ -21,6 +22,7 @@ export default function Connect({
   fetchOrgs: fetcher = defaultFetch,
   onConnected,
   onBack,
+  onCancel,
 }: Props) {
   const [token, setToken] = useState('');
   const [busy, setBusy] = useState(false);
@@ -123,6 +125,9 @@ export default function Connect({
           Back
         </button>
         <span class={styles.sp}></span>
+        <button class="btn btn-secondary" onClick={onCancel}>
+          Cancel
+        </button>
         <button class="btn btn-primary" disabled={!checked} onClick={() => onConnected(checked)}>
           Read both orgs
         </button>

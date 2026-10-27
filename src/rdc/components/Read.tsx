@@ -43,6 +43,14 @@ export function LogLine({ line }: { line: string }) {
 
 export type Counts = { source: Record<Kind, number>; target: Record<Kind, number> };
 
+// A finished read, kept by the page so going back to this step shows it without syncing again.
+export type ReadResult = {
+  counts: Counts;
+  sourceLog: string[];
+  targetLog: string[];
+  targetName: string;
+};
+
 type Props = {
   rdc: Rdc | null;
   rdcError: string;
@@ -51,8 +59,11 @@ type Props = {
   domain: string;
   token: string;
   organizations: () => Promise<unknown>;
-  onDone: (counts: Counts) => void;
+  // A finished read to show instead of syncing; "Read again" starts a fresh one.
+  kept?: ReadResult | null;
+  onDone: (result: ReadResult) => void;
   onBack: () => void;
+  onCancel: () => void;
 };
 
 type Pending = { prompt: Prompt; answer: (key: string | null) => void };
@@ -67,16 +78,20 @@ export default function Read({
   domain,
   token,
   organizations,
+  kept,
   onDone,
   onBack,
+  onCancel,
 }: Props) {
   const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [targetName, setTargetName] = useState('');
-  const [sourceLog, setSourceLog] = useState<string[]>([]);
-  const [targetLog, setTargetLog] = useState<string[]>([]);
-  const [counts, setCounts] = useState<Counts | null>(null);
+  const [targetName, setTargetName] = useState(kept?.targetName ?? '');
+  const [sourceLog, setSourceLog] = useState<string[]>(kept?.sourceLog ?? []);
+  const [targetLog, setTargetLog] = useState<string[]>(kept?.targetLog ?? []);
+  const [counts, setCounts] = useState<Counts | null>(kept?.counts ?? null);
+  // Only the first run may be skipped: a kept read is shown until the admin asks for a new one.
+  const skipFirst = useRef(!!kept);
   const [pending, setPending] = useState<Pending | null>(null);
   const pendingRef = useRef<Pending | null>(null);
   // The latest callbacks, so a read started once is not restarted by a parent re-render.
@@ -85,6 +100,7 @@ export default function Read({
 
   useEffect(() => {
     if (!rdc) return;
+    if (attempt === 0 && skipFirst.current) return;
     let alive = true;
     const ask = (prompt: Prompt) =>
       new Promise<string | null>((resolve) => {
@@ -228,11 +244,19 @@ export default function Read({
           Back
         </button>
         <span class={styles.sp}></span>
+        <button class="btn btn-secondary" onClick={onCancel}>
+          Cancel
+        </button>
+        {counts && !busy && !noRdc && (
+          <button class="btn btn-secondary" onClick={() => setAttempt((a) => a + 1)}>
+            Read again
+          </button>
+        )}
         <button
           class="btn btn-primary"
           disabled={!counts || noRdc}
           title={noRdc ? noRdcText : undefined}
-          onClick={() => counts && onDone(counts)}
+          onClick={() => counts && onDone({ counts, sourceLog, targetLog, targetName })}
         >
           Plan the deployment
         </button>

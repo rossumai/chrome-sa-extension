@@ -25,7 +25,11 @@ function fakeRdc() {
     files: vi.fn(() => new Map<string, Uint8Array>()),
     free: vi.fn(),
   };
-  return { version: () => '1.0.0', Project: { create: vi.fn(() => project) } } as unknown as Rdc;
+  const rdc = {
+    version: () => '1.0.0',
+    Project: { create: vi.fn(() => project) },
+  } as unknown as Rdc;
+  return { rdc, project };
 }
 
 // The session sees Acme; the source token sees Acme Test.
@@ -70,7 +74,7 @@ afterEach(() => {
   delete (globalThis as any).chrome;
 });
 
-const loadRdc = () => Promise.resolve(fakeRdc());
+const loadRdc = () => Promise.resolve(fakeRdc().rdc);
 
 describe('rdc App', () => {
   it('says so when not connected', () => {
@@ -164,6 +168,62 @@ describe('rdc App', () => {
     expect(root.textContent).toContain('Connect to test');
   });
 
+  // From the overview to a finished read, then on to Plan.
+  async function toPlan() {
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Deploy from test');
+    await click('button', 'Deploy from test');
+    await type('rdc-conn-token', 'stok');
+    await click('button', 'Check token');
+    await click('button', 'Read both orgs');
+    await flush();
+    await click('button', 'Plan the deployment');
+  }
+
+  it('cancels from Plan to the overview without reading again', async () => {
+    const { rdc, project } = fakeRdc();
+    mount(<App connected={true} loadRdc={async () => rdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    await toPlan();
+    expect(project.sync).toHaveBeenCalledTimes(2);
+    await click('button', 'Cancel');
+    expect(root.textContent).toContain('Acme deploys from');
+    expect(project.sync).toHaveBeenCalledTimes(2);
+  });
+
+  it('goes back from Plan to the kept read, and reads again only on request', async () => {
+    const { rdc, project } = fakeRdc();
+    mount(<App connected={true} loadRdc={async () => rdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    await toPlan();
+    await click('button', 'Back');
+    await flush();
+    expect(root.textContent).toContain('Reading both orgs');
+    expect(root.textContent).toContain('0 objects read');
+    expect(root.textContent).toContain('pulled');
+    expect(project.sync).toHaveBeenCalledTimes(2);
+    await click('button', 'Read again');
+    await flush();
+    expect(project.sync).toHaveBeenCalledTimes(4);
+  });
+
+  it('offers Cancel on every wizard step', async () => {
+    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    await toPlan();
+    for (const next of ['Review the changes', 'Continue to write']) {
+      expect(byText('button', 'Cancel')).toBeDefined();
+      await click('button', next);
+    }
+    await click('button', 'Cancel');
+    expect(root.textContent).toContain('Acme deploys from');
+    await click('button', 'Deploy from test');
+    expect(byText('button', 'Cancel')).toBeDefined();
+  });
+
   it('opens own values from the overview, with the work-in-progress note', async () => {
     mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();
@@ -177,6 +237,9 @@ describe('rdc App', () => {
     expect(root.textContent).toContain('Not available yet. Own values are stored with the project');
     controls().forEach((c) => expect(c.disabled).toBe(true));
     expect(byText('button', 'Save changes').hasAttribute('disabled')).toBe(true);
+    expect(root.textContent).not.toContain('Always Acme');
+    expect(root.textContent).not.toContain('Hook secrets');
+    expect(root.querySelector('table')).toBeNull();
     expect(chromeSet).not.toHaveBeenCalled();
     expect(sessionSet).not.toHaveBeenCalled();
   });

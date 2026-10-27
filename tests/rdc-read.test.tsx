@@ -72,6 +72,7 @@ const readProps = (rdc: Rdc | null, over: any = {}) => ({
   organizations: async () => orgs,
   onDone: vi.fn(),
   onBack: vi.fn(),
+  onCancel: vi.fn(),
   ...over,
 });
 
@@ -95,9 +96,37 @@ describe('Read', () => {
     expect(root.textContent).toContain('pull queues');
     act(() => byText('button', 'Plan the deployment').click());
     expect(props.onDone).toHaveBeenCalledWith({
-      source: { queues: 1, schemas: 1, hooks: 1, rules: 0, labels: 0 },
-      target: { queues: 0, schemas: 0, hooks: 2, rules: 0, labels: 0 },
+      counts: {
+        source: { queues: 1, schemas: 1, hooks: 1, rules: 0, labels: 0 },
+        target: { queues: 0, schemas: 0, hooks: 2, rules: 0, labels: 0 },
+      },
+      sourceLog: ['pull queues'],
+      targetLog: ['pull queues'],
+      targetName: 'Acme',
     });
+  });
+
+  it('shows a kept read without syncing, and reads again on request', async () => {
+    const { rdc, project } = fakeRdc(async () => outcome);
+    const kept = {
+      counts: {
+        source: { queues: 4, schemas: 4, hooks: 0, rules: 0, labels: 0 },
+        target: { queues: 0, schemas: 0, hooks: 0, rules: 0, labels: 0 },
+      },
+      sourceLog: ['kept line'],
+      targetLog: [],
+      targetName: 'Acme',
+    };
+    mount(<Read {...readProps(rdc, { kept })} />);
+    await flush();
+    expect(project.sync).not.toHaveBeenCalled();
+    expect(root.textContent).toContain('kept line');
+    expect(root.textContent).toContain('8 objects read');
+    act(() => byText('button', 'Read again').click());
+    await flush();
+    await flush();
+    expect(project.sync).toHaveBeenCalledTimes(2);
+    expect(root.textContent).not.toContain('kept line');
   });
 
   it('frees the project and offers Retry when a sync fails', async () => {
@@ -216,6 +245,7 @@ describe('Connect', () => {
         fetchOrgs={async () => ({ results: [{ id: 1 }] })}
         onConnected={onConnected}
         onBack={vi.fn()}
+        onCancel={vi.fn()}
       />,
     );
     await type('rdc-conn-token', 'tok');
@@ -230,7 +260,13 @@ describe('Connect', () => {
     const onConnected = vi.fn();
     const fetchOrgs = vi.fn(async () => ({ results: [{ id: 20412, name: 'Acme Test' }] }));
     mount(
-      <Connect source={source} fetchOrgs={fetchOrgs} onConnected={onConnected} onBack={vi.fn()} />,
+      <Connect
+        source={source}
+        fetchOrgs={fetchOrgs}
+        onConnected={onConnected}
+        onBack={vi.fn()}
+        onCancel={vi.fn()}
+      />,
     );
     await type('rdc-conn-token', ' tok ');
     act(() => byText('button', 'Check token').click());
@@ -250,6 +286,7 @@ describe('Connect', () => {
         }}
         onConnected={vi.fn()}
         onBack={vi.fn()}
+        onCancel={vi.fn()}
       />,
     );
     await type('rdc-conn-token', 'tok');
