@@ -13,7 +13,7 @@ import {
   globalActionMarks,
 } from './rules.js';
 import { sameDraft, type RuleDraft } from './ruleDraft.js';
-import { enginePlan, type EngineKind } from './engine.js';
+import { enginePlan, deletableFields, type EngineKind } from './engine.js';
 import { hooksByFieldText } from './codeRefs.js';
 
 export const domain = signal('');
@@ -82,9 +82,19 @@ export const enginePlanNow = computed(() => {
   if (es?.kind !== 'custom' || !es.engine) return null;
   return enginePlan(work.value, es.fields, es.engine.url, engineCatalog.value);
 });
+// Engine fields marked for deletion (their ids). Save deletes those still unused anywhere.
+export const engineDeletes = signal<Set<number>>(new Set());
+export const engineDeletesNow = computed(() => {
+  const byName = engineUsers.value?.byName;
+  const es = engineState.value;
+  if (!byName || !es?.engine || !engineDeletes.value.size) return [];
+  return deletableFields(work.value, es.fields, byName).filter((f) =>
+    engineDeletes.value.has(f.id),
+  );
+});
 export const engineChanges = computed(() => {
   const p = enginePlanNow.value;
-  return p ? p.create.length + p.patch.length : 0;
+  return (p ? p.create.length + p.patch.length : 0) + engineDeletesNow.value.length;
 });
 // The engine panel (custom engine only): the grid shows only extracted fields, each with its
 // seed picker in the AI column.
@@ -116,6 +126,7 @@ export function startDraft(name: string, content: Node[]) {
   base.value = content;
   baseName.value = name;
   history.value = initHistory({ name, content });
+  engineDeletes.value = new Set();
 }
 
 // Native Rules of the selected queue, and the one picked to highlight its fields.

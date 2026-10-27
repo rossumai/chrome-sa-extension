@@ -31,6 +31,7 @@ vi.mock('../src/builder/api.js', () => ({
   listPreTrainedFields: vi.fn(async () => []),
   createEngineField: vi.fn(async () => ({})),
   patchEngineField: vi.fn(async () => ({})),
+  deleteEngineField: vi.fn(async () => null),
 }));
 vi.mock('../src/agent/agentApi.js', () => ({
   createChat: vi.fn(async () => 'chat-9'),
@@ -58,6 +59,7 @@ import {
   fixWithFabry,
   openHookEditor,
   openEnginePanel,
+  toggleEngineDelete,
   updateHookDraft,
   saveHook,
   discardHook,
@@ -233,6 +235,30 @@ describe('custom engine', () => {
     const byName = store.engineUsers.value!.byName!;
     expect(byName.get('old_po')).toEqual(['Credit notes (6)']);
     expect(byName.has('calc')).toBe(false); // a formula does not use an engine field
+  });
+
+  it('Save deletes a marked engine field after creating, before the schema', async () => {
+    vi.mocked(api.listEngineFields).mockImplementation(async () => {
+      calls.push('list');
+      return [
+        { id: 1, name: 'doc_id', type: 'string', pre_trained_field_id: 'document_id' },
+        { id: 9, name: 'gone', type: 'string', pre_trained_field_id: null },
+      ];
+    });
+    vi.mocked(api.deleteEngineField).mockImplementation(async (id: number) => {
+      calls.push(`delete ${id}`);
+      return null;
+    });
+    store.engineState.value = {
+      ...store.engineState.value!,
+      fields: await api.listEngineFields(5),
+    };
+    store.engineUsers.value = { byName: new Map(), error: null };
+    toggleEngineDelete(9);
+    calls.length = 0;
+    await save();
+    expect(calls.slice(0, 4)).toEqual(['create po', 'delete 9', 'list', 'validate']);
+    expect(store.engineDeletes.value.size).toBe(0);
   });
 
   it('a failed engine-field write stops before the schema save', async () => {

@@ -1448,6 +1448,16 @@
   background: var(--bg-hover);
 }
 
+.engineDeleted .linkName {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.engineList .engineRow .iconBtn {
+  flex: none;
+  margin-left: auto;
+}
+
 /* An engine field's detail (seed, or the queues that use it) shortens before its name. */
 .engineRow > .dim,
 .linkRow > .dim {
@@ -1523,26 +1533,15 @@
   width: 100%;
 }
 
-.aiPick[data-ai='seeded'] {
-  box-shadow: inset 3px 0 var(--success-fg);
-}
-
-.aiPick[data-ai='learning'] {
-  box-shadow: inset 3px 0 var(--info-fg);
-}
-
 .aiPick[data-ai='new'] {
   box-shadow: inset 3px 0 var(--warning-fg);
 }
 
-.ai_seeded {
-  background: var(--success-bg);
-  color: var(--success-fg);
-}
-
+.ai_seeded,
 .ai_learning {
-  background: var(--info-bg);
-  color: var(--info-fg);
+  background: none;
+  color: var(--text-secondary);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 .ai_new {

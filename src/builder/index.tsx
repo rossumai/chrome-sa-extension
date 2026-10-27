@@ -357,6 +357,7 @@ async function saveEngineFields(): Promise<SaveResult | null> {
   try {
     for (const body of plan.create) await api.createEngineField(body);
     for (const p of plan.patch) await api.patchEngineField(p.id, p.body);
+    for (const f of store.engineDeletesNow.value) await api.deleteEngineField(f.id);
   } catch (err: any) {
     if (isRateLimited(err)) throw err;
     failed = {
@@ -368,6 +369,7 @@ async function saveEngineFields(): Promise<SaveResult | null> {
   // Re-read what landed, whether or not all of it did, so the next Save plans from there.
   const fields = await api.listEngineFields(es.engine.id);
   store.engineState.value = { ...es, fields };
+  store.engineDeletes.value = new Set();
   return failed;
 }
 
@@ -438,6 +440,13 @@ async function loadEngineUsers() {
 }
 
 /** Closing also drops the selection, so the field panel does not take the engine's place. */
+/** Mark an engine field no queue uses for deletion on Save, or keep it again. */
+export function toggleEngineDelete(id: number) {
+  const next = new Set(store.engineDeletes.value);
+  if (!next.delete(id)) next.add(id);
+  store.engineDeletes.value = next;
+}
+
 export function closeEnginePanel() {
   store.enginePanel.value = false;
   store.selectedKey.value = null;

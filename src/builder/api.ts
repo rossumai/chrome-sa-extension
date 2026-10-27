@@ -188,6 +188,11 @@ export function patchEngineField(id: number, body: Record<string, unknown>): Pro
   return request('PATCH', `/api/v1/engine_fields/${id}`, body);
 }
 
+/** 409 while a schema datapoint still uses the field's name. */
+export function deleteEngineField(id: number): Promise<any> {
+  return request('DELETE', `/api/v1/engine_fields/${id}`);
+}
+
 /** The hooks attached to a queue (the Builder keeps the MDH ones). */
 export function listHooks(queueId: number): Promise<RawResource[]> {
   return listAll(`/api/v1/hooks/?queue=${queueId}&page_size=100`);

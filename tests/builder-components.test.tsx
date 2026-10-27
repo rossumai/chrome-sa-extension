@@ -1614,11 +1614,45 @@ describe('Builder engine', () => {
       'item_desccreate · learning',
     ]);
     expect(rows('[data-engine-elsewhere]')).toEqual(['credit_refCredit notes (6)']);
-    expect(rows('[data-engine-nowhere]')).toEqual(['unused_flearning']);
+    expect(rows('[data-engine-nowhere]')).toEqual(['unused_flearning✕']);
     act(() => {
       (panel()!.querySelector('[data-engine-field="vendor"]') as HTMLElement).click();
     });
     expect(store.selectedKey.value).toBe(keyOf('vendor'));
+  });
+
+  it('✕ marks an engine field no queue uses for deletion on Save; undo keeps it', () => {
+    custom();
+    act(() => {
+      store.engineUsers.value = { byName: new Map(), error: null };
+      store.enginePanel.value = true;
+    });
+    const before = store.engineChanges.value;
+    const btn = () =>
+      panel()!.querySelector(
+        '[data-engine-field="unused_f"] [data-action="delete-engine-field"]',
+      ) as HTMLElement;
+    act(() => btn().click());
+    expect(store.engineDeletesNow.value.map((f) => f.name)).toEqual(['unused_f']);
+    expect(store.engineChanges.value).toBe(before + 1);
+    expect(
+      [...panel()!.querySelectorAll('[data-engine-save] [data-engine-field]')].pop()!.textContent,
+    ).toBe('unused_fdelete');
+    act(() => btn().click());
+    expect(store.engineDeletesNow.value).toEqual([]);
+    // Discard drops a marked delete with the schema edits.
+    act(() => btn().click());
+    act(() => {
+      (root.querySelector('[data-action="discard"]') as HTMLElement).click();
+    });
+    expect(store.engineDeletes.value.size).toBe(0);
+  });
+
+  it('the AI chip shows the state only; the seed is on hover', () => {
+    custom();
+    const chip = row('doc_id').querySelector('[data-ai]') as HTMLElement;
+    expect(chip.textContent).toBe('seeded');
+    expect(chip.title).toContain('document_id');
   });
 
   it('Esc closes it without opening the field panel; the badge toggles it', () => {

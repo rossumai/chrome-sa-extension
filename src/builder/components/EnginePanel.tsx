@@ -7,12 +7,15 @@ import {
   engineFieldsByName,
   enginePlanNow,
   engineUsers,
+  engineDeletes,
+  engineDeletesNow,
 } from '../store.js';
-import { closeEnginePanel } from '../index.jsx';
+import { closeEnginePanel, toggleEngineDelete } from '../index.jsx';
 import { flatten } from '../model.js';
 import { extractedFields, engineStatus, unusedEngineFields } from '../engine.js';
 import Extraction from './Extraction.jsx';
 import WideButton from './WideButton.jsx';
+import Icon from './icons.jsx';
 import s from './Builder.module.css';
 
 const STATES = ['seeded', 'learning', 'new', 'rejected'] as const;
@@ -99,10 +102,34 @@ function Unused({ fields }: { fields: any[] }) {
       {nowhere.length > 0 && (
         <div class={s.field + ' ' + s.engineList} data-engine-nowhere="">
           <span class={s.fieldLabel}>Not used by any queue ({nowhere.length})</span>
-          {nowhere.map((f) => (
-            <FieldRow name={String(f.name)} detail={seedText(f)} />
-          ))}
-          <div class={s.dim}>Save leaves them on the engine.</div>
+          {nowhere.map((f) => {
+            const marked = engineDeletes.value.has(f.id);
+            return (
+              <div
+                class={s.engineRow + (marked ? ' ' + s.engineDeleted : '')}
+                data-engine-field={String(f.name)}
+                data-marked={marked ? 'delete' : undefined}
+                title={`${f.name} · ${seedText(f)}`}
+              >
+                <span class={s.linkName + ' ' + s.mono}>{f.name}</span>
+                <span class={s.dim}>{marked ? 'deleted on Save' : seedText(f)}</span>
+                <button
+                  type="button"
+                  class={s.iconBtn}
+                  data-action="delete-engine-field"
+                  title={
+                    marked
+                      ? 'Keep this engine field'
+                      : 'Delete this engine field on Save (what it learned is lost)'
+                  }
+                  onClick={() => toggleEngineDelete(f.id)}
+                >
+                  {marked ? <Icon name="undo" size={12} /> : '✕'}
+                </button>
+              </div>
+            );
+          })}
+          <div class={s.dim}>✕ deletes one on Save, with what it learned. Unmarked ones stay.</div>
         </div>
       )}
     </Fragment>
@@ -185,10 +212,11 @@ export default function EnginePanel() {
         </div>
         {e.description && <div class={s.dim}>{e.description}</div>}
       </div>
-      {plan && plan.create.length + plan.patch.length > 0 && (
+      {plan && plan.create.length + plan.patch.length + engineDeletesNow.value.length > 0 && (
         <div class={s.field + ' ' + s.engineList} data-engine-save="">
           <span class={s.fieldLabel}>
-            Save writes to the engine first ({plan.create.length + plan.patch.length})
+            Save writes to the engine first (
+            {plan.create.length + plan.patch.length + engineDeletesNow.value.length})
           </span>
           {plan.create.map((c) => (
             <FieldRow
@@ -198,6 +226,9 @@ export default function EnginePanel() {
           ))}
           {plan.patch.map((p) => (
             <FieldRow name={p.name} detail={`update · ${changeText(p.body)}`} />
+          ))}
+          {engineDeletesNow.value.map((f) => (
+            <FieldRow name={String(f.name)} detail="delete" />
           ))}
         </div>
       )}

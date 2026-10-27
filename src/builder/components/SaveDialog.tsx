@@ -1,6 +1,13 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { summary, saving, sharedCount, renamed, enginePlanNow } from '../store.js';
+import {
+  summary,
+  saving,
+  sharedCount,
+  renamed,
+  enginePlanNow,
+  engineDeletesNow,
+} from '../store.js';
 import { save } from '../index.jsx';
 import type { SaveResult } from '../save.js';
 import { summaryText } from './Toolbar.jsx';
@@ -34,7 +41,10 @@ export default function SaveDialog({ onClose }: { onClose: () => void }) {
               </p>
             )}
             {enginePlanNow.value &&
-              enginePlanNow.value.create.length + enginePlanNow.value.patch.length > 0 && (
+              enginePlanNow.value.create.length +
+                enginePlanNow.value.patch.length +
+                engineDeletesNow.value.length >
+                0 && (
                 <div data-engine-plan="">
                   <p>
                     Engine fields first
@@ -42,6 +52,8 @@ export default function SaveDialog({ onClose }: { onClose: () => void }) {
                       ` · create ${enginePlanNow.value.create.map((c) => c.name).join(', ')}`}
                     {enginePlanNow.value.patch.length > 0 &&
                       ` · update ${enginePlanNow.value.patch.map((p) => p.name).join(', ')}`}
+                    {engineDeletesNow.value.length > 0 &&
+                      ` · delete ${engineDeletesNow.value.map((f) => f.name).join(', ')}`}
                   </p>
                   <p class={s.dim}>
                     They are saved before the schema. If Rossum then rejects the schema, they stay

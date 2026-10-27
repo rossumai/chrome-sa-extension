@@ -178,3 +178,12 @@ export function engineFieldUsers(
   }
   return out;
 }
+
+/**
+ * Engine fields safe to delete: no extracted datapoint of this schema uses one, and no other
+ * queue on the engine does (`users`, from their schemas). The API refuses (409) to delete one
+ * a schema still uses.
+ */
+export function deletableFields(nodes: Node[], fields: any[], users: Map<string, string[]>): any[] {
+  return unusedEngineFields(nodes, fields).filter((f) => !users.has(String(f.name)));
+}

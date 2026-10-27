@@ -470,7 +470,7 @@ function AiCell({ node }: { node: Node }) {
       title={
         rejected
           ? 'The API rejects this on a custom engine: click to fix it'
-          : `${st.state}${st.seed ? ` · catalog seed ${st.seed}` : ''} · click to edit the engine`
+          : `${st.seed ? `Seeded from catalog field ${st.seed}` : st.state === 'new' ? 'No engine field yet' : 'Learning: no catalog seed'} · click to edit the engine`
       }
       onClick={(e) => {
         e.stopPropagation();
@@ -478,7 +478,6 @@ function AiCell({ node }: { node: Node }) {
       }}
     >
       {rejected ? 'fix' : st.state}
-      {!rejected && st.seed ? ` · ${st.seed}` : ''}
     </button>
   );
 }
