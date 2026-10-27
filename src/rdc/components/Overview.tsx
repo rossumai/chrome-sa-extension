@@ -1,6 +1,6 @@
 // The deployments page below the band: the first-visit card with no source, else the source,
 // the history and the values the org keeps for itself (the last two are work in progress).
-import { h } from 'preact';
+import { h, type ComponentChildren } from 'preact';
 import { hostOf, type Source } from '../deploy.js';
 import Wip from './Wip.jsx';
 import styles from './Deploy.module.css';
@@ -13,6 +13,8 @@ type Props = {
   // Why a deployment cannot start (rdc is not available), or empty.
   blocked?: string;
   onEditOwn: () => void;
+  // The source form, when open; it replaces the button that opened it.
+  chooser?: ComponentChildren;
 };
 
 export default function Overview({
@@ -22,6 +24,7 @@ export default function Overview({
   onDeploy,
   blocked = '',
   onEditOwn,
+  chooser,
 }: Props) {
   if (!source) {
     return (
@@ -38,9 +41,11 @@ export default function Overview({
               <li>Give a token for it. It is only read, and the token is not kept.</li>
               <li>Review what will change in {targetName}, then write it.</li>
             </ol>
-            <button class="btn btn-primary" onClick={onChooseSource}>
-              Choose the org to deploy from
-            </button>
+            {chooser || (
+              <button class="btn btn-primary" onClick={onChooseSource}>
+                Choose the org to deploy from
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -76,12 +81,16 @@ export default function Overview({
                 {blocked}
               </div>
             )}
-            <div class={styles.srcFoot}>
-              {targetName} has one source.
-              <button class={styles.link} onClick={onChooseSource}>
-                Change source
-              </button>
-            </div>
+            {chooser ? (
+              <div class={styles.panelB}>{chooser}</div>
+            ) : (
+              <div class={styles.srcFoot}>
+                {targetName} has one source.
+                <button class={styles.link} onClick={onChooseSource}>
+                  Change source
+                </button>
+              </div>
+            )}
             <div class={styles.panelB}>
               <Wip feature="remember" />
             </div>

@@ -125,9 +125,12 @@ All screens are in the mockup. Copy is plain, short, active, from the admin's po
 1. **First visit** — no source yet. The band with "Your test org" behind a lock; three numbered
    sentences on how it works; one button, *Choose the org to deploy from*; a note that the record
    lives in this org's own data storage.
-2. **Choose the org to deploy from** (modal) — Rossum address, a token used only to list the orgs
-   it can read, the organization (select), a short name. Saves URL, org id and name only.
-   *Change source* on the overview opens the same modal.
+2. **Choose the org to deploy from** (an inline form, hidden until asked for — owner,
+   2026-10-27, replacing the mockup's modal) — Rossum address, a token used only to list the orgs
+   it can read, the organization (select), a short name. Saves URL, org id and name only. Its
+   button says *Use <name> as the source*, never "Deploy": choosing deploys nothing. It opens in
+   place of the button that asked for it: *Choose the org to deploy from* on the first visit,
+   *Change source* on the overview.
 3. **This org** (overview) — the band; *Acme deploys from* (one source, *Deploy from test*,
    *Change source*); *Deployments into Acme* as a timeline (deployed / partly skipped /
    cancelled); *What Acme keeps for itself* with *Edit*.

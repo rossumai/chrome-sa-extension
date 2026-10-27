@@ -102,6 +102,33 @@ describe('rdc App', () => {
     expect(byText('button', 'Choose the org to deploy from')).toBeUndefined();
   });
 
+  it('shows the source form inline, hidden until asked for', async () => {
+    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    expect(root.querySelector('#rdc-src-address')).toBeNull();
+    await click('button', 'Choose the org to deploy from');
+    expect(root.querySelector('[role="dialog"]')).toBeNull();
+    expect(
+      root.querySelector('section[aria-label="Choose the org to deploy from"]'),
+    ).not.toBeNull();
+    expect(byText('button', 'Choose the org to deploy from')).toBeUndefined();
+    expect((byText('button', 'Use test as the source') as HTMLButtonElement).disabled).toBe(true);
+    await click('button', 'Cancel');
+    expect(root.querySelector('#rdc-src-address')).toBeNull();
+    expect(byText('button', 'Choose the org to deploy from')).toBeDefined();
+
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Use test as the source');
+    expect(root.querySelector('#rdc-src-address')).toBeNull();
+    await click('button', 'Change source');
+    expect(root.querySelector('#rdc-src-address')).not.toBeNull();
+    expect(byText('button', 'Change source')).toBeUndefined();
+    expect(root.textContent).toContain('Acme deploys from');
+  });
+
   it('walks from choosing a source through the work-in-progress steps', async () => {
     mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();
@@ -109,7 +136,7 @@ describe('rdc App', () => {
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'stok');
     await click('button', 'Find organizations');
-    await click('button', 'Deploy from test');
+    await click('button', 'Use test as the source');
     expect(root.textContent).toContain('Acme deploys from');
 
     await click('button', 'Deploy from test');
@@ -159,7 +186,7 @@ describe('rdc App', () => {
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'stok');
     await click('button', 'Find organizations');
-    await click('button', 'Deploy from test');
+    await click('button', 'Use test as the source');
     await click('button', 'Deploy from test');
     await type('rdc-conn-token', 'stok');
     await click('button', 'Check token');
@@ -174,7 +201,7 @@ describe('rdc App', () => {
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'stok');
     await click('button', 'Find organizations');
-    await click('button', 'Deploy from test');
+    await click('button', 'Use test as the source');
     await click('button', 'Deploy from test');
     await type('rdc-conn-token', 'stok');
     await click('button', 'Check token');
@@ -231,7 +258,7 @@ describe('rdc App', () => {
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'stok');
     await click('button', 'Find organizations');
-    await click('button', 'Deploy from test');
+    await click('button', 'Use test as the source');
     await click('button', 'Edit');
     expect(root.textContent).toContain('What Acme keeps for itself');
     expect(root.textContent).toContain('Not available yet. Own values are stored with the project');
@@ -253,7 +280,7 @@ describe('rdc App', () => {
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'stok');
     await click('button', 'Find organizations');
-    await click('button', 'Deploy from test');
+    await click('button', 'Use test as the source');
     const deploy = byText('button', 'Deploy from test') as HTMLButtonElement;
     expect(deploy.disabled).toBe(true);
     expect(deploy.title).toContain('rdc_wasm.js is not in this build');
@@ -269,7 +296,7 @@ describe('rdc App', () => {
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
     await type('rdc-src-token', 'stok');
     await click('button', 'Find organizations');
-    await click('button', 'Deploy from test');
+    await click('button', 'Use test as the source');
     // still loading: blocked with the loading text
     expect((byText('button', 'Deploy from test') as HTMLButtonElement).disabled).toBe(true);
     act(() => fail(new Error('gone')));

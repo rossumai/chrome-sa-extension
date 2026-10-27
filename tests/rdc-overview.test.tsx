@@ -107,7 +107,7 @@ describe('ChooseSource', () => {
     act(() => byText('button', 'Find organizations').click());
     await flush();
     expect(fetchOrgs).toHaveBeenCalledWith('https://partner-sandbox.rossum.app', 'tok');
-    act(() => byText('button', 'Deploy from test').click());
+    act(() => byText('button', 'Use test as the source').click());
     expect(onChosen).toHaveBeenCalledWith(source);
   });
 
@@ -123,7 +123,7 @@ describe('ChooseSource', () => {
     await type('rdc-src-token', 'tok');
     act(() => byText('button', 'Find organizations').click());
     await flush();
-    act(() => byText('button', 'Deploy from test').click());
+    act(() => byText('button', 'Use test as the source').click());
     expect(root.textContent).toContain(
       'This is the org you are signed into. Choose another org to deploy from.',
     );
@@ -142,7 +142,7 @@ describe('ChooseSource', () => {
     await type('rdc-src-token', 'tok');
     act(() => byText('button', 'Find organizations').click());
     await flush();
-    act(() => byText('button', 'Deploy from test').click());
+    act(() => byText('button', 'Use test as the source').click());
     expect(onChosen).toHaveBeenCalled();
   });
 
@@ -210,7 +210,7 @@ describe('ChooseSource', () => {
     expect(root.querySelector('select')).not.toBeNull();
     await type('rdc-src-address', 'https://other.rossum.app');
     expect(root.querySelector('select')).toBeNull();
-    const confirm = byText('button', 'Deploy from test') as HTMLButtonElement;
+    const confirm = byText('button', 'Use test as the source') as HTMLButtonElement;
     expect(confirm.disabled).toBe(true);
     act(() => confirm.click());
     expect(onChosen).not.toHaveBeenCalled();

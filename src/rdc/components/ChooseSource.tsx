@@ -1,7 +1,8 @@
-// The modal that picks the one org this org deploys from. The token lives in this component's
-// state only: closing the modal unmounts it and the token goes with it.
+// The inline form, hidden until asked for, that picks the one org this org deploys from. The
+// token lives in this component's state only: closing the form unmounts it and the token goes
+// with it. Choosing deploys nothing; it only names the source.
 import { h } from 'preact';
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { apiBaseOf } from '../core.js';
 import { readableOrgs, type Source } from '../deploy.js';
 import { isRateLimited, rateLimitError, rateLimitMessage } from '../../net/rateLimit.js';
@@ -52,6 +53,10 @@ export default function ChooseSource({
   // The origin the list was read from, and a counter that voids a read an edit has outdated.
   const [foundDomain, setFoundDomain] = useState('');
   const edits = useRef(0);
+  const addressInput = useRef<HTMLInputElement>(null);
+
+  // The form appears on a click, so the first field takes the focus.
+  useEffect(() => addressInput.current?.focus(), []);
 
   const edited = () => {
     edits.current++;
@@ -117,95 +122,87 @@ export default function ChooseSource({
   };
 
   return (
-    <div class={styles.scrim}>
-      <div class={styles.modal} role="dialog" aria-label="Choose the org to deploy from">
-        <div class={styles.mh}>
-          Choose the org to deploy from
-          <button class="btn btn-secondary" aria-label="Close" onClick={onCancel}>
-            ×
-          </button>
-        </div>
-        <div class={styles.mb}>
-          <div class={styles.fld}>
-            <label for="rdc-src-address">Rossum address</label>
-            <input
-              id="rdc-src-address"
-              type="text"
-              placeholder="https://partner-sandbox.rossum.app"
-              value={address}
-              onInput={(e) => {
-                setAddress((e.target as HTMLInputElement).value);
-                edited();
-              }}
-            />
-          </div>
-          <div class={styles.fld}>
-            <label for="rdc-src-token">API token</label>
-            <input
-              id="rdc-src-token"
-              type="password"
-              autocomplete="off"
-              value={token}
-              onInput={(e) => {
-                setToken((e.target as HTMLInputElement).value);
-                edited();
-              }}
-            />
-            <small>Only to find the organization. It is not kept.</small>
-          </div>
-          <div>
-            <button class="btn btn-secondary" disabled={busy} onClick={find}>
-              Find organizations
-            </button>
-          </div>
-          {error && (
-            <div class={`${styles.note} ${styles.err}`} role="alert">
-              {error}
-            </div>
-          )}
-          {orgs && (
-            <div class={styles.fld}>
-              <label for="rdc-src-org">Organization</label>
-              <select
-                id="rdc-src-org"
-                value={String(orgId)}
-                onChange={(e) => setOrgId(Number((e.target as HTMLSelectElement).value))}
-              >
-                {orgs.map((o) => (
-                  <option value={String(o.id)}>
-                    {o.name}, org {o.id}
-                  </option>
-                ))}
-              </select>
-              <small>The organizations this token can read.</small>
-            </div>
-          )}
-          {orgs && (
-            <div class={styles.fld}>
-              <label for="rdc-src-name">Short name</label>
-              <input
-                id="rdc-src-name"
-                type="text"
-                value={name}
-                onInput={(e) => setName((e.target as HTMLInputElement).value)}
-              />
-              <small>Shown on this page.</small>
-            </div>
-          )}
-        </div>
-        <div class={styles.mf}>
-          <button class="btn btn-secondary" onClick={onCancel}>
-            Cancel
-          </button>
-          <button
-            class="btn btn-primary"
-            disabled={!chosen || !shortName || !foundDomain}
-            onClick={confirm}
-          >
-            Deploy from {shortName || 'source'}
-          </button>
-        </div>
+    <section class={styles.form} aria-label="Choose the org to deploy from">
+      <h2>Choose the org to deploy from</h2>
+      <div class={styles.fld}>
+        <label for="rdc-src-address">Rossum address</label>
+        <input
+          id="rdc-src-address"
+          ref={addressInput}
+          type="text"
+          placeholder="https://partner-sandbox.rossum.app"
+          value={address}
+          onInput={(e) => {
+            setAddress((e.target as HTMLInputElement).value);
+            edited();
+          }}
+        />
       </div>
-    </div>
+      <div class={styles.fld}>
+        <label for="rdc-src-token">API token</label>
+        <input
+          id="rdc-src-token"
+          type="password"
+          autocomplete="off"
+          value={token}
+          onInput={(e) => {
+            setToken((e.target as HTMLInputElement).value);
+            edited();
+          }}
+        />
+        <small>Only to find the organization. It is not kept.</small>
+      </div>
+      <div>
+        <button class="btn btn-secondary" disabled={busy} onClick={find}>
+          Find organizations
+        </button>
+      </div>
+      {error && (
+        <div class={`${styles.note} ${styles.err}`} role="alert">
+          {error}
+        </div>
+      )}
+      {orgs && (
+        <div class={styles.fld}>
+          <label for="rdc-src-org">Organization</label>
+          <select
+            id="rdc-src-org"
+            value={String(orgId)}
+            onChange={(e) => setOrgId(Number((e.target as HTMLSelectElement).value))}
+          >
+            {orgs.map((o) => (
+              <option value={String(o.id)}>
+                {o.name}, org {o.id}
+              </option>
+            ))}
+          </select>
+          <small>The organizations this token can read.</small>
+        </div>
+      )}
+      {orgs && (
+        <div class={styles.fld}>
+          <label for="rdc-src-name">Short name</label>
+          <input
+            id="rdc-src-name"
+            type="text"
+            value={name}
+            onInput={(e) => setName((e.target as HTMLInputElement).value)}
+          />
+          <small>Shown on this page.</small>
+        </div>
+      )}
+      <div class={styles.formFoot}>
+        <button class="btn btn-secondary" onClick={onCancel}>
+          Cancel
+        </button>
+        <button
+          class="btn btn-primary"
+          disabled={!chosen || !shortName || !foundDomain}
+          onClick={confirm}
+        >
+          Use {shortName || 'it'} as the source
+        </button>
+      </div>
+    </section>
   );
 }

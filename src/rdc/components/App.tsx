@@ -217,6 +217,22 @@ export default function App({
         onDeploy={() => setScreen('connect')}
         blocked={rdcBlock}
         onEditOwn={() => setScreen('own')}
+        chooser={
+          screen === 'choose' && (
+            <ChooseSource
+              fetchOrgs={fetchOrgs}
+              targetDomain={domain.value}
+              targetOrgId={target.orgId}
+              onCancel={toOverview}
+              onChosen={(s) => {
+                setSource(s);
+                setSourceToken('');
+                setReadResult(null);
+                toOverview();
+              }}
+            />
+          )
+        }
       />
     );
 
@@ -233,20 +249,6 @@ export default function App({
           />
           {page}
         </div>
-        {screen === 'choose' && (
-          <ChooseSource
-            fetchOrgs={fetchOrgs}
-            targetDomain={domain.value}
-            targetOrgId={target.orgId}
-            onCancel={toOverview}
-            onChosen={(s) => {
-              setSource(s);
-              setSourceToken('');
-              setReadResult(null);
-              toOverview();
-            }}
-          />
-        )}
       </main>
     </div>
   );

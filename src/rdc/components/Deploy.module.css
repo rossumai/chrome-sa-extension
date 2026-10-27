@@ -1,4 +1,4 @@
-/* Overview, the work-in-progress note and the source modal. Colours come from the Console tokens. */
+/* Overview, the work-in-progress note and the inline source form. Colours come from the Console tokens. */
 .wrap {
   max-width: 1160px;
   margin: 0 auto;
@@ -153,48 +153,26 @@
   color: var(--danger-fg);
   border: 1px solid var(--danger-border);
 }
-.scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 70px 16px;
-  background: rgba(15, 17, 35, 0.5);
-  backdrop-filter: blur(2px);
-}
-.modal {
-  width: 540px;
-  max-width: 100%;
-  background: var(--bg-card);
+.form {
+  margin-top: 18px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
   border-radius: 14px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
-  overflow: hidden;
-}
-.mh {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px 8px 20px;
-  height: 52px;
-  border-bottom: 1px solid var(--border);
-  font-size: 16px;
-  font-weight: 700;
-}
-.mb {
-  padding: 14px 20px 20px;
+  background: var(--bg-card);
   display: flex;
   flex-direction: column;
   gap: 14px;
+  max-width: 540px;
 }
-.mf {
-  padding: 12px 20px;
-  border-top: 1px solid var(--border);
+.form h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.formFoot {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  background: var(--bg-base);
 }
 .fld label {
   display: block;
