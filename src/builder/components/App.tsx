@@ -21,6 +21,7 @@ import {
   openQueue,
   openSchema,
   closeRightPanel,
+  retryFailedLists,
 } from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
@@ -96,6 +97,7 @@ export default function App({ connected }: { connected: boolean | null }) {
   const panelKey = panel?.kind === 'code' ? `${panel.hookId}:${panel.fieldId}` : panel?.kind;
 
   const retry = () => {
+    retryFailedLists();
     if (!queues.value.length) loadQueues();
     else if (selectedQueueId.value != null && !schema.value) openQueue(selectedQueueId.value);
     else if (selectedSchemaId.value != null && !schema.value) openSchema(selectedSchemaId.value);

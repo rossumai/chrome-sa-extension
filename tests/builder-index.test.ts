@@ -84,6 +84,7 @@ import {
   undoChange,
   apply,
   loadSchemas,
+  retryFailedLists,
 } from '../src/builder/index.jsx';
 import { rateLimitError } from '../src/net/rateLimit.js';
 
@@ -146,8 +147,20 @@ describe('a 429 on a side list', () => {
       await openQueue(2);
       await vi.waitFor(() => expect(store.error.value).toContain('rate-limiting'));
       expect(store.retryable.value).toBe(true);
+      vi.mocked(api[f]).mockClear();
+      retryFailedLists(); // the banner's Retry loads it again
+      expect(api[f]).toHaveBeenCalledTimes(1);
     });
   }
+
+  it('Retry loads the schema list again', async () => {
+    vi.mocked(api.listSchemas).mockRejectedValueOnce(slow()).mockResolvedValueOnce([]);
+    await loadSchemas();
+    retryFailedLists();
+    expect(api.listSchemas).toHaveBeenCalledTimes(2);
+    retryFailedLists(); // nothing left to retry
+    expect(api.listSchemas).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('save', () => {

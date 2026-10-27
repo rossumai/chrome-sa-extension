@@ -74,6 +74,24 @@ export async function initBuilder() {
   loadSchemas();
 }
 
+// The side lists (schemas, annotations, rules, hooks, the engine catalog) that a 429 left
+// empty, each with the load that fills it again: the banner's Retry re-runs them.
+const failedLists = new Map<string, () => unknown>();
+
+/** A side list failed: a 429 is shown and remembered for Retry; anything else stays quiet. */
+function listFailed(name: string, err: unknown, reload: () => unknown) {
+  if (!isRateLimited(err)) return;
+  failedLists.set(name, reload);
+  fail(err, '');
+}
+
+/** Retry: load again every side list a 429 left empty. */
+export function retryFailedLists() {
+  const reloads = [...failedLists.values()];
+  failedLists.clear();
+  for (const reload of reloads) reload();
+}
+
 // Names for the schema column. Separate from the queue list so a slow or failed schema
 // list never holds back the queues. Like the other side lists below, a failure leaves it
 // empty — except a 429, which is shown (a throttled list is not an empty one).
@@ -82,7 +100,7 @@ export async function loadSchemas() {
     const all = await api.listSchemas();
     store.schemas.value = all.map((x) => ({ id: x.id, url: x.url, name: x.name }));
   } catch (err: any) {
-    if (isRateLimited(err)) fail(err, '');
+    listFailed('schemas', err, loadSchemas);
     store.schemas.value = [];
   }
 }
@@ -168,6 +186,7 @@ function clearOpen() {
   const kind = store.rightPanel.value?.kind;
   if (kind !== 'fabry' && kind !== 'validation') store.rightPanel.value = null;
   store.hooks.value = [];
+  for (const name of ['annotations', 'rules', 'hooks']) failedLists.delete(name); // the old queue's
   // A new schema, a new conversation: Mr. Fabry's context and its row keys belong to the old one.
   assistSeq.schema++;
   store.schemaFabry.value = {
@@ -316,7 +335,7 @@ async function loadAnnotations(queueId: number) {
     if (store.selectedQueueId.value !== queueId) return;
     store.annotations.value = annotationRows(page);
   } catch (err: any) {
-    if (isRateLimited(err)) fail(err, '');
+    listFailed('annotations', err, () => loadAnnotations(queueId));
     store.annotations.value = [];
   }
 }
@@ -328,7 +347,7 @@ async function loadHooks(queueId: number) {
     if (store.selectedQueueId.value !== queueId) return;
     store.hooks.value = list;
   } catch (err: any) {
-    if (isRateLimited(err)) fail(err, '');
+    listFailed('hooks', err, () => loadHooks(queueId));
     store.hooks.value = [];
   }
 }
@@ -340,7 +359,7 @@ async function loadRules(queueId: number) {
     if (store.selectedQueueId.value !== queueId) return;
     store.rules.value = list;
   } catch (err: any) {
-    if (isRateLimited(err)) fail(err, '');
+    listFailed('rules', err, () => loadRules(queueId));
     store.rules.value = [];
   }
 }
@@ -376,7 +395,7 @@ async function loadCatalog() {
     store.engineCatalog.value = await api.listPreTrainedFields();
   } catch (err: any) {
     // no catalog: the seed picker is empty, the AI-fields text box still works
-    if (isRateLimited(err)) fail(err, '');
+    listFailed('catalog', err, loadCatalog);
   } finally {
     catalogLoading = false;
   }
