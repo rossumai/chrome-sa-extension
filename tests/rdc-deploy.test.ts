@@ -54,7 +54,6 @@ describe('rdc deploy core', () => {
       'history',
       'ownValues',
       'plan',
-      'remember',
       'review',
       'secrets',
       'write',

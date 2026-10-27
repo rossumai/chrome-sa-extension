@@ -84,13 +84,10 @@ export function readableOrgs(organizations: unknown): { id: number; name: string
   return out;
 }
 
-export type WipFeature =
-  'remember' | 'history' | 'secrets' | 'plan' | 'review' | 'write' | 'ownValues';
+export type WipFeature = 'history' | 'secrets' | 'plan' | 'review' | 'write' | 'ownValues';
 
 // Why each unfinished feature is unavailable; shown instead of any invented data.
 export const WIP: Record<WipFeature, string> = {
-  remember:
-    "Not available yet. The Console does not remember the source between visits; rdc's storage in this org's data storage is in progress.",
   history: 'Not available yet. Deployments are not recorded until rdc can store them in this org.',
   secrets:
     'Not available yet. Which hooks need a secret is known only after the plan, and rdc cannot plan in the browser yet.',

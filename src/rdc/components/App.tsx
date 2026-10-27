@@ -2,7 +2,8 @@
 // admin chooses one source org, gives a token for it, and rdc's sync engine (WebAssembly) reads
 // both into a project held in memory only, with `noPush: true`, so nothing is written to either
 // org. Plan, Review, Write, Done and the org's own values are shown as work in progress until
-// rdc can do them in the browser. Nothing is kept: a reload starts over.
+// rdc can do them in the browser. Only the chosen source is kept, in this org's own Data Storage
+// (`sourceStore.ts`), never its token.
 import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { domain, token } from '../store.js';
@@ -11,6 +12,7 @@ import { hostOf, type Source, type StepId } from '../deploy.js';
 import { loadRdc as defaultLoadRdc, type Rdc } from '../wasm.js';
 import { currentOrg } from '../../rossum/orgName.js';
 import { isRateLimited, rateLimitMessage } from '../../net/rateLimit.js';
+import { dataStorageFor, loadSource, saveSource, type DataStorage } from '../sourceStore.js';
 import Band, { type BandTarget } from './Band.jsx';
 import Overview from './Overview.jsx';
 import ChooseSource, { fetchOrgs as defaultFetchOrgs, type FetchOrgs } from './ChooseSource.jsx';
@@ -31,17 +33,23 @@ const STEP_OF: Partial<Record<Screen, StepId>> = {
   write: 'write',
 };
 
+const noteFor = (e: unknown) =>
+  isRateLimited(e) ? rateLimitMessage(e) : (e as Error)?.message || String(e);
+
 type Props = {
   connected: boolean | null;
   // Injectable for tests; production uses the real loader and `GET /organizations`.
   loadRdc?: () => Promise<Rdc>;
   fetchOrgs?: FetchOrgs;
+  // Injectable for tests; production calls the connected org's Data Storage.
+  dataStorage?: DataStorage;
 };
 
 export default function App({
   connected,
   loadRdc = defaultLoadRdc,
   fetchOrgs = defaultFetchOrgs,
+  dataStorage,
 }: Props) {
   // undefined while loading, null when it failed to load (rdcError says why)
   const [rdc, setRdc] = useState<Rdc | null | undefined>(undefined);
@@ -52,8 +60,11 @@ export default function App({
   // What the target was resolved from, handed to Read so it asks the API nothing again.
   const [targetOrgs, setTargetOrgs] = useState<unknown>(null);
   const [screen, setScreen] = useState<Screen>('overview');
-  // The source and its token live here only; a reload loses both.
+  // The source is remembered in this org's Data Storage; its token lives here only.
   const [source, setSource] = useState<Source | null>(null);
+  // Why the source could not be loaded or saved, or empty.
+  const [sourceNote, setSourceNote] = useState('');
+  const ds = () => dataStorage ?? dataStorageFor(domain.value, token.value);
   const [sourceToken, setSourceToken] = useState('');
   // The last finished read, so Back from Plan shows it without syncing both orgs again.
   const [readResult, setReadResult] = useState<ReadResult | null>(null);
@@ -83,7 +94,14 @@ export default function App({
         }
         setTargetOrgs(orgs);
         // env: the Console has no Sandbox/Production flag at hand, so the band shows no chip
-        setTarget({ name: org.name, host: hostOf(domain.value), orgId: org.id, env: null });
+        const resolved = { name: org.name, host: hostOf(domain.value), orgId: org.id, env: null };
+        // the page shows once the remembered source is known, so it does not flash the first visit
+        loadSource(ds())
+          .then(
+            (saved) => alive && setSource(saved),
+            (e) => alive && setSourceNote(`Could not load the saved source: ${noteFor(e)}`),
+          )
+          .finally(() => alive && setTarget(resolved));
       },
       (e) => {
         if (!alive) return;
@@ -217,6 +235,7 @@ export default function App({
         onChooseSource={() => setScreen('choose')}
         onDeploy={() => setScreen('connect')}
         blocked={rdcBlock}
+        sourceNote={sourceNote}
         onEditOwn={() => setScreen('own')}
         chooser={
           screen === 'choose' && (
@@ -227,6 +246,12 @@ export default function App({
               onCancel={toOverview}
               onChosen={(s, t) => {
                 setSource(s);
+                setSourceNote('');
+                saveSource(ds(), s).catch((e) =>
+                  setSourceNote(
+                    `Could not save the source in this org, so it is used for this visit only: ${noteFor(e)}`,
+                  ),
+                );
                 setSourceToken(t);
                 setReadResult(null);
                 toOverview();

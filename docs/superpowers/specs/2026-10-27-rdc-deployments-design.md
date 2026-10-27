@@ -15,16 +15,17 @@ the page must **say plainly** where a feature does not work yet, rather than fak
 
 - **Works now** with today's wasm API: the Console session for the target; checking a token for
   the source (it can read the chosen org); reading both orgs into memory with
-  `sync({ noPush: true })`, with the real log and real counts per kind.
+  `sync({ noPush: true })`, with the real log and real counts per kind; and **remembering the
+  source** (owner, 2026-10-27: the extension stores it, not rdc) — one `kind: 'source'` document
+  in the target's `_SA_EXTENSION__rdc_deployments` collection (§3), never the token.
 - **Work in progress** — shown in the design's layout, but disabled and labelled as not available
-  yet, naming what it waits for: remembering the source and the history (storage in the target's
-  collection), Plan (`migrate` in wasm), Review and its decisions (structured dry run and conflict
+  yet, naming what it waits for: the history (storage in the target's collection), Plan (`migrate` in wasm), Review and its decisions (structured dry run and conflict
   input), Write, Done, and editing own values.
 - **No fake data presented as real.** Where the mockup shows sample numbers for a work-in-progress
   step, the build shows the step's structure and the work-in-progress note instead.
 - The questions in §8.1, §8.2, the first deployment into a target that already has configuration,
   and when hook secrets are asked for are **deferred** until the rdc work lands; this phase does
-  not need their answers, because nothing is written to either org.
+  not need their answers, because rdc writes nothing to either org.
 
 ## 1. Why
 

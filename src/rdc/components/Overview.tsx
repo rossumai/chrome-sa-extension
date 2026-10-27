@@ -12,6 +12,8 @@ type Props = {
   onDeploy: () => void;
   // Why a deployment cannot start (rdc is not available), or empty.
   blocked?: string;
+  // Why the source could not be loaded or saved, or empty.
+  sourceNote?: string;
   onEditOwn: () => void;
   // The source form, when open; it replaces the button that opened it.
   chooser?: ComponentChildren;
@@ -23,6 +25,7 @@ export default function Overview({
   onChooseSource,
   onDeploy,
   blocked = '',
+  sourceNote = '',
   onEditOwn,
   chooser,
 }: Props) {
@@ -41,6 +44,11 @@ export default function Overview({
               <li>Give a token for it. It is only read, and the token is not kept.</li>
               <li>Review what will change in {targetName}, then write it.</li>
             </ol>
+            {sourceNote && (
+              <div class={`${styles.note} ${styles.err}`} role="alert">
+                {sourceNote}
+              </div>
+            )}
             {chooser || (
               <button class="btn btn-primary" onClick={onChooseSource}>
                 Choose the org to deploy from
@@ -91,9 +99,15 @@ export default function Overview({
                 </button>
               </div>
             )}
-            <div class={styles.panelB}>
-              <Wip feature="remember" />
-            </div>
+            {sourceNote ? (
+              <div class={styles.panelB}>
+                <div class={`${styles.note} ${styles.err}`} role="alert">
+                  {sourceNote}
+                </div>
+              </div>
+            ) : (
+              <div class={styles.srcFoot}>Saved in this org's data storage. The token is not.</div>
+            )}
           </div>
           <div class={styles.panel}>
             <div class={styles.panelH}>

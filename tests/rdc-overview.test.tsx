@@ -52,6 +52,21 @@ describe('Overview', () => {
     expect(onChooseSource).toHaveBeenCalled();
   });
 
+  it('says why the source could not be remembered', () => {
+    mount(
+      <Overview
+        source={source}
+        targetName="Acme"
+        onChooseSource={vi.fn()}
+        onDeploy={vi.fn()}
+        onEditOwn={vi.fn()}
+        sourceNote="Could not save the source in this org, so it is used for this visit only: HTTP 403"
+      />,
+    );
+    expect(root.querySelector('[role="alert"]')!.textContent).toContain('HTTP 403');
+    expect(root.textContent).not.toContain("Saved in this org's data storage.");
+  });
+
   it('with a source shows it, deploys, and notes the unbuilt parts', () => {
     const onDeploy = vi.fn();
     mount(
@@ -67,8 +82,10 @@ describe('Overview', () => {
     expect(root.textContent).toContain('Values a deployment will never overwrite.');
     act(() => byText('button', 'Deploy from test').click());
     expect(onDeploy).toHaveBeenCalled();
+    // history and own values; the source itself is remembered now
     const notes = root.querySelectorAll('[role="note"]');
-    expect(notes).toHaveLength(3);
+    expect(notes).toHaveLength(2);
+    expect(root.textContent).toContain("Saved in this org's data storage. The token is not.");
     notes.forEach((n) => expect(n.textContent).toContain('Not available yet.'));
   });
 });

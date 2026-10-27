@@ -39,11 +39,18 @@ const fetchOrgs = vi.fn(async (d: string, _t: string) =>
     : { results: [{ id: 20412, name: 'Acme Test' }] },
 );
 
+// The org's Data Storage: nothing saved yet, and saving works.
+let ds: ReturnType<typeof vi.fn>;
+
 let root: HTMLElement;
 let chromeSet: ReturnType<typeof vi.fn>;
 let sessionSet: ReturnType<typeof vi.spyOn>;
 const mount = (el: any) => act(() => void render(el, root));
-const flush = () => act(async () => {});
+// a macrotask, so promise chains (the target, then the saved source) settle
+const flush = () =>
+  act(async () => {
+    await new Promise((r) => setTimeout(r, 0));
+  });
 const byText = (sel: string, text: string) =>
   [...root.querySelectorAll<HTMLElement>(sel)].find((e) => e.textContent?.trim() === text)!;
 const click = async (sel: string, text: string) => {
@@ -66,6 +73,7 @@ beforeEach(() => {
   chromeSet = vi.fn();
   (globalThis as any).chrome = { storage: { local: { set: chromeSet } } };
   sessionSet = vi.spyOn(Storage.prototype, 'setItem');
+  ds = vi.fn(async (op: string, _body: Record<string, unknown>) => (op === 'find' ? [] : {}));
 });
 afterEach(() => {
   render(null, root);
@@ -78,12 +86,14 @@ const loadRdc = () => Promise.resolve(fakeRdc().rdc);
 
 describe('rdc App', () => {
   it('says so when not connected', () => {
-    mount(<App connected={false} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    mount(
+      <App connected={false} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />,
+    );
     expect(root.textContent).toContain('Not connected');
   });
 
   it('shows the overview for the connected org', async () => {
-    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();
     expect(root.textContent).toContain('Bring tested configuration into Acme');
     expect(root.querySelector('[data-role="target"]')!.textContent).toContain('org 31007');
@@ -96,14 +106,77 @@ describe('rdc App', () => {
         { id: 2, name: 'y' },
       ],
     }));
-    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={two} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={two} />);
     await flush();
     expect(root.textContent).toContain('does not list exactly one organization');
     expect(byText('button', 'Choose the org to deploy from')).toBeUndefined();
   });
 
+  it('remembers the chosen source in the org, without its token', async () => {
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    expect(ds).toHaveBeenCalledWith('find', { query: { kind: 'source' }, limit: 1 });
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Use test as the source');
+    const save = ds.mock.calls.find(([op]) => op === 'replace_one')!;
+    expect(save[1]).toMatchObject({
+      filter: { kind: 'source' },
+      replacement: {
+        kind: 'source',
+        name: 'test',
+        domain: 'https://partner-sandbox.rossum.app',
+        orgId: 20412,
+        orgName: 'Acme Test',
+      },
+      options: { upsert: true },
+    });
+    expect(JSON.stringify(save[1])).not.toContain('stok');
+    expect(root.textContent).toContain("Saved in this org's data storage. The token is not.");
+  });
+
+  it('opens on the remembered source', async () => {
+    ds = vi.fn(async (op: string) =>
+      op === 'find'
+        ? [
+            {
+              kind: 'source',
+              name: 'test',
+              domain: 'https://partner-sandbox.rossum.app',
+              orgId: 20412,
+              orgName: 'Acme Test',
+            },
+          ]
+        : {},
+    );
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    expect(root.textContent).toContain('Acme deploys from');
+    expect(root.textContent).not.toContain('Bring tested configuration');
+  });
+
+  it('says when the source cannot be loaded or saved, and still works for the visit', async () => {
+    ds = vi.fn(async () => {
+      throw new Error('HTTP 403');
+    });
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    await flush();
+    expect(root.textContent).toContain('Could not load the saved source: HTTP 403');
+    await click('button', 'Choose the org to deploy from');
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'stok');
+    await click('button', 'Find organizations');
+    await click('button', 'Use test as the source');
+    expect(root.textContent).toContain('Acme deploys from');
+    expect(root.textContent).toContain(
+      'Could not save the source in this org, so it is used for this visit only: HTTP 403',
+    );
+  });
+
   it('shows the source form inline, hidden until asked for', async () => {
-    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();
     expect(root.querySelector('#rdc-src-address')).toBeNull();
     await click('button', 'Choose the org to deploy from');
@@ -130,7 +203,7 @@ describe('rdc App', () => {
   });
 
   it('does not ask again for the token the source was just found with', async () => {
-    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();
     await click('button', 'Choose the org to deploy from');
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
@@ -148,7 +221,7 @@ describe('rdc App', () => {
   });
 
   it('walks from choosing a source through the work-in-progress steps', async () => {
-    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();
     await click('button', 'Choose the org to deploy from');
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
@@ -198,7 +271,7 @@ describe('rdc App', () => {
   });
 
   it('goes back from Read to Connect', async () => {
-    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();
     await click('button', 'Choose the org to deploy from');
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
@@ -230,7 +303,14 @@ describe('rdc App', () => {
 
   it('cancels from Plan to the overview without reading again', async () => {
     const { rdc, project } = fakeRdc();
-    mount(<App connected={true} loadRdc={async () => rdc} fetchOrgs={fetchOrgs} />);
+    mount(
+      <App
+        connected={true}
+        dataStorage={ds as any}
+        loadRdc={async () => rdc}
+        fetchOrgs={fetchOrgs}
+      />,
+    );
     await flush();
     await toPlan();
     expect(project.sync).toHaveBeenCalledTimes(2);
@@ -241,7 +321,14 @@ describe('rdc App', () => {
 
   it('goes back from Plan to the kept read, and reads again only on request', async () => {
     const { rdc, project } = fakeRdc();
-    mount(<App connected={true} loadRdc={async () => rdc} fetchOrgs={fetchOrgs} />);
+    mount(
+      <App
+        connected={true}
+        dataStorage={ds as any}
+        loadRdc={async () => rdc}
+        fetchOrgs={fetchOrgs}
+      />,
+    );
     await flush();
     await toPlan();
     await click('button', 'Back');
@@ -256,7 +343,7 @@ describe('rdc App', () => {
   });
 
   it('offers Cancel on every wizard step', async () => {
-    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();
     await toPlan();
     for (const next of ['Review the changes', 'Continue to write']) {
@@ -270,7 +357,7 @@ describe('rdc App', () => {
   });
 
   it('opens own values from the overview, with the work-in-progress note', async () => {
-    mount(<App connected={true} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={fetchOrgs} />);
     await flush();
     await click('button', 'Choose the org to deploy from');
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
@@ -291,7 +378,7 @@ describe('rdc App', () => {
 
   it('says rdc is not in this build when it does not load', async () => {
     const missing = () => Promise.reject(new Error('console/rdc/rdc_wasm.js is not in this build'));
-    mount(<App connected={true} loadRdc={missing} fetchOrgs={fetchOrgs} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={missing} fetchOrgs={fetchOrgs} />);
     await flush();
     expect(root.textContent).toContain('Bring tested configuration into Acme');
     await click('button', 'Choose the org to deploy from');
@@ -308,7 +395,14 @@ describe('rdc App', () => {
   it('blocks Deploy while rdc loads and after it fails', async () => {
     let fail!: (e: Error) => void;
     const loading = new Promise<Rdc>((_r, rej) => (fail = rej));
-    mount(<App connected={true} loadRdc={() => loading} fetchOrgs={fetchOrgs} />);
+    mount(
+      <App
+        connected={true}
+        dataStorage={ds as any}
+        loadRdc={() => loading}
+        fetchOrgs={fetchOrgs}
+      />,
+    );
     await flush();
     await click('button', 'Choose the org to deploy from');
     await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
@@ -325,7 +419,7 @@ describe('rdc App', () => {
   it('asks GET /organizations once for the connected org across a whole read', async () => {
     const { rdc } = fakeRdc();
     const f = vi.fn(fetchOrgs);
-    mount(<App connected={true} loadRdc={async () => rdc} fetchOrgs={f} />);
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={async () => rdc} fetchOrgs={f} />);
     await flush();
     await toPlan();
     const forTarget = f.mock.calls.filter(([d]) => d === 'https://acme.rossum.app');

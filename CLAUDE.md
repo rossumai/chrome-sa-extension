@@ -371,11 +371,15 @@ opened, because its form, log and a deploy in flight live in component state.
   one source org and gives a token for it (checked with one read, kept in component state only,
   never stored); rdc's sync engine, compiled to WebAssembly, then reads BOTH orgs into one
   in-memory project, each with `sync({ noPush: true })` — the only option ever passed — and
-  shows rdc's log (ANSI colour rendered by `ansi.ts`) and the counts per kind. **It writes
+  shows rdc's log (ANSI colour rendered by `ansi.ts`) and the counts per kind. **rdc writes
   nothing to either org.** A prompt rdc raises is shown with its choices; Cancel, or leaving the
-  page, answers `null`. Nothing persists: a reload loses the source and the project. Plan,
-  Review, Write, Done, the org's own values, remembering the source and the deployment history
-  are **work in progress pending rdc** (`migrate` in wasm, a structured dry run, storage in the
+  page, answers `null`. The ONE thing the page stores is the chosen source (URL, org id, org name,
+  short name; never its token): a `kind: 'source'` document upserted into the connected org's
+  hidden `_SA_EXTENSION__rdc_deployments` collection (`sourceStore.ts`) and loaded on the next
+  visit; when Data Storage refuses, the page says so and keeps the source for the visit only.
+  The source token carries from the source form to step 1 in memory and is forgotten when the
+  deployment is left. The project is in memory only. Plan, Review, Write, Done, the org's own
+  values and the deployment history are **work in progress pending rdc** (`migrate` in wasm, a structured dry run, storage in the
   org): they show the design's frames with a "Not available yet" note (`WIP` in `deploy.ts`),
   every control that would act on data disabled, and no sample data. Design:
   `2026-10-27-rdc-deployments-design.md`.
