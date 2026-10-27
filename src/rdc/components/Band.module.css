@@ -1,0 +1,374 @@
+/* The deployment header band: source card, conveyor (or the five steps), target card. */
+.lane {
+  position: relative;
+  color: #fff;
+  overflow: hidden;
+  font-size: 14px;
+  background:
+    radial-gradient(900px 300px at 85% 120%, rgba(229, 72, 61, 0.28), transparent 60%),
+    radial-gradient(700px 260px at 8% -20%, rgba(42, 167, 196, 0.28), transparent 60%),
+    radial-gradient(circle, rgba(255, 255, 255, 0.075) 1px, transparent 1.2px) 0 0/20px 20px,
+    linear-gradient(160deg, #1b1f3b, #232a55 60%, #2a2350);
+}
+.laneIn {
+  display: grid;
+  grid-template-columns: 260px 1fr 300px;
+  align-items: center;
+  padding: 30px 28px 26px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+.compact .laneIn {
+  padding: 18px 28px 16px;
+  grid-template-columns: 220px 1fr 250px;
+}
+.org {
+  border-radius: 14px;
+  padding: 16px 18px;
+  position: relative;
+}
+.who {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.75;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nm {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 4px 0 2px;
+}
+.compact .nm {
+  font-size: 17px;
+}
+.host {
+  font: 12px var(--font-mono, 'SF Mono', Consolas, monospace);
+  opacity: 0.7;
+}
+.src {
+  border: 1.5px dashed rgba(138, 220, 239, 0.55);
+  background: rgba(42, 167, 196, 0.08);
+}
+.dst {
+  background: #fff;
+  color: #1b1f3b;
+  box-shadow:
+    0 0 0 4px rgba(229, 72, 61, 0.35),
+    0 20px 50px rgba(0, 0, 0, 0.35);
+}
+/* the target card is white in both themes, so its icons keep their light-theme colours */
+.dst .who {
+  color: #9b231b;
+  opacity: 1;
+}
+.stack {
+  display: flex;
+  gap: 5px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.compact .stack {
+  display: none;
+}
+.ico {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  transition: transform 0.25s;
+}
+.src .ico {
+  background: rgba(255, 255, 255, 0.08);
+  color: #9fe3f2;
+}
+.dst .ico {
+  background: #fde6e4;
+  color: #9b231b;
+}
+.ico svg {
+  width: 15px;
+  height: 15px;
+}
+.src .read {
+  animation: icoRead 1.2s ease-out;
+}
+@keyframes icoRead {
+  40% {
+    background: rgba(138, 220, 239, 0.18);
+  }
+}
+.dst .got {
+  animation: icoGot 1.2s ease-out;
+}
+@keyframes icoGot {
+  35% {
+    box-shadow: 0 0 0 1.5px rgba(229, 72, 61, 0.35);
+  }
+}
+.env {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  vertical-align: 4px;
+}
+.env::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.prd {
+  background: #fde6e4;
+  color: #9b231b;
+}
+.sbx {
+  background: #dff3f8;
+  color: #0d5d70;
+}
+.ro,
+.rw {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.ro {
+  background: rgba(138, 220, 239, 0.18);
+  color: #bdeef8;
+}
+.rw {
+  background: #e5483d;
+  color: #fff;
+}
+
+/* the track: the belt with its moving icons, or the five steps */
+.track {
+  position: relative;
+  height: 120px;
+  margin: 0 -4px;
+}
+.compact .track {
+  height: 74px;
+}
+.railLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  background: linear-gradient(
+    90deg,
+    rgba(42, 167, 196, 0.75),
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(229, 72, 61, 0.85)
+  );
+  border-radius: 2px;
+}
+.railLine::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-top: 3px solid rgba(229, 72, 61, 0.9);
+  border-right: 3px solid rgba(229, 72, 61, 0.9);
+  transform: translateY(-50%) rotate(45deg);
+}
+/* the belt: dashes move at exactly the icons' speed, so it reads as one conveyor */
+.belt .railLine {
+  top: 38%;
+  right: 18px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(42, 167, 196, 0.55),
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(229, 72, 61, 0.65)
+  );
+}
+.belt .railLine::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 14px;
+  top: -3px;
+  height: 8px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.07) 0 4px,
+    transparent 4px 18px
+  );
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 90%, transparent);
+  animation: belt var(--belt, 1s) linear infinite;
+}
+.belt .railLine::after {
+  content: '';
+  right: -13px;
+  width: 14px;
+  height: 14px;
+  border: 0;
+  transform: translateY(-50%);
+  background: #ff8a80;
+  clip-path: polygon(0 0, 100% 50%, 0 100%, 22% 50%);
+  filter: drop-shadow(0 0 6px rgba(255, 138, 128, 0.8));
+}
+@keyframes belt {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 18px 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .belt .railLine::before,
+  .src .read,
+  .dst .got {
+    animation: none;
+  }
+  .ico {
+    transition: none;
+  }
+}
+.token {
+  position: absolute;
+  top: 38%;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b1f3b;
+  display: grid;
+  place-items: center;
+  will-change: transform;
+  z-index: 2;
+}
+.token svg {
+  width: 15px;
+  height: 15px;
+}
+.cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(38% + 24px);
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+}
+.cap b {
+  color: #fff;
+}
+.foot {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 28px 22px;
+  display: flex;
+  gap: 28px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+}
+.foot div {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  max-width: 330px;
+}
+.foot svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.foot b {
+  color: #fff;
+}
+
+/* the five steps on the track (compact band) */
+.stages {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+.dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #2a3160;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.7);
+}
+.lb {
+  position: absolute;
+  top: 31px;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+.done .dot {
+  background: #fff;
+  color: #1f8a4c;
+  border-color: #fff;
+}
+.cur .dot {
+  background: #4270db;
+  border-color: #fff;
+  color: #fff;
+  box-shadow: 0 0 0 6px rgba(66, 112, 219, 0.35);
+}
+.cur .lb {
+  color: #fff;
+}
+.write .dot {
+  border-color: rgba(229, 72, 61, 0.8);
+}
+.write.cur .dot {
+  background: #e5483d;
+  box-shadow: 0 0 0 6px rgba(229, 72, 61, 0.35);
+}
+
+@media (max-width: 900px) {
+  .laneIn,
+  .compact .laneIn {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .track {
+    height: 70px;
+  }
+  .foot {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
