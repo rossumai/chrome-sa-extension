@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as store from '../src/builder/store.js';
 import { withKeys, flatten } from '../src/builder/model.js';
+import { resetBuilderStore } from './support/builder.js';
 
 vi.mock('../src/builder/api.js', () => ({
   getSchema: vi.fn(),
@@ -76,13 +77,12 @@ import {
 const section = (id: string) => [{ category: 'section', id, label: id, children: [] }];
 
 beforeEach(() => {
-  vi.mocked(api.getSchema).mockReset();
+  vi.resetAllMocks();
+  resetBuilderStore();
   store.queues.value = [
     { id: 1, name: 'A', schema: 'https://x/api/v1/schemas/11' },
     { id: 2, name: 'B', schema: 'https://x/api/v1/schemas/22' },
   ];
-  store.startDraft('', []);
-  store.generalErrors.value = [];
 });
 
 describe('openQueue', () => {

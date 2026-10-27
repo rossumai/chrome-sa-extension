@@ -10,6 +10,7 @@ import type { PlacedMessage } from '../src/builder/validation.js';
 import { apply } from '../src/builder/index.jsx';
 import { setAttr } from '../src/builder/model.js';
 import { navDrawer, panelWide } from '../src/builder/components/panels.js';
+import { resetBuilderStore } from './support/builder.js';
 
 function content(): any[] {
   return [
@@ -97,15 +98,9 @@ afterEach(() => {
 });
 
 beforeEach(() => {
+  resetBuilderStore();
   document.body.innerHTML = '';
   navDrawer.value = false;
-  store.engineState.value = null;
-  store.codeView.value = null;
-  store.enginePanel.value = false;
-  store.onlyWarnings.value = false;
-  store.ruleEval.value = null;
-  store.engineUsers.value = null;
-  store.engineCatalog.value = [];
   panelWide.value = false;
   root = document.createElement('div');
   document.body.appendChild(root);
@@ -144,20 +139,6 @@ beforeEach(() => {
     { id: 8, url: 'https://x/api/v1/schemas/8', name: 'Unused schema' },
   ];
   store.startDraft('Invoice schema', withKeys(content()));
-  store.selectedKey.value = null;
-  store.rowErrors.value = new Map();
-  store.annotationId.value = null;
-  store.values.value = null;
-  store.lineRow.value = {};
-  store.validation.value = null;
-  store.onlyMessages.value = false;
-  store.validationPanel.value = null;
-  store.annotationContent.value = [];
-  store.revalidateError.value = null;
-  store.fieldFilter.value = '';
-  store.ruleId.value = null;
-  store.ruleEditor.value = null;
-  store.hookEditor.value = null;
   store.hooks.value = [
     {
       id: 70,
@@ -172,16 +153,6 @@ beforeEach(() => {
       },
     },
   ];
-  store.schemaFabry.value = {
-    open: false,
-    chatId: null,
-    busy: false,
-    error: null,
-    turns: [],
-    problems: [],
-  };
-  store.fabryTouched.value = new Set();
-  store.onlyFabryChanges.value = false;
   store.rules.value = [
     {
       id: 40,
