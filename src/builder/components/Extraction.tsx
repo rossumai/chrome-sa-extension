@@ -4,6 +4,7 @@ import { editAttr } from '../index.jsx';
 import type { Node } from '../model.js';
 import { isExtracted, engineStatus, isTabular, renamedFrom } from '../engine.js';
 import SearchPicker from './SearchPicker.jsx';
+import { Field } from './fields.jsx';
 import s from './Builder.module.css';
 
 const STATE_TEXT = {
@@ -74,18 +75,16 @@ export default function Extraction({
   }
   if (!isExtracted(node)) {
     return (
-      <div class={s.field} data-extraction="none">
-        <span class={s.fieldLabel}>Extraction</span>
+      <Field block data-extraction="none" label="Extraction">
         <div class={s.dim}>Not extracted: its source is {node.ui_configuration?.type}.</div>
-      </div>
+      </Field>
     );
   }
   if (!es.engine) {
     return (
-      <div class={s.field}>
-        <span class={s.fieldLabel}>Extraction</span>
+      <Field block label="Extraction">
         <div class={es.error ? s.warn : s.dim}>{es.error ?? 'Loading the engine…'}</div>
-      </div>
+      </Field>
     );
   }
   const byName = engineFieldsByName.value;
@@ -94,10 +93,11 @@ export default function Extraction({
   const oldName = renamedFrom(base.value, node, byName);
   const rir: string[] = Array.isArray(node.rir_field_names) ? node.rir_field_names : [];
   return (
-    <div class={s.field} data-extraction={st.state}>
-      <span class={s.fieldLabel}>
-        {label ?? `Extraction · ${es.engine.name} (${es.engine.id})`}
-      </span>
+    <Field
+      block
+      data-extraction={st.state}
+      label={label ?? `Extraction · ${es.engine.name} (${es.engine.id})`}
+    >
       <div>
         <span class={s.aiChip + ' ' + s['ai_' + st.state]}>{st.state}</span>{' '}
         <span class={s.dim}>{STATE_TEXT[st.state]}</span>
@@ -142,6 +142,6 @@ export default function Extraction({
           </button>
         </div>
       )}
-    </div>
+    </Field>
   );
 }

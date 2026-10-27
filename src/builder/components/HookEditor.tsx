@@ -22,6 +22,7 @@ import { hookEditorRef, revealPendingConfig } from './hookJump.js';
 import AskFabry from './AskFabry.jsx';
 import PanelHead from './PanelHead.jsx';
 import DraftFooter from './DraftFooter.jsx';
+import { Field } from './fields.jsx';
 import s from './Builder.module.css';
 
 // "Format" for JSON: parse and print with two-space indent. A parse error is the message.
@@ -52,8 +53,7 @@ export default function HookEditor() {
         followupPlaceholder="What should change?"
         doneText="Proposal filled in — review, then Save hook or Discard."
       />
-      <div class={s.field + ' ' + s.grow}>
-        <span class={s.fieldLabel}>Settings (JSON)</span>
+      <Field block extra={s.grow} label="Settings (JSON)">
         <CodeEditor
           key={`hook:${ed.hookId}:${hookAssistRev.value}`}
           name="hook"
@@ -64,7 +64,7 @@ export default function HookEditor() {
           value={ed.draft}
           onCommit={updateHookDraft}
         />
-      </div>
+      </Field>
       <DraftFooter
         what="hook"
         errors={hookErrors.value}

@@ -17,6 +17,7 @@ import { extractedFields, engineStatus, unusedEngineFields, isRejected } from '.
 import Extraction from './Extraction.jsx';
 import PanelHead from './PanelHead.jsx';
 import Icon from './icons.jsx';
+import { Field } from './fields.jsx';
 import s from './Builder.module.css';
 
 const STATES = ['seeded', 'learning', 'new', 'rejected'] as const;
@@ -66,8 +67,12 @@ function Unused({ fields }: { fields: any[] }) {
   const users = engineUsers.value;
   if (!users?.byName) {
     return (
-      <div class={s.field + ' ' + s.engineList} data-engine-unused="">
-        <span class={s.fieldLabel}>Engine fields not in this schema ({fields.length})</span>
+      <Field
+        block
+        extra={s.engineList}
+        data-engine-unused=""
+        label={`Engine fields not in this schema (${fields.length})`}
+      >
         {users?.error ? (
           <div class={s.warn}>Could not read the other queues on this engine: {users.error}</div>
         ) : (
@@ -76,7 +81,7 @@ function Unused({ fields }: { fields: any[] }) {
         {fields.map((f) => (
           <FieldRow name={String(f.name)} detail={seedText(f)} />
         ))}
-      </div>
+      </Field>
     );
   }
   const byName = users.byName;
@@ -85,16 +90,24 @@ function Unused({ fields }: { fields: any[] }) {
   return (
     <Fragment>
       {elsewhere.length > 0 && (
-        <div class={s.field + ' ' + s.engineList} data-engine-elsewhere="">
-          <span class={s.fieldLabel}>Used by other queues ({elsewhere.length})</span>
+        <Field
+          block
+          extra={s.engineList}
+          data-engine-elsewhere=""
+          label={`Used by other queues (${elsewhere.length})`}
+        >
           {elsewhere.map((f) => (
             <FieldRow name={String(f.name)} detail={byName.get(String(f.name))!.join(', ')} />
           ))}
-        </div>
+        </Field>
       )}
       {nowhere.length > 0 && (
-        <div class={s.field + ' ' + s.engineList} data-engine-nowhere="">
-          <span class={s.fieldLabel}>Not used by any queue ({nowhere.length})</span>
+        <Field
+          block
+          extra={s.engineList}
+          data-engine-nowhere=""
+          label={`Not used by any queue (${nowhere.length})`}
+        >
           {nowhere.map((f) => {
             const marked = engineDeletes.value.has(f.id);
             return (
@@ -123,7 +136,7 @@ function Unused({ fields }: { fields: any[] }) {
             );
           })}
           <div class={s.dim}>✕ deletes one on Save, with what it learned. Unmarked ones stay.</div>
-        </div>
+        </Field>
       )}
     </Fragment>
   );
@@ -183,8 +196,7 @@ export default function EnginePanel() {
       ) : (
         <div class={s.dim}>Pick a seed in the AI column, or click a row for its details.</div>
       )}
-      <div class={s.field} data-engine-settings="">
-        <span class={s.fieldLabel}>Settings (read-only)</span>
+      <Field block data-engine-settings="" label="Settings (read-only)">
         <dl class={s.kv}>
           <dt>Use case</dt>
           <dd class={s.mono}>{e.settings?.use_case ?? <span class={s.dim}>not set</span>}</dd>
@@ -195,9 +207,13 @@ export default function EnginePanel() {
           {e.description && <dt>Description</dt>}
           {e.description && <dd>{e.description}</dd>}
         </dl>
-      </div>
-      <div class={s.field + ' ' + s.engineList} data-engine-training="">
-        <span class={s.fieldLabel}>Learns from ({training.length})</span>
+      </Field>
+      <Field
+        block
+        extra={s.engineList}
+        data-engine-training=""
+        label={`Learns from (${training.length})`}
+      >
         {training.length ? (
           training.map((url) => {
             const q = queues.value.find((x) => x.url === url);
@@ -215,13 +231,14 @@ export default function EnginePanel() {
         ) : (
           <div class={s.dim}>No training queues: it learns from no confirmed documents.</div>
         )}
-      </div>
+      </Field>
       {plan && plan.create.length + plan.patch.length + engineDeletesNow.value.length > 0 && (
-        <div class={s.field + ' ' + s.engineList} data-engine-save="">
-          <span class={s.fieldLabel}>
-            Save writes to the engine first (
-            {plan.create.length + plan.patch.length + engineDeletesNow.value.length})
-          </span>
+        <Field
+          block
+          extra={s.engineList}
+          data-engine-save=""
+          label={`Save writes to the engine first (${plan.create.length + plan.patch.length + engineDeletesNow.value.length})`}
+        >
           {plan.create.map((c) => (
             <FieldRow
               name={String(c.name)}
@@ -234,7 +251,7 @@ export default function EnginePanel() {
           {engineDeletesNow.value.map((f) => (
             <FieldRow name={String(f.name)} detail="delete" />
           ))}
-        </div>
+        </Field>
       )}
       {unused.length > 0 && <Unused fields={unused} />}
     </aside>

@@ -24,6 +24,7 @@ import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
 import PanelHead from './PanelHead.jsx';
 import DraftFooter from './DraftFooter.jsx';
+import { Field, splitList } from './fields.jsx';
 import s from './Builder.module.css';
 
 function setAction(i: number, next: any) {
@@ -41,14 +42,13 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
   const p = action.payload || {};
   const known = ACTION_TYPES.includes(action.type);
   const anchor = (
-    <label class={s.field}>
-      <span class={s.fieldLabel}>Field</span>
+    <Field label="Field">
       <input
         class={s.input + ' ' + s.mono}
         value={p.schema_id ?? ''}
         onInput={(e) => setPayload(i, 'schema_id', (e.currentTarget as HTMLInputElement).value)}
       />
-    </label>
+    </Field>
   );
   return (
     <div class={s.actionCard}>
@@ -98,8 +98,7 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
       </div>
       {action.type === 'show_message' && (
         <div>
-          <label class={s.field}>
-            <span class={s.fieldLabel}>Severity</span>
+          <Field label="Severity">
             <select
               class={s.select}
               value={p.type ?? 'error'}
@@ -109,53 +108,42 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
                 <option value={t}>{t}</option>
               ))}
             </select>
-          </label>
-          <label class={s.field}>
-            <span class={s.fieldLabel}>Message</span>
+          </Field>
+          <Field label="Message">
             <input
               class={s.input}
               value={p.content ?? ''}
               onInput={(e) => setPayload(i, 'content', (e.currentTarget as HTMLInputElement).value)}
             />
-          </label>
+          </Field>
           {anchor}
         </div>
       )}
       {action.type === 'add_automation_blocker' && (
         <div>
-          <label class={s.field}>
-            <span class={s.fieldLabel}>Reason</span>
+          <Field label="Reason">
             <input
               class={s.input}
               value={p.content ?? ''}
               onInput={(e) => setPayload(i, 'content', (e.currentTarget as HTMLInputElement).value)}
             />
-          </label>
+          </Field>
           {anchor}
         </div>
       )}
       {action.type === 'show_hide_field' && (
-        <label class={s.field}>
-          <span class={s.fieldLabel}>Fields shown when the rule fires</span>
+        <Field label="Fields shown when the rule fires">
           <input
             class={s.input + ' ' + s.mono}
             value={(p.schema_ids || []).join(', ')}
             onChange={(e) =>
-              setPayload(
-                i,
-                'schema_ids',
-                (e.currentTarget as HTMLInputElement).value
-                  .split(',')
-                  .map((x) => x.trim())
-                  .filter(Boolean),
-              )
+              setPayload(i, 'schema_ids', splitList((e.currentTarget as HTMLInputElement).value))
             }
           />
-        </label>
+        </Field>
       )}
       {!known && (
-        <label class={s.field}>
-          <span class={s.fieldLabel}>Payload (JSON)</span>
+        <Field label="Payload (JSON)">
           <textarea
             key={JSON.stringify(p)}
             class={s.code}
@@ -172,7 +160,7 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
               }
             }}
           />
-        </label>
+        </Field>
       )}
     </div>
   );
@@ -207,16 +195,14 @@ export default function RuleEditor() {
         followupPlaceholder="What should change?"
         doneText="Proposal filled in — review, then Save rule or Discard."
       />
-      <label class={s.field}>
-        <span class={s.fieldLabel}>Name</span>
+      <Field label="Name">
         <input
           class={s.input}
           value={d.name}
           onInput={(e) => updateRuleDraft({ name: (e.currentTarget as HTMLInputElement).value })}
         />
-      </label>
-      <label class={s.field}>
-        <span class={s.fieldLabel}>Description</span>
+      </Field>
+      <Field label="Description">
         <input
           class={s.input}
           value={d.description}
@@ -224,7 +210,7 @@ export default function RuleEditor() {
             updateRuleDraft({ description: (e.currentTarget as HTMLInputElement).value })
           }
         />
-      </label>
+      </Field>
       <label class={s.checkField}>
         <input
           type="checkbox"
@@ -235,8 +221,7 @@ export default function RuleEditor() {
         />
         Enabled
       </label>
-      <div class={s.field}>
-        <span class={s.fieldLabel}>Condition (fires when True)</span>
+      <Field block label="Condition (fires when True)">
         <CodeEditor
           key={`rule:${ed.ruleId ?? 'new'}:${assistRev.value}`}
           name="condition"
@@ -250,9 +235,8 @@ export default function RuleEditor() {
               : ev.errors.join(' · ')}
           </div>
         )}
-      </div>
-      <div class={s.field}>
-        <span class={s.fieldLabel}>Actions</span>
+      </Field>
+      <Field block label="Actions">
         {d.actions.map((a, i) => (
           <ActionEditor key={a.id ?? i} action={a} i={i} />
         ))}
@@ -263,7 +247,7 @@ export default function RuleEditor() {
         >
           + Action
         </button>
-      </div>
+      </Field>
       <DraftFooter
         what="rule"
         errors={ruleErrors.value}

@@ -9,6 +9,7 @@ import FieldLinks from './FieldLinks.jsx';
 import Extraction from './Extraction.jsx';
 import { isHiddenCaptured, HIDDEN_CAPTURED } from '../engine.js';
 import PanelHead from './PanelHead.jsx';
+import { Field, splitList } from './fields.jsx';
 import s from './Builder.module.css';
 
 function get(node: Node, path: string[]): any {
@@ -33,8 +34,7 @@ function Text({
     if (next !== v) editAttr(node.__key, path, next);
   };
   return (
-    <label class={s.field}>
-      <span class={s.fieldLabel}>{label}</span>
+    <Field label={label}>
       {multiline ? (
         <textarea
           key={node.__key + path.join('.') + JSON.stringify(v ?? null)}
@@ -52,15 +52,14 @@ function Text({
           onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
         />
       )}
-    </label>
+    </Field>
   );
 }
 
 function Num({ node, path, label }: { node: Node; path: string[]; label: string }) {
   const v = get(node, path);
   return (
-    <label class={s.field}>
-      <span class={s.fieldLabel}>{label}</span>
+    <Field label={label}>
       <input
         key={node.__key + path.join('.') + JSON.stringify(v ?? null)}
         type="number"
@@ -72,7 +71,7 @@ function Num({ node, path, label }: { node: Node; path: string[]; label: string 
           if (next !== v) editAttr(node.__key, path, next);
         }}
       />
-    </label>
+    </Field>
   );
 }
 
@@ -102,8 +101,7 @@ function Pick({
 }) {
   const v = get(node, path);
   return (
-    <label class={s.field}>
-      <span class={s.fieldLabel}>{label}</span>
+    <Field label={label}>
       <select
         class={s.select}
         value={v ?? ''}
@@ -116,7 +114,7 @@ function Pick({
           <option value={o}>{o}</option>
         ))}
       </select>
-    </label>
+    </Field>
   );
 }
 
@@ -135,22 +133,18 @@ function List({
   const v: string[] = Array.isArray(get(node, path)) ? get(node, path) : [];
   const sep = lines ? '\n' : ', ';
   return (
-    <label class={s.field}>
-      <span class={s.fieldLabel}>{label}</span>
+    <Field label={label}>
       <textarea
         key={node.__key + path.join('.') + JSON.stringify(v ?? null)}
         class={s.code}
         rows={lines ? 3 : 1}
         defaultValue={v.join(sep)}
         onBlur={(e) => {
-          const next = (e.currentTarget as HTMLTextAreaElement).value
-            .split(lines ? '\n' : ',')
-            .map((x) => x.trim())
-            .filter(Boolean);
+          const next = splitList((e.currentTarget as HTMLTextAreaElement).value, lines);
           if (JSON.stringify(next) !== JSON.stringify(v)) editAttr(node.__key, path, next);
         }}
       />
-    </label>
+    </Field>
   );
 }
 
@@ -167,8 +161,7 @@ function Options({ node }: { node: Node }) {
     set(next);
   };
   return (
-    <div class={s.field}>
-      <span class={s.fieldLabel}>Options</span>
+    <Field block label="Options">
       {opts.map((o, i) => (
         <div class={s.optRow} key={node.__key + ':' + i + ':' + o.value + ':' + o.label}>
           <input
@@ -220,16 +213,15 @@ function Options({ node }: { node: Node }) {
       >
         + Add option
       </button>
-    </div>
+    </Field>
   );
 }
 
 function ReadOnlyJson({ label, value }: { label: string; value: unknown }) {
   return (
-    <div class={s.field}>
-      <span class={s.fieldLabel}>{label} (read-only)</span>
+    <Field block label={`${label} (read-only)`}>
       <pre class={s.code}>{JSON.stringify(value, null, 2)}</pre>
-    </div>
+    </Field>
   );
 }
 
@@ -278,8 +270,7 @@ export default function Inspector() {
     />
   );
   const formulaEditor = (fill: boolean) => (
-    <div class={s.field + (fill ? ' ' + s.grow : '')}>
-      <span class={s.fieldLabel}>Formula</span>
+    <Field block extra={fill ? s.grow : undefined} label="Formula">
       <CodeEditor
         key={node.__key + ':formula:' + String(node.formula ?? '')}
         name="formula"
@@ -288,7 +279,7 @@ export default function Inspector() {
         expanded={fill}
         onToggleExpand={() => setExpanded(!fill)}
       />
-    </div>
+    </Field>
   );
   if (expanded && src === 'formula') {
     return shell(
