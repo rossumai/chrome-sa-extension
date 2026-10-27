@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rdc Deployments v13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#1b1f3b; --ink-2:#2a3160; --paper:#f5f6fa; --card:#ffffff; --line:#e1e4ee; --line-2:#cdd2e2;
+  --text:#1b1f3b; --muted:#646a85; --faint:#9298b0;
+  --accent:#4270db; --accent-2:#3560c5; --accent-bg:#eaf0fd;
+  --sbx:#2aa7c4; --sbx-bg:#dff3f8; --sbx-ink:#0d5d70;
+  --prd:#e5483d; --prd-bg:#fde6e4; --prd-ink:#9b231b;
+  --ok:#1f8a4c; --ok-bg:#dcf5e6; --warn:#b45309; --warn-bg:#fdf1d8; --warn-ink:#7a3a06;
+  --del:#c93333; --del-bg:#fde8e8; --ren:#7c3aed; --ren-bg:#efe7fd;
+  --guess:#c026d3;
+  --sans:'Manrope', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --mono:'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  --r-lg:14px; --r:9px; --r-sm:6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:#11131f; --card:#1a1d2e; --line:#272b40; --line-2:#363b56; --text:#e4e6f0; --muted:#9aa0bb; --faint:#6c7290;
+    --accent-bg:#1b2546; --sbx-bg:#0f3640; --sbx-ink:#8adcef; --prd-bg:#3d1714; --prd-ink:#ffb4ad;
+    --ok-bg:#0f2f1f; --warn-bg:#2f230d; --warn-ink:#f6c56f; --del-bg:#371515; --ren-bg:#271a45;
+  }
+}
+* { box-sizing:border-box; }
+html { -webkit-font-smoothing:antialiased; }
+body { margin:0; background:#0c0d16; font:14px/1.5 var(--sans); color:var(--text); }
+button { font-family:inherit; }
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+
+/* ---------- mockup chrome (not product) ---------- */
+.mk { display:flex; gap:4px; align-items:center; flex-wrap:wrap; padding:8px 14px; background:#0c0d16; color:#aab; position:sticky; top:0; z-index:50; font-size:12px; border-bottom:1px solid #22243a; }
+.mk strong { color:#fff; margin-right:10px; font-weight:700; }
+.mk button { background:transparent; color:#b8bcd4; border:1px solid #2c2f4a; border-radius:20px; padding:4px 11px; font-size:12px; cursor:pointer; }
+.mk button.on { background:#fff; color:#0c0d16; border-color:#fff; }
+.mk label { margin-left:auto; display:flex; gap:6px; align-items:center; cursor:pointer; }
+.g { display:inline-flex; align-items:center; justify-content:center; min-width:19px; height:19px; padding:0 5px; border-radius:10px; background:var(--guess); color:#fff; font:700 10px var(--sans); vertical-align:middle; margin-left:5px; cursor:help; box-shadow:0 0 0 2px rgba(192,38,211,.18); }
+body.hide-g .g, body.hide-g .gq { display:none !important; }
+.gq { position:fixed; right:16px; bottom:16px; width:330px; max-height:46vh; overflow:auto; background:#fff; color:#1b1f3b; border-radius:12px; padding:12px 14px 10px; font-size:12px; z-index:60; box-shadow:0 18px 50px rgba(0,0,0,.35); border-top:4px solid var(--guess); }
+.gq h4 { margin:0 0 6px; color:var(--guess); font-size:13px; }
+.gq ol { margin:0; padding-left:20px; } .gq li { margin:4px 0; line-height:1.4; }
+
+/* ---------- console shell ---------- */
+.frame { display:flex; min-height:calc(100vh - 42px); background:var(--paper); }
+.rail { width:66px; background:var(--card); border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center; padding:10px 0; gap:2px; flex-shrink:0; }
+.rail div { width:54px; padding:7px 0 6px; border-radius:8px; text-align:center; font-size:10px; font-weight:600; color:var(--faint); }
+.rail div i { display:block; width:20px; height:20px; margin:0 auto 3px; border-radius:6px; background:var(--line-2); }
+.rail div.on { color:var(--accent); background:var(--accent-bg); } .rail div.on i { background:var(--accent); }
+.main { flex:1; min-width:0; display:flex; flex-direction:column; }
+.conn { display:flex; align-items:center; gap:8px; padding:7px 18px; background:var(--card); border-bottom:1px solid var(--line); font-size:12px; color:var(--muted); }
+.conn .dot { width:8px; height:8px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 3px rgba(31,138,76,.15); }
+.conn b { color:var(--text); font-weight:600; }
+.screen { display:none; } .screen.on { display:block; }
+
+/* ---------- small parts ---------- */
+.btn { display:inline-flex; align-items:center; gap:7px; font:600 13px var(--sans); border-radius:var(--r-sm); padding:8px 14px; border:1px solid var(--line-2); background:var(--card); color:var(--text); cursor:pointer; white-space:nowrap; }
+.btn:hover { border-color:var(--faint); }
+.btn-p { background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 1px 0 rgba(255,255,255,.2) inset, 0 4px 14px rgba(66,112,219,.3); }
+.btn-p:hover { background:var(--accent-2); border-color:var(--accent-2); }
+.btn-prd { background:var(--prd); border-color:var(--prd); color:#fff; box-shadow:0 4px 14px rgba(229,72,61,.3); }
+.btn-prd[disabled] { opacity:.4; cursor:not-allowed; box-shadow:none; }
+.btn-sm { padding:5px 10px; font-size:12px; }
+.btn-ghost { border-color:transparent; background:transparent; color:var(--muted); }
+.env { display:inline-flex; align-items:center; gap:5px; padding:2px 9px 2px 7px; border-radius:20px; font-size:11px; font-weight:700; line-height:18px; }
+.env::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.env.sbx { background:var(--sbx-bg); color:var(--sbx-ink); } .env.prd { background:var(--prd-bg); color:var(--prd-ink); }
+.tag { display:inline-block; padding:1px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+.t-ok { background:var(--ok-bg); color:var(--ok); } .t-warn { background:var(--warn-bg); color:var(--warn-ink); } .t-del { background:var(--del-bg); color:var(--del); } .t-mute { background:var(--paper); color:var(--muted); border:1px solid var(--line); }
+.mono { font-family:var(--mono); font-size:12px; }
+.muted { color:var(--muted); }
+.row { display:flex; gap:10px; align-items:center; }
+.sp { flex:1; }
+input[type=text], input[type=password], select { font:500 14px var(--sans); padding:9px 12px; border:1px solid var(--line-2); border-radius:var(--r-sm); background:var(--card); color:var(--text); width:100%; }
+input::placeholder { color:var(--faint); }
+.fld label { display:block; font-weight:600; font-size:13px; margin-bottom:4px; }
+.fld small { display:block; color:var(--muted); font-size:12px; margin-top:4px; }
+.wrap { max-width:1160px; margin:0 auto; padding:0 28px; }
+.panel { background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); }
+.panel-h { display:flex; align-items:center; gap:10px; padding:16px 20px 0; }
+.panel-h h2 { margin:0; font-size:15px; font-weight:700; }
+.panel-b { padding:14px 20px 20px; }
+h1 { font-size:26px; line-height:1.15; letter-spacing:-.02em; margin:0; font-weight:800; }
+
+/* ---------- THE LANE: the one memorable element ---------- */
+.lane {
+  position:relative; color:#fff; overflow:hidden;
+  background:
+    radial-gradient(900px 300px at 85% 120%, rgba(229,72,61,.28), transparent 60%),
+    radial-gradient(700px 260px at 8% -20%, rgba(42,167,196,.28), transparent 60%),
+    radial-gradient(circle, rgba(255,255,255,.075) 1px, transparent 1.2px) 0 0/20px 20px,
+    linear-gradient(160deg, #1b1f3b, #232a55 60%, #2a2350);
+}
+.lane-in { display:grid; grid-template-columns:260px 1fr 300px; align-items:center; gap:0; padding:30px 28px 26px; max-width:1160px; margin:0 auto; }
+.lane.compact .lane-in { padding:18px 28px 16px; grid-template-columns:220px 1fr 250px; }
+.org { border-radius:var(--r-lg); padding:16px 18px; position:relative; }
+.org .who { font-size:11px; font-weight:600; opacity:.75; display:flex; align-items:center; gap:6px; }
+.org .nm { font-size:22px; font-weight:800; letter-spacing:-.02em; margin:4px 0 2px; }
+.lane.compact .org .nm { font-size:17px; }
+.org .host { font:12px var(--mono); opacity:.7; }
+.org.src { border:1.5px dashed rgba(138,220,239,.55); background:rgba(42,167,196,.08); }
+.org.dst { background:#fff; color:var(--ink); box-shadow:0 0 0 4px rgba(229,72,61,.35), 0 20px 50px rgba(0,0,0,.35); }
+.org.dst .who { color:var(--prd-ink); opacity:1; }
+.org .stack { display:flex; gap:5px; margin-top:12px; flex-wrap:wrap; }
+.lane.compact .org .stack { display:none; }
+.ico { width:28px; height:28px; border-radius:7px; display:grid; place-items:center; }
+.org.src .ico { background:rgba(255,255,255,.08); color:#9fe3f2; }
+.org.dst .ico { background:var(--prd-bg); color:var(--prd-ink); }
+/* the Acme card is white in both themes, so its icons keep their light-theme colours */
+.org.dst .ico { background:#fde6e4; color:#9b231b; }
+.org.dst .who { color:#9b231b; }
+.org.dst .env.prd { background:#fde6e4; color:#9b231b; }
+.ico svg { width:15px; height:15px; }
+.track { position:relative; height:120px; margin:0 -4px; }
+.lane.compact .track { height:74px; }
+.rail-line { position:absolute; left:0; right:0; top:50%; height:3px; transform:translateY(-50%); background:linear-gradient(90deg, rgba(42,167,196,.75), rgba(255,255,255,.35) 50%, rgba(229,72,61,.85)); border-radius:2px; }
+.rail-line::after { content:''; position:absolute; right:-2px; top:50%; width:12px; height:12px; border-top:3px solid rgba(229,72,61,.9); border-right:3px solid rgba(229,72,61,.9); transform:translateY(-50%) rotate(45deg); }
+.track[data-conveyor] .token { top:38%; }
+.track[data-conveyor] .track-cap { bottom:auto; top:calc(38% + 24px); }
+.token { position:absolute; top:50%; left:0; width:30px; height:30px; margin-top:-15px; border-radius:8px; background:#fff; color:var(--ink); display:grid; place-items:center; will-change:transform; z-index:2; }
+.token svg { width:15px; height:15px; }
+/* the belt: dashes move at exactly the tokens' speed, so it reads as one conveyor */
+.track[data-conveyor] .rail-line { top:38%; right:18px; height:2px; background:linear-gradient(90deg, rgba(42,167,196,.55), rgba(255,255,255,.22) 50%, rgba(229,72,61,.65)); }
+.track[data-conveyor] .rail-line::before { content:''; position:absolute; left:0; right:14px; top:-3px; height:8px; border-radius:4px;
+  background:repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 4px, transparent 4px 18px);
+  -webkit-mask-image:linear-gradient(90deg, transparent, #000 8%, #000 90%, transparent); mask-image:linear-gradient(90deg, transparent, #000 8%, #000 90%, transparent);
+  animation:belt var(--belt, 1s) linear infinite; }
+.track[data-conveyor] .rail-line::after { content:''; right:-13px; width:14px; height:14px; border:0; transform:translateY(-50%);
+  background:#ff8a80; clip-path:polygon(0 0, 100% 50%, 0 100%, 22% 50%); filter:drop-shadow(0 0 6px rgba(255,138,128,.8)); }
+@keyframes belt { from { background-position:0 0; } to { background-position:18px 0; } }
+
+@keyframes arrow { 40% { border-color:#fff; filter:drop-shadow(0 0 6px rgba(255,138,128,.9)); } }
+.token .tail { position:absolute; right:100%; top:50%; width:46px; height:10px; margin-top:-5px; border-radius:5px; background:linear-gradient(90deg, transparent, var(--tail, rgba(138,220,239,.35))); filter:blur(3px); pointer-events:none; }
+.org .ico { transition:transform .25s; }
+.org.src .ico.read { animation:icoRead 1.2s ease-out; }
+@keyframes icoRead { 40% { background:rgba(138,220,239,.18); } }
+.org.dst .ico.got { animation:icoGot 1.2s ease-out; }
+@keyframes icoGot { 35% { box-shadow:0 0 0 1.5px rgba(229,72,61,.35); } }
+.track-cap { position:absolute; left:0; right:0; bottom:2px; text-align:center; font-size:12px; color:rgba(255,255,255,.72); }
+.track-cap b { color:#fff; }
+.lane-foot { max-width:1160px; margin:0 auto; padding:0 28px 22px; display:flex; gap:28px; color:rgba(255,255,255,.78); font-size:13px; }
+.lane-foot div { display:flex; gap:9px; align-items:flex-start; max-width:330px; }
+.lane-foot svg { flex-shrink:0; margin-top:2px; }
+.lane-foot b { color:#fff; }
+/* stage nodes on the track (wizard) */
+.stages { position:absolute; inset:0; display:flex; justify-content:space-around; align-items:center; }
+.stage { position:relative; display:flex; flex-direction:column; align-items:center; gap:0; z-index:2; }
+.stage .dot { width:26px; height:26px; border-radius:50%; background:#2a3160; border:2px solid rgba(255,255,255,.3); display:grid; place-items:center; font-size:11px; font-weight:800; color:rgba(255,255,255,.7); }
+.stage .lb { position:absolute; top:31px; white-space:nowrap; font-size:11px; font-weight:600; color:rgba(255,255,255,.6); }
+.stage.done .dot { background:#fff; color:var(--ok); border-color:#fff; }
+.stage.cur .dot { background:var(--accent); border-color:#fff; color:#fff; box-shadow:0 0 0 6px rgba(66,112,219,.35); }
+.stage.cur .lb { color:#fff; }
+.stage.write .dot { border-color:rgba(229,72,61,.8); }
+.stage.write.cur .dot { background:var(--prd); box-shadow:0 0 0 6px rgba(229,72,61,.35); }
+.ro { font-size:10px; font-weight:700; padding:1px 7px; border-radius:20px; background:rgba(138,220,239,.18); color:#bdeef8; display:inline-flex; gap:4px; align-items:center; }
+.rw { font-size:10px; font-weight:700; padding:1px 7px; border-radius:20px; background:var(--prd); color:#fff; display:inline-flex; gap:4px; align-items:center; }
+
+/* ---------- overview ---------- */
+.ov { display:grid; grid-template-columns:1.35fr 1fr; gap:22px; padding:26px 0 120px; }
+.srcs .s { display:grid; grid-template-columns:44px 1fr auto; gap:14px; align-items:center; padding:16px 20px; border-top:1px solid var(--line); }
+.srcs .s:first-child { border-top:0; }
+.srcs .badge { width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background:var(--sbx-bg); color:var(--sbx-ink); font-weight:800; font-size:15px; }
+.srcs .t { font-weight:700; font-size:16px; display:flex; gap:8px; align-items:center; }
+.srcs .m { font-size:12px; color:var(--muted); margin-top:1px; }
+.addrow { display:flex; gap:10px; align-items:center; padding:13px 20px; border-top:1px dashed var(--line-2); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer; }
+.tl { list-style:none; margin:0; padding:0; position:relative; }
+.tl::before { content:''; position:absolute; left:6px; top:8px; bottom:8px; width:2px; background:var(--line); }
+.tl li { position:relative; padding:0 0 16px 26px; }
+.tl li::before { content:''; position:absolute; left:0; top:5px; width:14px; height:14px; border-radius:50%; background:var(--card); border:3px solid var(--ok); }
+.tl li.w::before { border-color:var(--warn); } .tl li.x::before { border-color:var(--faint); }
+.tl .when { font-weight:700; font-size:13px; }
+.tl .what { font-size:12px; color:var(--muted); }
+.nums { display:inline-flex; gap:8px; font-size:12px; font-weight:700; margin-top:3px; }
+.c-c { color:var(--ok); } .c-u { color:var(--accent); } .c-d { color:var(--del); } .c-r { color:var(--ren); }
+.pins div { display:grid; grid-template-columns:18px 1fr auto; gap:8px; align-items:center; padding:8px 0; border-top:1px solid var(--line); font-size:13px; }
+.pins div:first-child { border-top:0; }
+.pins svg { color:var(--prd); }
+.side { display:flex; flex-direction:column; gap:22px; }
+
+/* ---------- empty ---------- */
+.hero-empty { text-align:left; padding:60px 0 120px; display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; }
+.hero-empty h1 { font-size:34px; }
+.hero-empty p { color:var(--muted); font-size:16px; max-width:460px; line-height:1.6; }
+.steps-list { list-style:none; padding:0; margin:22px 0 26px; counter-reset:s; }
+.steps-list li { counter-increment:s; display:grid; grid-template-columns:30px 1fr; gap:10px; padding:7px 0; font-size:14px; }
+.steps-list li::before { content:counter(s); width:24px; height:24px; border-radius:50%; background:var(--accent-bg); color:var(--accent); font-weight:800; font-size:12px; display:grid; place-items:center; }
+
+/* ---------- wizard body ---------- */
+.wz { padding:26px 0 120px; }
+.wz-h { display:flex; align-items:flex-end; gap:16px; margin-bottom:18px; }
+.wz-h p { margin:6px 0 0; color:var(--muted); max-width:640px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.foot { display:flex; gap:10px; align-items:center; margin-top:22px; }
+.note { display:flex; gap:10px; padding:11px 14px; border-radius:var(--r); font-size:13px; line-height:1.45; }
+.note svg { flex-shrink:0; margin-top:2px; }
+.n-info { background:var(--accent-bg); color:var(--accent-2); }
+.n-warn { background:var(--warn-bg); color:var(--warn-ink); }
+.n-prd { background:var(--prd-bg); color:var(--prd-ink); }
+.check { display:flex; gap:8px; align-items:center; font-size:13px; font-weight:600; color:var(--ok); }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { text-align:left; font-weight:600; color:var(--muted); font-size:12px; padding:8px 10px; border-bottom:1px solid var(--line); }
+td { padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
+tr:last-child td { border-bottom:0; }
+.term { background:#141627; color:#d6d8e6; font:12px/1.65 var(--mono); padding:12px 14px; border-radius:var(--r); overflow:auto; white-space:pre; max-height:250px; }
+.k-g { color:#5be39a; } .k-y { color:#f7cd5a; } .k-b { color:#8fb0ff; } .k-d { opacity:.5; } .k-r { color:#ff8a80; }
+.prog { height:6px; border-radius:3px; background:var(--line); overflow:hidden; }
+.prog i { display:block; height:100%; border-radius:3px; background:linear-gradient(90deg, var(--accent), var(--prd)); }
+/* plan */
+.choice { display:grid; grid-template-columns:20px 1fr; gap:10px; padding:11px 12px; border:1px solid var(--line); border-radius:var(--r); margin-top:8px; cursor:pointer; }
+.choice:has(input:checked) { border-color:var(--accent); background:var(--accent-bg); }
+.choice input { margin-top:3px; accent-color:var(--accent); }
+.choice b { font-size:13px; } .choice small { display:block; color:var(--muted); font-size:12px; }
+.grp-t { font-size:13px; font-weight:700; margin:18px 0 0; }
+.grp-t:first-child { margin-top:0; }
+.counts { display:grid; grid-template-columns:repeat(5, 1fr); border:1px solid var(--line); border-radius:var(--r-lg); background:var(--card); overflow:hidden; }
+.counts div { padding:14px 16px; border-left:1px solid var(--line); }
+.counts div:first-child { border-left:0; }
+.counts b { display:block; font-size:28px; font-weight:800; letter-spacing:-.02em; line-height:1.1; }
+.counts span { font-size:12px; color:var(--muted); }
+/* review */
+.review { display:grid; grid-template-columns:320px 1fr; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--card); overflow:hidden; min-height:500px; }
+.objs { border-right:1px solid var(--line); overflow:auto; max-height:600px; background:var(--paper); }
+.objs .gh { padding:12px 14px 5px; font-size:12px; font-weight:700; color:var(--muted); display:flex; gap:6px; align-items:center; }
+.obj { display:flex; align-items:center; gap:9px; padding:7px 14px; cursor:pointer; font-size:13px; border-left:3px solid transparent; }
+.obj:hover { background:var(--card); }
+.obj.sel { background:var(--card); border-left-color:var(--accent); font-weight:600; }
+.obj.need { border-left-color:var(--warn); }
+.op { width:18px; height:18px; border-radius:5px; font:800 10px var(--sans); display:grid; place-items:center; flex-shrink:0; }
+.op-c { background:var(--ok-bg); color:var(--ok); } .op-u { background:var(--accent-bg); color:var(--accent); } .op-d { background:var(--del-bg); color:var(--del); } .op-r { background:var(--ren-bg); color:var(--ren); } .op-w { background:var(--warn-bg); color:var(--warn); }
+.obj .meta { margin-left:auto; color:var(--faint); font-size:11px; font-weight:500; }
+.diffp { display:flex; flex-direction:column; min-width:0; }
+.diff-h { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--line); }
+.diff-h b { font-size:14px; }
+.sides { display:block; font-size:11px; font-weight:700; color:var(--muted); border-bottom:1px solid var(--line); }
+.sides div { padding:6px 16px; } .sides div + div { border-left:1px solid var(--line); }
+.dl { display:grid; grid-template-columns:40px 40px 1fr; font:12px/1.75 var(--mono); white-space:pre; }
+.dl span:nth-child(-n+2) { color:var(--faint); text-align:right; padding-right:10px; }
+.dl.add { background:rgba(31,138,76,.11); } .dl.del { background:rgba(201,51,51,.10); }
+.dl.pin { background:rgba(229,72,61,.07); }
+.dl.hunk { color:var(--faint); background:var(--paper); }
+.pinnote { font-family:var(--sans); font-size:11px; font-weight:700; color:var(--prd); margin-left:10px; }
+.decide { margin:14px 16px 16px; border-radius:var(--r-lg); border:1px solid #f3d89a; background:var(--warn-bg); padding:14px 16px; }
+.decide .q { font-weight:700; color:var(--warn-ink); margin-bottom:10px; }
+.decide .opts { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.decide .opts button { text-align:left; background:var(--card); border:1.5px solid var(--line-2); border-radius:var(--r); padding:9px 11px; cursor:pointer; font:600 13px var(--sans); color:var(--text); }
+.decide .opts button small { display:block; font-weight:500; font-size:11px; color:var(--muted); }
+.decide .opts button.on { border-color:var(--accent); box-shadow:0 0 0 3px rgba(66,112,219,.18); }
+/* write */
+.confirm { border:1.5px solid var(--prd); border-radius:var(--r-lg); padding:18px 20px; background:linear-gradient(180deg, var(--prd-bg), var(--card) 70%); }
+.confirm h2 { margin:0 0 6px; font-size:17px; }
+.typed { display:flex; gap:10px; margin-top:12px; }
+.typed input { max-width:200px; }
+/* done */
+.fin-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; padding:30px 0 120px; }
+.done-hero { background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); padding:28px; position:relative; overflow:hidden; }
+.done-hero::after { content:''; position:absolute; right:-60px; top:-60px; width:220px; height:220px; border-radius:50%; background:radial-gradient(circle, rgba(31,138,76,.18), transparent 70%); }
+.seal { width:52px; height:52px; border-radius:50%; background:var(--ok); color:#fff; display:grid; place-items:center; margin-bottom:14px; box-shadow:0 0 0 8px var(--ok-bg); }
+/* modal */
+.scrim { min-height:calc(100vh - 80px); display:flex; justify-content:center; align-items:flex-start; padding:70px 16px; background:rgba(15,17,35,.5); backdrop-filter:blur(2px); }
+.modal { width:540px; background:var(--card); border-radius:var(--r-lg); box-shadow:0 30px 80px rgba(0,0,0,.35); overflow:hidden; }
+.modal .mh { display:flex; align-items:center; padding:8px 12px 8px 20px; height:52px; border-bottom:1px solid var(--line); font-size:16px; font-weight:700; }
+.modal .mill { padding:18px 20px 4px; display:flex; align-items:center; gap:10px; }
+.modal .mb { padding:14px 20px 20px; display:flex; flex-direction:column; gap:14px; }
+.modal .mf { padding:12px 20px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:8px; background:var(--paper); }
+.mini { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:var(--r); font-size:12px; font-weight:700; }
+.mini.s { border:1.5px dashed var(--sbx); color:var(--sbx-ink); background:var(--sbx-bg); }
+.mini.d { background:var(--ink); color:#fff; }
+@media (max-width: 900px) {
+  .lane-in, .lane.compact .lane-in { grid-template-columns:1fr; gap:10px; }
+  .track { height:70px; } .ov, .grid2, .hero-empty, .fin-grid, .review { grid-template-columns:1fr; }
+  .lane-foot { flex-direction:column; gap:10px; } .counts { grid-template-columns:repeat(3,1fr); }
+  .rail { display:none; } .wrap { padding:0 16px; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-queue" viewBox="0 0 16 16"><path d="M2 9.5h3l1 2h4l1-2h3M2 9.5 3.5 3h9L14 9.5V13H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+  <symbol id="i-schema" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 6h12M6 6v8" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="i-hook" viewBox="0 0 16 16"><path d="M9 2v6.5a3 3 0 1 1-6 0V7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="2.5" r="1.3" fill="currentColor"/><path d="M11 6h3M11 9h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-rule" viewBox="0 0 16 16"><path d="M8 1.8 13.5 4v4c0 3.2-2.4 5.3-5.5 6.2C4.9 13.3 2.5 11.2 2.5 8V4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m5.6 8 1.7 1.7L10.6 6.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-label" viewBox="0 0 16 16"><path d="M2 2.5h5.5L14 9l-5 5-6.5-6.5V2.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="5.3" cy="5.5" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-fx" viewBox="0 0 16 16"><path d="M9.5 2.5c-2 0-2.4 1.3-2.7 3L5.3 13.5c-.3 1.5-1 2-2.3 2M4 7h5M9.5 8.5l4 4.5M13.5 8.5l-4 4.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 16 16"><path d="M11 2.5 13.5 5 6 12.5 2.5 13.5 3.5 10z" fill="currentColor"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 16 16"><path d="M10 1.5 14.5 6l-2 1-2.5 2.5.5 3-1.5 1.5L3 7.5 4.5 6l3 .5L10 4z" fill="currentColor"/><path d="M5.5 10.5 2 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 7.2v4M8 4.7v.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 16 16"><path d="M8 1.8 15 14H1z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6v4M8 11.8v.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="m3 8.5 3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 16 16"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="mk">
+  <strong>rdc deployments · mockup v13</strong>
+  <button data-s="empty">First visit</button>
+  <button data-s="overview" class="on">This org</button>
+  <button data-s="w1">1 Connect</button>
+  <button data-s="w2">2 Read</button>
+  <button data-s="w3">3 Plan</button>
+  <button data-s="w4">4 Review</button>
+  <button data-s="w5">5 Write</button>
+  <button data-s="fin">Done</button>
+  <button data-s="own">Own values</button>
+  <button data-s="addsrc">Choose source</button>
+  <label><input type="checkbox" id="tg" checked> show my guesses</label>
+</div>
+
+<div class="frame">
+  <nav class="rail" aria-label="Application switcher">
+    <div><i></i>Data</div><div><i></i>Audit</div><div><i></i>Inspector</div><div><i></i>Fabry</div>
+    <div><i></i>Galaxy</div><div><i></i>CIB</div><div class="on"><i></i>rdc</div>
+  </nav>
+  <div class="main">
+    <div class="conn"><span class="dot"></span>Connected to <b>acme.rossum.app</b> <span class="env prd">Production</span> <b>Acme</b> org 31007 [eu1]</div>
+
+<!-- ======================= FIRST VISIT ======================= -->
+<section class="screen" id="empty">
+  <div class="lane"><div class="lane-in">
+    <div class="org src"><div class="who"><svg width="11" height="11"><use href="#i-lock"/></svg>Another org, only read</div><div class="nm">Your test org</div><div class="host">for example a Sandbox</div>
+      <div class="stack"><span class="ico"><svg><use href="#i-queue"/></svg></span><span class="ico"><svg><use href="#i-schema"/></svg></span><span class="ico"><svg><use href="#i-hook"/></svg></span><span class="ico"><svg><use href="#i-rule"/></svg></span><span class="ico"><svg><use href="#i-label"/></svg></span></div></div>
+    <div class="track" data-conveyor><div class="rail-line"></div>
+      
+      <div class="track-cap">configuration is <b>copied</b>, you review it, then it is <b>written</b></div></div>
+    <div class="org dst"><div class="who"><svg width="11" height="11"><use href="#i-pen"/></svg>This org, the only one that changes</div><div class="nm">Acme</div><div class="host">acme.rossum.app</div>
+      <div class="stack"><span class="ico"><svg><use href="#i-queue"/></svg></span><span class="ico"><svg><use href="#i-schema"/></svg></span><span class="ico"><svg><use href="#i-hook"/></svg></span><span class="ico"><svg><use href="#i-rule"/></svg></span><span class="ico"><svg><use href="#i-label"/></svg></span></div></div>
+  </div></div>
+  <div class="wrap"><div class="hero-empty">
+    <div>
+      <h1>Bring tested configuration into Acme</h1>
+      <p>Copy queues, schemas, hooks, rules and labels from another organization into this one. You see every change before anything is written.</p>
+      <ol class="steps-list">
+        <li>Choose the one org that Acme deploys from, usually your test org.</li>
+        <li>Give a token for it. It is only read, and the token is not kept.</li>
+        <li>Review what will change in Acme, then write it.</li>
+      </ol>
+      <button class="btn btn-p" data-go="addsrc">Choose the org to deploy from</button>
+    </div>
+    <div class="panel"><div class="panel-b" style="padding-top:20px">
+      <div class="note n-info"><svg width="16" height="16"><use href="#i-info"/></svg><div><b>Why start here, in Acme?</b><br>Each organization has its own data storage, so each one keeps its own record: where it gets configuration from, what it keeps for itself, and what was deployed into it. To deploy into another org, open the Console from that org. <span class="g" title="Guess 2">2</span></div></div>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ======================= THIS ORG ======================= -->
+<section class="screen on" id="overview">
+  <div class="lane"><div class="lane-in">
+    <div class="org src"><div class="who"><svg width="11" height="11"><use href="#i-lock"/></svg>Deploys from</div><div class="nm">test</div><div class="host">partner-sandbox.rossum.app</div>
+      <div class="stack"><span class="ico"><svg><use href="#i-queue"/></svg></span><span class="ico"><svg><use href="#i-schema"/></svg></span><span class="ico"><svg><use href="#i-hook"/></svg></span><span class="ico"><svg><use href="#i-rule"/></svg></span><span class="ico"><svg><use href="#i-label"/></svg></span></div></div>
+    <div class="track" data-conveyor><div class="rail-line"></div>
+      
+      <div class="track-cap">last deployment <b>Oct 21, 14:02</b> by jane@example.com</div></div>
+    <div class="org dst"><div class="who"><svg width="11" height="11"><use href="#i-pen"/></svg>You are signed in here</div><div class="nm">Acme <span class="env prd" style="vertical-align:4px">Production</span></div><div class="host">acme.rossum.app · org 31007</div>
+      <div class="stack"><span class="ico"><svg><use href="#i-queue"/></svg></span><span class="ico"><svg><use href="#i-schema"/></svg></span><span class="ico"><svg><use href="#i-hook"/></svg></span><span class="ico"><svg><use href="#i-rule"/></svg></span><span class="ico"><svg><use href="#i-label"/></svg></span></div></div>
+  </div>
+  <div class="lane-foot">
+    <div><svg width="16" height="16"><use href="#i-lock"/></svg><span><b>test is only read.</b> You give a token for it each time. It is not kept.</span></div>
+    <div><svg width="16" height="16"><use href="#i-pen"/></svg><span><b>Acme is the only org that changes,</b> with your own sign-in, after you review the changes.</span></div>
+    <div><svg width="16" height="16"><use href="#i-pin"/></svg><span><b>Acme keeps its own values,</b> like its token owner and its automation level.</span></div>
+  </div></div>
+
+  <div class="wrap"><div class="ov">
+    <div style="display:flex; flex-direction:column; gap:22px">
+      <div class="panel srcs">
+        <div class="panel-h"><h2>Acme deploys from</h2></div>
+        <div style="height:8px"></div>
+        <div class="s"><div class="badge">T</div><div><div class="t">test <span class="env sbx">Sandbox</span></div><div class="m">Acme Test, org 20412, partner-sandbox.rossum.app<br>Last deployed from Oct 21. 3 deployments.</div></div><button class="btn btn-p" data-go="w1">Deploy from test</button></div>
+        <div class="addrow" data-go="addsrc" style="color:var(--muted); font-weight:500">Acme has one source. <span style="color:var(--accent); font-weight:600">Change source</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h2>Deployments into Acme</h2><span class="g" title="Guess 3">3</span></div>
+        <div class="panel-b"><ul class="tl">
+          <li><div class="when">Oct 21, 14:02 from test</div><div class="what">jane@example.com</div><div class="nums"><span class="c-c">+2 created</span><span class="c-u">9 updated</span><span class="c-d">0 deleted</span></div></li>
+          <li class="w"><div class="when">Oct 18, 09:12 from test</div><div class="what">sam@example.com. 1 change edited in Acme was left as it was.</div><div class="nums"><span class="c-u">3 updated</span></div></li>
+          <li class="x"><div class="when">Oct 17, 16:55 from test</div><div class="what">sam@example.com. Cancelled during review, nothing written.</div></li>
+        </ul></div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="panel">
+        <div class="panel-h"><h2>What Acme keeps for itself</h2><span class="sp"></span><button class="btn btn-sm" data-go="own">Edit</button></div>
+        <div class="panel-b">
+          <p class="muted" style="margin:0 0 10px; font-size:13px">A deployment never overwrites these. Everything else comes from the source.</p>
+          <div class="pins">
+            <div><svg width="14" height="14"><use href="#i-pin"/></svg>Token owner of all hooks<span class="mono">integration@example.com</span></div>
+            <div><svg width="14" height="14"><use href="#i-pin"/></svg>export-to-erp URL<span class="mono">erp.example.com/prod</span></div>
+            <div><svg width="14" height="14"><use href="#i-pin"/></svg>Score thresholds<span class="tag t-mute">always</span></div>
+            <div><svg width="14" height="14"><use href="#i-pin"/></svg>Inbox addresses<span class="tag t-mute">always</span></div>
+            <div><svg width="14" height="14"><use href="#i-pin"/></svg>Automation settings<span class="tag t-mute">always</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-b" style="padding-top:18px">
+        <div class="note n-info"><svg width="16" height="16"><use href="#i-info"/></svg><div>This list lives in Acme's own data storage. test does not know about it. To deploy into test, open the Console from test. <span class="g" title="Guess 2">2</span></div></div>
+      </div></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ======================= WIZARD LANE TEMPLATE ======================= -->
+<template id="wz-lane">
+  <div class="lane compact"><div class="lane-in">
+    <div class="org src"><div class="who"><span class="ro"><svg width="9" height="9"><use href="#i-lock"/></svg>only read</span></div><div class="nm">test</div><div class="host">org 20412</div></div>
+    <div class="track"><div class="rail-line"></div>
+      <div class="stages">
+        <div class="stage"><span class="dot">1</span><span class="lb">Connect</span></div>
+        <div class="stage"><span class="dot">2</span><span class="lb">Read both</span></div>
+        <div class="stage"><span class="dot">3</span><span class="lb">Plan</span></div>
+        <div class="stage"><span class="dot">4</span><span class="lb">Review</span></div>
+        <div class="stage write"><span class="dot">5</span><span class="lb">Write to Acme</span></div>
+      </div></div>
+    <div class="org dst"><div class="who"><span class="rw"><svg width="9" height="9"><use href="#i-pen"/></svg>changes</span></div><div class="nm">Acme <span class="env prd" style="vertical-align:3px">Production</span></div><div class="host">org 31007, you</div></div>
+  </div></div>
+</template>
+
+<!-- ======================= 1 CONNECT ======================= -->
+<section class="screen" id="w1" data-step="1"><div class="lh"></div><div class="wrap wz">
+  <div class="wz-h"><div><h1>Connect to test</h1><p>To read test, the Console needs a token for it. Acme uses your current sign-in, so there is nothing to enter for it.</p></div></div>
+  <div class="grid2">
+    <div class="panel"><div class="panel-h"><h2>test</h2><span class="ro" style="background:var(--sbx-bg); color:var(--sbx-ink)">only read</span></div>
+      <div class="panel-b" style="display:flex; flex-direction:column; gap:12px">
+        <div class="fld"><label for="tk">API token for partner-sandbox.rossum.app</label><input id="tk" type="password" value="••••••••••••••••••••••••••••••••••••••"><small>Used for this deployment only, then forgotten. <span class="g" title="Guess 4">4</span></small></div>
+        <div class="check"><svg width="16" height="16"><use href="#i-check"/></svg>The token can read Acme Test, org 20412</div>
+      </div></div>
+    <div class="panel"><div class="panel-h"><h2>Hook secrets in Acme</h2><span class="g" title="Guess 5">5</span></div>
+      <div class="panel-b">
+        <p class="muted" style="margin:0 0 6px; font-size:13px">Rossum never shows a secret value. Type one only if Acme needs a new or changed value.</p>
+        <table>
+          <tr><td><b>master-data-hub</b><br><span class="mono muted">mdh_api_token</span></td><td><input type="password" placeholder="Keep Acme's value"></td></tr>
+          <tr><td><b>notify-slack</b> <span class="tag t-ok">new</span><br><span class="mono muted">signing_secret</span></td><td><input type="password" placeholder="Required"></td></tr>
+        </table>
+      </div></div>
+  </div>
+  <div class="foot"><span class="sp"></span><button class="btn btn-p" data-go="w2">Read both orgs</button></div>
+</div></section>
+
+<!-- ======================= 2 READ ======================= -->
+<section class="screen" id="w2" data-step="2"><div class="lh"></div><div class="wrap wz">
+  <div class="wz-h"><div><h1>Reading both orgs</h1><p>The Console reads the current configuration of test and of Acme. Nothing is written yet. <span class="g" title="Guess 6">6</span></p></div></div>
+  <div class="grid2">
+    <div class="panel"><div class="panel-h"><h2>test</h2><span class="sp"></span><span class="tag t-ok">214 files read</span></div><div class="panel-b">
+<div class="term"><span class="k-d">14:31:02</span> <span class="k-b">pull</span>  organization   acme-test
+<span class="k-d">14:31:02</span> <span class="k-b">pull</span>  workspaces     2
+<span class="k-d">14:31:03</span> <span class="k-b">pull</span>  queues         6
+<span class="k-d">14:31:04</span> <span class="k-b">pull</span>  schemas        6  <span class="k-d">41 formulas</span>
+<span class="k-d">14:31:05</span> <span class="k-b">pull</span>  hooks          14
+<span class="k-d">14:31:05</span> <span class="k-b">pull</span>  rules          9
+<span class="k-d">14:31:06</span> <span class="k-b">pull</span>  labels         4
+<span class="k-g">done</span>  214 files</div></div></div>
+    <div class="panel"><div class="panel-h"><h2>Acme</h2><span class="sp"></span><span class="tag t-ok">205 files read</span></div><div class="panel-b">
+<div class="term"><span class="k-d">14:31:02</span> <span class="k-b">pull</span>  organization   acme
+<span class="k-d">14:31:03</span> <span class="k-b">pull</span>  workspaces     2
+<span class="k-d">14:31:04</span> <span class="k-b">pull</span>  queues         6
+<span class="k-d">14:31:06</span> <span class="k-b">pull</span>  schemas        6  <span class="k-d">39 formulas</span>
+<span class="k-d">14:31:07</span> <span class="k-b">pull</span>  hooks          13
+<span class="k-y">note</span>  hooks/export-to-erp was edited in Acme
+      after the last deployment
+<span class="k-g">done</span>  205 files</div></div></div>
+  </div>
+  <div class="note n-warn" style="margin-top:18px"><svg width="16" height="16"><use href="#i-warn"/></svg><div><b>Someone edited Acme directly.</b> One hook changed in Acme after the last deployment. You decide what happens to it during the review. <span class="g" title="Guess 7">7</span></div></div>
+  <div class="foot"><button class="btn" data-go="w1"><svg width="14" height="14"><use href="#i-back"/></svg>Back</button><span class="sp"></span><button class="btn btn-p" data-go="w3">Plan the deployment</button></div>
+</div></section>
+
+<!-- ======================= 3 PLAN ======================= -->
+<section class="screen" id="w3" data-step="3"><div class="lh"></div><div class="wrap wz">
+  <div class="wz-h"><div><h1>Plan what to bring</h1><p>Choose what to copy from test. The numbers update as you choose.</p></div></div>
+  <div class="counts" style="margin-bottom:18px">
+    <div><b class="c-c">3</b><span>will be created</span></div>
+    <div><b class="c-u">12</b><span>will be updated</span></div>
+    <div><b class="c-d" id="delN">0</b><span>will be deleted</span></div>
+    <div><b class="c-r">1</b><span>will be renamed</span></div>
+    <div><b style="color:var(--faint)">47</b><span>already the same</span></div>
+  </div>
+  <div class="grid2" style="grid-template-columns:400px 1fr">
+    <div class="panel"><div class="panel-b" style="padding-top:18px">
+      <div class="grp-t">From test</div>
+      <label class="choice"><input type="radio" name="sc" checked><span><b>Everything</b><small>All queues, schemas, hooks, rules and labels</small></span></label>
+      <label class="choice"><input type="radio" name="sc"><span><b>Only what I pick</b><small>For example one hook, for a hotfix</small></span></label>
+      <div class="grp-t">Things Acme has and test does not</div>
+      <label class="choice"><input type="radio" name="mi" value="keep" checked><span><b>Keep them</b><small>Nothing is deleted in Acme</small></span></label>
+      <label class="choice"><input type="radio" name="mi" value="mirror"><span><b>Delete them</b><small>Acme ends up exactly like test</small></span></label>
+      <div class="grp-t">Also overwrite Acme's own <span class="g" title="Guess 8">8</span></div>
+      <p class="muted" style="font-size:12px; margin:4px 0 0">The 2 values you set for Acme always stay. <a href="#" data-go="own" style="color:var(--accent); font-weight:600">See them</a></p>
+      <label class="choice"><input type="checkbox"><span><b>Score thresholds</b><small>Otherwise Acme keeps its own</small></span></label>
+      <label class="choice"><input type="checkbox"><span><b>Inbox addresses</b><small>Mail to the current addresses would stop arriving</small></span></label>
+      <label class="choice"><input type="checkbox"><span><b>Automation settings</b><small>Automation level and spot-check share</small></span></label>
+    </div></div>
+    <div style="display:flex; flex-direction:column; gap:12px">
+      <div class="note n-info"><svg width="16" height="16"><use href="#i-info"/></svg><div><b>3 queue references fixed in the duplicates hook.</b> Its settings named test's queues by number. They now name Acme's queues.</div></div>
+      <div class="note n-warn"><svg width="16" height="16"><use href="#i-warn"/></svg><div><b>The new credit-notes inbox gets test's address prefix</b>, acme-test-credit. Set Acme's own prefix now if documents should arrive at a different address.<div style="margin-top:8px"><button class="btn btn-sm" data-go="own">Set Acme's prefix</button></div></div></div>
+      <div class="note n-warn"><svg width="16" height="16"><use href="#i-warn"/></svg><div><b>Number 1010 was not changed.</b> In test it is both the label urgent and the rule needs-review, so the Console cannot tell which one a setting means.</div></div>
+      <div class="panel"><div class="panel-h"><h2>The same plan in the command line</h2><span class="g" title="Guess 9">9</span></div><div class="panel-b">
+<div class="term" style="max-height:none">rdc sync test --no-push
+rdc sync acme --no-push
+rdc migrate test acme<span id="mirrorFlag"></span>
+rdc sync acme --dry-run</div></div></div>
+    </div>
+  </div>
+  <div class="foot"><button class="btn" data-go="w2"><svg width="14" height="14"><use href="#i-back"/></svg>Back</button><span class="sp"></span><button class="btn btn-p" data-go="w4">Review 16 changes</button></div>
+</div></section>
+
+<!-- ======================= 4 REVIEW ======================= -->
+<section class="screen" id="w4" data-step="4"><div class="lh"></div><div class="wrap wz">
+  <div class="wz-h"><div><h1>Review the changes to Acme</h1><p>Red lines leave Acme, green lines arrive in Acme. Lines marked "Acme keeps this" are Acme's own values and do not change.</p></div><span class="sp"></span><span class="tag t-warn" id="leftTag">1 decision left</span></div>
+  <div class="review">
+    <div class="objs">
+      <div class="gh">Needs your decision</div>
+      <div class="obj need" data-d="erp"><span class="op op-w">!</span>export-to-erp<span class="meta">edited in Acme</span></div>
+      <div class="gh"><svg width="13" height="13"><use href="#i-hook"/></svg>Hooks</div>
+      <div class="obj sel" data-d="val"><span class="op op-u">U</span>validator-invoices<span class="meta">+3 −2</span></div>
+      <div class="obj"><span class="op op-u">U</span>master-data-hub<span class="meta">+14 −3</span></div>
+      <div class="obj"><span class="op op-u">U</span>duplicates<span class="meta">3 references</span></div>
+      <div class="obj"><span class="op op-c">C</span>notify-slack<span class="meta">new</span></div>
+      <div class="gh"><svg width="13" height="13"><use href="#i-queue"/></svg>Queues and schemas</div>
+      <div class="obj"><span class="op op-u">U</span>cost-invoices schema<span class="meta">+2 formulas</span></div>
+      <div class="obj"><span class="op op-u">U</span>cost-invoices queue<span class="meta">+1 −1</span></div>
+      <div class="obj"><span class="op op-c">C</span>credit-notes queue<span class="meta">new</span></div>
+      <div class="obj"><span class="op op-c">C</span>credit-notes inbox<span class="meta">new</span></div>
+      <div class="obj"><span class="op op-r">R</span>po-invoices<span class="meta">renamed</span></div>
+      <div class="obj"><span class="op op-u">U</span>po-invoices schema<span class="meta">+3 −3</span></div>
+      <div class="gh"><svg width="13" height="13"><use href="#i-rule"/></svg>Rules</div>
+      <div class="obj"><span class="op op-u">U</span>validate-totals<span class="meta">code</span></div>
+      <div class="obj"><span class="op op-u">U</span>vat-check<span class="meta">+1 −1</span></div>
+      <div class="obj"><span class="op op-u">U</span>needs-review<span class="meta">+2</span></div>
+    </div>
+    <div class="diffp">
+      <div id="d-val">
+        <div class="diff-h"><span class="op op-u">U</span><b>validator-invoices</b><span class="muted" style="font-size:12px">hook, Python code and settings</span></div>
+        <div class="sides"><div><span class="c-d">− Acme today</span>&nbsp;&nbsp;&nbsp;<span class="c-c">+ Acme after the deployment</span></div></div>
+        <div class="dl hunk"><span></span><span></span>  def check_due_date(t)</div>
+        <div class="dl"><span>12</span><span>12</span>  def check_due_date(t):</div>
+        <div class="dl"><span>13</span><span>13</span>      if is_empty(t.field.date_due):</div>
+        <div class="dl del"><span>14</span><span></span>-         t.show_warning("Due date missing")</div>
+        <div class="dl add"><span></span><span>14</span>+         t.show_error("Due date is required", t.field.date_due)</div>
+        <div class="dl add"><span></span><span>15</span>+         return</div>
+        <div class="dl"><span>15</span><span>16</span>      if t.field.date_due &lt; t.field.date_issue:</div>
+        <div class="dl hunk"><span></span><span></span>  settings</div>
+        <div class="dl del"><span>9</span><span></span>-   "runtime": "python3.8",</div>
+        <div class="dl add"><span></span><span>9</span>+   "runtime": "python3.12",</div>
+        <div class="dl pin"><span>21</span><span>21</span><span>    "token_owner": ".../users/88120"  <span class="pinnote">Acme keeps this</span></span></div>
+        <div class="dl"><span>22</span><span>22</span>    "queues": [ "cost-invoices" ]</div>
+      </div>
+      <div id="d-erp" style="display:none">
+        <div class="diff-h"><span class="op op-w">!</span><b>export-to-erp</b><span class="muted" style="font-size:12px">edited in Acme on Oct 24 by sam@example.com</span></div>
+        <div class="sides"><div><span class="c-d">− Acme today</span>&nbsp;&nbsp;&nbsp;<span class="c-c">+ test</span></div></div>
+        <div class="dl hunk"><span></span><span></span>  settings</div>
+        <div class="dl del"><span>14</span><span></span>-   "timeout_s": 120,</div>
+        <div class="dl add"><span></span><span>14</span>+   "timeout_s": 30,</div>
+        <div class="decide">
+          <div class="q">Both orgs changed this hook. Which version should Acme have? <span class="g" title="Guess 10">10</span></div>
+          <div class="opts">
+            <button data-pick><span>Use test's version</span><small>Acme's edit is replaced</small></button>
+            <button data-pick><span>Keep Acme's version</span><small>test's change is not applied</small></button>
+            <button data-pick><span>Decide next time</span><small>Skip it in this deployment</small></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><button class="btn" data-go="w3"><svg width="14" height="14"><use href="#i-back"/></svg>Back</button><span class="sp"></span><button class="btn btn-p" data-go="w5">Continue to write</button></div>
+</div></section>
+
+<!-- ======================= 5 WRITE ======================= -->
+<section class="screen" id="w5" data-step="5"><div class="lh"></div><div class="wrap wz">
+  <div class="wz-h"><div><h1>Write to Acme</h1><p>A dry run produced exactly the 16 changes you reviewed. Only Acme is changed.</p></div></div>
+  <div class="grid2">
+    <div class="confirm" style="align-self:start">
+      <h2>Confirm the deployment</h2>
+      <p class="muted" style="margin:0">You are about to change Acme, a Production org. Type the org name to confirm. Every deployment asks for it.</p>
+      <div class="typed"><input type="text" id="cf" placeholder="Acme" aria-label="Type Acme to confirm"><button class="btn btn-prd" id="cfb" disabled>Write 16 changes to Acme</button></div>
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Writing</h2><span class="sp"></span><span class="muted" style="font-size:12px">10 of 16</span></div><div class="panel-b">
+      <div class="prog" style="margin-bottom:12px"><i style="width:62%"></i></div>
+<div class="term" style="max-height:220px"><span class="k-d">14:36:10</span> <span class="k-g">create</span> queue  credit-notes
+<span class="k-d">14:36:11</span> <span class="k-g">create</span> inbox  credit-notes
+<span class="k-d">14:36:11</span> <span class="k-g">create</span> hook   notify-slack
+<span class="k-d">14:36:12</span> <span class="k-b">rename</span> queue  po-invoices to purchase-invoices
+<span class="k-d">14:36:12</span> <span class="k-b">update</span> schema cost-invoices
+<span class="k-d">14:36:13</span> <span class="k-b">update</span> hook   validator-invoices
+<span class="k-d">14:36:13</span> <span class="k-b">update</span> hook   master-data-hub
+<span class="k-d">14:36:14</span> <span class="k-b">update</span> hook   duplicates
+<span class="k-d">14:36:14</span> <span class="k-b">update</span> rule   validate-totals
+<span class="k-d">14:36:15</span> <span class="k-b">update</span> rule   vat-check</div>
+      <div class="note n-warn" style="margin-top:10px"><svg width="16" height="16"><use href="#i-warn"/></svg><div><b>Keep this tab open until the deployment finishes.</b> Closing it stops the deployment, and the changes already written stay in Acme.</div></div>
+      <div class="foot" style="margin-top:12px"><span class="sp"></span><button class="btn btn-sm" data-go="fin">See the result</button></div>
+    </div></div>
+  </div>
+</div></section>
+
+<!-- ======================= DONE ======================= -->
+<section class="screen" id="fin">
+  <div class="lane compact"><div class="lane-in">
+    <div class="org src"><div class="who"><span class="ro">only read</span></div><div class="nm">test</div><div class="host">org 20412</div></div>
+    <div class="track"><div class="rail-line"></div><div class="track-cap" style="bottom:auto; top:8px"><b>Deployed</b> Oct 27, 14:36</div></div>
+    <div class="org dst"><div class="who" style="color:var(--ok)"><svg width="11" height="11"><use href="#i-check"/></svg>updated</div><div class="nm">Acme <span class="env prd" style="vertical-align:3px">Production</span></div><div class="host">org 31007</div></div>
+  </div></div>
+  <div class="wrap"><div class="fin-grid">
+    <div class="done-hero">
+      <div class="seal"><svg width="24" height="24"><use href="#i-check"/></svg></div>
+      <h1>Deployed to Acme</h1>
+      <p class="muted" style="font-size:15px; margin:8px 0 18px">16 changes from test are now in Acme. The deployment is saved in Acme's history.</p>
+      <div class="nums" style="font-size:14px; gap:16px"><span class="c-c">3 created</span><span class="c-u">12 updated</span><span class="c-r">1 renamed</span><span class="c-d">0 deleted</span></div>
+      <div class="foot"><button class="btn btn-p" data-go="overview">Back to Acme</button><button class="btn">Download the log</button></div>
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Left for you</h2></div><div class="panel-b">
+      <div class="note n-warn" style="margin-bottom:10px"><svg width="16" height="16"><use href="#i-warn"/></svg><div><b>export-to-erp was skipped.</b> You chose to decide next time. The next deployment from test asks again.</div></div>
+      <div class="note n-info"><svg width="16" height="16"><use href="#i-info"/></svg><div><b>The new credit-notes queue has automation off.</b> New queues start without automation. Turn it on in Acme when you are ready.</div></div>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ======================= OWN VALUES ======================= -->
+<section class="screen" id="own"><div class="wrap wz">
+  <div style="margin-bottom:14px"><button class="btn btn-sm btn-ghost" data-go="overview" style="padding-left:0"><svg width="14" height="14"><use href="#i-back"/></svg>Acme</button></div>
+  <div class="wz-h"><div><h1>What Acme keeps for itself</h1><p>A deployment copies everything from test except these values. Use them for what must differ in Acme: addresses of other systems, users, mail addresses.</p></div><span class="sp"></span><button class="btn btn-p">Save changes</button></div>
+
+  <div class="panel">
+    <div class="panel-h"><h2>Values you set</h2><span class="g" title="Guess 14">14</span><span class="sp"></span><span class="muted" style="font-size:12px">3 values</span></div>
+    <div class="panel-b">
+      <table class="ownt">
+        <tr><th style="width:26%">Object</th><th style="width:22%">Setting</th><th>Value in Acme</th><th style="width:20%">Value in test</th><th style="width:40px"></th></tr>
+        <tr>
+          <td><div class="row" style="gap:8px"><span class="ico oi"><svg><use href="#i-hook"/></svg></span><div><b>All hooks</b><div class="muted" style="font-size:12px">every hook in Acme</div></div></div></td>
+          <td>Token owner<div class="mono muted">token_owner</div></td>
+          <td><select><option>integration@example.com</option><option>jane@example.com</option></select></td>
+          <td class="muted">qa-bot@example.com</td>
+          <td><button class="btn btn-sm btn-ghost" aria-label="Remove">✕</button></td>
+        </tr>
+        <tr>
+          <td><div class="row" style="gap:8px"><span class="ico oi"><svg><use href="#i-hook"/></svg></span><div><b>export-to-erp</b><div class="muted" style="font-size:12px">hook</div></div></div></td>
+          <td>Endpoint URL<div class="mono muted">config.url</div></td>
+          <td><input type="text" value="https://erp.example.com/prod/hook"></td>
+          <td class="muted mono" style="font-size:12px">erp.example.com/test/hook</td>
+          <td><button class="btn btn-sm btn-ghost" aria-label="Remove">✕</button></td>
+        </tr>
+        <tr class="newrow">
+          <td><div class="row" style="gap:8px"><span class="ico oi"><svg><use href="#i-queue"/></svg></span><div><b>credit-notes</b><div class="muted" style="font-size:12px">inbox, new in this deployment</div></div></div></td>
+          <td>Address prefix<div class="mono muted">email_prefix</div></td>
+          <td><input type="text" value="acme-credit"><small class="muted" style="font-size:11px">Documents arrive at acme-credit-…@acme.rossum.app</small></td>
+          <td class="muted mono" style="font-size:12px">acme-test-credit</td>
+          <td><button class="btn btn-sm btn-ghost" aria-label="Remove">✕</button></td>
+        </tr>
+      </table>
+      <div class="addv">
+        <select><option>Choose an object…</option><option>All hooks</option><option>All queues</option><option>export-to-erp (hook)</option><option>cost-invoices (queue)</option></select>
+        <select><option>Choose a setting…</option></select>
+        <button class="btn btn-sm">Add value</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:18px">
+    <div class="panel">
+      <div class="panel-h"><h2>Always Acme's own</h2></div>
+      <div class="panel-b">
+        <p class="muted" style="margin:0 0 8px; font-size:13px">These stay as they are in Acme. A single deployment can still overwrite them, in its Plan step.</p>
+        <div class="pins">
+          <div><svg width="14" height="14"><use href="#i-pin"/></svg>Score thresholds of fields and queues<span class="tag t-mute">kept</span></div>
+          <div><svg width="14" height="14"><use href="#i-pin"/></svg>Inbox addresses<span class="tag t-mute">kept</span></div>
+          <div><svg width="14" height="14"><use href="#i-pin"/></svg>Automation level and spot-check share<span class="tag t-mute">kept</span></div>
+          <div><svg width="14" height="14"><use href="#i-lock"/></svg>Queue training<span class="tag t-mute">always kept</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>Hook secrets</h2></div>
+      <div class="panel-b">
+        <p class="muted" style="margin:0; font-size:13px">Secrets are not listed here. Rossum never shows them, and the Console never stores them. You type a secret during a deployment, only when Acme needs a new one. <span class="g" title="Guess 5">5</span></p>
+      </div>
+    </div>
+  </div>
+
+  <details class="panel" style="margin-top:18px">
+    <summary style="padding:14px 20px; cursor:pointer; font-weight:700">Show as overlay.toml</summary>
+    <div class="panel-b" style="padding-top:0">
+<div class="term" style="max-height:none"># Acme's own values. rdc migrate applies them on every deployment.
+version = 1
+
+[hooks."*"]
+token_owner = "https://acme.rossum.app/api/v1/users/88120"
+
+[hooks.export-to-erp]
+config = { url = "https://erp.example.com/prod/hook" }
+
+[inboxes.credit-notes]
+email_prefix = "acme-credit"</div>
+      <p class="muted" style="font-size:12px; margin:8px 0 0">The same file rdc reads in the command line, so a project pulled with the CLI keeps these values. <span class="g" title="Guess 2">2</span></p>
+    </div>
+  </details>
+</div></section>
+<style>
+.ownt td { vertical-align:top; }
+.ownt input, .ownt select { padding:7px 10px; font-size:13px; }
+.ico.oi { background:var(--accent-bg); color:var(--accent); flex-shrink:0; }
+.newrow { background:linear-gradient(90deg, var(--warn-bg), transparent 60%); }
+.addv { display:grid; grid-template-columns:1fr 1fr auto; gap:10px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line-2); }
+.addv select { padding:7px 10px; font-size:13px; }
+</style>
+
+<!-- ======================= ADD SOURCE ======================= -->
+<section class="screen" id="addsrc"><div class="scrim">
+  <div class="modal" role="dialog" aria-label="Choose the org to deploy from">
+    <div class="mh">Choose the org to deploy from<span class="sp"></span><button class="btn btn-sm btn-ghost" aria-label="Close" data-go="overview">✕</button></div>
+    <div class="mill"><span class="mini s"><svg width="10" height="10"><use href="#i-lock"/></svg>source, only read</span>
+      <svg width="40" height="12" viewBox="0 0 40 12" style="color:var(--faint)"><path d="M0 6h34m-5-4 5 4-5 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="mini d">Acme</span></div>
+    <div class="mb">
+      <div class="fld"><label>Rossum address</label><input type="text" value="https://partner-sandbox.rossum.app"></div>
+      <div class="fld"><label>API token</label><input type="password" value="••••••••••••••••••••••••"><small>Only to find the organization. It is not kept.</small></div>
+      <div class="fld"><label>Organization</label><select><option>Acme Test, org 20412</option><option>Acme Dev, org 20398</option></select><small>The organizations this token can read.</small></div>
+      <div class="fld"><label>Short name</label><input type="text" value="test"><small>Shown on the page and in the history.</small></div>
+      <div class="note n-info"><svg width="16" height="16"><use href="#i-info"/></svg><div>Acme deploys from one org. Acme saves its address, organization and name. Acme Test is not changed and does not learn about this.</div></div>
+    </div>
+    <div class="mf"><button class="btn" data-go="overview">Cancel</button><button class="btn btn-p" data-go="overview">Deploy from test</button></div>
+  </div>
+</div></section>
+
+  </div>
+</div>
+
+<div class="gq">
+  <h4>My guesses, please correct</h4>
+  <ol>
+    <li value="2">Source, own values, slug mapping and history live in a hidden collection in this org only.</li>
+    <li value="3">Every deployment into the org is recorded: who, when, counts, result.</li>
+    <li value="4">The source token is used for one deployment and never stored.</li>
+    <li value="5">Hook secrets are typed during the deployment and never stored.</li>
+    <li value="6">Both orgs are read fresh before every plan.</li>
+    <li value="7">A direct edit in this org shows as a decision, never as a silent overwrite.</li>
+    <li value="8">The three "also overwrite" options are offered, unchecked by default.</li>
+    <li value="9">The equivalent CLI commands are shown.</li>
+    <li value="10">Conflicts are decided one by one; no "all" answer.</li>
+    <li value="14">Own values are edited as a list of object, field and value, not as raw overlay.toml.</li>
+  </ol>
+  <h4 style="margin-top:10px; color:#1f8a4c">Decided</h4>
+  <ul style="margin:0; padding-left:18px">
+    <li>One source per org.</li>
+    <li>Every deployment asks for the org name.</li>
+    <li>Own values are viewed and edited on their own page.</li>
+    <li>No resume after a closed tab: rdc has no checkpoint for it today.</li>
+  </ul>
+</div>
+
+<script>
+const tpl = document.getElementById('wz-lane');
+document.querySelectorAll('.screen[data-step]').forEach(s => {
+  const n = +s.dataset.step, c = tpl.content.cloneNode(true);
+  c.querySelectorAll('.stage').forEach((st, i) => {
+    if (i + 1 < n) { st.classList.add('done'); st.querySelector('.dot').innerHTML = '<svg width="12" height="12"><use href="#i-check"/></svg>'; }
+    else if (i + 1 === n) st.classList.add('cur');
+  });
+  s.querySelector('.lh').appendChild(c);
+});
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  document.querySelectorAll('.mk button').forEach(b => b.classList.toggle('on', b.dataset.s === id));
+  window.scrollTo(0, 0);
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-s],[data-go]');
+  if (t) { go(t.dataset.s || t.dataset.go); return; }
+  const o = e.target.closest('.obj[data-d]');
+  if (o) {
+    document.querySelectorAll('.obj').forEach(x => x.classList.toggle('sel', x === o));
+    document.getElementById('d-val').style.display = o.dataset.d === 'val' ? '' : 'none';
+    document.getElementById('d-erp').style.display = o.dataset.d === 'erp' ? '' : 'none';
+  }
+  const p = e.target.closest('[data-pick]');
+  if (p) {
+    p.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === p));
+    const tag = document.getElementById('leftTag'); tag.textContent = 'All decided'; tag.className = 'tag t-ok';
+  }
+});
+document.querySelectorAll('input[name=mi]').forEach(r => r.addEventListener('change', () => {
+  const m = document.querySelector('input[name=mi]:checked').value === 'mirror';
+  document.getElementById('delN').textContent = m ? '2' : '0';
+  document.getElementById('mirrorFlag').textContent = m ? ' --mirror' : '';
+}));
+document.getElementById('cf').addEventListener('input', e => { document.getElementById('cfb').disabled = e.target.value !== 'Acme'; });
+document.getElementById('tg').addEventListener('change', e => document.body.classList.toggle('hide-g', !e.target.checked));
+
+// ---------- the conveyor: constant speed, evenly spaced, tied to both orgs ----------
+(function () {
+  const KINDS = ['i-queue', 'i-schema', 'i-hook', 'i-rule', 'i-label'];
+  const DUR = 9000, GAP = 2700;             // one object per GAP ms, so tokens never bunch
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const pulse = (el, cls) => { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+  const icon = (stack, k) => stack && [...stack.querySelectorAll('.ico')].find(i => i.querySelector('use')?.getAttribute('href') === '#' + k);
+  document.querySelectorAll('.track[data-conveyor]').forEach(track => {
+    const lane = track.closest('.lane'), line = track.querySelector('.rail-line');
+    const src = lane.querySelector('.org.src .stack'), dst = lane.querySelector('.org.dst .stack');
+    let n = 0;
+    const geometry = () => { const W = track.clientWidth; const x0 = 6, x1 = W - 18 - 14 - 30 - 8; /* stop before the arrowhead */ return { x0, x1, speed: (x1 - x0) / (DUR * .84) }; };
+    const make = k => { const t = document.createElement('span'); t.className = 'token'; t.innerHTML = `<svg><use href="#${k}"/></svg>`; track.appendChild(t); return t; };
+    if (reduceMotion) {             // three still objects on the belt, nothing moves
+      const { x0, x1 } = geometry();
+      ['i-schema', 'i-hook', 'i-rule'].forEach((k, i) => { const t = make(k); t.style.transform = `translateX(${x0 + (x1 - x0) * (i + 1) / 4}px)`; t.style.boxShadow = '0 3px 8px rgba(0,0,0,.18)'; });
+      return;
+    }
+    const spawn = () => {
+      if (!track.offsetParent || document.hidden) return;        // only on the screen you are looking at
+      const k = KINDS[n++ % KINDS.length], t = make(k);
+      const { x0, x1, speed } = geometry();
+      track.style.setProperty('--belt', (18 / speed).toFixed(0) + 'ms');
+      pulse(icon(src, k), 'read');
+      // linear in the middle: the belt runs at one speed. It lifts on at the start and settles in at the end.
+      t.animate([
+        { transform: `translateX(${x0}px)`, opacity: 0, background: '#e3f4f8', boxShadow: '0 0 0 1px rgba(138,220,239,.35)', offset: 0 },
+        { transform: `translateX(${x0 + (x1 - x0) * .1}px)`, opacity: 1, background: '#e8f6f9', boxShadow: '0 0 0 1px rgba(138,220,239,.3), 0 3px 8px rgba(0,0,0,.18)', offset: .1 },
+        { transform: `translateX(${x0 + (x1 - x0) * .5}px)`, opacity: 1, background: '#f4f5f8', boxShadow: '0 0 0 1px rgba(255,255,255,.25), 0 3px 8px rgba(0,0,0,.18)', offset: .5 },
+        { transform: `translateX(${x0 + (x1 - x0) * .9}px)`, opacity: 1, background: '#f9f1f1', boxShadow: '0 0 0 1px rgba(255,138,128,.3), 0 3px 8px rgba(0,0,0,.18)', offset: .9 },
+        { transform: `translateX(${x1}px)`, opacity: 0, background: '#f9f1f1', boxShadow: '0 0 0 1px rgba(255,138,128,.3)', offset: 1 },
+      ], { duration: DUR, easing: 'linear' }).onfinish = () => { t.remove(); pulse(icon(dst, k), 'got'); };
+      
+    };
+    spawn(); setInterval(spawn, GAP);
+  });
+})();
+</script>
+</body>
+</html>
