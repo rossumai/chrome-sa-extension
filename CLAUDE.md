@@ -199,7 +199,7 @@ Nine entry points, plus two bundles nothing imports that are script-injected on 
 |---|---|
 | `src/rossum/index.ts` · `src/netsuite/index.ts` · `src/coupa/index.ts` | content scripts |
 | `src/popup/popup.tsx` | extension popup (Preact) |
-| `src/console/index.tsx` | Console page — an app rail over eight apps |
+| `src/console/index.tsx` | Console page — an app rail over nine apps |
 | `src/background/index.ts` | MV3 service worker |
 | `src/devtools/devtools.ts` · `src/devtools/panel.tsx` | DevTools "Rossum" panel |
 | `src/sidepanel/index.tsx` | Chrome side panel |
@@ -281,7 +281,7 @@ Reloading the extension does NOT re-inject content scripts into open tabs — re
 
 ### Console apps (`src/console/`)
 
-An app-switcher rail over eight apps. Adding one touches three hardcoded switch points
+An app-switcher rail over nine apps. Adding one touches three hardcoded switch points
 (`Rail.tsx` APPS, `Console.tsx` render switch, `boot.ts` `isValidApp`) plus `console/index.tsx`.
 `Console.tsx` unmounts the app you leave — except CIB deploy, which stays mounted (hidden) once
 opened, because its form, log and a deploy in flight live in component state.
@@ -302,6 +302,15 @@ opened, because its form, log and a deploy in flight live in component state.
   query is a full scan). What creates it is not established — treat it as an observation.
 - **Audit Log Viewer** (`src/audit/`) — one generic shell driven by per-source descriptors in
   `sources/`. Only `audit_logs` is registered; the descriptor shape exists to host more.
+- **Builder** (`src/builder/`, beta) — a queue's schema as an editable grid, beside right-hand
+  panels for a field, a native Rule, an MDH hook's settings and a custom engine's fields. Every
+  edit is staged in an undoable draft; only Save writes (schema, rules, hook settings, engine
+  fields — engine fields before the schema that uses them, deletes after it). A picked
+  annotation fills a Value column; Revalidate runs start → `content/validate` → cancel, and the
+  open rule is evaluated by Rossum's INTERNAL `POST /v1/internal/rules/evaluate_rules` (the
+  endpoint behind Rossum's own rule-editor preview; shapes read off its public web-app bundle,
+  undocumented — see `ruleEval.ts`). Layout is tuned for a 13" screen (1440px): the grid drops
+  columns while a panel is open rather than scroll sideways.
 - **Galaxy** (`src/galaxy/`) — the live org as a 3D force graph on raw three.js + d3-force-3d.
   `3d-force-graph` is deliberately avoided: its ngraph engine uses `new Function`, which the
   Console page's MV3 CSP forbids.

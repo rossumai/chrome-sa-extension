@@ -65,12 +65,16 @@ A full-page app with a rail of tools for the organization you opened it from:
   collections. Write aggregation pipelines and debug them stage by stage. Manage regular and
   search indexes.
 - **Audit Log Viewer.** Browse and filter the organization's audit log.
+- **Builder (beta).** Edit a queue's schema as a grid, together with its rules, MDH matching
+  hooks and custom AI engine fields. Pick an annotation to see its values, validation results
+  and the open rule evaluated on it. Changes are staged and undoable until you press Save,
+  which changes your organization.
 - **Inspector.** Explains what happened to one annotation, and why, as a diagnosis report.
 - **Fabry.** A chat assistant over the Rossum Agent API. Chat is read-only.
 - **Galaxy.** The organization's workspaces, queues, hooks, engines and their links as a 3D graph.
 - **CIB deploy.** Deploys a release of the Coupa Integration Baseline into the organization. It
   reads the release from GitHub when you press Check or Deploy, checks the organization and the
-  Coupa credentials first, and can resume an interrupted deploy. Unlike the other tools, a Deploy
+  Coupa credentials first, and can resume an interrupted deploy. Like Builder's Save, a Deploy
   changes your organization.
 - **Academy.** An onboarding training track for new partners. Hidden by default; it never
   changes your organization.
