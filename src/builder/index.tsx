@@ -257,7 +257,16 @@ export async function save(force = false): Promise<SaveResult | null> {
     } else {
       const deleteError = await deleteEngineFields();
       const marks = store.engineDeletes.value;
+      const sel = store.selectedKey.value;
+      const selectedId = sel == null ? undefined : findByKey(store.work.value, sel)?.id;
       setBase(r.schema);
+      // setBase renumbers the row keys: keep the selection on its field (ids are unique);
+      // the rows Mr. Fabry touched are saved now.
+      store.selectedKey.value =
+        selectedId == null
+          ? null
+          : (flatten(store.work.value).find((x) => x.node.id === selectedId)?.key ?? null);
+      store.fabryTouched.value = new Set();
       if (deleteError) {
         store.engineDeletes.value = marks;
         general.push(deleteError);

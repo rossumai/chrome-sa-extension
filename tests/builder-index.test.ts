@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as store from '../src/builder/store.js';
-import { withKeys, flatten, setAttr } from '../src/builder/model.js';
+import { withKeys, flatten, setAttr, setDeleted } from '../src/builder/model.js';
 import {
   resetBuilderStore,
   section,
@@ -125,6 +125,26 @@ describe('save', () => {
     vi.mocked(api.patchSchema).mockResolvedValue({});
     await save();
     expect(store.generalErrors.value.join(' ')).toContain('[0].label');
+  });
+});
+
+describe('save renumbers row keys', () => {
+  it('keeps the selected field and forgets the rows Mr. Fabry touched', async () => {
+    const content = [section('s', [dp('a'), dp('b')])];
+    const saved = [section('s', [dp('b')])];
+    store.schema.value = { id: 7, modified_at: 't0', content };
+    store.startDraft('S', withKeys(content));
+    apply(setDeleted(store.work.value, keyOf(store.work.value, 'a'), true));
+    store.selectedKey.value = keyOf(store.work.value, 'b');
+    store.fabryTouched.value = new Set([keyOf(store.work.value, 'b')]);
+    vi.mocked(api.getSchema)
+      .mockResolvedValueOnce({ id: 7, modified_at: 't0', content })
+      .mockResolvedValueOnce({ id: 7, modified_at: 't1', content: saved });
+    vi.mocked(api.validateSchema).mockResolvedValue({});
+    vi.mocked(api.patchSchema).mockResolvedValue({});
+    await save();
+    expect(store.selectedKey.value).toBe(keyOf(store.work.value, 'b'));
+    expect(store.fabryTouched.value.size).toBe(0);
   });
 });
 
