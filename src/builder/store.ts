@@ -40,6 +40,9 @@ export const baseName = signal('');
 export const history = signal<History<Draft>>(initHistory({ name: '', content: [] }));
 // Every schema in the org, names only (the list call returns full objects; content is dropped).
 export const schemas = signal<{ id: number; url: string; name: string }[]>([]);
+// The last schema deleted here, for Undo (recreated under a new id). Memory only: a reload
+// loses it, and it is not part of the draft's undo history.
+export const deletedSchema = signal<{ name: string; content: any[] } | null>(null);
 export const selectedKey = signal<string | null>(null);
 // The grid's id/label filter (see fieldFilter.ts); '' shows every row.
 export const fieldFilter = signal('');

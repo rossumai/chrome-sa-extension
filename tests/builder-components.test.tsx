@@ -5,6 +5,7 @@ import { act } from 'preact/test-utils';
 import { EditorView } from '@codemirror/view';
 import App from '../src/builder/components/App.jsx';
 import CreateDialog from '../src/builder/components/CreateDialog.jsx';
+import { modalContent } from '../src/ui/Modal.jsx';
 import * as store from '../src/builder/store.js';
 import { withKeys, flatten } from '../src/builder/model.js';
 import { annotationValues } from '../src/builder/values.js';
@@ -87,6 +88,7 @@ afterEach(() => {
 
 beforeEach(() => {
   resetBuilderStore();
+  modalContent.value = null;
   document.body.innerHTML = '';
   navDrawer.value = false;
   panelWide.value = false;
@@ -319,19 +321,24 @@ describe('Builder keyboard and dialog', () => {
     expect(store.work.value).toBe(flipped);
   });
 
-  it('the save dialog does not close on an overlay click while saving', () => {
+  it('Escape closes the save dialog and leaves the right panel under it open', () => {
     act(() => {
       (row('doc_id').querySelector('button[data-col="visible"]') as HTMLButtonElement).click();
     });
     act(() => {
+      store.rightPanel.value = { kind: 'fabry' };
+    });
+    act(() => {
       (root.querySelector('[data-action="save"]') as HTMLElement).click();
     });
-    store.saving.value = true;
+    const dialog = root.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog.textContent).toContain('Save schema');
+    expect(document.activeElement).toBe(dialog);
     act(() => {
-      (root.querySelector('[role="dialog"]')!.parentElement as HTMLElement).click();
+      dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
-    expect(root.querySelector('[role="dialog"]')).not.toBeNull();
-    store.saving.value = false;
+    expect(root.querySelector('[role="dialog"]')).toBeNull();
+    expect(store.rightPanel.value).toEqual({ kind: 'fabry' });
   });
 });
 
@@ -536,6 +543,66 @@ describe('Builder left panel actions', () => {
       (e) => (e as HTMLInputElement).value,
     );
     expect(modes).toEqual(['copy', 'share', 'empty']);
+  });
+
+  it('a queue delete offers Delete in 24 h and Delete now, with Cancel focused', async () => {
+    const fetchMock = vi.fn(async (_url: string, _opts: any) => ({
+      ok: true,
+      status: 204,
+      headers: new Headers(),
+      json: async () => ({ results: [] }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    const open = () =>
+      act(() => {
+        (root.querySelector('[data-action="delete-queue"][data-queue="3"]') as HTMLElement).click();
+      });
+    open();
+    const dialog = root.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Orders (3)');
+    expect(dialog.textContent).toContain('cannot be deleted while the queue still exists');
+    expect(document.activeElement?.textContent).toBe('Cancel');
+    for (const [action, url] of [
+      ['delete-later', '/api/v1/queues/3'],
+      ['delete-now', '/api/v1/queues/3?delete_after=0'],
+    ]) {
+      fetchMock.mockClear();
+      if (!root.querySelector('[role="dialog"]')) open();
+      await act(async () => {
+        (root.querySelector(`[data-action="${action}"]`) as HTMLElement).click();
+      });
+      expect(root.querySelector('[role="dialog"]')).toBeNull();
+      expect(fetchMock.mock.calls[0][0]).toBe(url);
+      expect(fetchMock.mock.calls[0][1].method).toBe('DELETE');
+    }
+    vi.unstubAllGlobals();
+    vi.stubGlobal('chrome', {
+      storage: { local: { get: vi.fn(async () => ({})), set: chromeSet } },
+    });
+  });
+
+  it('a queue Rossum is deleting is marked Deleting and has no delete button', () => {
+    act(() => {
+      store.queues.value = store.queues.value.map((q) =>
+        q.id === 3 ? { ...q, status: 'deletion_requested' } : q,
+      );
+    });
+    expect(root.querySelector('[data-deleting="3"]')?.textContent).toBe('Deleting');
+    expect(root.querySelector('[data-action="delete-queue"][data-queue="3"]')).toBeNull();
+    expect(root.querySelector('[data-action="delete-queue"][data-queue="1"]')).not.toBeNull();
+  });
+
+  it('a deleted schema shows Undo until it is restored', () => {
+    act(() => {
+      (root.querySelector('[data-action="delete-schema"][data-schema="8"]') as HTMLElement).click();
+    });
+    expect(root.querySelector('[role="dialog"]')!.textContent).toContain('new ID');
+    act(() => {
+      store.deletedSchema.value = { name: 'Unused schema', content: [] };
+    });
+    const line = root.querySelector('[data-deleted-schema]')!;
+    expect(line.textContent).toContain('Schema Unused schema deleted.');
+    expect(line.textContent).toContain('new ID');
   });
 
   it('+ Schema opens a dialog offering a copy or an empty schema', () => {
@@ -2051,7 +2118,7 @@ describe('Builder create dialog', () => {
   it('focuses the name once; a click on a radio keeps the focus there', async () => {
     store.schema.value = { id: 7, name: 'Inv', url: 'https://x/api/v1/schemas/7', content: [] };
     act(() => {
-      render(<CreateDialog target={{ kind: 'schema' }} onClose={() => {}} />, root);
+      render(<CreateDialog target={{ kind: 'schema' }} />, root);
     });
     expect(document.activeElement).toBe(root.querySelector('input:not([type])'));
     const empty = root.querySelector('input[value="empty"]') as HTMLInputElement;

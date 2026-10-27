@@ -601,7 +601,7 @@ export async function pickAnnotation(input: string) {
 }
 
 // ---- Creating and deleting workspaces, queues and schemas -------------------------------
-// These act at once, after a confirmation for deletes: they are not staged with Save.
+// These act at once (deletes after the Navigator's confirmation): they are not staged with Save.
 
 async function refreshLists() {
   await Promise.all([loadQueues(), loadSchemas()]);
@@ -696,14 +696,11 @@ function closeEditor() {
   setBase(null);
 }
 
-export async function deleteQueue(id: number) {
-  const q = store.queues.value.find((x) => x.id === id);
+/** `now` deletes at once and for good; otherwise Rossum keeps the queue for 24 h. */
+export async function deleteQueue(id: number, { now }: { now: boolean }) {
   const open = store.selectedQueueId.value === id;
-  const lose = open && store.dirty.value ? ' Your staged schema changes are lost.' : '';
-  const msg = `Delete queue ${q?.name ?? 'queue'} (${id}) now? This cannot be undone. Its schema is kept.${lose}`;
-  if (!confirm(msg)) return;
   try {
-    await api.deleteQueue(id);
+    await api.deleteQueue(id, { now });
     if (open) closeEditor();
     await refreshLists();
   } catch (err: any) {
@@ -711,16 +708,30 @@ export async function deleteQueue(id: number) {
   }
 }
 
+/** The API keeps no deleted schema, so its name and content are kept here first, for Undo. */
 export async function deleteSchema(id: number) {
-  const x = store.schemas.value.find((y) => y.id === id);
   const open = store.selectedSchemaId.value === id;
-  if (!confirm(`Delete schema ${x?.name ?? 'schema'} (${id}) now? This cannot be undone.`)) return;
   try {
+    const full = await api.getSchema(id);
     await api.deleteSchema(id);
+    store.deletedSchema.value = { name: full.name, content: full.content };
     if (open) closeEditor();
     await refreshLists();
   } catch (err: any) {
     fail(err, 'Failed to delete the schema');
+  }
+}
+
+/** Recreates the last deleted schema from its snapshot; Rossum gives it a new id. */
+export async function undoSchemaDelete() {
+  const snap = store.deletedSchema.value;
+  if (!snap) return;
+  try {
+    await api.createSchema(snap.name, snap.content);
+    store.deletedSchema.value = null;
+    await refreshLists();
+  } catch (err: any) {
+    fail(err, 'Failed to restore the schema');
   }
 }
 

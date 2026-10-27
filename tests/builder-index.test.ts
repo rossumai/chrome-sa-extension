@@ -58,6 +58,7 @@ import {
   createQueue,
   deleteQueue,
   deleteSchema,
+  undoSchemaDelete,
   createUnlinkedSchema,
   openRuleEditor,
   updateRuleDraft,
@@ -531,18 +532,12 @@ describe('create and delete', () => {
     ]);
   });
 
-  it('deleting a queue asks first, then deletes and clears it when it was open', async () => {
+  it('deleting a queue passes the choice on and clears it when it was open', async () => {
     store.queues.value = [{ id: 1, name: 'A', schema: 's/7' }];
     store.selectedQueueId.value = 1;
-    const ask = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
-    await deleteQueue(1);
-    expect(api.deleteQueue).not.toHaveBeenCalled();
-    ask.mockReturnValueOnce(true);
-    await deleteQueue(1);
-    expect(ask.mock.calls[1][0]).toContain('A (1)');
-    expect(api.deleteQueue).toHaveBeenCalledWith(1);
+    await deleteQueue(1, { now: false });
+    expect(api.deleteQueue).toHaveBeenCalledWith(1, { now: false });
     expect(store.selectedQueueId.value).toBeNull();
-    ask.mockRestore();
   });
 
   it('deleting the open queue closes everything that belonged to it', async () => {
@@ -554,24 +549,35 @@ describe('create and delete', () => {
     store.rightPanel.value = { kind: 'code', hookId: 7, fieldId: 'a' };
     store.schemaFabry.value = { ...store.schemaFabry.value, chatId: 'c', turns: [] };
     openRuleEditor(4);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    await deleteQueue(1);
+    await deleteQueue(1, { now: true });
+    expect(api.deleteQueue).toHaveBeenCalledWith(1, { now: true });
     expect(store.ruleEditor.value).toBeNull();
     expect(store.rules.value).toEqual([]);
     expect(store.hooks.value).toEqual([]);
     expect(store.engineState.value).toBeNull();
     expect(store.rightPanel.value).toBeNull();
     expect(store.schemaFabry.value.chatId).toBeNull();
-    vi.mocked(window.confirm).mockRestore();
   });
 
-  it('deleting a schema asks first and calls the API', async () => {
+  it('deleting a schema keeps its name and content; Undo posts them back once', async () => {
     store.schemas.value = [{ id: 8, url: 's/8', name: 'Old' }];
-    const ask = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const content = [section('kept')];
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 8, name: 'Old', content });
     await deleteSchema(8);
-    expect(ask.mock.calls[0][0]).toContain('Old (8)');
     expect(api.deleteSchema).toHaveBeenCalledWith(8);
-    ask.mockRestore();
+    expect(store.deletedSchema.value).toEqual({ name: 'Old', content });
+    vi.mocked(api.createSchema).mockResolvedValue({ id: 81, url: 's/81' });
+    await undoSchemaDelete();
+    expect(api.createSchema).toHaveBeenCalledWith('Old', content);
+    expect(store.deletedSchema.value).toBeNull();
+    expect(api.listSchemas).toHaveBeenCalled();
+  });
+
+  it('does not delete a schema it could not read first, so Undo always has a snapshot', async () => {
+    vi.mocked(api.getSchema).mockRejectedValue(new Error('boom'));
+    await deleteSchema(8);
+    expect(api.deleteSchema).not.toHaveBeenCalled();
+    expect(store.deletedSchema.value).toBeNull();
   });
 
   it('creates a schema with no queue, from the saved open schema or empty, and opens it', async () => {

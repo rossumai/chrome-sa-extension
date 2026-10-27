@@ -1,5 +1,6 @@
 import { h, type ComponentType } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
+import Modal, { openModal } from '../../ui/Modal.jsx';
 import {
   error,
   retryable,
@@ -12,6 +13,7 @@ import {
   selectedKey,
   schemaLocked,
   rightPanel,
+  deletedSchema,
   type RightPanel,
 } from '../store.js';
 import {
@@ -22,6 +24,7 @@ import {
   openSchema,
   closeRightPanel,
   retryFailedLists,
+  undoSchemaDelete,
 } from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
@@ -58,12 +61,13 @@ function inField(t: EventTarget | null): boolean {
 }
 
 export default function App({ connected }: { connected: boolean | null }) {
-  const [saveOpen, setSaveOpen] = useState(false);
   useEffect(loadPanelWide, []);
 
   // ⌘Z / Ctrl+Z undo, ⇧⌘Z / Ctrl+Shift+Z / Ctrl+Y redo — not while typing in a field.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // The modal closes itself on Escape; the panel under it stays.
+      if (e.key === 'Escape' && (e.target as Element).closest?.('[role="dialog"]')) return;
       if (e.key === 'Escape' && !inField(e.target)) {
         if (navDrawer.value) navDrawer.value = false;
         else if (rightPanel.value) closeRightPanel();
@@ -118,6 +122,15 @@ export default function App({ connected }: { connected: boolean | null }) {
             )}
           </div>
         )}
+        {deletedSchema.value && (
+          <div class={s.notice} data-deleted-schema="">
+            Schema {deletedSchema.value.name} deleted.
+            <button type="button" class="btn btn-sm" onClick={undoSchemaDelete}>
+              Undo
+            </button>
+            <span class={s.dim}>The restored schema gets a new ID.</span>
+          </div>
+        )}
         {generalErrors.value.length > 0 && (
           <div class={s.banner}>
             {generalErrors.value.map((m) => (
@@ -133,7 +146,7 @@ export default function App({ connected }: { connected: boolean | null }) {
           <div class="empty-state">{loading.value ? 'Loading schema…' : ''}</div>
         ) : (
           <div class={s.editor}>
-            <Toolbar onSave={() => setSaveOpen(true)} />
+            <Toolbar onSave={() => openModal('Save schema', () => <SaveDialog />)} />
             <FilterBar />
             <div class={s.body + (panelWide.value && panelOpen.value ? ' ' + s.bodyWide : '')}>
               <div
@@ -155,7 +168,7 @@ export default function App({ connected }: { connected: boolean | null }) {
           </div>
         )}
       </main>
-      {saveOpen && <SaveDialog onClose={() => setSaveOpen(false)} />}
+      <Modal />
     </div>
   );
 }

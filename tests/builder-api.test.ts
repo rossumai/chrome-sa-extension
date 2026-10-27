@@ -123,16 +123,18 @@ describe('builder api', () => {
     ]);
   });
 
-  it('deletes a queue immediately and a schema, accepting an empty 204 body', async () => {
+  it('deletes a queue in 24 h or now, and a schema, accepting an empty 204 body', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 204,
       headers: new Headers(),
       json: () => Promise.reject(new Error('no body')),
     });
-    await api.deleteQueue(4);
+    await api.deleteQueue(4, { now: false });
+    await api.deleteQueue(4, { now: true });
     await api.deleteSchema(5);
     expect(fetchMock.mock.calls.map(([url, o]: any) => [url, o.method])).toEqual([
+      ['https://x.rossum.ai/api/v1/queues/4', 'DELETE'],
       ['https://x.rossum.ai/api/v1/queues/4?delete_after=0', 'DELETE'],
       ['https://x.rossum.ai/api/v1/schemas/5', 'DELETE'],
     ]);

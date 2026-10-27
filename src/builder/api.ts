@@ -146,9 +146,12 @@ export function createQueue(name: string, workspace: string, schema: string): Pr
   return request('POST', '/api/v1/queues/', { name, workspace, schema });
 }
 
-/** Immediate and permanent: `delete_after=0` skips the API's default 24 h grace period. */
-export function deleteQueue(id: number): Promise<any> {
-  return request('DELETE', `/api/v1/queues/${id}?delete_after=0`);
+/**
+ * By default Rossum keeps the queue for 24 h in `deletion_requested`; `now` sends
+ * `delete_after=0`, which deletes it at once and for good.
+ */
+export function deleteQueue(id: number, { now }: { now: boolean }): Promise<any> {
+  return request('DELETE', `/api/v1/queues/${id}${now ? '?delete_after=0' : ''}`);
 }
 
 export function deleteSchema(id: number): Promise<any> {

@@ -8,9 +8,10 @@ import {
   selectedSchemaId,
   sharedQueueIds,
 } from '../store.js';
-import { openQueue, openSchema, deleteQueue, deleteSchema } from '../index.jsx';
+import { openQueue, openSchema } from '../index.jsx';
 import { queueGroups, orphanSchemas } from '../links.js';
-import CreateDialog, { type CreateTarget } from './CreateDialog.jsx';
+import { openCreateDialog } from './CreateDialog.jsx';
+import { confirmQueueDelete, confirmSchemaDelete } from './DeleteDialogs.jsx';
 import { navDrawer } from './panels.js';
 import s from './Builder.module.css';
 
@@ -44,7 +45,6 @@ function DeleteBtn({
 // the open schema is highlighted, so it is plain which queues an edit changes.
 export default function Navigator() {
   const [filter, setFilter] = useState('');
-  const [creating, setCreating] = useState<CreateTarget | null>(null);
   const groups = queueGroups(workspaces.value, queues.value, filter);
   const orphans = orphanSchemas(schemas.value, queues.value, filter);
   const shared = sharedQueueIds.value;
@@ -94,7 +94,7 @@ export default function Navigator() {
               type="button"
               class={s.linkBtn}
               data-action="new-workspace"
-              onClick={() => setCreating({ kind: 'workspace' })}
+              onClick={() => openCreateDialog({ kind: 'workspace' })}
             >
               + Workspace
             </button>
@@ -111,7 +111,11 @@ export default function Navigator() {
                   data-action="new-queue"
                   data-workspace={ws.url}
                   onClick={() =>
-                    setCreating({ kind: 'queue', workspaceUrl: ws.url, workspaceName: ws.name })
+                    openCreateDialog({
+                      kind: 'queue',
+                      workspaceUrl: ws.url,
+                      workspaceName: ws.name,
+                    })
                   }
                 >
                   + Queue
@@ -137,11 +141,22 @@ export default function Navigator() {
                     >
                       {q.name} ({q.id})
                     </button>
-                    <DeleteBtn
-                      action="delete-queue"
-                      data={{ 'data-queue': String(q.id) }}
-                      onClick={() => deleteQueue(q.id)}
-                    />
+                    {/* Deleted in 24 h: the list still returns it until Rossum deletes it. */}
+                    {q.status === 'deletion_requested' ? (
+                      <span
+                        class={s.deleting}
+                        data-deleting={String(q.id)}
+                        title="Rossum deletes this queue within 24 hours"
+                      >
+                        Deleting
+                      </span>
+                    ) : (
+                      <DeleteBtn
+                        action="delete-queue"
+                        data={{ 'data-queue': String(q.id) }}
+                        onClick={() => confirmQueueDelete(q)}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -154,7 +169,7 @@ export default function Navigator() {
                 type="button"
                 class={s.linkBtn}
                 data-action="new-schema"
-                onClick={() => setCreating({ kind: 'schema' })}
+                onClick={() => openCreateDialog({ kind: 'schema' })}
               >
                 + Schema
               </button>
@@ -180,13 +195,12 @@ export default function Navigator() {
                 <DeleteBtn
                   action="delete-schema"
                   data={{ 'data-schema': String(x.id) }}
-                  onClick={() => deleteSchema(x.id)}
+                  onClick={() => confirmSchemaDelete(x)}
                 />
               </div>
             ))}
           </div>
         </div>
-        {creating && <CreateDialog target={creating} onClose={() => setCreating(null)} />}
       </nav>
     </Fragment>
   );

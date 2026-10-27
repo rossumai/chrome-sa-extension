@@ -75,6 +75,14 @@
   visibility: visible;
 }
 
+/* A queue deleted in 24 h, still listed: it takes the delete button's place. */
+.deleting {
+  flex: none;
+  padding: 0 6px;
+  font-size: 10px;
+  color: var(--warning-fg);
+}
+
 .wsName {
   display: flex;
   justify-content: space-between;
@@ -672,6 +680,17 @@
   color: var(--danger-fg);
 }
 
+/* "Schema X deleted. Undo" — a status line, not an error. */
+.notice {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border-bottom: 1px solid var(--info-border);
+}
+
 .banner {
   display: flex;
   gap: 10px;
@@ -758,29 +777,6 @@
 .optRow > .input {
   flex: 1 1 0;
   min-width: 0;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.dialog {
-  width: min(460px, 90vw);
-  padding: 16px 18px;
-  border-radius: 8px;
-  background: var(--bg-card);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.dialogTitle {
-  margin: 0 0 8px;
-  font-size: 15px;
 }
 
 .dialogActions {

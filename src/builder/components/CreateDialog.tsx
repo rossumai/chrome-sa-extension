@@ -1,5 +1,6 @@
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
+import { openModal, closeModal, ModalBody, ModalField, ModalActions } from '../../ui/Modal.jsx';
 import { schema, schemas, saving } from '../store.js';
 import { createWorkspace, createQueue, createUnlinkedSchema, type NewQueue } from '../index.jsx';
 import s from './Builder.module.css';
@@ -9,16 +10,21 @@ export type CreateTarget =
   | { kind: 'schema' }
   | { kind: 'queue'; workspaceUrl: string; workspaceName: string };
 
+/** Opens the dialog for "+ Workspace", "+ Queue" or "+ Schema" in the shared modal. */
+export function openCreateDialog(target: CreateTarget) {
+  const title =
+    target.kind === 'workspace'
+      ? 'New workspace'
+      : target.kind === 'schema'
+        ? 'New schema (no queue)'
+        : `New queue in ${target.workspaceName}`;
+  openModal(title, () => <CreateDialog target={target} />);
+}
+
 // One small form for "+ Workspace", "+ Queue" and "+ Schema". A new queue's schema is a copy
 // of the open schema (as saved), an existing schema it will share, or a new schema with one
 // empty section; a new schema with no queue is a copy or empty.
-export default function CreateDialog({
-  target,
-  onClose,
-}: {
-  target: CreateTarget;
-  onClose: () => void;
-}) {
+export default function CreateDialog({ target }: { target: CreateTarget }) {
   const open = schema.value;
   const [name, setName] = useState('');
   const [mode, setMode] = useState<NewQueue['mode']>(open ? 'copy' : 'empty');
@@ -28,9 +34,8 @@ export default function CreateDialog({
   // Once: an inline ref callback would re-run every render and pull focus back here.
   useEffect(() => nameRef.current?.focus(), []);
 
-  const submit = async (e: Event) => {
-    e.preventDefault();
-    if (!name.trim() || busy) return;
+  const submit = async () => {
+    if (!name.trim() || busy || saving.value) return;
     setBusy(true);
     const n = name.trim();
     const ok =
@@ -45,7 +50,7 @@ export default function CreateDialog({
               schemaUrl: mode === 'share' ? shareUrl : undefined,
             });
     setBusy(false);
-    if (ok) onClose();
+    if (ok) closeModal();
   };
 
   const radio = (value: NewQueue['mode'], label: any, disabled = false) => (
@@ -63,67 +68,59 @@ export default function CreateDialog({
   );
 
   return (
-    <div class={s.overlay} onClick={() => !busy && onClose()}>
-      <div class={s.dialog} onClick={(e) => e.stopPropagation()} role="dialog">
-        <form onSubmit={submit}>
-          <h3 class={s.dialogTitle}>
-            {target.kind === 'workspace'
-              ? 'New workspace'
-              : target.kind === 'schema'
-                ? 'New schema (no queue)'
-                : `New queue in ${target.workspaceName}`}
-          </h3>
-          <label class={s.field}>
-            <span class={s.fieldLabel}>Name</span>
-            <input
-              class={s.input}
-              value={name}
-              ref={nameRef}
-              onInput={(e) => setName((e.currentTarget as HTMLInputElement).value)}
-            />
-          </label>
-          {target.kind !== 'workspace' && (
-            <div class={s.field}>
-              <span class={s.fieldLabel}>Schema</span>
-              {radio(
-                'copy',
-                open
-                  ? `Copy of ${open.name} (${open.id}), as saved`
-                  : 'Copy of the open schema (none open)',
-                !open,
-              )}
-              {target.kind === 'queue' &&
-                radio('share', 'Share an existing schema', !schemas.value.length)}
-              {target.kind === 'queue' && mode === 'share' && (
-                <select
-                  class={s.select}
-                  value={shareUrl}
-                  onChange={(e) => setShareUrl((e.currentTarget as HTMLSelectElement).value)}
-                >
-                  {schemas.value.map((x) => (
-                    <option value={x.url}>
-                      {x.name} ({x.id})
-                    </option>
-                  ))}
-                </select>
-              )}
-              {radio('empty', 'New schema with one empty section')}
-            </div>
-          )}
-          <div class={s.dialogActions}>
-            <button type="button" class={s.btn} onClick={onClose} disabled={busy}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class={s.btn + ' ' + s.primary}
-              disabled={!name.trim() || busy || saving.value}
-            >
-              {busy ? 'Creating…' : 'Create'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Fragment>
+      <ModalBody>
+        <ModalField label="Name">
+          <input
+            class={s.input}
+            value={name}
+            ref={nameRef}
+            onInput={(e) => setName((e.currentTarget as HTMLInputElement).value)}
+            onKeyDown={(e) => e.key === 'Enter' && submit()}
+          />
+        </ModalField>
+        {target.kind !== 'workspace' && (
+          <ModalField label="Schema">
+            {radio(
+              'copy',
+              open
+                ? `Copy of ${open.name} (${open.id}), as saved`
+                : 'Copy of the open schema (none open)',
+              !open,
+            )}
+            {target.kind === 'queue' &&
+              radio('share', 'Share an existing schema', !schemas.value.length)}
+            {target.kind === 'queue' && mode === 'share' && (
+              <select
+                class={s.select}
+                value={shareUrl}
+                onChange={(e) => setShareUrl((e.currentTarget as HTMLSelectElement).value)}
+              >
+                {schemas.value.map((x) => (
+                  <option value={x.url}>
+                    {x.name} ({x.id})
+                  </option>
+                ))}
+              </select>
+            )}
+            {radio('empty', 'New schema with one empty section')}
+          </ModalField>
+        )}
+      </ModalBody>
+      <ModalActions footer>
+        <button type="button" class="btn btn-secondary" onClick={closeModal} disabled={busy}>
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-action="create"
+          disabled={!name.trim() || busy || saving.value}
+          onClick={submit}
+        >
+          {busy ? 'Creating…' : 'Create'}
+        </button>
+      </ModalActions>
+    </Fragment>
   );
 }
