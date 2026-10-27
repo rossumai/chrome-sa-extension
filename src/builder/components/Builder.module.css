@@ -617,6 +617,19 @@
   cursor: help;
 }
 
+/* The ID beside the mark must fit the rest of the cell: an inline-block that overflows a cell
+   with text-overflow: ellipsis is hidden whole, not cut, so a long ID vanished. */
+.warnMark + .editable {
+  max-width: calc(100% - 18px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.warnMark + .cellInput {
+  width: calc(100% - 18px);
+}
+
 .rowError {
   margin-top: 2px;
   white-space: normal;
