@@ -3,6 +3,8 @@
 // its own bundle (dist/console/ruff.js + ruff.wasm, see src/builder/ruffEntry.ts), loaded by
 // a same-package <script> the first time someone clicks Format — like the Mermaid renderer.
 
+import { lazyScript } from '../ui/lazyScript.js';
+
 export type PythonFormatter = (src: string) => Promise<string>;
 export type FormatResult = { ok: true; text: string } | { ok: false; error: string };
 
@@ -22,26 +24,7 @@ export async function formatPython(src: string, format: PythonFormatter): Promis
   }
 }
 
-let pending: Promise<PythonFormatter> | null = null;
-
-function loadRuff(): Promise<PythonFormatter> {
-  if (window.__builderRuffFormat) return Promise.resolve(window.__builderRuffFormat);
-  if (pending) return pending;
-  pending = new Promise<PythonFormatter>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'ruff.js';
-    script.onload = () =>
-      window.__builderRuffFormat
-        ? resolve(window.__builderRuffFormat)
-        : reject(new Error('the formatter loaded but did not register'));
-    script.onerror = () => reject(new Error('failed to load the formatter'));
-    document.head.appendChild(script);
-  });
-  pending.catch(() => {
-    pending = null; // a later click may retry
-  });
-  return pending;
-}
+const loadRuff = lazyScript('ruff.js', () => window.__builderRuffFormat, 'the formatter');
 
 /** The formatter, loading it on first use. */
 export const ruffFormat: PythonFormatter = async (src) => (await loadRuff())(src);

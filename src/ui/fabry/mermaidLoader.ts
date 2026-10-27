@@ -1,8 +1,8 @@
 // On-demand loader for the beautiful-mermaid SVG renderer bundle
-// (dist/console/mermaid.js, see src/fabry/mermaidEntry.js). A same-package
-// <script> satisfies the extension page's CSP (script-src 'self'). The cached
-// promise lets concurrent MermaidBlocks share one load; a failed load rejects
-// them all (they fall back to a plain code fence) but permits a later retry.
+// (dist/console/mermaid.js, see src/fabry/mermaidEntry.js), through lazyScript. A failed
+// load leaves MermaidBlocks on a plain code fence.
+import { lazyScript } from '../lazyScript.js';
+
 /** The renderer the lazy bundle registers on `window`. */
 export type MermaidRenderer = (text: string, themeOpts?: any) => string;
 
@@ -12,35 +12,11 @@ declare global {
   }
 }
 
-let pending: Promise<MermaidRenderer> | null = null;
-
 export function getMermaidRenderer(): MermaidRenderer | null {
   return (typeof window !== 'undefined' && window.__fabryMermaidSvg) || null;
 }
 
-export function loadMermaidRenderer({
-  src = 'mermaid.js',
-  doc = document,
-}: { src?: string; doc?: Document } = {}): Promise<MermaidRenderer> {
-  const ready = getMermaidRenderer();
-  if (ready) return Promise.resolve(ready);
-  if (pending) return pending;
-  pending = new Promise((resolve, reject) => {
-    const script = doc.createElement('script');
-    script.src = src;
-    script.onload = () => {
-      const fn = getMermaidRenderer();
-      if (fn) resolve(fn);
-      else reject(new Error('mermaid bundle loaded but did not register'));
-    };
-    script.onerror = () => reject(new Error('failed to load mermaid bundle'));
-    doc.head.appendChild(script);
-  });
-  pending.catch(() => {
-    pending = null;
-  }); // allow retry after a failed load
-  return pending;
-}
+export const loadMermaidRenderer = lazyScript('mermaid.js', getMermaidRenderer, 'mermaid bundle');
 
 // Console theme → beautiful-mermaid theme options, read live from the CSS
 // custom properties so diagrams match the active (light/dark) theme. Blue
