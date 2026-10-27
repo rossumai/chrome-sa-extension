@@ -22,7 +22,7 @@ describe('Rail', () => {
 
   it('renders one button per app', () => {
     const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(7); // only the Academy is gated
+    expect(root.querySelectorAll('.app-rail-item').length).toBe(6); // the Builder, Academy and rdc are gated
   });
 
   it('renders the Inspector app button and switches to it on click', () => {
@@ -132,7 +132,7 @@ describe('Rail — academy (experimental) gate', () => {
   it('hides Academy while the gate is locked', () => {
     experimentalUnlocked.value = false;
     const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(7); // the Academy is the only gated app
+    expect(root.querySelectorAll('.app-rail-item').length).toBe(6); // the Builder, Academy and rdc are gated
     expect(
       [...root.querySelectorAll('.app-rail-item')].some(
         (b) => b.getAttribute('title') === ACADEMY_TITLE,
@@ -187,11 +187,24 @@ describe('Rail — CIB is public', () => {
     (btn as HTMLElement).click();
     expect(activeApp.value).toBe('cib');
   });
+});
 
-  it('marks the Builder as beta', () => {
-    const btn = [...mount().querySelectorAll('.app-rail-item')].find(
-      (b) => b.getAttribute('title') === 'Schema Builder',
-    )!;
-    expect(btn.querySelector('.app-rail-beta')).not.toBeNull();
+describe('Rail — the Builder is gated', () => {
+  const BUILDER_TITLE = 'Schema Builder — experimental';
+  const builderBtn = () =>
+    [...mount().querySelectorAll('.app-rail-item')].find(
+      (b) => b.getAttribute('title') === BUILDER_TITLE,
+    );
+
+  it('hides the Builder while the gate is locked', () => {
+    experimentalUnlocked.value = false;
+    expect(builderBtn()).toBeUndefined();
+  });
+
+  it('shows the Builder with an EXP badge when unlocked', () => {
+    experimentalUnlocked.value = true;
+    const btn = builderBtn()!;
+    expect(btn.querySelector('.app-rail-exp')!.textContent).toBe('exp');
+    expect(btn.querySelector('.app-rail-beta')).toBeNull();
   });
 });

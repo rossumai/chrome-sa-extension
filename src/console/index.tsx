@@ -53,6 +53,7 @@ const TITLES = {
 const APP_EVENTS: Record<string, any> = {
   mdh: 'sa_console_app_mdh',
   audit: 'sa_console_app_audit',
+  builder: 'sa_console_app_builder',
   galaxy: 'sa_console_app_galaxy',
   inspector: 'sa_console_app_inspector',
   fabry: 'sa_console_app_fabry',
