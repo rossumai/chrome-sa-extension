@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import App from '../src/rdc/components/App.jsx';
+import { WipStep } from '../src/rdc/components/WipSteps.jsx';
 import { domain, token } from '../src/rdc/store.js';
 import type { Rdc } from '../src/rdc/wasm.js';
 
@@ -138,11 +139,13 @@ describe('rdc App', () => {
       root.querySelector<HTMLInputElement>('[aria-label="Type Acme to confirm"]')!.disabled,
     ).toBe(true);
     expect(byText('button', 'Write the changes to Acme').hasAttribute('disabled')).toBe(true);
+    expect(byText('button', 'See the result').hasAttribute('disabled')).toBe(true);
     controls().forEach((c) => expect(c.disabled).toBe(true));
 
     expect(chromeSet).not.toHaveBeenCalled();
     expect(sessionSet).not.toHaveBeenCalled();
     expect(root.textContent).not.toMatch(/\d+ changes/);
+    expect(document.body.textContent).not.toContain('Deployed to');
   });
 
   it('goes back from Read to Connect', async () => {
@@ -194,5 +197,13 @@ describe('rdc App', () => {
     await click('button', 'Read both orgs');
     expect(root.textContent).toContain('rdc_wasm.js is not in this build');
     expect(byText('button', 'Plan the deployment').hasAttribute('disabled')).toBe(true);
+  });
+
+  it('previews Done without claiming a deployment', () => {
+    mount(<WipStep step="done" sourceName="test" targetName="Acme" onBack={vi.fn()} />);
+    expect(root.querySelector('h1')!.textContent).toBe('After the deployment');
+    expect(root.textContent).toContain('Not available yet. Nothing can be written to this org');
+    expect(root.textContent).not.toContain('Deployed to');
+    expect(root.textContent).not.toMatch(/\d/);
   });
 });

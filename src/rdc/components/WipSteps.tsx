@@ -184,14 +184,13 @@ function Write({ targetName, onNext }: { targetName: string; onNext?: () => void
               deployment, and the changes already written stay in {targetName}.
             </span>
           </div>
-          {onNext && (
-            <div class={styles.foot}>
-              <span class={styles.sp}></span>
-              <button class="btn btn-secondary" onClick={onNext}>
-                See the result
-              </button>
-            </div>
-          )}
+          {/* nothing was written, so there is no result to see until writing works */}
+          <div class={styles.foot}>
+            <span class={styles.sp}></span>
+            <button class="btn btn-secondary" disabled onClick={onNext}>
+              See the result
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -205,7 +204,10 @@ const HEAD: Record<WipStepId, (src: string, dst: string) => [string, string]> = 
     `Red lines leave ${dst}, green lines arrive in ${dst}. Lines marked "${dst} keeps this" are ${dst}'s own values and do not change.`,
   ],
   write: (_src, dst) => [`Write to ${dst}`, `Only ${dst} is changed.`],
-  done: (src, dst) => [`Deployed to ${dst}`, `The changes from ${src} are now in ${dst}.`],
+  done: (_src, dst) => [
+    'After the deployment',
+    `What changed in ${dst}, and what is left for you.`,
+  ],
 };
 
 const NEXT: Partial<Record<WipStepId, string>> = {
