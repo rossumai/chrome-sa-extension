@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseRuleEval, evalForRow, evalSummary } from '../src/builder/ruleEval.js';
+import { parseRuleEval, evalText } from '../src/builder/ruleEval.js';
 
 describe('parseRuleEval', () => {
   it('reads the first rule’s results and the error messages', () => {
@@ -20,25 +20,15 @@ describe('parseRuleEval', () => {
   });
 });
 
-describe('evalForRow', () => {
-  it('a header rule has one result for every row', () => {
-    expect(evalForRow([true], null, 0)).toBe(true);
-    expect(evalForRow([false], 3, 2)).toBe(false);
+describe('evalText', () => {
+  it('is the value of a header rule', () => {
+    expect(evalText([false])).toBe('false');
+    expect(evalText([])).toBe('');
   });
 
-  it('one result per table row picks the row', () => {
-    expect(evalForRow([false, true, false], 3, 1)).toBe(true);
-  });
-
-  it('results that do not match the table rows give none', () => {
-    expect(evalForRow([false, true], 3, 1)).toBeNull();
-    expect(evalForRow([], null, 0)).toBeNull();
-  });
-});
-
-describe('evalSummary', () => {
-  it('is the value, or how many rows are true', () => {
-    expect(evalSummary([false])).toBe('false');
-    expect(evalSummary([true, false, true])).toBe('2 of 3 true');
+  it('per table line: true on the lines where it is, or false on all', () => {
+    expect(evalText([true, false, true])).toBe('true on lines 1, 3 of 3');
+    expect(evalText([false, true])).toBe('true on line 2 of 2');
+    expect(evalText([false, false])).toBe('false on all 2 lines');
   });
 });

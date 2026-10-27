@@ -40,16 +40,13 @@ export function parseRuleEval(res: any): RuleEval {
 }
 
 /**
- * The result for one grid row: the only one for a header rule, the row's own when there is one
- * per table row. null when the results do not line up with this table's rows.
+ * One line for the whole document: the result of a header rule, or (one result per table row)
+ * whether it is true on any line, and on which.
  */
-export function evalForRow(values: boolean[], rows: number | null, row: number): boolean | null {
-  if (values.length === 1) return values[0];
-  if (rows != null && values.length === rows && row < rows) return values[row];
-  return null;
-}
-
-export function evalSummary(values: boolean[]): string {
-  if (values.length === 1) return String(values[0]);
-  return `${values.filter(Boolean).length} of ${values.length} true`;
+export function evalText(values: boolean[]): string {
+  if (values.length <= 1) return values.length ? String(values[0]) : '';
+  const on = values.flatMap((v, i) => (v ? [i + 1] : []));
+  return on.length
+    ? `true on line${on.length > 1 ? 's' : ''} ${on.join(', ')} of ${values.length}`
+    : `false on all ${values.length} lines`;
 }

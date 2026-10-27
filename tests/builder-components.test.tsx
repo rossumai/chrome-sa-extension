@@ -400,18 +400,21 @@ describe('Builder annotation values', () => {
   }
   const value = (id: string) => row(id).querySelector('td[data-col="value"]')!.textContent;
 
-  it('rule mode: "Rule config" and, with an annotation, "Rule eval" per row and overall', () => {
+  it('rule mode: "Rule config", and the rule evaluated once, in the whole document row', () => {
     pick();
     pickRule('40'); // is_empty(field.doc_id) or field.ghost_field
     const head = (c: string) => root.querySelector(`th[data-col="${c}"]`)?.textContent;
-    expect([head('rule'), head('eval')]).toEqual(['Rule config', 'Rule eval']);
-    const ev = (id: string) => row(id).querySelector('td[data-col="eval"]')!.textContent;
-    const doc = () => root.querySelector('[data-doc-row] td[data-col="eval"]')!.textContent;
+    expect(head('rule')).toBe('Rule config');
+    expect(root.querySelector('td[data-col="eval"], th[data-col="eval"]')).toBeNull();
+    const doc = () => root.querySelector('[data-doc-row] [data-rule-eval]')!.textContent;
     act(() => {
       store.ruleEval.value = { values: [true], errors: [], busy: false, error: null };
     });
-    expect(ev('doc_id')).toBe('true'); // a field the condition reads
-    expect(doc()).toBe('true');
+    expect(doc()).toBe('Rule eval true');
+    act(() => {
+      store.ruleEval.value = { values: [false, true], errors: [], busy: false, error: null };
+    });
+    expect(doc()).toBe('Rule eval true on line 2 of 2');
     act(() => {
       store.ruleEval.value = {
         values: [],
@@ -420,37 +423,10 @@ describe('Builder annotation values', () => {
         error: null,
       };
     });
-    expect(doc()).toBe('error');
+    expect(doc()).toBe('Rule eval error');
     expect(root.querySelector('[data-rule-eval-error]')!.textContent).toContain(
       'Trigger condition: bad',
     );
-  });
-
-  it('Rule eval follows Value, and steps through table rows with the Value stepper', () => {
-    act(() => {
-      store.rules.value = [
-        ...store.rules.value,
-        { id: 42, name: 'Lines', enabled: true, trigger_condition: 'field.item_desc', actions: [] },
-      ];
-    });
-    pick();
-    pickRule('42');
-    const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
-      th.getAttribute('data-col'),
-    );
-    expect(heads.slice(-2)).toEqual(['value', 'eval']);
-    act(() => {
-      store.ruleEval.value = { values: [false, true], errors: [], busy: false, error: null };
-    });
-    const ev = (id: string) => row(id).querySelector('td[data-col="eval"]')!.textContent;
-    const doc = root.querySelector('[data-doc-row] td[data-col="eval"] [data-eval]')!;
-    expect([ev('items'), ev('item_desc')]).toEqual(['false', 'false']);
-    expect(doc.textContent).toBe('true'); // True on some row
-    expect(doc.getAttribute('title')).toBe('True on row 2 of 2');
-    act(() => {
-      (row('items').querySelector('[data-action="next-row"]') as HTMLElement).click();
-    });
-    expect([ev('items'), ev('item_desc')]).toEqual(['true', 'true']);
   });
 
   it('has no Value column until an annotation is picked', () => {

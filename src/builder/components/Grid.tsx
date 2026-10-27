@@ -63,7 +63,7 @@ import {
   HIDDEN_CAPTURED,
 } from '../engine.js';
 import { SeedPicker } from './Extraction.jsx';
-import { evalForRow, evalSummary } from '../ruleEval.js';
+import { evalText } from '../ruleEval.js';
 import { fitColumns, WIDTHS, LABEL_MIN } from './columnFit.js';
 import s from './Builder.module.css';
 
@@ -252,74 +252,36 @@ function ValueCell({ node, tableId }: { node: Node; tableId: string | null }) {
   );
 }
 
-// The open rule's condition on the picked annotation, on each field the condition reads: the
-// one result of a header rule, or the result for the row a table's stepper shows.
-function EvalCell({ tableId }: { tableId: string | null }) {
-  const ev = ruleEval.value;
-  if (!ev || ev.error || ev.errors.length) return null; // the rule editor says why
-  if (ev.busy) return <span class={s.dim}>…</span>;
-  const rows = tableId ? (values.value?.rows.get(tableId) ?? null) : null;
-  const row = tableId ? (lineRow.value[tableId] ?? 0) : 0;
-  const v = evalForRow(ev.values, rows, row);
-  if (v == null) {
-    return ev.values.length ? (
-      <span class={s.dim} title="One result per table row, but not this table's rows">
-        {evalSummary(ev.values)}
-      </span>
-    ) : null;
-  }
-  return <EvalValue v={v} />;
-}
-
-function EvalValue({ v }: { v: boolean }) {
-  return (
-    <span
-      class={v ? s.evalTrue : s.dim}
-      data-eval={String(v)}
-      title={v ? 'The condition is True: the rule fires' : 'The condition is False'}
-    >
-      {String(v)}
-    </span>
-  );
-}
-
-// Whether the open rule's condition reads a column of this table: its row then shows the
-// result for the row its Value stepper points at.
-function readsTable(node: Node): boolean {
-  const roles = ruleRoleById.value;
-  const walk = (n: any): boolean =>
-    n.category === 'datapoint'
-      ? ['condition', 'both'].includes(roles?.get(n.id) as string)
-      : [n.children ?? []].flat().some(walk);
-  return walk(node);
-}
-
-// The whole-document result: True when the condition is True anywhere (on any table row).
+// The open rule's condition on the picked annotation, at the top of the whole document's
+// Value cell: the API evaluates the condition once per document (or table line), not per field.
 function DocEval() {
   const ev = ruleEval.value;
   if (!ev) return null;
-  if (ev.busy) return <span class={s.dim}>…</span>;
-  if (ev.error || ev.errors.length) {
-    return (
+  let body;
+  if (ev.busy) body = <span class={s.dim}>…</span>;
+  else if (ev.error || ev.errors.length) {
+    body = (
       <span class={s.warn} data-eval="error" title={ev.error ?? ev.errors.join('\n')}>
         error
       </span>
     );
-  }
-  if (ev.values.length <= 1) return ev.values.length ? <EvalValue v={ev.values[0]} /> : null;
-  const on = ev.values.flatMap((v, i) => (v ? [i + 1] : []));
+  } else if (ev.values.length) {
+    const fires = ev.values.some(Boolean);
+    body = (
+      <span
+        class={fires ? s.evalTrue : s.dim}
+        data-eval={String(fires)}
+        title={fires ? 'The condition is True: the rule fires' : 'The condition is False'}
+      >
+        {evalText(ev.values)}
+      </span>
+    );
+  } else return null;
   return (
-    <span
-      class={on.length ? s.evalTrue : s.dim}
-      data-eval={String(on.length > 0)}
-      title={
-        on.length
-          ? `True on row${on.length > 1 ? 's' : ''} ${on.join(', ')} of ${ev.values.length}`
-          : `False on all ${ev.values.length} rows`
-      }
-    >
-      {String(on.length > 0)}
-    </span>
+    <div data-rule-eval="">
+      <span class={s.dim}>Rule eval </span>
+      {body}
+    </div>
   );
 }
 
@@ -786,12 +748,6 @@ function Row({
           <ValueCell node={node} tableId={tableId} />
         </td>
       )}
-      {on('eval') && (
-        <td data-col="eval">
-          {dp && (role === 'condition' || role === 'both') && <EvalCell tableId={tableId} />}
-          {kind === 'multivalue' && readsTable(node) && <EvalCell tableId={node.id} />}
-        </td>
-      )}
     </tr>
   );
 }
@@ -875,7 +831,7 @@ function renderNode(
 const EDITING = ['grip', 'actions'];
 const DETAIL = ['flags', 'ai', 'hooks'];
 // Engine mode drops Rules and Matching, rule mode Matching, to fit a 13" screen beside the
-// panel: room for the AI seed pickers, and for Rule config with Rule eval.
+// panel: room for the AI seed pickers, and for Rule config.
 
 const columns = computed(() => {
   const cols = [
@@ -893,7 +849,6 @@ const columns = computed(() => {
     ...(ruleMarks.value ? ['rule'] : []),
     ...(hookRoleById.value ? ['mdh'] : []),
     ...(values.value ? ['value'] : []),
-    ...(ruleMarks.value && values.value ? ['eval'] : []),
   ].filter(
     (c) =>
       !(panelOpen.value && DETAIL.includes(c) && !(c === 'ai' && engineMode.value)) &&
@@ -902,8 +857,7 @@ const columns = computed(() => {
       !(schemaLocked.value && EDITING.includes(c)),
   );
   if (!(panelOpen.value && panelWide.value)) return cols;
-  const modeCol = (c: string) =>
-    c === 'rule' || c === 'eval' || c === 'mdh' || (c === 'ai' && engineMode.value);
+  const modeCol = (c: string) => c === 'rule' || c === 'mdh' || (c === 'ai' && engineMode.value);
   const mode = cols.some(modeCol);
   return cols.filter((c) => c === 'id' || modeCol(c) || (!mode && c === 'label'));
 });
@@ -921,7 +875,6 @@ const HEAD: Record<string, any> = {
   mdh: 'MDH',
   value: 'Value',
   rule: 'Rule config',
-  eval: 'Rule eval',
   type: 'Type',
   ai: 'AI',
   source: 'Source',
@@ -1069,9 +1022,7 @@ export default function Grid() {
     : {
         minWidth: `${(cols.includes('label') ? LABEL_MIN : 0) + cols.reduce((sum, c) => sum + (WIDTHS[c] ?? 0), 0)}px`,
       };
-  const lead = cols.filter(
-    (c) => c !== 'rule' && c !== 'eval' && c !== 'mdh' && c !== 'value',
-  ).length;
+  const lead = cols.filter((c) => c !== 'rule' && c !== 'mdh' && c !== 'value').length;
   return (
     <Fragment>
       <table
@@ -1114,6 +1065,7 @@ export default function Grid() {
               {on('mdh') && <td />}
               {on('value') && (
                 <td data-col="value" class={s.docMessages}>
+                  <DocEval />
                   {docMessages.map((m) => (
                     <div>
                       <MarkIcons marks={[{ kind: m.type, text: m.content, event: 'validation' }]} />
@@ -1126,11 +1078,6 @@ export default function Grid() {
                       <pre class={s.code}>{JSON.stringify(validation.value.raw, null, 2)}</pre>
                     </details>
                   )}
-                </td>
-              )}
-              {on('eval') && (
-                <td data-col="eval">
-                  <DocEval />
                 </td>
               )}
             </tr>
