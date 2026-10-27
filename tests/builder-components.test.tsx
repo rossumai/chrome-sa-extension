@@ -4,6 +4,7 @@ import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import { EditorView } from '@codemirror/view';
 import App from '../src/builder/components/App.jsx';
+import CreateDialog from '../src/builder/components/CreateDialog.jsx';
 import * as store from '../src/builder/store.js';
 import { withKeys, flatten } from '../src/builder/model.js';
 import { annotationValues } from '../src/builder/values.js';
@@ -2032,5 +2033,22 @@ describe('Builder validation panel', () => {
     vi.stubGlobal('chrome', {
       storage: { local: { get: vi.fn(async () => ({})), set: chromeSet } },
     });
+  });
+});
+
+describe('Builder create dialog', () => {
+  it('focuses the name once; a click on a radio keeps the focus there', async () => {
+    store.schema.value = { id: 7, name: 'Inv', url: 'https://x/api/v1/schemas/7', content: [] };
+    act(() => {
+      render(<CreateDialog target={{ kind: 'schema' }} onClose={() => {}} />, root);
+    });
+    expect(document.activeElement).toBe(root.querySelector('input:not([type])'));
+    const empty = root.querySelector('input[value="empty"]') as HTMLInputElement;
+    act(() => {
+      empty.focus();
+      empty.click();
+    });
+    expect(empty.checked).toBe(true);
+    expect(document.activeElement).toBe(empty);
   });
 });

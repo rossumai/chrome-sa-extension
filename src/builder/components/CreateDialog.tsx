@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { schema, schemas, saving } from '../store.js';
 import { createWorkspace, createQueue, createUnlinkedSchema, type NewQueue } from '../index.jsx';
 import s from './Builder.module.css';
@@ -24,6 +24,9 @@ export default function CreateDialog({
   const [mode, setMode] = useState<NewQueue['mode']>(open ? 'copy' : 'empty');
   const [shareUrl, setShareUrl] = useState<string>(open?.url ?? schemas.value[0]?.url ?? '');
   const [busy, setBusy] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
+  // Once: an inline ref callback would re-run every render and pull focus back here.
+  useEffect(() => nameRef.current?.focus(), []);
 
   const submit = async (e: Event) => {
     e.preventDefault();
@@ -75,7 +78,7 @@ export default function CreateDialog({
             <input
               class={s.input}
               value={name}
-              ref={(el) => el?.focus()}
+              ref={nameRef}
               onInput={(e) => setName((e.currentTarget as HTMLInputElement).value)}
             />
           </label>
