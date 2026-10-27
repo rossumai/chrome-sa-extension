@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { saveSchema, mapValidateErrors, landedDiff } from '../src/builder/save.js';
+import { saveSchema, mapValidateErrors, landedDiff, type SaveDeps } from '../src/builder/save.js';
 import { withKeys, setAttr, setDeleted, stripForSave } from '../src/builder/model.js';
 import { section, dp, keyOf } from './support/builder.js';
 
@@ -10,7 +10,7 @@ function fixture(): any[] {
   ];
 }
 
-function deps(over: Record<string, any> = {}) {
+function deps(over: Partial<SaveDeps> = {}) {
   return {
     getSchema: vi.fn(async () => ({ id: 7, modified_at: 't0', content: fixture() })),
     validateSchema: vi.fn(async () => ({})),

@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
+import { EditorView } from '@codemirror/view';
 import App from '../src/builder/components/App.jsx';
 import * as store from '../src/builder/store.js';
 import { withKeys, flatten } from '../src/builder/model.js';
@@ -1239,7 +1240,6 @@ describe('Builder hook mode: jump to a configuration', () => {
       sel.value = '1';
       sel.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    const { EditorView } = await import('@codemirror/view');
     const view = EditorView.findFromDOM(
       root.querySelector('[data-code="hook"] .cm-editor') as HTMLElement,
     )!;
@@ -1424,7 +1424,6 @@ describe('Builder field panel: used by', () => {
     });
     expect(store.hookEditor.value!.hookId).toBe(72);
     expect(store.hookConfigIndex.value).toBe(1);
-    const { EditorView } = await import('@codemirror/view');
     const view = EditorView.findFromDOM(
       root.querySelector('[data-code="hook"] .cm-editor') as HTMLElement,
     )!;
@@ -1525,7 +1524,7 @@ describe('Builder engine', () => {
     expect(ai('doc_id')).toBe('seeded');
   });
 
-  const panel = () => root.querySelector('[data-panel="engine"]') as HTMLElement | null;
+  const panel = () => root.querySelector('[data-panel="engine"]') as HTMLElement;
   const pickerValueIn = (el: HTMLElement) =>
     (el.querySelector('[data-picker="engine-seed"]') as HTMLElement).dataset.value;
   const pickInRow = (id: string, v: string) => {
@@ -1547,9 +1546,9 @@ describe('Builder engine', () => {
     act(() => {
       (row('doc_id').querySelector('[data-action="open-engine"]') as HTMLElement).click();
     });
-    expect(panel()!.textContent).toContain('Engine · Inv engine (5)');
+    expect(panel().textContent).toContain('Engine · Inv engine (5)');
     expect(store.selectedKey.value).toBe(rowKey('doc_id'));
-    expect(panel()!.querySelector('[data-extraction="seeded"]')).not.toBeNull();
+    expect(panel().querySelector('[data-extraction="seeded"]')).not.toBeNull();
     expect(row('vendor')).toBeNull(); // a formula field: nothing to extract
     expect(row('item_desc')).not.toBeNull();
     // The AI column stays while the panel is open, as each row's seed picker.
@@ -1563,7 +1562,7 @@ describe('Builder engine', () => {
     });
     pickInRow('item_desc', 'table_column_description');
     expect(row('item_desc').dataset.status).toBe('edited');
-    expect(panel()!.querySelector('[data-engine-save]')!.textContent).toContain('item_desc');
+    expect(panel().querySelector('[data-engine-save]')!.textContent).toContain('item_desc');
     expect(
       store.enginePlanNow.value!.create.find((c) => c.name === 'item_desc')!.pre_trained_field_id,
     ).toBe('table_column_description');
@@ -1590,13 +1589,13 @@ describe('Builder engine', () => {
       };
       store.enginePanel.value = true;
     });
-    const settings = panel()!.querySelector('[data-engine-settings]')!.textContent;
+    const settings = panel().querySelector('[data-engine-settings]')!.textContent;
     expect(settings).toContain('Use casegeneric_ap');
-    expect(panel()!.querySelector('[data-engine-warning]')).toBeNull(); // facts, no verdicts
+    expect(panel().querySelector('[data-engine-warning]')).toBeNull(); // facts, no verdicts
     expect(
-      [...panel()!.querySelectorAll('[data-training-queue]')].map((r) => r.textContent),
+      [...panel().querySelectorAll('[data-training-queue]')].map((r) => r.textContent),
     ).toEqual(['Training77']);
-    expect(panel()!.querySelector('[data-engine-unused]')!.textContent).toContain('unused_f');
+    expect(panel().querySelector('[data-engine-unused]')!.textContent).toContain('unused_f');
   });
 
   it('lists engine fields one per line: to write, used by other queues, used by none', () => {
@@ -1616,7 +1615,7 @@ describe('Builder engine', () => {
       store.enginePanel.value = true;
     });
     const rows = (sel: string) =>
-      [...panel()!.querySelectorAll(`${sel} [data-engine-field]`)].map((r) => r.textContent);
+      [...panel().querySelectorAll(`${sel} [data-engine-field]`)].map((r) => r.textContent);
     expect(rows('[data-engine-save]')).toEqual([
       'vendorcreate · learning',
       'item_desccreate · learning',
@@ -1624,7 +1623,7 @@ describe('Builder engine', () => {
     expect(rows('[data-engine-elsewhere]')).toEqual(['credit_refCredit notes (6)']);
     expect(rows('[data-engine-nowhere]')).toEqual(['unused_flearning✕']);
     act(() => {
-      (panel()!.querySelector('[data-engine-field="vendor"]') as HTMLElement).click();
+      (panel().querySelector('[data-engine-field="vendor"]') as HTMLElement).click();
     });
     expect(store.selectedKey.value).toBe(rowKey('vendor'));
   });
@@ -1637,14 +1636,14 @@ describe('Builder engine', () => {
     });
     const before = store.engineChanges.value;
     const btn = () =>
-      panel()!.querySelector(
+      panel().querySelector(
         '[data-engine-field="unused_f"] [data-action="delete-engine-field"]',
       ) as HTMLElement;
     act(() => btn().click());
     expect(store.engineDeletesNow.value.map((f) => f.name)).toEqual(['unused_f']);
     expect(store.engineChanges.value).toBe(before + 1);
     expect(
-      [...panel()!.querySelectorAll('[data-engine-save] [data-engine-field]')].pop()!.textContent,
+      [...panel().querySelectorAll('[data-engine-save] [data-engine-field]')].pop()!.textContent,
     ).toBe('unused_fdelete');
     act(() => btn().click());
     expect(store.engineDeletesNow.value).toEqual([]);
@@ -1772,7 +1771,6 @@ describe('Builder hooks that mention a field', () => {
     expect(panel.textContent).toContain('Totals check (80)');
     expect(panel.querySelector('[data-match]')!.textContent).toContain('1 of 2');
     expect(panel.querySelector('[data-action^="format-"]')).toBeNull(); // read-only: no Format
-    const { EditorView } = await import('@codemirror/view');
     const view = () =>
       EditorView.findFromDOM(
         panel.querySelector('[data-code="hook-view"] .cm-editor') as HTMLElement,
@@ -1961,13 +1959,11 @@ describe('Builder validation panel', () => {
     expect(panel().querySelector('[data-rule-result="40"]')!.textContent).toContain(
       'Doc id missing',
     );
-    const others = [...panel().querySelectorAll('[data-other-message]')].map((e) => e.textContent);
+    const others = [...panel().querySelectorAll('[data-other-message]')].map((e) => e.textContent!);
     expect(
-      others.some(
-        (t) => t!.includes('item_desc') && t!.includes('row 2') && t!.includes('required'),
-      ),
+      others.some((t) => t.includes('item_desc') && t.includes('row 2') && t.includes('required')),
     ).toBe(true);
-    expect(others.some((t) => t!.includes('Duplicate document'))).toBe(true);
+    expect(others.some((t) => t.includes('Duplicate document'))).toBe(true);
   });
 
   it('clicking a rule opens it in rule mode, which closes the panel', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { withKeys, setAttr } from '../src/builder/model.js';
+import { withKeys, setAttr, stripForSave } from '../src/builder/model.js';
 import { section, dp, keyOf, rowOf } from './support/builder.js';
 import {
   engineKind,
@@ -134,8 +134,7 @@ describe('engine', () => {
 });
 
 describe('a staged engine edit', () => {
-  it('is not sent with the schema', async () => {
-    const { stripForSave } = await import('../src/builder/model.js');
+  it('is not sent with the schema', () => {
     let nodes = schema();
     nodes = setAttr(nodes, keyOf(nodes, 'doc_id'), ['__engine', 'pre_trained_field_id'], null);
     expect(JSON.stringify(stripForSave(nodes))).not.toContain('__engine');

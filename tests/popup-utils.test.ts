@@ -81,7 +81,7 @@ describe('runInTab', () => {
 });
 
 describe('openConsoleTab', () => {
-  it('opens the console tab without a position when there is no source tab (the Builder)', () => {
+  it('opens the console tab without a position when there is no source tab (as from the Builder)', () => {
     openConsoleTab(undefined, { token: 'tok', domain: 'https://x.rossum.ai' }, 'mdh');
     expect(tabsCreateMock).toHaveBeenCalledWith({
       url: 'chrome-extension://abc/console/console.html?authId=uuid-1',

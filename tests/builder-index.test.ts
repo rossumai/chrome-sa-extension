@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as store from '../src/builder/store.js';
-import { withKeys, flatten } from '../src/builder/model.js';
+import { withKeys, flatten, setAttr } from '../src/builder/model.js';
 import { resetBuilderStore, section, dp, keyOf, rowOf, fabryReply } from './support/builder.js';
 
 vi.mock('../src/builder/api.js', () => ({
@@ -72,6 +72,7 @@ import {
   pickAnnotation,
   renameSchema,
   undoChange,
+  apply,
 } from '../src/builder/index.jsx';
 
 beforeEach(() => {
@@ -181,8 +182,6 @@ describe('custom engine', () => {
 
   it('stops before any call when the API would reject the schema', async () => {
     const key = keyOf(store.work.value, 'doc_id');
-    const { apply } = await import('../src/builder/index.jsx');
-    const { setAttr } = await import('../src/builder/model.js');
     apply(setAttr(store.work.value, key, ['rir_field_names'], ['document_id']));
     const r = await save();
     expect(r).toMatchObject({ ok: false, stage: 'local' });
