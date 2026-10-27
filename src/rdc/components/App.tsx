@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { domain, token } from '../store.js';
 import { connectedOrg } from '../../console/store.js';
 import { ENV, answerFor, envInputFor, treeRows, type TreeRow } from '../core.js';
-import { parseAnsi, type AnsiStyle } from '../ansi.js';
+import { LogLine } from './Read.jsx';
 import { loadRdc, type CycleOutcome, type Prompt, type Rdc } from '../wasm.js';
 import styles from './App.module.css';
 
@@ -19,28 +19,6 @@ const host = (d: string) => {
     return d;
   }
 };
-
-// One SGR style as inline CSS. Dim is opacity, not a grey, so it stays readable in both themes.
-function css(st: AnsiStyle): Record<string, string> {
-  const o: Record<string, string> = {};
-  if (st.color) o.color = st.color;
-  if (st.bold) o.fontWeight = '600';
-  if (st.dim) o.opacity = '0.6';
-  if (st.italic) o.fontStyle = 'italic';
-  if (st.underline) o.textDecoration = 'underline';
-  return o;
-}
-
-// A log line from rdc, its colour rendered as spans — text nodes only, never HTML.
-function LogLine({ line }: { line: string }) {
-  return (
-    <div class={styles.logLine}>
-      {parseAnsi(line).map((seg) => (
-        <span style={css(seg.style)}>{seg.text}</span>
-      ))}
-    </div>
-  );
-}
 
 type Pending = { prompt: Prompt; answer: (key: string | null) => void };
 

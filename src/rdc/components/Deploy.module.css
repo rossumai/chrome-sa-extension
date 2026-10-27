@@ -224,3 +224,135 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Connect and Read both. */
+.wz {
+  padding-top: 26px;
+}
+.wzH h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.wzH p {
+  margin: 6px 0 18px;
+  max-width: 640px;
+  color: var(--text-secondary);
+}
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 0;
+}
+.panelHead h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sp {
+  flex: 1;
+}
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--success-fg);
+}
+.foot {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 22px;
+}
+.counts {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.term {
+  /* The 16 basic ANSI colours (src/rdc/ansi.ts), on the Console's own palette where it has one. */
+  --rdc-ansi-0: var(--text-primary);
+  --rdc-ansi-1: var(--danger);
+  --rdc-ansi-2: var(--success);
+  --rdc-ansi-3: var(--warning);
+  --rdc-ansi-4: var(--accent);
+  --rdc-ansi-5: #a03fb0;
+  --rdc-ansi-6: #11808f;
+  --rdc-ansi-7: var(--text-secondary);
+  --rdc-ansi-8: var(--text-secondary);
+  --rdc-ansi-9: var(--danger);
+  --rdc-ansi-10: var(--success);
+  --rdc-ansi-11: var(--warning);
+  --rdc-ansi-12: var(--accent);
+  --rdc-ansi-13: #a03fb0;
+  --rdc-ansi-14: #11808f;
+  --rdc-ansi-15: var(--text-primary);
+  min-height: 80px;
+  max-height: 250px;
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: 9px;
+  background: var(--bg-code);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.65;
+}
+@media (prefers-color-scheme: dark) {
+  .term {
+    --rdc-ansi-5: #d58fe0;
+    --rdc-ansi-6: #4cc6d6;
+  }
+}
+/* Wraps long lines, keeps rdc's own column padding. */
+.logLine {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ask {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+.question {
+  white-space: pre-wrap;
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 900px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}

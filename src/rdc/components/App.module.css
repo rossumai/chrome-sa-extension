@@ -83,9 +83,3 @@
     --rdc-ansi-6: #4cc6d6;
   }
 }
-
-/* Wraps long lines, keeps rdc's own column padding. */
-.logLine {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
