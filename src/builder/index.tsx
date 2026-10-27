@@ -1,6 +1,8 @@
 // src/builder/index.tsx
-// Impure glue for the Builder: session probe, queue list, opening a queue's schema,
-// the history actions the screen calls, and Save.
+// Impure glue for the Builder: the session probe and side lists, opening a queue or schema,
+// the draft's history and Save, the engine, the picked annotation, creating and deleting
+// workspaces, queues and schemas, the right panels (rule, hook, code view, engine, Mr. Fabry,
+// validation) with their own saves and Mr. Fabry turns, and Revalidate.
 import * as api from './api.js';
 import * as store from './store.js';
 import { push, undo, redo } from './history.js';
@@ -20,6 +22,7 @@ import { engineKind, bindingErrors, engineFieldUsers } from './engine.js';
 import { isRateLimited, errorText } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { idFromUrl } from '../galaxy/graph.js';
+import { currentOrg } from '../rossum/orgName.js';
 import { annotationValues } from './values.js';
 import { placeMessages, firedRuleIds } from './validation.js';
 import { ruleEvalBody, parseRuleEval } from './ruleEval.js';
@@ -493,7 +496,6 @@ async function loadEngineUsers() {
   }
 }
 
-/** Closing also drops the selection, so the field panel does not take the engine's place. */
 /** Mark an engine field no queue uses for deletion on Save, or keep it again. */
 export function toggleEngineDelete(id: number) {
   const next = new Set(store.engineDeletes.value);
@@ -501,6 +503,7 @@ export function toggleEngineDelete(id: number) {
   store.engineDeletes.value = next;
 }
 
+/** Closing also drops the selection, so the field panel does not take the engine's place. */
 export function closeEnginePanel() {
   store.enginePanel.value = false;
   store.selectedKey.value = null;
@@ -554,14 +557,12 @@ async function refreshLists() {
 }
 
 // The organization a new workspace belongs to: the one the existing workspaces are in, or
-// the org list's only entry. auth/user's organization is the user's HOME org, which can
-// differ (see src/rossum/orgName.ts), so it is not used.
+// the session's organization (currentOrg — not auth/user's HOME org).
 async function organizationUrl(): Promise<string> {
   const known = store.workspaces.value.find((w) => w.organization)?.organization;
   if (known) return known;
-  const page = await api.get('/api/v1/organizations/');
-  const orgs = page?.results || [];
-  if (orgs.length === 1) return orgs[0].url;
+  const org = currentOrg(await api.get('/api/v1/organizations/'));
+  if (org?.id != null) return `${store.domain.value}/api/v1/organizations/${org.id}`;
   throw new Error('Could not tell which organization to create the workspace in');
 }
 

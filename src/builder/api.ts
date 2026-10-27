@@ -1,7 +1,9 @@
 // src/builder/api.ts
 // REST client for the Builder. Same error behaviour as src/galaxy/api.ts (Bearer auth,
-// 30s timeout, 401 -> session expired, 403 -> featureUnavailable, 429 -> rateLimitError),
-// plus the two writes the Builder makes: schema validate (a dry run) and schema PATCH.
+// 30s timeout, 401 -> session expired, 403 -> featureUnavailable, 429 -> rateLimitError).
+// Its writes: schema validate (a dry run) and PATCH; creating workspaces, queues, schemas and
+// rules; deleting queues and schemas; rule, hook settings and engine field PATCHes (engine
+// fields are also created and deleted); and Revalidate's annotation start, validate and cancel.
 
 import { rateLimitError } from '../net/rateLimit.js';
 
@@ -9,8 +11,6 @@ export type ApiError = Error & { status: number; featureUnavailable?: boolean };
 
 /** One Rossum resource as the API returns it — untyped on the wire. */
 export type RawResource = Record<string, any>;
-
-type RequestOpts = { signal?: AbortSignal | null };
 
 let baseDomain = '';
 let authHeader = '';
@@ -32,15 +32,9 @@ function toUrl(pathOrUrl: string): string {
   return /^https?:\/\//.test(pathOrUrl) ? pathOrUrl : `${baseDomain}${pathOrUrl}`;
 }
 
-async function request(
-  method: string,
-  pathOrUrl: string,
-  body?: unknown,
-  { signal: external }: RequestOpts = {},
-): Promise<any> {
+async function request(method: string, pathOrUrl: string, body?: unknown): Promise<any> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
-  const signal = external ? AbortSignal.any([external, controller.signal]) : controller.signal;
   const headers: Record<string, string> = { Authorization: authHeader, Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   let res: Response;
@@ -49,10 +43,10 @@ async function request(
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal,
+      signal: controller.signal,
     });
   } catch (err) {
-    if ((err as Error).name === 'AbortError' && !external?.aborted) {
+    if ((err as Error).name === 'AbortError') {
       throw apiError('Request timed out after 30s', 0);
     }
     throw err;
@@ -76,15 +70,15 @@ async function request(
   return data;
 }
 
-export function get(pathOrUrl: string, opts?: RequestOpts): Promise<any> {
-  return request('GET', pathOrUrl, undefined, opts);
+export function get(pathOrUrl: string): Promise<any> {
+  return request('GET', pathOrUrl);
 }
 
-export async function listAll(pathOrUrl: string, opts?: RequestOpts): Promise<RawResource[]> {
+export async function listAll(pathOrUrl: string): Promise<RawResource[]> {
   const out: RawResource[] = [];
   let next: string | null = pathOrUrl;
   while (next) {
-    const page = await get(next, opts);
+    const page = await get(next);
     if (Array.isArray(page?.results)) out.push(...page.results);
     next = page?.pagination?.next || page?.next || null; // engine_fields: cursor pages
   }
