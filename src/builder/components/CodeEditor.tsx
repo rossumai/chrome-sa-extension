@@ -19,7 +19,7 @@ function prefersDark() {
 
 const surface = EditorView.theme({
   '&': { fontSize: '12px', border: '1px solid var(--border)', borderRadius: '4px' },
-  '.cm-scroller': { fontFamily: 'ui-monospace, Menlo, monospace' },
+  '.cm-scroller': { fontFamily: 'var(--font-mono)' },
 });
 // A short highlight over a range ("this is the part you picked"), cleared by a timer.
 const flashOn = StateEffect.define<{ from: number; to: number }>();
@@ -45,8 +45,8 @@ const flashTheme = EditorView.theme({
     animation: 'builder-cm-flash 1.2s ease-out forwards',
   },
   '@keyframes builder-cm-flash': {
-    from: { backgroundColor: 'rgba(66, 112, 219, 0.35)' },
-    to: { backgroundColor: 'rgba(66, 112, 219, 0)' },
+    from: { backgroundColor: 'color-mix(in srgb, var(--accent) 35%, transparent)' },
+    to: { backgroundColor: 'transparent' },
   },
 });
 const FLASH_MS = 1200;
