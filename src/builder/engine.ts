@@ -53,6 +53,19 @@ export function isExtracted(node: Node): boolean {
   );
 }
 
+/** Shown to explain the "!" on a captured field that is hidden. */
+export const HIDDEN_CAPTURED =
+  'Captured but hidden: nobody sees or corrects its prediction, yet confirmed documents still teach the AI with it.';
+
+/** A captured datapoint that is hidden: legal, but its unchecked predictions train the engine. */
+export function isHiddenCaptured(node: Node): boolean {
+  return (
+    node.category === 'datapoint' &&
+    node.hidden === true &&
+    (node.ui_configuration?.type ?? 'captured') === 'captured'
+  );
+}
+
 export type EngineStatus = {
   /** seeded: has a catalog seed; learning: no seed, learns from confirmed documents; new: no
    *  engine field yet — Save creates it (seeded or learning by `seed`). */

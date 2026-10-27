@@ -7,6 +7,7 @@ import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
 import FieldLinks from './FieldLinks.jsx';
 import Extraction from './Extraction.jsx';
+import { isHiddenCaptured, HIDDEN_CAPTURED } from '../engine.js';
 import WideButton from './WideButton.jsx';
 import s from './Builder.module.css';
 
@@ -320,6 +321,19 @@ export default function Inspector() {
         {type ? ` · ${type}` : ''}
         {src ? ` · ${src}` : ''}
       </div>
+      {isHiddenCaptured(node) && (
+        <div class={s.warn} data-warn="hidden-captured">
+          {HIDDEN_CAPTURED}{' '}
+          <button
+            type="button"
+            class={s.linkBtn}
+            data-action="show-field"
+            onClick={() => edit(node, ['hidden'], false)}
+          >
+            Make it visible
+          </button>
+        </div>
+      )}
       {kind === 'datapoint' && askBox}
       {kind === 'datapoint' && (
         <div key={node.__key}>

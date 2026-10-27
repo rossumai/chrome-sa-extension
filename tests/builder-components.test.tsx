@@ -1690,6 +1690,31 @@ describe('Builder engine', () => {
   });
 });
 
+describe('Builder hidden captured fields', () => {
+  const mark = (id: string) => row(id).querySelector('[data-warn="hidden-captured"]');
+
+  it('marks a captured field that is hidden, and the field panel can make it visible', () => {
+    act(() => {
+      apply(setAttr(store.work.value, keyOf('doc_id'), ['hidden'], true));
+    });
+    expect(mark('doc_id')).not.toBeNull();
+    act(() => {
+      row('doc_id').click();
+    });
+    act(() => {
+      (root.querySelector('[data-action="show-field"]') as HTMLElement).click();
+    });
+    expect(mark('doc_id')).toBeNull();
+  });
+
+  it('a hidden field with another source is not marked', () => {
+    act(() => {
+      apply(setAttr(store.work.value, keyOf('vendor'), ['hidden'], true)); // a lookup
+    });
+    expect(mark('vendor')).toBeNull();
+  });
+});
+
 describe('Builder hooks that mention a field', () => {
   beforeEach(() => {
     act(() => {

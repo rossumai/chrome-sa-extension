@@ -52,7 +52,13 @@ import EditableCell from './EditableCell.jsx';
 import Icon, { type IconName } from './icons.jsx';
 import type { ActionMark } from '../rules.js';
 import { panelOpen, panelWide } from './panels.js';
-import { isExtracted, engineStatus, extractedFields } from '../engine.js';
+import {
+  isExtracted,
+  engineStatus,
+  extractedFields,
+  isHiddenCaptured,
+  HIDDEN_CAPTURED,
+} from '../engine.js';
 import { SeedPicker } from './Extraction.jsx';
 import { fitColumns, WIDTHS, LABEL_MIN } from './columnFit.js';
 import s from './Builder.module.css';
@@ -544,6 +550,11 @@ function Row({
       )}
       <td data-col="id" data-full={full} style={{ paddingLeft: `${6 + depth * 16}px` }}>
         {kind === 'section' && <span class={s.caret}>▾ </span>}
+        {!deleted && isHiddenCaptured(node) && (
+          <span class={s.warnMark} data-warn="hidden-captured" title={HIDDEN_CAPTURED}>
+            !
+          </span>
+        )}
         {locked ? (
           <span class={s.mono}>{String(node.id ?? '')}</span>
         ) : (

@@ -601,6 +601,22 @@
   border: 1px dashed var(--info-border);
 }
 
+.warnMark {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--warning-fg);
+  color: var(--bg-card);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  vertical-align: middle;
+  cursor: help;
+}
+
 .rowError {
   margin-top: 2px;
   white-space: normal;

@@ -9,6 +9,7 @@ import {
   unusedEngineFields,
   renamedFrom,
   engineFieldUsers,
+  isHiddenCaptured,
 } from '../src/builder/engine.js';
 
 const dp = (id: string, extra: any = {}) => ({
@@ -167,5 +168,18 @@ describe('engineFieldUsers', () => {
     ]);
     expect(m.get('a')).toEqual(['Q1 (1)', 'Q2 (2)']);
     expect(m.has('f')).toBe(false);
+  });
+});
+
+describe('isHiddenCaptured', () => {
+  it('is a hidden datapoint whose source is captured or not set', () => {
+    expect(isHiddenCaptured(dp('a', { hidden: true }) as any)).toBe(true);
+    expect(
+      isHiddenCaptured(dp('a', { hidden: true, ui_configuration: { type: 'captured' } }) as any),
+    ).toBe(true);
+    expect(
+      isHiddenCaptured(dp('a', { hidden: true, ui_configuration: { type: 'formula' } }) as any),
+    ).toBe(false);
+    expect(isHiddenCaptured(dp('a') as any)).toBe(false);
   });
 });
