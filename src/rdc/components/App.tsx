@@ -110,6 +110,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         domain.value,
         token.value,
         await organizations(domain.value, token.value),
+        ENV,
       );
       if (typeof env === 'string') throw new Error(env);
       const project = rdc.Project.create('console', env);

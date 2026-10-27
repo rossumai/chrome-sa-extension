@@ -15,9 +15,12 @@ describe.skipIf(!present)('rdc wasm package (Node)', () => {
     const glue = await import(pathToFileURL(join(VENDOR, 'rdc_wasm.js')).href);
     glue.initSync({ module: readFileSync(join(VENDOR, 'rdc_wasm_bg.wasm')) });
     expect(glue.version()).toMatch(/^\d+\.\d+\.\d+/);
-    const env = envInputFor('https://acme.rossum.app', 'tok', {
-      results: [{ id: 42, name: 'Acme' }],
-    });
+    const env = envInputFor(
+      'https://acme.rossum.app',
+      'tok',
+      { results: [{ id: 42, name: 'Acme' }] },
+      ENV,
+    );
     if (typeof env === 'string') throw new Error(env);
     const project = glue.Project.create('console', env);
     const files: Map<string, Uint8Array> = project.files();

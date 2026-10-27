@@ -27,6 +27,7 @@ export function envInputFor(
   domain: string,
   token: string,
   organizations: unknown,
+  name: string,
 ): EnvInput | string {
   const apiBase = apiBaseOf(domain);
   if (!apiBase) return `Not a Rossum URL: ${domain}`;
@@ -34,7 +35,7 @@ export function envInputFor(
   const org = currentOrg(organizations);
   if (!org || org.id === null)
     return 'The session does not list exactly one organization, so which one to pull is unknown.';
-  return { name: ENV, apiBase, orgId: org.id, authKind: 'token', token };
+  return { name, apiBase, orgId: org.id, authKind: 'token', token };
 }
 
 // rdc counts any answer that is not one of the prompt's choices as "no answer"; say so here

@@ -18,7 +18,7 @@ describe('apiBaseOf', () => {
 
 describe('envInputFor', () => {
   it('builds a token env for the one listed organization', () => {
-    expect(envInputFor('https://acme.rossum.app', 'tok', one)).toEqual({
+    expect(envInputFor('https://acme.rossum.app', 'tok', one, ENV)).toEqual({
       name: ENV,
       apiBase: 'https://acme.rossum.app/api/v1',
       orgId: 42,
@@ -28,15 +28,17 @@ describe('envInputFor', () => {
   });
   it('refuses when the organization cannot be told', () => {
     const two = { results: [one.results[0], { id: 43, name: 'Other' }] };
-    expect(typeof envInputFor('https://acme.rossum.app', 'tok', two)).toBe('string');
-    expect(typeof envInputFor('https://acme.rossum.app', 'tok', { results: [] })).toBe('string');
-    expect(typeof envInputFor('https://acme.rossum.app', 'tok', null)).toBe('string');
+    expect(typeof envInputFor('https://acme.rossum.app', 'tok', two, ENV)).toBe('string');
+    expect(typeof envInputFor('https://acme.rossum.app', 'tok', { results: [] }, ENV)).toBe(
+      'string',
+    );
+    expect(typeof envInputFor('https://acme.rossum.app', 'tok', null, ENV)).toBe('string');
     const noId = { results: [{ name: 'Acme' }] };
-    expect(typeof envInputFor('https://acme.rossum.app', 'tok', noId)).toBe('string');
+    expect(typeof envInputFor('https://acme.rossum.app', 'tok', noId, ENV)).toBe('string');
   });
   it('refuses a bad domain or a missing token', () => {
-    expect(typeof envInputFor('nope', 'tok', one)).toBe('string');
-    expect(typeof envInputFor('https://acme.rossum.app', '', one)).toBe('string');
+    expect(typeof envInputFor('nope', 'tok', one, ENV)).toBe('string');
+    expect(typeof envInputFor('https://acme.rossum.app', '', one, ENV)).toBe('string');
   });
 });
 
