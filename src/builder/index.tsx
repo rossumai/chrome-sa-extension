@@ -68,12 +68,14 @@ export async function initBuilder() {
 }
 
 // Names for the schema column. Separate from the queue list so a slow or failed schema
-// list never holds back the queues.
+// list never holds back the queues. Like the other side lists below, a failure leaves it
+// empty — except a 429, which is shown (a throttled list is not an empty one).
 export async function loadSchemas() {
   try {
     const all = await api.listSchemas();
     store.schemas.value = all.map((x) => ({ id: x.id, url: x.url, name: x.name }));
-  } catch {
+  } catch (err: any) {
+    if (isRateLimited(err)) fail(err, '');
     store.schemas.value = [];
   }
 }
@@ -307,7 +309,8 @@ async function loadAnnotations(queueId: number) {
       id: a.id,
       label: annotationLabel(a, docs),
     }));
-  } catch {
+  } catch (err: any) {
+    if (isRateLimited(err)) fail(err, '');
     store.annotations.value = [];
   }
 }
@@ -318,7 +321,8 @@ async function loadHooks(queueId: number) {
     const list = await api.listHooks(queueId);
     if (store.selectedQueueId.value !== queueId) return;
     store.hooks.value = list;
-  } catch {
+  } catch (err: any) {
+    if (isRateLimited(err)) fail(err, '');
     store.hooks.value = [];
   }
 }
@@ -329,7 +333,8 @@ async function loadRules(queueId: number) {
     const list = await api.listRules(queueId);
     if (store.selectedQueueId.value !== queueId) return;
     store.rules.value = list;
-  } catch {
+  } catch (err: any) {
+    if (isRateLimited(err)) fail(err, '');
     store.rules.value = [];
   }
 }
@@ -363,8 +368,9 @@ async function loadCatalog() {
   catalogLoading = true;
   try {
     store.engineCatalog.value = await api.listPreTrainedFields();
-  } catch {
+  } catch (err: any) {
     // no catalog: the seed picker is empty, the AI-fields text box still works
+    if (isRateLimited(err)) fail(err, '');
   } finally {
     catalogLoading = false;
   }

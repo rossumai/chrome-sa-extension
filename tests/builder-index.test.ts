@@ -83,7 +83,9 @@ import {
   renameSchema,
   undoChange,
   apply,
+  loadSchemas,
 } from '../src/builder/index.jsx';
+import { rateLimitError } from '../src/net/rateLimit.js';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -109,6 +111,43 @@ describe('openQueue', () => {
     expect(store.selectedQueueId.value).toBe(2);
     expect(store.schema.value.id).toBe(22);
   });
+});
+
+describe('a 429 on a side list', () => {
+  const slow = () => rateLimitError({}, 'slow');
+  beforeEach(() => {
+    store.queues.value = [
+      { id: 2, name: 'B', schema: 'https://x/api/v1/schemas/22', generic_engine: 'e/1' },
+    ];
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: [section('b')] });
+    vi.mocked(api.listAnnotations).mockResolvedValue({ results: [] });
+    vi.mocked(api.listRules).mockResolvedValue([]);
+    vi.mocked(api.listHooks).mockResolvedValue([]);
+    vi.mocked(api.listPreTrainedFields).mockResolvedValue([]);
+  });
+
+  it('loadSchemas shows it rather than an empty list', async () => {
+    vi.mocked(api.listSchemas).mockRejectedValue(slow());
+    await loadSchemas();
+    expect(store.error.value).toContain('rate-limiting');
+    expect(store.retryable.value).toBe(true);
+  });
+
+  it('loadSchemas keeps any other failure quiet', async () => {
+    vi.mocked(api.listSchemas).mockRejectedValue(new Error('boom'));
+    await loadSchemas();
+    expect(store.error.value).toBeNull();
+    expect(store.schemas.value).toEqual([]);
+  });
+
+  for (const f of ['listAnnotations', 'listRules', 'listHooks', 'listPreTrainedFields'] as const) {
+    it(`${f} on opening a queue shows it`, async () => {
+      vi.mocked(api[f]).mockRejectedValue(slow());
+      await openQueue(2);
+      await vi.waitFor(() => expect(store.error.value).toContain('rate-limiting'));
+      expect(store.retryable.value).toBe(true);
+    });
+  }
 });
 
 describe('save', () => {
