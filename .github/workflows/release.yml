@@ -24,7 +24,13 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          # The optional @mrtnzlml/rdc-wasm lives on GitHub Packages, which needs a token even
+          # to install; without it npm ci would silently skip it and ship no rdc wasm.
+          registry-url: https://npm.pkg.github.com
+          scope: '@mrtnzlml'
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.RDC_WASM_TOKEN }}
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
@@ -40,8 +46,17 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          # The optional @mrtnzlml/rdc-wasm lives on GitHub Packages, which needs a token even
+          # to install; without it npm ci would silently skip it and ship no rdc wasm.
+          registry-url: https://npm.pkg.github.com
+          scope: '@mrtnzlml'
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.RDC_WASM_TOKEN }}
       - run: npm run build
+      - name: Fail if the rdc wasm is missing
+        # An expired or missing RDC_WASM_TOKEN makes npm ci skip the package and still exit 0.
+        run: test -f dist/console/rdc/rdc_wasm_bg.wasm
       - name: Package dist/ contents into extension.zip
         # Zip the CONTENTS of dist/ so manifest.json lands at the archive
         # root; zipping the dist/ folder itself would nest it and fail upload.

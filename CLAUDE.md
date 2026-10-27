@@ -337,8 +337,10 @@ opened, because its form, log and a deploy in flight live in component state.
   one organization `GET /organizations` lists (`currentOrg`), else it refuses.
   **The wasm is an OPTIONAL dependency**, `@mrtnzlml/rdc-wasm` on GitHub Packages (`.npmrc`
   maps the `@mrtnzlml` scope there). That registry needs a token even to install a public
-  package, so without one `npm ci` skips it and exits 0, and `build.js` builds without it: CI
-  and the Web Store release ship NO rdc wasm, and the app says it is not in this build. To
+  package, so without one `npm ci` skips it and exits 0, and `build.js` builds without it (the
+  app then says it is not in this build). PR CI has no token and builds without it; the
+  **Release** workflow installs it with the `RDC_WASM_TOKEN` secret (a classic token with
+  `read:packages`) and fails if `dist/` lacks the wasm, so the Web Store build always has it. To
   have it locally, put a classic token with `read:packages` in `~/.npmrc` as
   `//npm.pkg.github.com/:_authToken=<token>` (never in the repo's `.npmrc`), then `npm
   install` and build. `build.js` copies `rdc_wasm.js` + `rdc_wasm_bg.wasm` to
