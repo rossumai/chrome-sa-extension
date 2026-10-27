@@ -7,4 +7,3 @@ node_modules
 .claude/
 .rossum-cache/
 *.zip
-/vendor/

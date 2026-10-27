@@ -14,8 +14,8 @@ esbuild bundles ES modules from `src/` into `dist/`. No transpilation, no other 
 `build.js` also copies static assets and injects the version (see Versioning). Config:
 `format: 'iife'`, `minify: true`, `jsxFactory: 'h'`, `jsxFragment: 'Fragment'` (Preact JSX).
 
-- `npm run build` — clean build into `dist/`; also fetches the pinned rdc wasm release into
-  `vendor/rdc/` when it is not there yet (see rdc under Console apps), so it needs network once
+- `npm run build` — clean build into `dist/`; includes the rdc wasm only when its optional
+  package is installed (see rdc under Console apps)
 - `npm run dev` — watch mode (JS only; re-run the full build for CSS/HTML changes)
 - `npm run typecheck` — `tsc --noEmit` for `src/`, then `-p tsconfig.tests.json` for `tests/`.
   Two programs, not one: see TypeScript below for why.
@@ -36,8 +36,7 @@ Prettier owns `src/` and `tests/`, and only `*.ts` / `*.tsx` / `*.css` there. Co
   `format:check` fails that update rather than a tree nobody touched.
 - **Deliberately NOT formatted**: every `.md` (so `CLAUDE.md`, `PRIVACY.md` and the whole dated
   record under `docs/superpowers/` keep their hand-wrapped prose), the 12 `.html`, the JSON and
-  YAML, and — a consequence worth knowing — `build.js`, `vitest.config.mjs` and the rdc proof
-  of concept's `scripts/rdc-vendor.cjs` and `scripts/build-rdc-wasm.sh`, the only
+  YAML, and — a consequence worth knowing — `build.js` and `vitest.config.mjs`, the only
   non-TypeScript code files in the repo.
 - **`tests/fixtures/` is in `.prettierignore`.** They are golden inputs: `expected/*.html` is
   the byte-exact rendering of those `.md` files, so reformatting an input silently invalidates
@@ -336,28 +335,18 @@ opened, because its form, log and a deploy in flight live in component state.
   log (ANSI colour rendered by `ansi.ts`) and the pulled tree. A prompt rdc raises is shown with
   its choices; Cancel answers `null`. `apiBase` is `${consoleDomain}/api/v1`; the org id is the
   one organization `GET /organizations` lists (`currentOrg`), else it refuses.
-  **The wasm is not in the repo; every build fetches it.** `rdc-wasm.json` pins an rdc release:
-  `tag`, its `asset` (`rdc-<version>-wasm32-unknown-unknown.tar.gz`) and the asset's `sha256`.
-  `build.js` (via `scripts/rdc-vendor.cjs`) downloads
-  `https://github.com/mrtnzlml/rdc/releases/download/<tag>/<asset>` — no token, no
-  `api.github.com` — checks the sha256 BEFORE unpacking, unpacks it with Node's `zlib` and a
-  ustar reader (no `tar` CLI, no dependency) into the git-ignored `vendor/rdc/` with a
-  `.source.json` marker, and copies `rdc_wasm.js` + `rdc_wasm_bg.wasm` to `dist/console/rdc/`.
-  While the marker matches the pin nothing is downloaded again (`npm run dev`, rebuilds). A
-  network error, an HTTP error, a hash mismatch or a missing file FAILS the build — there is
-  no "build without wasm". So CI and the Web Store release get it through `npm run build` with
-  no workflow change, and need network access to github.com.
-  **To bump**: set `tag` and `asset` in `rdc-wasm.json`, put the new asset's `sha256`
-  (`curl -sL <url> | shasum -a 256`) beside them, build, and check the Console shows the new
-  version. `src/rdc/wasm.ts` carries a hand-kept subset of the release's `rdc_wasm.d.ts` (the
-  source of truth) — re-read it on a bump.
-  **Developer override**: `scripts/build-rdc-wasm.sh <rdc checkout>` (or `RDC_DIR`) builds a
-  LOCAL rdc's `wasm/` crate with `wasm-bindgen --target web` (the exact version the crate
-  pins, or it fails) into `vendor/rdc/` with a `{"local": …}` marker. Only
-  `RDC_WASM_LOCAL=1 npm run build` uses it; a plain build replaces it with the pinned release.
-  The glue is loaded at run time with `import(chrome.runtime.getURL(…))`, which esbuild leaves
-  alone in the iife bundle, because `npm run typecheck` and `npm test` run before any build on
-  a fresh clone, when `vendor/rdc/` does not exist yet.
+  **The wasm is an OPTIONAL dependency**, `@mrtnzlml/rdc-wasm` on GitHub Packages (`.npmrc`
+  maps the `@mrtnzlml` scope there). That registry needs a token even to install a public
+  package, so without one `npm ci` skips it and exits 0, and `build.js` builds without it: CI
+  and the Web Store release ship NO rdc wasm, and the app says it is not in this build. To
+  have it locally, put a classic token with `read:packages` in `~/.npmrc` as
+  `//npm.pkg.github.com/:_authToken=<token>` (never in the repo's `.npmrc`), then `npm
+  install` and build. `build.js` copies `rdc_wasm.js` + `rdc_wasm_bg.wasm` to
+  `dist/console/rdc/`. **To bump**: `npm install @mrtnzlml/rdc-wasm@<version>` with the token,
+  and re-read the package's `rdc_wasm.d.ts` — `src/rdc/wasm.ts` keeps a hand-written subset of
+  it, because tsc must pass without the package. For the same reason the glue is loaded at
+  run time with `import(chrome.runtime.getURL(…))`, which esbuild leaves alone in the iife
+  bundle.
 
 Auth: the popup (or the worker) runs `readAuthInfo` in the Rossum tab via
 `chrome.scripting.executeScript`, stages a single-use `consoleAuth_<uuid>` in

@@ -4,13 +4,13 @@ import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { envInputFor, ENV } from '../src/rdc/core.js';
 
-// Loads the real rdc wasm in Node from vendor/rdc/, which `npm run build` fills (CI builds
-// before testing). Skipped only when vendor/rdc/ is absent — a fresh clone tested before its
-// first build. No network: only create + read the tree.
-const VENDOR = join(process.cwd(), 'vendor', 'rdc');
+// Loads the real rdc wasm in Node from the optional @mrtnzlml/rdc-wasm package. Skipped when
+// it is not installed (no GitHub Packages token, CI included). No network: only create + read
+// the tree.
+const VENDOR = join(process.cwd(), 'node_modules', '@mrtnzlml', 'rdc-wasm');
 const present = existsSync(join(VENDOR, 'rdc_wasm.js'));
 
-describe.skipIf(!present)('rdc wasm vendor build (Node)', () => {
+describe.skipIf(!present)('rdc wasm package (Node)', () => {
   it('instantiates and creates an in-memory project for the connected env', async () => {
     const glue = await import(pathToFileURL(join(VENDOR, 'rdc_wasm.js')).href);
     glue.initSync({ module: readFileSync(join(VENDOR, 'rdc_wasm_bg.wasm')) });
