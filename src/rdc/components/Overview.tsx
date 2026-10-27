@@ -99,14 +99,12 @@ export default function Overview({
                 </button>
               </div>
             )}
-            {sourceNote ? (
+            {sourceNote && (
               <div class={styles.panelB}>
                 <div class={`${styles.note} ${styles.err}`} role="alert">
                   {sourceNote}
                 </div>
               </div>
-            ) : (
-              <div class={styles.srcFoot}>Saved in this org's data storage. The token is not.</div>
             )}
           </div>
           <div class={styles.panel}>

@@ -134,7 +134,7 @@ describe('rdc App', () => {
       options: { upsert: true },
     });
     expect(JSON.stringify(save[1])).not.toContain('stok');
-    expect(root.textContent).toContain("Saved in this org's data storage. The token is not.");
+    expect(root.querySelector('[role="alert"]')).toBeNull();
   });
 
   it('opens on the remembered source', async () => {

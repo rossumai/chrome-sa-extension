@@ -64,7 +64,6 @@ describe('Overview', () => {
       />,
     );
     expect(root.querySelector('[role="alert"]')!.textContent).toContain('HTTP 403');
-    expect(root.textContent).not.toContain("Saved in this org's data storage.");
   });
 
   it('with a source shows it, deploys, and notes the unbuilt parts', () => {
@@ -85,7 +84,7 @@ describe('Overview', () => {
     // history and own values; the source itself is remembered now
     const notes = root.querySelectorAll('[role="note"]');
     expect(notes).toHaveLength(2);
-    expect(root.textContent).toContain("Saved in this org's data storage. The token is not.");
+    expect(root.querySelector('[role="alert"]')).toBeNull();
     notes.forEach((n) => expect(n.textContent).toContain('Not available yet.'));
   });
 });
