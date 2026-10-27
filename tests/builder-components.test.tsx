@@ -10,36 +10,21 @@ import type { PlacedMessage } from '../src/builder/validation.js';
 import { apply } from '../src/builder/index.jsx';
 import { setAttr } from '../src/builder/model.js';
 import { navDrawer, panelWide } from '../src/builder/components/panels.js';
-import { resetBuilderStore } from './support/builder.js';
+import { resetBuilderStore, section, dp, keyOf, rowOf } from './support/builder.js';
 
 function content(): any[] {
   return [
-    {
-      category: 'section',
-      id: 'basic_section',
-      label: 'Basic',
-      children: [
-        {
-          category: 'datapoint',
-          id: 'doc_id',
-          label: 'Doc ID',
-          type: 'string',
-          ui_configuration: { type: 'captured' },
-        },
-        {
-          category: 'datapoint',
-          id: 'vendor',
-          label: 'Vendor',
-          type: 'enum',
-          ui_configuration: { type: 'lookup' },
-        },
+    section(
+      'basic_section',
+      [
+        dp('doc_id', { label: 'Doc ID', ui_configuration: { type: 'captured' } }),
+        dp('vendor', { label: 'Vendor', type: 'enum', ui_configuration: { type: 'lookup' } }),
       ],
-    },
-    {
-      category: 'section',
-      id: 'items_section',
-      label: 'Items',
-      children: [
+      { label: 'Basic' },
+    ),
+    section(
+      'items_section',
+      [
         {
           category: 'multivalue',
           id: 'items',
@@ -48,19 +33,20 @@ function content(): any[] {
             category: 'tuple',
             id: 'item',
             label: 'Item',
-            children: [{ category: 'datapoint', id: 'item_desc', label: 'Desc', type: 'string' }],
+            children: [dp('item_desc', { label: 'Desc' })],
           },
         },
       ],
-    },
+      { label: 'Items' },
+    ),
   ];
 }
 
 let root: HTMLElement;
 const chromeSet = vi.fn(async (_v: any) => {});
 vi.stubGlobal('chrome', { storage: { local: { get: vi.fn(async () => ({})), set: chromeSet } } });
-const keyOf = (id: string) => flatten(store.work.value).find((r) => r.node.id === id)!.key;
-const row = (id: string) => root.querySelector(`[data-row-key="${keyOf(id)}"]`) as HTMLElement;
+const rowKey = (id: string) => keyOf(store.work.value, id);
+const row = (id: string) => root.querySelector(`[data-row-key="${rowKey(id)}"]`) as HTMLElement;
 
 // The rule and hook filters are SearchPickers: focus opens the list, mousedown picks.
 const openPicker = (picker: string) => {
@@ -270,7 +256,7 @@ describe('Builder screen', () => {
   });
 
   it('+ Table adds a table with one row type and one column; + List adds a one-value list', () => {
-    const section = keyOf('basic_section');
+    const section = rowKey('basic_section');
     const before = root.querySelectorAll('[data-row-key]').length;
     act(() => {
       (
@@ -293,7 +279,7 @@ describe('Builder screen', () => {
     act(() => {
       (
         root.querySelector(
-          `[data-action="add-field"][data-parent="${keyOf('basic_section')}"]`,
+          `[data-action="add-field"][data-parent="${rowKey('basic_section')}"]`,
         ) as HTMLElement
       ).click();
     });
@@ -305,7 +291,7 @@ describe('Builder screen', () => {
     act(() => {
       (row('doc_id').querySelector('button[data-col="visible"]') as HTMLButtonElement).click();
     });
-    expect(flatten(store.work.value).find((r) => r.node.id === 'doc_id')!.node.hidden).toBe(true);
+    expect(rowOf(store.work.value, 'doc_id').node.hidden).toBe(true);
   });
 });
 
@@ -559,26 +545,21 @@ describe('Builder formula editor', () => {
       store.startDraft(
         'Invoice schema',
         withKeys([
-          {
-            category: 'section',
-            id: 's',
-            label: 'S',
-            children: [
-              {
-                category: 'datapoint',
-                id: 'total_check',
+          section(
+            's',
+            [
+              dp('total_check', {
                 label: 'Check',
                 type: 'number',
                 ui_configuration: { type: 'formula' },
                 formula: 'field.a+field.b',
-              },
+              }),
             ],
-          },
+            { label: 'S' },
+          ),
         ]),
       );
-      store.selectedKey.value = flatten(store.work.value).find(
-        (r) => r.node.id === 'total_check',
-      )!.key;
+      store.selectedKey.value = rowKey('total_check');
     });
   }
 
@@ -595,8 +576,7 @@ describe('Builder formula editor', () => {
     await act(async () => {
       (root.querySelector('[data-action="format-formula"]') as HTMLElement).click();
     });
-    const formula = () =>
-      flatten(store.work.value).find((r) => r.node.id === 'total_check')!.node.formula;
+    const formula = () => rowOf(store.work.value, 'total_check').node.formula;
     await vi.waitFor(() => expect(formula()).toBe('field.a + field.b'));
     expect(store.history.value.past.length).toBe(1);
     delete (window as any).__builderRuffFormat;
@@ -1057,24 +1037,21 @@ describe('Builder field inspector: Mr. Fabry box', () => {
       store.startDraft(
         'Invoice schema',
         withKeys([
-          {
-            category: 'section',
-            id: 's',
-            label: 'S',
-            children: [
-              {
-                category: 'datapoint',
-                id: 'f',
+          section(
+            's',
+            [
+              dp('f', {
                 label: 'F',
                 type: 'number',
                 ui_configuration: { type: 'formula' },
                 formula: '1',
-              },
+              }),
             ],
-          },
+            { label: 'S' },
+          ),
         ]),
       );
-      store.selectedKey.value = flatten(store.work.value).find((r) => r.node.id === 'f')!.key;
+      store.selectedKey.value = rowKey('f');
     });
     act(() => {
       (root.querySelector('[data-action="expand-formula"]') as HTMLElement).click();
@@ -1092,8 +1069,8 @@ describe('Builder schema-wide Mr. Fabry', () => {
     });
     expect(root.querySelector('aside[data-panel="schema-fabry"]')).not.toBeNull();
     act(() => {
-      apply(setAttr(store.work.value, keyOf('item_desc'), ['label'], 'Described'));
-      store.fabryTouched.value = new Set([keyOf('item_desc'), keyOf('doc_id')]); // doc_id unchanged
+      apply(setAttr(store.work.value, rowKey('item_desc'), ['label'], 'Described'));
+      store.fabryTouched.value = new Set([rowKey('item_desc'), rowKey('doc_id')]); // doc_id unchanged
     });
     act(() => {
       (root.querySelector('input[data-action="only-fabry"]') as HTMLInputElement).click();
@@ -1533,7 +1510,7 @@ describe('Builder engine', () => {
   it('AI fields on a custom engine are marked and can be cleared from the panel', () => {
     custom();
     act(() => {
-      apply(setAttr(store.work.value, keyOf('doc_id'), ['rir_field_names'], ['document_id']));
+      apply(setAttr(store.work.value, rowKey('doc_id'), ['rir_field_names'], ['document_id']));
     });
     expect(row('doc_id').querySelector('[data-ai="rejected"]')).not.toBeNull();
     act(() => {
@@ -1565,13 +1542,13 @@ describe('Builder engine', () => {
   it('a click on an AI cell opens the engine panel on extracted fields only', () => {
     custom();
     act(() => {
-      apply(setAttr(store.work.value, keyOf('vendor'), ['ui_configuration'], { type: 'formula' }));
+      apply(setAttr(store.work.value, rowKey('vendor'), ['ui_configuration'], { type: 'formula' }));
     });
     act(() => {
       (row('doc_id').querySelector('[data-action="open-engine"]') as HTMLElement).click();
     });
     expect(panel()!.textContent).toContain('Engine · Inv engine (5)');
-    expect(store.selectedKey.value).toBe(keyOf('doc_id'));
+    expect(store.selectedKey.value).toBe(rowKey('doc_id'));
     expect(panel()!.querySelector('[data-extraction="seeded"]')).not.toBeNull();
     expect(row('vendor')).toBeNull(); // a formula field: nothing to extract
     expect(row('item_desc')).not.toBeNull();
@@ -1649,7 +1626,7 @@ describe('Builder engine', () => {
     act(() => {
       (panel()!.querySelector('[data-engine-field="vendor"]') as HTMLElement).click();
     });
-    expect(store.selectedKey.value).toBe(keyOf('vendor'));
+    expect(store.selectedKey.value).toBe(rowKey('vendor'));
   });
 
   it('✕ marks an engine field no queue uses for deletion on Save; undo keeps it', () => {
@@ -1726,7 +1703,7 @@ describe('Builder hidden captured fields', () => {
 
   it('marks a captured field that is hidden, and the field panel can make it visible', () => {
     act(() => {
-      apply(setAttr(store.work.value, keyOf('doc_id'), ['hidden'], true));
+      apply(setAttr(store.work.value, rowKey('doc_id'), ['hidden'], true));
     });
     expect(mark('doc_id')).not.toBeNull();
     act(() => {
@@ -1742,7 +1719,7 @@ describe('Builder hidden captured fields', () => {
     const btn = () => root.querySelector('[data-action="only-warnings"]') as HTMLElement | null;
     expect(btn()).toBeNull(); // nothing to warn about
     act(() => {
-      apply(setAttr(store.work.value, keyOf('doc_id'), ['hidden'], true));
+      apply(setAttr(store.work.value, rowKey('doc_id'), ['hidden'], true));
     });
     expect(btn()!.textContent).toBe('!1');
     act(() => btn()!.click());
@@ -1755,7 +1732,7 @@ describe('Builder hidden captured fields', () => {
 
   it('a hidden field with another source is not marked', () => {
     act(() => {
-      apply(setAttr(store.work.value, keyOf('vendor'), ['hidden'], true)); // a lookup
+      apply(setAttr(store.work.value, rowKey('vendor'), ['hidden'], true)); // a lookup
     });
     expect(mark('vendor')).toBeNull();
   });

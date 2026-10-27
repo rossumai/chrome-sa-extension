@@ -1,27 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { saveSchema, mapValidateErrors, landedDiff } from '../src/builder/save.js';
-import { withKeys, flatten, setAttr, setDeleted, stripForSave } from '../src/builder/model.js';
+import { withKeys, setAttr, setDeleted, stripForSave } from '../src/builder/model.js';
+import { section, dp, keyOf } from './support/builder.js';
 
 function fixture(): any[] {
   return [
-    {
-      category: 'section',
-      id: 'a_section',
-      label: 'A',
-      children: [{ category: 'datapoint', id: 'x', label: 'X', type: 'string' }],
-    },
-    {
-      category: 'section',
-      id: 'b_section',
-      label: 'B',
-      children: [
-        { category: 'datapoint', id: 'y', label: 'Y', type: 'string' },
-        { category: 'datapoint', id: 'z', label: 'Z', type: 'string' },
-      ],
-    },
+    section('a_section', [dp('x', { label: 'X' })], { label: 'A' }),
+    section('b_section', [dp('y', { label: 'Y' }), dp('z', { label: 'Z' })], { label: 'B' }),
   ];
 }
-const keyOf = (nodes: any[], id: string) => flatten(nodes).find((r) => r.node.id === id)!.key;
 
 function deps(over: Record<string, any> = {}) {
   return {
@@ -50,11 +37,9 @@ describe('mapValidateErrors', () => {
 
   it('walks into a multivalue object child and nested attributes', () => {
     const work = withKeys([
-      {
-        category: 'section',
-        id: 's',
-        label: 'S',
-        children: [
+      section(
+        's',
+        [
           {
             category: 'multivalue',
             id: 'm',
@@ -65,7 +50,8 @@ describe('mapValidateErrors', () => {
             },
           },
         ],
-      },
+        { label: 'S' },
+      ),
     ]);
     const tree = {
       content: [

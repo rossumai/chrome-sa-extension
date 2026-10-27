@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { withKeys, setAttr, flatten } from '../src/builder/model.js';
+import { withKeys, setAttr } from '../src/builder/model.js';
+import { section, dp, keyOf, rowOf } from './support/builder.js';
 import {
   engineKind,
   extractedFields,
@@ -12,31 +13,20 @@ import {
   isHiddenCaptured,
 } from '../src/builder/engine.js';
 
-const dp = (id: string, extra: any = {}) => ({
-  category: 'datapoint',
-  id,
-  label: id,
-  type: 'string',
-  ...extra,
-});
 const schema = () =>
   withKeys([
-    {
-      category: 'section',
-      id: 's',
-      children: [
-        dp('doc_id', { ui_configuration: { type: 'captured' } }),
-        dp('total', { type: 'number' }),
-        dp('calc', { ui_configuration: { type: 'formula' }, formula: '1' }),
-        dp('btn', { type: 'button' }),
-        {
-          category: 'multivalue',
-          id: 'items',
-          rir_field_names: ['line_items'],
-          children: { category: 'tuple', id: 'item', children: [dp('item_desc')] },
-        },
-      ],
-    },
+    section('s', [
+      dp('doc_id', { ui_configuration: { type: 'captured' } }),
+      dp('total', { type: 'number' }),
+      dp('calc', { ui_configuration: { type: 'formula' }, formula: '1' }),
+      dp('btn', { type: 'button' }),
+      {
+        category: 'multivalue',
+        id: 'items',
+        rir_field_names: ['line_items'],
+        children: { category: 'tuple', id: 'item', children: [dp('item_desc')] },
+      },
+    ]),
   ]);
 const ENGINE = 'https://x/api/v1/engines/5';
 const fields = [
@@ -54,7 +44,6 @@ const catalog = [
     tabular: true,
   },
 ];
-const keyOf = (nodes: any[], id: string) => flatten(nodes).find((r) => r.node.id === id)!.key;
 
 describe('engine', () => {
   it('tells the queue binding from its engine properties', () => {
@@ -75,7 +64,7 @@ describe('engine', () => {
   it('a field is seeded, learning, or new; a staged seed wins', () => {
     const byName = new Map(fields.map((f) => [f.name, f]));
     const nodes = schema();
-    const node = (id: string) => flatten(nodes).find((r) => r.node.id === id)!.node;
+    const node = (id: string) => rowOf(nodes, id).node;
     expect(engineStatus(node('doc_id'), byName)).toMatchObject({
       state: 'seeded',
       seed: 'document_id',
@@ -88,7 +77,7 @@ describe('engine', () => {
       ['__engine', 'pre_trained_field_id'],
       null,
     );
-    const n = flatten(staged).find((r) => r.node.id === 'doc_id')!.node;
+    const n = rowOf(staged, 'doc_id').node;
     expect(engineStatus(n, byName)).toMatchObject({ state: 'learning', seed: null });
   });
 
@@ -139,7 +128,7 @@ describe('engine', () => {
     const nodes = schema();
     expect(unusedEngineFields(nodes, fields).map((f) => f.name)).toEqual(['old_field']);
     const renamed = setAttr(nodes, keyOf(nodes, 'total'), ['id'], 'grand_total');
-    const node = flatten(renamed).find((r) => r.node.id === 'grand_total')!.node;
+    const node = rowOf(renamed, 'grand_total').node;
     expect(renamedFrom(nodes, node, new Map(fields.map((f) => [f.name, f])))).toBe('total');
   });
 });
@@ -156,11 +145,7 @@ describe('a staged engine edit', () => {
 describe('engineFieldUsers', () => {
   it('maps each extracted field id to the queues whose schema has it, once per queue', () => {
     const content = [
-      {
-        category: 'section',
-        id: 's',
-        children: [dp('a'), dp('a'), dp('f', { ui_configuration: { type: 'formula' } })],
-      },
+      section('s', [dp('a'), dp('a'), dp('f', { ui_configuration: { type: 'formula' } })]),
     ] as any;
     const m = engineFieldUsers([
       { queue: 'Q1 (1)', content },

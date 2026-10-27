@@ -5,28 +5,22 @@ import {
   configValues,
   configOutcome,
 } from '../src/builder/provenance.js';
+import { section, dp } from './support/builder.js';
 
 const schema = [
-  {
-    category: 'section',
-    id: 's',
-    children: [
-      { category: 'datapoint', id: 'vat', type: 'string' },
-      { category: 'datapoint', id: 'total', type: 'number' },
-      {
-        category: 'multivalue',
-        id: 'items',
-        children: {
-          category: 'tuple',
-          id: 'item',
-          children: [
-            { category: 'datapoint', id: 'item_code', type: 'string' },
-            { category: 'datapoint', id: 'item_match', type: 'enum' },
-          ],
-        },
+  section('s', [
+    dp('vat'),
+    dp('total', { type: 'number' }),
+    {
+      category: 'multivalue',
+      id: 'items',
+      children: {
+        category: 'tuple',
+        id: 'item',
+        children: [dp('item_code'), dp('item_match', { type: 'enum' })],
       },
-    ],
-  },
+    },
+  ]),
 ];
 const content = [
   {

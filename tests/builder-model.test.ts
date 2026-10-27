@@ -22,39 +22,32 @@ import {
   rowStatus,
   changeSummary,
 } from '../src/builder/model.js';
+import { section, dp, keyOf } from './support/builder.js';
 
 function fixture(): any[] {
   return [
-    {
-      category: 'section',
-      id: 'basic_info_section',
-      label: 'Basic information',
-      children: [
-        { category: 'datapoint', id: 'document_id', label: 'Invoice number', type: 'string' },
-        {
-          category: 'datapoint',
-          id: 'amount_check',
+    section(
+      'basic_info_section',
+      [
+        dp('document_id', { label: 'Invoice number' }),
+        dp('amount_check', {
           label: 'Total check',
           type: 'number',
           ui_configuration: { type: 'formula', edit: 'disabled' },
           formula: 'field.amount_total',
-        },
-        {
-          category: 'datapoint',
-          id: 'gl_hint',
+        }),
+        dp('gl_hint', {
           label: 'GL hint',
-          type: 'string',
           ui_configuration: { type: 'reasoning' },
           prompt: 'Guess the GL account',
           context: ['field.document_id'],
-        },
+        }),
       ],
-    },
-    {
-      category: 'section',
-      id: 'line_items_section',
-      label: 'Line items',
-      children: [
+      { label: 'Basic information' },
+    ),
+    section(
+      'line_items_section',
+      [
         {
           category: 'multivalue',
           id: 'line_items',
@@ -64,22 +57,16 @@ function fixture(): any[] {
             id: 'line_item',
             label: 'Line item',
             children: [
-              {
-                category: 'datapoint',
-                id: 'item_description',
-                label: 'Description',
-                type: 'string',
-              },
-              { category: 'datapoint', id: 'item_amount', label: 'Amount', type: 'number' },
+              dp('item_description', { label: 'Description' }),
+              dp('item_amount', { label: 'Amount', type: 'number' }),
             ],
           },
         },
       ],
-    },
+      { label: 'Line items' },
+    ),
   ];
 }
-
-const keyOf = (nodes: any[], id: string) => flatten(nodes).find((r) => r.node.id === id)!.key;
 
 describe('withKeys / stripForSave', () => {
   it('round-trips a schema with an object-shaped multivalue child', () => {
@@ -139,11 +126,7 @@ describe('setAttr', () => {
 describe('stripForSave cleanup', () => {
   it('keeps formula and prompt on a field whose source is not set', () => {
     const src = [
-      {
-        category: 'section',
-        id: 's',
-        children: [{ category: 'datapoint', id: 'f', formula: 'x', prompt: 'p', context: [] }],
-      },
+      section('s', [{ category: 'datapoint', id: 'f', formula: 'x', prompt: 'p', context: [] }]),
     ];
     expect(stripForSave(withKeys(src))).toEqual(src);
   });
@@ -347,19 +330,15 @@ describe('newList / newTable', () => {
 describe('mergeAttrs', () => {
   it('deep-merges objects, replaces arrays, deletes on null, and keeps the key', () => {
     const t = withKeys([
-      {
-        category: 'section',
-        id: 's',
-        children: [
-          {
-            category: 'datapoint',
-            id: 'x',
-            constraints: { required: false, length: { max: 5 } },
-            rir_field_names: ['a'],
-            default_value: '1',
-          },
-        ],
-      },
+      section('s', [
+        {
+          category: 'datapoint',
+          id: 'x',
+          constraints: { required: false, length: { max: 5 } },
+          rir_field_names: ['a'],
+          default_value: '1',
+        },
+      ]),
     ]);
     const k = flatten(t)[1].key;
     const next = mergeAttrs(t, k, {

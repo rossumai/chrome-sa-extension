@@ -2,14 +2,13 @@ import { describe, it, expect, vi } from 'vitest';
 import { buildRulePrompt, parseRuleReply } from '../src/builder/ruleAssist.js';
 import { withKeys } from '../src/builder/model.js';
 import { runAssist, schemaFieldList } from '../src/builder/assist.js';
+import { section, dp } from './support/builder.js';
 
 const schema = withKeys([
-  {
-    category: 'section',
-    id: 'basic_section',
-    label: 'Basic',
-    children: [
-      { category: 'datapoint', id: 'doc_id', label: 'Doc ID', type: 'string' },
+  section(
+    'basic_section',
+    [
+      dp('doc_id', { label: 'Doc ID' }),
       {
         category: 'multivalue',
         id: 'items',
@@ -17,11 +16,12 @@ const schema = withKeys([
         children: {
           category: 'tuple',
           id: 'item',
-          children: [{ category: 'datapoint', id: 'item_amount', label: 'Amount', type: 'number' }],
+          children: [dp('item_amount', { label: 'Amount', type: 'number' })],
         },
       },
     ],
-  },
+    { label: 'Basic' },
+  ),
 ]);
 
 describe('schemaFieldList', () => {

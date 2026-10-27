@@ -1,22 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { withKeys, flatten } from '../src/builder/model.js';
 import { visibleKeys } from '../src/builder/fieldFilter.js';
+import { section, dp } from './support/builder.js';
 
 const tree = withKeys([
-  {
-    category: 'section',
-    id: 'basic_section',
-    label: 'Basic',
-    children: [
-      { category: 'datapoint', id: 'document_id', label: 'Invoice number' },
-      { category: 'datapoint', id: 'date_issue', label: 'Issue date' },
-    ],
-  },
-  {
-    category: 'section',
-    id: 'items_section',
-    label: 'Line items',
-    children: [
+  section(
+    'basic_section',
+    [dp('document_id', { label: 'Invoice number' }), dp('date_issue', { label: 'Issue date' })],
+    { label: 'Basic' },
+  ),
+  section(
+    'items_section',
+    [
       {
         category: 'multivalue',
         id: 'line_items',
@@ -25,14 +20,12 @@ const tree = withKeys([
           category: 'tuple',
           id: 'line_item',
           label: 'Item',
-          children: [
-            { category: 'datapoint', id: 'item_amount', label: 'Amount' },
-            { category: 'datapoint', id: 'item_code', label: 'Code' },
-          ],
+          children: [dp('item_amount', { label: 'Amount' }), dp('item_code', { label: 'Code' })],
         },
       },
     ],
-  },
+    { label: 'Line items' },
+  ),
 ]);
 const ids = (keys: Set<string> | null) =>
   keys === null

@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as store from '../src/builder/store.js';
 import { withKeys, flatten } from '../src/builder/model.js';
-import { resetBuilderStore } from './support/builder.js';
+import { resetBuilderStore, section, dp, keyOf, rowOf, fabryReply } from './support/builder.js';
 
 vi.mock('../src/builder/api.js', () => ({
   getSchema: vi.fn(),
@@ -74,8 +74,6 @@ import {
   undoChange,
 } from '../src/builder/index.jsx';
 
-const section = (id: string) => [{ category: 'section', id, label: id, children: [] }];
-
 beforeEach(() => {
   vi.resetAllMocks();
   resetBuilderStore();
@@ -91,11 +89,11 @@ describe('openQueue', () => {
     vi.mocked(api.getSchema).mockImplementation((id: number) =>
       id === 11
         ? new Promise((r) => (releaseA = r))
-        : Promise.resolve({ id: 22, content: section('b_section') }),
+        : Promise.resolve({ id: 22, content: [section('b_section')] }),
     );
     const a = openQueue(1);
     await openQueue(2);
-    releaseA({ id: 11, content: section('a_section') });
+    releaseA({ id: 11, content: [section('a_section')] });
     await a;
     expect(store.selectedQueueId.value).toBe(2);
     expect(store.schema.value.id).toBe(22);
@@ -104,7 +102,7 @@ describe('openQueue', () => {
 
 describe('save', () => {
   it('shows landed-diff warnings in the banner', async () => {
-    const content = section('s');
+    const content = [section('s')];
     store.schema.value = { id: 7, modified_at: 't0', content };
     store.startDraft('Invoices', withKeys(content));
     vi.mocked(api.getSchema)
@@ -123,17 +121,7 @@ describe('save', () => {
 
 describe('custom engine', () => {
   const ENGINE = 'https://x/api/v1/engines/5';
-  const content = () => [
-    {
-      category: 'section',
-      id: 's',
-      label: 's',
-      children: [
-        { category: 'datapoint', id: 'doc_id', label: 'Doc', type: 'string' },
-        { category: 'datapoint', id: 'po', label: 'PO', type: 'string' },
-      ],
-    },
-  ];
+  const content = () => [section('s', [dp('doc_id', { label: 'Doc' }), dp('po', { label: 'PO' })])];
   const calls: string[] = [];
   beforeEach(async () => {
     calls.length = 0;
@@ -192,7 +180,7 @@ describe('custom engine', () => {
   });
 
   it('stops before any call when the API would reject the schema', async () => {
-    const key = flatten(store.work.value).find((r) => r.node.id === 'doc_id')!.key;
+    const key = keyOf(store.work.value, 'doc_id');
     const { apply } = await import('../src/builder/index.jsx');
     const { setAttr } = await import('../src/builder/model.js');
     apply(setAttr(store.work.value, key, ['rir_field_names'], ['document_id']));
@@ -220,14 +208,7 @@ describe('custom engine', () => {
     vi.mocked(api.getSchema).mockResolvedValueOnce({
       id: 66,
       content: [
-        {
-          category: 'section',
-          id: 's',
-          children: [
-            { category: 'datapoint', id: 'old_po', type: 'string' },
-            { category: 'datapoint', id: 'calc', ui_configuration: { type: 'formula' } },
-          ],
-        },
+        section('s', [dp('old_po'), dp('calc', { ui_configuration: { type: 'formula' } })]),
       ],
     });
     openEnginePanel();
@@ -293,7 +274,7 @@ describe('pickAnnotation', () => {
 
 describe('renameSchema', () => {
   it('stages the name as one undoable edit, and Save updates the schema list', async () => {
-    const content = section('s');
+    const content = [section('s')];
     store.schema.value = { id: 7, name: 'Invoices', modified_at: 't0', content };
     store.schemas.value = [{ id: 7, url: 'https://x/api/v1/schemas/7', name: 'Invoices' }];
     store.startDraft('Invoices', withKeys(content));
@@ -318,7 +299,7 @@ describe('renameSchema', () => {
 
 describe('openSchema / annotation labels', () => {
   it('opens a schema no queue uses', async () => {
-    vi.mocked(api.getSchema).mockResolvedValue({ id: 33, name: 'Orphan', content: section('s') });
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 33, name: 'Orphan', content: [section('s')] });
     await openSchema(33);
     expect(api.getSchema).toHaveBeenCalledWith(33);
     expect(store.selectedQueueId.value).toBeNull();
@@ -327,7 +308,7 @@ describe('openSchema / annotation labels', () => {
   });
 
   it('labels annotations as file name (id) · status', async () => {
-    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: section('b') });
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: [section('b')] });
     vi.mocked(api.listAnnotations).mockResolvedValue({
       results: [
         { id: 5, status: 'to_review', document: 'd/1' },
@@ -355,7 +336,7 @@ describe('create and delete', () => {
     ] as const) {
       vi.mocked(api[f]).mockReset();
     }
-    vi.mocked(api.getSchema).mockResolvedValue({ id: 99, content: section('x') });
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 99, content: [section('x')] });
     store.workspaces.value = [{ id: 10, url: 'w/10', name: 'AP', organization: 'o/1' }];
   });
 
@@ -366,12 +347,12 @@ describe('create and delete', () => {
   });
 
   it('a queue with a copied schema creates the schema from the SAVED content first', async () => {
-    store.schema.value = { id: 7, name: 'Inv', url: 's/7', content: section('saved') };
-    store.startDraft('Inv', withKeys(section('saved')));
+    store.schema.value = { id: 7, name: 'Inv', url: 's/7', content: [section('saved')] };
+    store.startDraft('Inv', withKeys([section('saved')]));
     vi.mocked(api.createSchema).mockResolvedValue({ id: 70, url: 's/70' });
     vi.mocked(api.createQueue).mockResolvedValue({ id: 5, schema: 's/70' });
     await createQueue({ name: 'Inv 2', workspaceUrl: 'w/10', mode: 'copy' });
-    expect(api.createSchema).toHaveBeenCalledWith('Inv 2', section('saved'));
+    expect(api.createSchema).toHaveBeenCalledWith('Inv 2', [section('saved')]);
     expect(api.createQueue).toHaveBeenCalledWith('Inv 2', 'w/10', 's/70');
   });
 
@@ -415,15 +396,15 @@ describe('create and delete', () => {
   });
 
   it('creates a schema with no queue, from the saved open schema or empty, and opens it', async () => {
-    store.schema.value = { id: 7, name: 'Inv', url: 's/7', content: section('saved') };
+    store.schema.value = { id: 7, name: 'Inv', url: 's/7', content: [section('saved')] };
     vi.mocked(api.createSchema).mockResolvedValue({ id: 80, url: 's/80' });
     vi.mocked(api.getSchema).mockResolvedValue({
       id: 80,
       name: 'Spare',
-      content: section('saved'),
+      content: [section('saved')],
     });
     await createUnlinkedSchema('Spare', 'copy');
-    expect(api.createSchema).toHaveBeenLastCalledWith('Spare', section('saved'));
+    expect(api.createSchema).toHaveBeenLastCalledWith('Spare', [section('saved')]);
     expect(store.selectedSchemaId.value).toBe(80);
     expect(store.selectedQueueId.value).toBeNull();
     await createUnlinkedSchema('Blank', 'empty');
@@ -436,7 +417,7 @@ describe('create and delete', () => {
 describe('rules', () => {
   it('opening a queue loads its rules and clears the picked rule', async () => {
     store.ruleId.value = 99;
-    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: section('b') });
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: [section('b')] });
     vi.mocked(api.listRules).mockResolvedValue([
       { id: 4, name: 'R', trigger_condition: 'True', actions: [] },
     ]);
@@ -519,12 +500,6 @@ describe('rule editor', () => {
 });
 
 describe('Mr. Fabry in the rule editor', () => {
-  const reply = (text: string) =>
-    vi
-      .mocked(agentApi.streamMessage)
-      .mockImplementation(async (_id: string, content: string, opts: any) => {
-        if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
-      });
   const proposal = {
     name: 'Doc id required',
     trigger_condition: 'is_empty(field.doc_id)',
@@ -538,14 +513,7 @@ describe('Mr. Fabry in the rule editor', () => {
     vi.mocked(agentApi.streamMessage).mockReset();
     store.startDraft(
       'S',
-      withKeys([
-        {
-          category: 'section',
-          id: 's',
-          label: 'S',
-          children: [{ category: 'datapoint', id: 'doc_id', label: 'Doc', type: 'string' }],
-        },
-      ]),
+      withKeys([section('s', [dp('doc_id', { label: 'Doc' })], { label: 'S' })]),
     );
     store.queues.value = [{ id: 1, name: 'A', url: 'q/1', schema: 's/7' }];
     store.selectedQueueId.value = 1;
@@ -554,7 +522,7 @@ describe('Mr. Fabry in the rule editor', () => {
 
   it('fills the editor with the proposal, unsaved, and reuses the chat for a follow-up', async () => {
     openRuleEditor(null, 'doc_id');
-    reply('```json\n' + JSON.stringify(proposal) + '\n```');
+    fabryReply('```json\n' + JSON.stringify(proposal) + '\n```');
     const rev = store.assistRev.value;
     await askRuleAssistant('Error when the document id is missing');
     const prompt = vi.mocked(agentApi.streamMessage).mock.calls[1][1];
@@ -569,7 +537,7 @@ describe('Mr. Fabry in the rule editor', () => {
 
   it('a reply without a rule leaves the draft and shows the error', async () => {
     openRuleEditor(null, 'doc_id');
-    reply('I am not sure what you mean.');
+    fabryReply('I am not sure what you mean.');
     await askRuleAssistant('???');
     expect(store.ruleEditor.value!.draft.trigger_condition).toBe('field.doc_id');
     expect(store.assist.value.error).toBe('Mr. Fabry did not return a rule');
@@ -578,14 +546,14 @@ describe('Mr. Fabry in the rule editor', () => {
 
   it('warns about fields the proposal uses that the schema does not have', async () => {
     openRuleEditor(null, 'doc_id');
-    reply(JSON.stringify({ ...proposal, trigger_condition: 'field.ghost > 0' }));
+    fabryReply(JSON.stringify({ ...proposal, trigger_condition: 'field.ghost > 0' }));
     await askRuleAssistant('x');
     expect(store.assist.value.warnings.join(' ')).toContain('ghost');
   });
 
   it('Discard puts the rule back as it was opened', async () => {
     openRuleEditor(null, 'doc_id');
-    reply(JSON.stringify(proposal));
+    fabryReply(JSON.stringify(proposal));
     await askRuleAssistant('x');
     discardRule();
     expect(store.ruleEditor.value!.draft.trigger_condition).toBe('field.doc_id');
@@ -594,13 +562,6 @@ describe('Mr. Fabry in the rule editor', () => {
 });
 
 describe('Mr. Fabry on a field', () => {
-  const reply = (text: string) =>
-    vi
-      .mocked(agentApi.streamMessage)
-      .mockImplementation(async (_id: string, content: string, opts: any) => {
-        if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
-      });
-
   beforeEach(() => {
     vi.mocked(agentApi.createChat).mockClear();
     vi.mocked(agentApi.streamMessage).mockReset();
@@ -616,46 +577,41 @@ describe('Mr. Fabry on a field', () => {
     store.startDraft(
       'S',
       withKeys([
-        {
-          category: 'section',
-          id: 's',
-          label: 'S',
-          children: [
-            { category: 'datapoint', id: 'amount', label: 'Amount', type: 'number' },
-            {
-              category: 'datapoint',
-              id: 'check',
+        section(
+          's',
+          [
+            dp('amount', { label: 'Amount', type: 'number' }),
+            dp('check', {
               label: 'Check',
               type: 'number',
               ui_configuration: { type: 'formula' },
               formula: '',
-            },
+            }),
           ],
-        },
+          { label: 'S' },
+        ),
       ]),
     );
   });
-  const key = (id: string) => flatten(store.work.value).find((r) => r.node.id === id)!.key;
+  const key = (id: string) => keyOf(store.work.value, id);
 
   it('applies the changes as one undoable schema edit', async () => {
-    reply('```json\n{"formula": "field.amount * 2"}\n```');
+    fabryReply('```json\n{"formula": "field.amount * 2"}\n```');
     await askFieldAssistant(key('check'), 'twice the amount');
-    expect(flatten(store.work.value).find((r) => r.node.id === 'check')!.node.formula).toBe(
-      'field.amount * 2',
-    );
+    expect(rowOf(store.work.value, 'check').node.formula).toBe('field.amount * 2');
     expect(store.history.value.past.length).toBe(1);
     expect(store.fieldAssist.value.error).toBeNull();
   });
 
   it('a rejected answer changes nothing and says why', async () => {
-    reply('{"formula": "field.check + 1"}');
+    fabryReply('{"formula": "field.check + 1"}');
     await askFieldAssistant(key('check'), 'x');
     expect(store.history.value.past.length).toBe(0);
     expect(store.fieldAssist.value.error).toContain('reads its own field');
   });
 
   it('keeps one chat per field and starts a new one for another field', async () => {
-    reply('{"label": "Twice"}');
+    fabryReply('{"label": "Twice"}');
     await askFieldAssistant(key('check'), 'a');
     await askFieldAssistant(key('check'), 'b');
     expect(agentApi.createChat).toHaveBeenCalledTimes(1);
@@ -680,20 +636,7 @@ describe('Mr. Fabry on a field', () => {
 });
 
 describe('Mr. Fabry on the whole schema', () => {
-  const reply = (text: string) =>
-    vi
-      .mocked(agentApi.streamMessage)
-      .mockImplementation(async (_id: string, content: string, opts: any) => {
-        if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
-      });
-  const content = () => [
-    {
-      category: 'section',
-      id: 's',
-      label: 'S',
-      children: [{ category: 'datapoint', id: 'doc_id', label: 'Doc', type: 'string' }],
-    },
-  ];
+  const content = () => [section('s', [dp('doc_id', { label: 'Doc' })], { label: 'S' })];
 
   beforeEach(() => {
     vi.mocked(agentApi.createChat).mockClear();
@@ -715,7 +658,7 @@ describe('Mr. Fabry on the whole schema', () => {
   it('applies the changes as one edit, validates the result, and reports what it skipped', async () => {
     openSchemaFabry();
     expect(store.schemaFabry.value.open).toBe(true);
-    reply(
+    fabryReply(
       JSON.stringify({
         summary: 'Added a PO field',
         changes: [
@@ -744,7 +687,7 @@ describe('Mr. Fabry on the whole schema', () => {
 
   it('puts validate errors on their rows and offers them to Mr. Fabry to fix', async () => {
     openSchemaFabry();
-    reply(
+    fabryReply(
       JSON.stringify({
         summary: 'x',
         changes: [{ op: 'set', id: 'doc_id', attrs: { label: 'D' } }],
@@ -754,10 +697,10 @@ describe('Mr. Fabry on the whole schema', () => {
       content: [{ children: { '0': { label: ['bad'] } } }],
     });
     await askSchemaFabry('rename');
-    const k = flatten(store.work.value).find((r) => r.node.id === 'doc_id')!.key;
+    const k = keyOf(store.work.value, 'doc_id');
     expect(store.rowErrors.value.get(k)).toEqual(['label: bad']);
     expect(store.schemaFabry.value.problems).toEqual(['doc_id: label: bad']);
-    reply(JSON.stringify({ summary: 'fixed', changes: [] }));
+    fabryReply(JSON.stringify({ summary: 'fixed', changes: [] }));
     vi.mocked(api.validateSchema).mockResolvedValue({});
     await fixWithFabry();
     const fixPrompt = vi.mocked(agentApi.streamMessage).mock.calls.at(-1)![1];
@@ -776,14 +719,14 @@ describe('Mr. Fabry on the whole schema', () => {
   it("'only changes' covers every answer, and drops a change once it is undone", async () => {
     openSchemaFabry();
     vi.mocked(api.validateSchema).mockResolvedValue({});
-    reply(
+    fabryReply(
       JSON.stringify({
         summary: 'a',
         changes: [{ op: 'add', kind: 'field', parent: 's', field: { id: 'po', label: 'PO' } }],
       }),
     );
     await askSchemaFabry('one');
-    reply(
+    fabryReply(
       JSON.stringify({
         summary: 'b',
         changes: [{ op: 'set', id: 'doc_id', attrs: { label: 'D' } }],
@@ -830,12 +773,6 @@ describe('hook mode (MDH)', () => {
       ],
     },
   };
-  const reply = (text: string) =>
-    vi
-      .mocked(agentApi.streamMessage)
-      .mockImplementation(async (_id: string, content: string, opts: any) => {
-        if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
-      });
 
   beforeEach(() => {
     vi.mocked(api.patchHookSettings).mockReset();
@@ -846,15 +783,11 @@ describe('hook mode (MDH)', () => {
     store.startDraft(
       'S',
       withKeys([
-        {
-          category: 'section',
-          id: 's',
-          label: 'S',
-          children: [
-            { category: 'datapoint', id: 'doc_id', label: 'Doc', type: 'string' },
-            { category: 'datapoint', id: 'vendor', label: 'Vendor', type: 'enum' },
-          ],
-        },
+        section(
+          's',
+          [dp('doc_id', { label: 'Doc' }), dp('vendor', { label: 'Vendor', type: 'enum' })],
+          { label: 'S' },
+        ),
       ]),
     );
   });
@@ -903,7 +836,7 @@ describe('hook mode (MDH)', () => {
         },
       ],
     };
-    reply('```json\n' + JSON.stringify(proposed) + '\n```');
+    fabryReply('```json\n' + JSON.stringify(proposed) + '\n```');
     await askHookAssistant('match on ghost instead');
     expect(JSON.parse(store.hookEditor.value!.draft)).toEqual(proposed);
     expect(store.hookAssist.value.warnings.join(' ')).toContain('ghost');

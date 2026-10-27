@@ -7,37 +7,27 @@ import {
   buildFixPrompt,
   fitSchema,
 } from '../src/builder/schemaAssist.js';
-import { withKeys, flatten, setDeleted, stripForSave } from '../src/builder/model.js';
+import { withKeys, setDeleted, stripForSave } from '../src/builder/model.js';
+import { section, dp, keyOf, rowOf } from './support/builder.js';
 
 function tree() {
   return withKeys([
-    {
-      category: 'section',
-      id: 'basic_section',
-      label: 'Basic',
-      children: [
-        {
-          category: 'datapoint',
-          id: 'doc_id',
-          label: 'Doc ID',
-          type: 'string',
-          constraints: { required: true },
-        },
-        {
-          category: 'datapoint',
-          id: 'check',
+    section(
+      'basic_section',
+      [
+        dp('doc_id', { label: 'Doc ID', constraints: { required: true } }),
+        dp('check', {
           label: 'Check',
           type: 'number',
           ui_configuration: { type: 'formula' },
           formula: 'field.doc_id',
-        },
+        }),
       ],
-    },
-    {
-      category: 'section',
-      id: 'items_section',
-      label: 'Items',
-      children: [
+      { label: 'Basic' },
+    ),
+    section(
+      'items_section',
+      [
         {
           category: 'multivalue',
           id: 'items',
@@ -46,11 +36,12 @@ function tree() {
             category: 'tuple',
             id: 'item',
             label: 'Item',
-            children: [{ category: 'datapoint', id: 'item_desc', label: 'Desc', type: 'string' }],
+            children: [dp('item_desc', { label: 'Desc' })],
           },
         },
       ],
-    },
+      { label: 'Items' },
+    ),
   ]);
 }
 const ids = (nodes: any[]) => stripForSave(nodes);
@@ -58,7 +49,7 @@ const ids = (nodes: any[]) => stripForSave(nodes);
 describe('compactSchema', () => {
   it('lists sections, fields, tables and columns compactly, without deleted ones', () => {
     let t = tree();
-    t = setDeleted(t, flatten(t).find((r) => r.node.id === 'check')!.key, true);
+    t = setDeleted(t, keyOf(t, 'check'), true);
     expect(compactSchema(t)).toEqual([
       {
         section: 'basic_section',
@@ -177,7 +168,7 @@ describe('applyChanges', () => {
       { op: 'delete', id: 'check' },
       { op: 'move', id: 'doc_id', parent: 'items_section' },
     ]);
-    expect(flatten(r.nodes).find((x) => x.node.id === 'check')!.deleted).toBe(true);
+    expect(rowOf(r.nodes, 'check').deleted).toBe(true);
     expect(ids(r.nodes)[1].children.map((c: any) => c.id)).toEqual(['items', 'doc_id']);
   });
 
