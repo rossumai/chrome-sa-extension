@@ -17,7 +17,7 @@ import {
 } from './model.js';
 import { saveSchema, localStage, mapValidateErrors, type SaveResult } from './save.js';
 import { engineKind, bindingErrors, engineFieldUsers } from './engine.js';
-import { isRateLimited, rateLimitMessage } from '../net/rateLimit.js';
+import { isRateLimited, errorText } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { annotationValues } from './values.js';
 import { placeMessages, firedRuleIds } from './validation.js';
@@ -40,7 +40,7 @@ import { MAX_PROMPT } from '../inspector/promptBudget.js';
 import { draftFromRule, emptyDraft, draftBody, draftErrors, type RuleDraft } from './ruleDraft.js';
 
 function fail(err: any, fallback: string) {
-  store.error.value = isRateLimited(err) ? rateLimitMessage(err) : err?.message || fallback;
+  store.error.value = errorText(err, fallback);
   store.retryable.value = isRateLimited(err);
 }
 
@@ -430,7 +430,7 @@ async function deleteEngineFields(): Promise<string | null> {
     for (const f of doomed) await api.deleteEngineField(f.id);
     return null;
   } catch (err: any) {
-    return `Engine fields: ${isRateLimited(err) ? rateLimitMessage(err) : (err?.message ?? err)}`;
+    return `Engine fields: ${errorText(err, String(err))}`;
   } finally {
     // Re-read what is left, whether or not every delete landed.
     const fields = await api.listEngineFields(es.engine.id).catch(() => null);
@@ -553,9 +553,7 @@ export async function pickAnnotation(input: string) {
   } catch (err: any) {
     if (seq !== pickSeq) return;
     store.values.value = null;
-    store.annotationError.value = isRateLimited(err)
-      ? rateLimitMessage(err)
-      : err?.message || 'Failed to load the annotation';
+    store.annotationError.value = errorText(err, 'Failed to load the annotation');
   }
 }
 
@@ -755,7 +753,7 @@ export function scheduleRuleEval() {
       store.ruleEval.value = { ...parseRuleEval(res), busy: false, error: null };
     } catch (err: any) {
       if (seq !== ruleEvalSeq) return;
-      const msg = isRateLimited(err) ? rateLimitMessage(err) : err?.message || 'Evaluation failed';
+      const msg = errorText(err, 'Evaluation failed');
       store.ruleEval.value = { values: [], errors: [], busy: false, error: msg };
     }
   }, RULE_EVAL_DELAY_MS);
@@ -804,9 +802,7 @@ export async function saveRule() {
     store.ruleEditor.value = { ruleId: saved?.id ?? ed.ruleId, base: draft, draft };
     if (saved?.id != null) store.ruleId.value = saved.id;
   } catch (err: any) {
-    store.ruleErrors.value = [
-      isRateLimited(err) ? rateLimitMessage(err) : err?.message || 'Failed to save the rule',
-    ];
+    store.ruleErrors.value = [errorText(err, 'Failed to save the rule')];
   } finally {
     store.ruleSaving.value = false;
   }
@@ -1140,9 +1136,7 @@ export async function saveHook() {
     store.hookEditor.value = { hookId: ed.hookId, base: text, draft: text };
     store.hookAssistRev.value++;
   } catch (err: any) {
-    store.hookErrors.value = [
-      isRateLimited(err) ? rateLimitMessage(err) : err?.message || 'Failed to save the hook',
-    ];
+    store.hookErrors.value = [errorText(err, 'Failed to save the hook')];
   } finally {
     store.hookSaving.value = false;
   }
@@ -1241,9 +1235,7 @@ export async function revalidate() {
     };
     openValidationPanel('rules');
   } catch (err: any) {
-    store.revalidateError.value = isRateLimited(err)
-      ? rateLimitMessage(err)
-      : err?.message || 'Revalidation failed';
+    store.revalidateError.value = errorText(err, 'Revalidation failed');
   } finally {
     if (started) {
       try {
