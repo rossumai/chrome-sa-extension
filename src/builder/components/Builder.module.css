@@ -150,6 +150,32 @@
   border-bottom: 1px solid var(--border);
 }
 
+/* One line at any width: buttons and pills keep their size; the breadcrumb and the engine
+   badge give up room first and end in an ellipsis (hover shows the full text). */
+.toolbar > * {
+  flex: none;
+  white-space: nowrap;
+}
+
+.toolbar > .spacer {
+  flex: 1;
+}
+
+.toolbar > .crumb,
+.toolbar > .engineBadge {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar > .crumb {
+  min-width: 120px;
+}
+
+.toolbar > .engineBadge {
+  min-width: 80px;
+}
+
 .crumb {
   min-width: 0;
   overflow: hidden;

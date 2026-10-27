@@ -73,6 +73,7 @@ function EngineBadge() {
       title={
         e
           ? [
+              `${e.name} (${e.id})`,
               `use case: ${e.settings?.use_case ?? 'generic_ap'}`,
               `learning: ${e.learning_enabled ? 'on' : 'off'}`,
               `${es.fields.length} engine fields`,
@@ -111,7 +112,14 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       >
         <Icon name="menu" />
       </button>
-      <span class={s.crumb}>
+      <span
+        class={s.crumb}
+        title={[
+          ws ? `${ws.name} › ` : '',
+          q ? `${q.name} (${q.id})` : 'No queue',
+          schema.value ? ` · schema ${draftName.value} (${schema.value.id})` : '',
+        ].join('')}
+      >
         {ws ? `${ws.name} › ` : ''}
         <b>{q ? `${q.name} (${q.id})` : 'No queue'}</b>
         {schema.value && (
