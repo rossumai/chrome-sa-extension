@@ -123,6 +123,18 @@ describe('ChooseSource', () => {
     expect(onChosen).not.toHaveBeenCalled();
   });
 
+  it('re-enables Find when an edit outdates a read in flight', async () => {
+    const fetchOrgs = vi.fn(() => new Promise<unknown>(() => {}));
+    mount(<ChooseSource onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'tok');
+    act(() => byText('button', 'Find organizations').click());
+    await flush();
+    expect((byText('button', 'Find organizations') as HTMLButtonElement).disabled).toBe(true);
+    await type('rdc-src-address', 'https://other.rossum.app');
+    expect((byText('button', 'Find organizations') as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it('trims the address and the token', async () => {
     const fetchOrgs = vi.fn(async (_d: string, _t: string) => ({
       results: [{ id: 1, name: 'x' }],

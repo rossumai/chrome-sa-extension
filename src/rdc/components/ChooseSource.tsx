@@ -45,6 +45,7 @@ export default function ChooseSource({
     setOrgs(null);
     setOrgId(null);
     setFoundDomain('');
+    setBusy(false);
   };
 
   const find = async () => {
