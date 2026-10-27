@@ -21,8 +21,11 @@ export function provenanceInputs(content: any[], schemaContent: any[]): Provenan
   return { ...flat, types: mergeSchemaTypes(flat.types, buildSchemaTypes(schemaContent)) };
 }
 
+/** One configuration of an MDH hook, numbered within its hook. */
+export type ProvenanceItem = { hook: any; index: number; cfg: any };
+
 /** Every configuration of the queue's MDH hooks, numbered within its hook. */
-export function provenanceConfigs(hooks: any[]): { hook: any; index: number; cfg: any }[] {
+export function provenanceConfigs(hooks: any[]): ProvenanceItem[] {
   return mdhHooks(hooks).flatMap((hook) =>
     extractConfigsFromHook(hook).map((cfg, index) => ({ hook, index, cfg })),
   );
