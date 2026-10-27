@@ -529,6 +529,7 @@ export async function pickAnnotation(input: string) {
   const id = Number(raw);
   const seq = ++pickSeq;
   store.annotationId.value = id;
+  store.annotationContent.value = []; // the old annotation's, until the new one loads
   store.validation.value = null;
   store.revalidateError.value = null;
   store.annotationError.value = null;

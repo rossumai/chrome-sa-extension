@@ -359,6 +359,16 @@ describe('pickAnnotation', () => {
     expect(store.values.value!.values.get('doc_id')).toEqual(['INV-9']);
   });
 
+  it('a failed load leaves no content from the previous annotation', async () => {
+    store.annotationId.value = 1;
+    store.annotationContent.value = [{ category: 'section', schema_id: 'old', children: [] }];
+    vi.mocked(api.getAnnotationContent).mockRejectedValue(new Error('gone'));
+    await pickAnnotation('2');
+    expect(store.annotationId.value).toBe(2);
+    expect(store.annotationContent.value).toEqual([]);
+    expect(store.annotationError.value).toBe('gone');
+  });
+
   it('rejects input that is not an annotation id or URL', async () => {
     vi.mocked(api.getAnnotationContent).mockClear();
     await pickAnnotation('hello');
