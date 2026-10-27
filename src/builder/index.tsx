@@ -98,8 +98,17 @@ function idFromUrl(url: unknown): number | null {
   return m ? Number(m[1]) : null;
 }
 
+// Each Mr. Fabry assistant's sequence, bumped by a new question and wherever its target is
+// replaced (another rule, hook or schema; a save renumbers row keys): a reply for an older
+// target is dropped, as openQueue drops a stale schema.
+let ruleAssistSeq = 0;
+let fieldAssistSeq = 0;
+let schemaFabrySeq = 0;
+let hookAssistSeq = 0;
+
 function setBase(schema: any) {
   store.schema.value = schema;
+  fieldAssistSeq++;
   // Keys are regenerated per load (k1, k2…), so a field chat must not outlive its schema.
   store.fieldAssist.value = {
     forKey: null,
@@ -136,6 +145,7 @@ async function load(queueId: number | null, schemaId: number | null) {
   store.hookEditor.value = null;
   store.hooks.value = [];
   // A new schema, a new conversation: Mr. Fabry's context and its row keys belong to the old one.
+  schemaFabrySeq++;
   store.schemaFabry.value = {
     ...store.schemaFabry.value,
     chatId: null,
@@ -680,6 +690,7 @@ export function openRuleEditor(id: number | null, fieldId?: string) {
     draft,
     fromField: rule ? null : (fieldId ?? null),
   };
+  ruleAssistSeq++;
   store.assist.value = { chatId: null, busy: false, error: null, reply: null, warnings: [] };
   store.ruleErrors.value = [];
   store.selectedKey.value = null;
@@ -786,6 +797,7 @@ export async function askRuleAssistant(request: string) {
   const ed = store.ruleEditor.value;
   if (!ed || !request.trim() || store.assist.value.busy) return;
   const prev = store.assist.value;
+  const seq = ++ruleAssistSeq;
   store.assist.value = { ...prev, busy: true, error: null, reply: null, warnings: [] };
   const fields = schemaFieldList(store.work.value);
   const changed = ed.ruleId != null || JSON.stringify(ed.draft) !== JSON.stringify(ed.base);
@@ -799,7 +811,7 @@ export async function askRuleAssistant(request: string) {
       });
   try {
     const { chatId, text } = await runAssist({ agentApi, chatId: prev.chatId, content });
-    if (!store.ruleEditor.value) return; // closed while Mr. Fabry was writing
+    if (seq !== ruleAssistSeq || !store.ruleEditor.value) return; // closed or replaced meanwhile
     const r = parseRuleReply(text, new Set(fields.map((f) => f.id)));
     if (!r.ok) {
       store.assist.value = { chatId, busy: false, error: r.error, reply: text, warnings: [] };
@@ -815,6 +827,7 @@ export async function askRuleAssistant(request: string) {
       warnings: r.unknownFields.length ? [`Not in this schema: ${r.unknownFields.join(', ')}`] : [],
     };
   } catch (err: any) {
+    if (seq !== ruleAssistSeq) return;
     const msg =
       err?.status === 401
         ? 'Session expired. Open the Console from a Rossum tab again.'
@@ -832,6 +845,7 @@ export async function askFieldAssistant(key: string, request: string) {
   if (!node || !request.trim() || store.fieldAssist.value.busy) return;
   const prev = store.fieldAssist.value.forKey === key ? store.fieldAssist.value : null;
   const chatId = prev?.chatId ?? null;
+  const seq = ++fieldAssistSeq;
   store.fieldAssist.value = {
     forKey: key,
     chatId,
@@ -847,6 +861,7 @@ export async function askFieldAssistant(key: string, request: string) {
     : buildFieldPrompt({ request, field: node, fields, table: info?.table ?? null });
   try {
     const res = await runAssist({ agentApi, chatId, content });
+    if (seq !== fieldAssistSeq) return;
     const r = parseFieldReply(res.text, {
       selfId: String(node.id),
       schemaIds: new Set(fields.map((f) => f.id)),
@@ -872,6 +887,7 @@ export async function askFieldAssistant(key: string, request: string) {
       warnings: r.warnings,
     };
   } catch (err: any) {
+    if (seq !== fieldAssistSeq) return;
     const msg =
       err?.status === 401
         ? 'Session expired. Open the Console from a Rossum tab again.'
@@ -920,9 +936,11 @@ export async function askSchemaFabry(request: string, fix?: string[]) {
   }
   const content = fitted.prompt;
   const you = { role: 'you' as const, text: fix ? 'Fix the problems above.' : request };
+  const seq = ++schemaFabrySeq;
   store.schemaFabry.value = { ...st, busy: true, error: null, turns: [...st.turns, you] };
   try {
     const res = await runAssist({ agentApi, chatId: st.chatId, content });
+    if (seq !== schemaFabrySeq) return;
     const parsed = parseSchemaReply(res.text);
     const cur = store.schemaFabry.value;
     if (!parsed.ok) {
@@ -955,6 +973,7 @@ export async function askSchemaFabry(request: string, fix?: string[]) {
       } catch (err: any) {
         problems.push(`Could not validate: ${err?.message || 'unknown error'}`);
       }
+      if (seq !== schemaFabrySeq) return;
     }
     const idOf = new Map(flatten(r.nodes).map((x) => [x.key, String(x.node.id)]));
     const byRow = new Map<string, string[]>();
@@ -979,6 +998,7 @@ export async function askSchemaFabry(request: string, fix?: string[]) {
       ],
     };
   } catch (err: any) {
+    if (seq !== schemaFabrySeq) return;
     const msg =
       err?.status === 401
         ? 'Session expired. Open the Console from a Rossum tab again.'
@@ -1015,6 +1035,7 @@ export function openHookEditor(id: number) {
   store.hookEditor.value = { hookId: id, base: text, draft: text };
   store.hookConfigIndex.value = null;
   store.hookErrors.value = [];
+  hookAssistSeq++;
   store.hookAssist.value = IDLE_ASSIST;
   store.selectedKey.value = null;
   store.enginePanel.value = false;
@@ -1102,10 +1123,11 @@ export async function askHookAssistant(request: string) {
     };
     return;
   }
+  const seq = ++hookAssistSeq;
   store.hookAssist.value = { ...prev, busy: true, error: null, reply: null, warnings: [] };
   try {
     const res = await runAssist({ agentApi, chatId: prev.chatId, content });
-    if (!store.hookEditor.value) return;
+    if (seq !== hookAssistSeq || !store.hookEditor.value) return;
     const r = parseHookReply(res.text, new Set(fields.map((f) => f.id)));
     if (!r.ok) {
       store.hookAssist.value = {
@@ -1127,6 +1149,7 @@ export async function askHookAssistant(request: string) {
       warnings: r.warnings,
     };
   } catch (err: any) {
+    if (seq !== hookAssistSeq) return;
     const msg =
       err?.status === 401
         ? 'Session expired. Open the Console from a Rossum tab again.'

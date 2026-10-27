@@ -2,7 +2,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as store from '../src/builder/store.js';
 import { withKeys, flatten, setAttr } from '../src/builder/model.js';
-import { resetBuilderStore, section, dp, keyOf, rowOf, fabryReply } from './support/builder.js';
+import {
+  resetBuilderStore,
+  section,
+  dp,
+  keyOf,
+  rowOf,
+  fabryReply,
+  heldFabryReply,
+} from './support/builder.js';
 
 vi.mock('../src/builder/api.js', () => ({
   getSchema: vi.fn(),
@@ -626,6 +634,21 @@ describe('Mr. Fabry in the rule editor', () => {
     expect(store.ruleEditor.value!.draft.trigger_condition).toBe('field.doc_id');
     expect(store.ruleDirty.value).toBe(false);
   });
+
+  it('drops a late reply once another rule is open', async () => {
+    store.rules.value = [
+      { id: 4, name: 'R4', trigger_condition: 'field.doc_id', actions: [] },
+      { id: 5, name: 'R5', trigger_condition: 'True', actions: [] },
+    ];
+    openRuleEditor(4);
+    const release = heldFabryReply(JSON.stringify(proposal));
+    const asked = askRuleAssistant('x');
+    openRuleEditor(5);
+    release();
+    await asked;
+    expect(store.ruleEditor.value!.draft.trigger_condition).toBe('True');
+    expect(store.ruleDirty.value).toBe(false);
+  });
 });
 
 describe('Mr. Fabry on a field', () => {
@@ -699,6 +722,20 @@ describe('Mr. Fabry on a field', () => {
     store.queues.value = [{ id: 2, name: 'B', schema: 'https://x/api/v1/schemas/22' }];
     await openQueue(2);
     expect(store.fieldAssist.value.chatId).toBeNull();
+  });
+
+  it('drops a late reply once another schema is open', async () => {
+    const release = heldFabryReply('{"label": "Twice"}');
+    const asked = askFieldAssistant(key('check'), 'x');
+    vi.mocked(api.getSchema).mockResolvedValue({
+      id: 22,
+      content: [section('b', [dp('other'), dp('check2')])],
+    });
+    await openQueue(2);
+    release();
+    await asked;
+    expect(store.history.value.past.length).toBe(0);
+    expect(store.fieldAssist.value.busy).toBe(false);
   });
 });
 
@@ -825,6 +862,23 @@ describe('Mr. Fabry on the whole schema', () => {
     expect(store.schemaFabry.value).toMatchObject({ chatId: null, turns: [], problems: [] });
     expect(store.fabryTouched.value.size).toBe(0);
   });
+
+  it('drops a late reply once another schema is open', async () => {
+    openSchemaFabry();
+    const release = heldFabryReply(
+      JSON.stringify({
+        summary: 'a',
+        changes: [{ op: 'add', kind: 'field', parent: 's', field: { id: 'po', label: 'PO' } }],
+      }),
+    );
+    const asked = askSchemaFabry('one');
+    vi.mocked(api.getSchema).mockResolvedValue({ id: 22, content: [section('s')] });
+    await openQueue(2);
+    release();
+    await asked;
+    expect(store.history.value.past.length).toBe(0);
+    expect(store.schemaFabry.value).toMatchObject({ busy: false, turns: [] });
+  });
 });
 
 describe('hook mode (MDH)', () => {
@@ -909,6 +963,19 @@ describe('hook mode (MDH)', () => {
     expect(store.hookAssist.value.warnings.join(' ')).toContain('ghost');
     discardHook();
     expect(JSON.parse(store.hookEditor.value!.draft)).toEqual(hook.settings);
+  });
+
+  it('drops a late Mr. Fabry reply once another hook is open', async () => {
+    store.hooks.value = [hook, { ...hook, id: 8, name: 'Other' }];
+    openHookEditor(7);
+    const release = heldFabryReply(JSON.stringify({ configurations: [] }));
+    const asked = askHookAssistant('x');
+    openHookEditor(8);
+    release();
+    await asked;
+    expect(store.hookEditor.value!.hookId).toBe(8);
+    expect(JSON.parse(store.hookEditor.value!.draft)).toEqual(hook.settings);
+    expect(store.hookAssist.value.busy).toBe(false);
   });
 });
 

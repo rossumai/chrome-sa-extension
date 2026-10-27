@@ -44,3 +44,18 @@ export const fabryReply = (text: string) =>
     .mockImplementation(async (_id: string, content: string, opts: any) => {
       if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
     });
+
+/** Like fabryReply, but the answer waits for the returned release(): a reply that arrives
+ *  after the user moved on. */
+export const heldFabryReply = (text: string) => {
+  let release = () => {};
+  const gate = new Promise<void>((r) => (release = r));
+  vi.mocked(agentApi.streamMessage).mockImplementation(
+    async (_id: string, content: string, opts: any) => {
+      if (content === '/persona cautious') return;
+      await gate;
+      opts.onEvent({ type: 'text-delta', delta: text });
+    },
+  );
+  return () => release();
+};
