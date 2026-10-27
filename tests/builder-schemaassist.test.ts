@@ -6,6 +6,7 @@ import {
   buildSchemaPrompt,
   buildFixPrompt,
   fitSchema,
+  problemList,
 } from '../src/builder/schemaAssist.js';
 import { withKeys, setDeleted, stripForSave } from '../src/builder/model.js';
 import { section, dp, keyOf, rowOf } from './support/builder.js';
@@ -230,5 +231,18 @@ describe('fitSchema (the agent rejects prompts over 50000 characters)', () => {
   it('gives up with a clear message when even that is too long', () => {
     const r = fitSchema(big(0, 5000), build);
     expect(r).toEqual({ ok: false, error: expect.stringContaining('too large') });
+  });
+});
+
+describe('problemList', () => {
+  it('lists skipped changes, a failed validate, then errors by field id', () => {
+    const nodes = withKeys([section('s', [dp('a')])]);
+    const r = { nodes, applied: 0, skipped: [{ change: {}, reason: 'No field with ID x' }] };
+    expect(
+      problemList(r, 'Could not validate: down', [
+        { key: keyOf(nodes, 'a'), message: 'bad' },
+        { key: null, message: 'empty' },
+      ]),
+    ).toEqual(['Skipped: No field with ID x', 'Could not validate: down', 'a: bad', 'empty']);
   });
 });

@@ -196,6 +196,13 @@ export function move(
   return update(without, targetParentKey, (p) => ({ ...p, children: insert(kids(p)) }));
 }
 
+/** A new schema's content: one empty section. */
+export function emptySchemaContent(): any[] {
+  return [
+    { category: 'section', id: 'basic_info_section', label: 'Basic information', children: [] },
+  ];
+}
+
 export function newDatapoint(key: string, id: string, label: string, type: string): Node {
   const n: Node = {
     __key: key,

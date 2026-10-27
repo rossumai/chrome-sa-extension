@@ -10,6 +10,7 @@ import {
   unusedEngineFields,
   renamedFrom,
   engineFieldUsers,
+  otherEngineQueues,
   isHiddenCaptured,
 } from '../src/builder/engine.js';
 
@@ -165,5 +166,21 @@ describe('isHiddenCaptured', () => {
       isHiddenCaptured(dp('a', { hidden: true, ui_configuration: { type: 'formula' } }) as any),
     ).toBe(false);
     expect(isHiddenCaptured(dp('a') as any)).toBe(false);
+  });
+});
+
+describe('otherEngineQueues', () => {
+  it('groups the other queues on the engine by schema, leaving out the open schema', () => {
+    const q = (id: number, engine: string, schema: string) => ({ id, engine, schema });
+    const queues = [
+      q(1, 'e', 's1'),
+      q(2, 'e', 's2'),
+      q(3, 'e', 's2'),
+      q(4, 'e', 's1'),
+      q(5, 'f', 's3'),
+    ];
+    expect(otherEngineQueues(queues, 'e', 1, 's1')).toEqual(
+      new Map([['s2', [queues[1], queues[2]]]]),
+    );
   });
 });

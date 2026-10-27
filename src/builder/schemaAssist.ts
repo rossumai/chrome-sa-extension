@@ -23,6 +23,7 @@ import {
 } from './model.js';
 import { parseReplyObject, NEVER_SET } from './assist.js';
 import { MAX_PROMPT } from '../inspector/promptBudget.js';
+import type { RowError } from './save.js';
 
 // ---- What Mr. Fabry sees --------------------------------------------------------------
 
@@ -275,6 +276,23 @@ function applyOne(nodes: Node[], c: SchemaChange): Node[] | string {
     default:
       return `Unknown change "${c.op}"`;
   }
+}
+
+/**
+ * What is still wrong after an answer, for the chat and for "fix": the skipped changes, a
+ * validate that could not run, then each error (on a row: `<field id>: message`).
+ */
+export function problemList(
+  r: ApplyResult,
+  unvalidated: string | null,
+  errors: RowError[],
+): string[] {
+  const idOf = new Map(flatten(r.nodes).map((x) => [x.key, String(x.node.id)]));
+  return [
+    ...r.skipped.map((x) => `Skipped: ${x.reason}`),
+    ...(unvalidated ? [unvalidated] : []),
+    ...errors.map((e) => (e.key ? `${idOf.get(e.key)}: ${e.message}` : e.message)),
+  ];
 }
 
 /** Apply every change that can be applied, in order; the rest come back with a reason. */

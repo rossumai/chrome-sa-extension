@@ -176,6 +176,24 @@ export function isTabular(nodes: Node[], key: string): boolean {
  * Which other queues use each engine field: an extracted datapoint whose id is the field's
  * name, in the schema of another queue bound to the same engine.
  */
+/**
+ * The other queues bound to the engine `engineUrl`, by schema URL. Queues on the open schema
+ * are not "other": their fields are this schema's.
+ */
+export function otherEngineQueues(
+  queues: any[],
+  engineUrl: string,
+  queueId: number | null,
+  schemaUrl: unknown,
+): Map<string, any[]> {
+  const out = new Map<string, any[]>();
+  for (const q of queues) {
+    if (q.engine !== engineUrl || q.id === queueId || q.schema === schemaUrl) continue;
+    out.set(q.schema, [...(out.get(q.schema) ?? []), q]);
+  }
+  return out;
+}
+
 export function engineFieldUsers(
   others: { queue: string; content: Node[] }[],
 ): Map<string, string[]> {

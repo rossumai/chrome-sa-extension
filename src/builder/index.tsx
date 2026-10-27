@@ -15,16 +15,18 @@ import {
   rowStatus,
   movedKeys,
   flatten,
+  emptySchemaContent,
   type Node,
 } from './model.js';
-import { saveSchema, localStage, mapValidateErrors, type SaveResult } from './save.js';
-import { engineKind, bindingErrors, engineFieldUsers } from './engine.js';
+import { saveSchema, localStage, mapValidateErrors, errorsByRow, type SaveResult } from './save.js';
+import { engineKind, bindingErrors, engineFieldUsers, otherEngineQueues } from './engine.js';
 import { isRateLimited, errorText } from '../net/rateLimit.js';
 import { annotationIdFromInput } from '../rossum/annotationUrl.js';
 import { idFromUrl } from '../galaxy/graph.js';
 import { currentOrg } from '../rossum/orgName.js';
 import { annotationValues } from './values.js';
-import { placeMessages, firedRuleIds } from './validation.js';
+import { annotationRows } from './links.js';
+import { placeMessages, firedRuleIds, revalidateStart } from './validation.js';
 import { ruleEvalBody, parseRuleEval } from './ruleEval.js';
 import * as agentApi from '../agent/agentApi.js';
 import { buildRulePrompt, buildFollowupPrompt, parseRuleReply } from './ruleAssist.js';
@@ -38,10 +40,12 @@ import {
   parseSchemaReply,
   applyChanges,
   fitSchema,
+  problemList,
 } from './schemaAssist.js';
 import { buildHookPrompt, buildHookFollowup, parseHookReply } from './hookAssist.js';
 import { MAX_PROMPT } from '../inspector/promptBudget.js';
 import { draftFromRule, emptyDraft, draftBody, draftErrors, type RuleDraft } from './ruleDraft.js';
+import { parseSettings } from './hookDraft.js';
 
 function fail(err: any, fallback: string) {
   store.error.value = errorText(err, fallback);
@@ -246,14 +250,8 @@ export async function save(force = false): Promise<SaveResult | null> {
         },
         api,
       ));
-    const byRow = new Map<string, string[]>();
-    const general: string[] = [];
-    if (!r.ok) {
-      for (const e of r.errors) {
-        if (e.key) byRow.set(e.key, [...(byRow.get(e.key) || []), e.message]);
-        else general.push(e.message);
-      }
-    } else {
+    const { byRow, general } = errorsByRow(r.ok ? [] : r.errors);
+    if (r.ok) {
       const deleteError = await deleteEngineFields();
       const marks = store.engineDeletes.value;
       const sel = store.selectedKey.value;
@@ -286,21 +284,12 @@ export async function save(force = false): Promise<SaveResult | null> {
   }
 }
 
-function annotationLabel(a: any, docs: Map<string, any>): string {
-  const name = docs.get(a.document)?.original_file_name;
-  return `${name || 'annotation'} (${a.id}) · ${a.status}`;
-}
-
 // Fills the picker. A failure leaves it empty; pasting an ID still works.
 async function loadAnnotations(queueId: number) {
   try {
     const page = await api.listAnnotations(queueId);
     if (store.selectedQueueId.value !== queueId) return;
-    const docs = new Map<string, any>((page?.documents || []).map((d: any) => [d.url, d]));
-    store.annotations.value = (page?.results || []).map((a: any) => ({
-      id: a.id,
-      label: annotationLabel(a, docs),
-    }));
+    store.annotations.value = annotationRows(page);
   } catch (err: any) {
     if (isRateLimited(err)) fail(err, '');
     store.annotations.value = [];
@@ -461,20 +450,15 @@ export function openEnginePanel(key?: string) {
   if (!store.engineUsers.value) loadEngineUsers();
 }
 
-// The other queues bound to this engine, and the engine fields their schemas use. Queues that
-// share this schema are not "other": their fields are this schema's.
+// The other queues bound to this engine, and the engine fields their schemas use.
 async function loadEngineUsers() {
   const es = store.engineState.value;
   const queueId = store.selectedQueueId.value;
   const mine = store.selectedQueue.value?.schema;
   if (!es?.engine) return;
   store.engineUsers.value = { byName: null, error: null };
-  const others = store.queues.value.filter(
-    (q) => q.engine === es.engine.url && q.id !== queueId && q.schema !== mine,
-  );
+  const bySchema = otherEngineQueues(store.queues.value, es.engine.url, queueId, mine);
   try {
-    const bySchema = new Map<string, any[]>();
-    for (const q of others) bySchema.set(q.schema, [...(bySchema.get(q.schema) ?? []), q]);
     const loaded = await Promise.all(
       [...bySchema.keys()].map(async (url) => ({
         url,
@@ -583,12 +567,6 @@ export type NewQueue = {
   mode: 'copy' | 'share' | 'empty';
   schemaUrl?: string;
 };
-
-export function emptySchemaContent(): any[] {
-  return [
-    { category: 'section', id: 'basic_info_section', label: 'Basic information', children: [] },
-  ];
-}
 
 /** Copy = the open schema as last SAVED (staged edits are not copied). */
 export async function createQueue(p: NewQueue): Promise<boolean> {
@@ -980,8 +958,8 @@ export async function askSchemaFabry(request: string, fix?: string[]) {
     ]);
 
     // Check the exact content Save would send: local rules, then the validate dry run.
-    const problems = r.skipped.map((x) => `Skipped: ${x.reason}`);
     const errs = localErrors(r.nodes);
+    let unvalidated: string | null = null;
     const sch = store.schema.value;
     if (!errs.length && sch) {
       try {
@@ -989,17 +967,12 @@ export async function askSchemaFabry(request: string, fix?: string[]) {
         if (verdict && Object.keys(verdict).length)
           errs.push(...mapValidateErrors(verdict, r.nodes));
       } catch (err: any) {
-        problems.push(`Could not validate: ${err?.message || 'unknown error'}`);
+        unvalidated = `Could not validate: ${err?.message || 'unknown error'}`;
       }
       if (seq !== schemaFabrySeq) return;
     }
-    const idOf = new Map(flatten(r.nodes).map((x) => [x.key, String(x.node.id)]));
-    const byRow = new Map<string, string[]>();
-    for (const e of errs) {
-      if (e.key) byRow.set(e.key, [...(byRow.get(e.key) || []), e.message]);
-      problems.push(e.key ? `${idOf.get(e.key)}: ${e.message}` : e.message);
-    }
-    store.rowErrors.value = byRow;
+    const problems = problemList(r, unvalidated, errs);
+    store.rowErrors.value = errorsByRow(errs).byRow;
     store.schemaFabry.value = {
       ...cur,
       chatId: res.chatId,
@@ -1077,24 +1050,6 @@ export function discardHook() {
   store.hookAssistRev.value++;
 }
 
-function parseSettings(
-  text: string,
-): { ok: true; value: Record<string, unknown> } | { ok: false; error: string } {
-  let v: unknown;
-  try {
-    v = JSON.parse(text);
-  } catch (err: any) {
-    return {
-      ok: false,
-      error: `The settings are not valid JSON: ${err?.message || 'parse error'}`,
-    };
-  }
-  if (!v || typeof v !== 'object' || Array.isArray(v)) {
-    return { ok: false, error: 'The settings must be a JSON object' };
-  }
-  return { ok: true, value: v as Record<string, unknown> };
-}
-
 export async function saveHook() {
   const ed = store.hookEditor.value;
   if (!ed) return;
@@ -1137,8 +1092,7 @@ export async function askHookAssistant(request: string) {
   const prev = store.hookAssist.value;
   if (!ed || !request.trim() || prev.busy) return;
   const hook = store.hooks.value.find((h) => h.id === ed.hookId);
-  const current = parseSettings(ed.draft);
-  const settings = current.ok ? current.value : hook?.settings;
+  const settings = store.hookLive.value?.settings;
   const fields = schemaFieldList(store.work.value);
   const content = prev.chatId
     ? buildHookFollowup(request, settings)
@@ -1187,11 +1141,8 @@ export async function askHookAssistant(request: string) {
 
 // ---- Revalidate -------------------------------------------------------------------------
 // Validate the picked annotation as a reviewer's edit would — formulas, hooks and rules run —
-// without changing a value. Validation needs the document in `reviewing`: one in `to_review`
-// is started (locked to this user) and handed back afterwards; one already in review is left
-// as it is; any other status is refused.
-
-const REVIEWABLE = ['to_review', 'reviewing'];
+// without changing a value. A document in `to_review` is started (locked to this user) and
+// handed back afterwards; one already in review is left as it is (revalidateStart).
 
 export async function revalidate() {
   const id = store.annotationId.value;
@@ -1202,12 +1153,12 @@ export async function revalidate() {
   let started = false;
   try {
     const ann = await api.getAnnotation(id);
-    const status = String(ann?.status ?? '');
-    if (!REVIEWABLE.includes(status)) {
-      store.revalidateError.value = `Only a document in review can be revalidated (this one is ${status || 'unknown'}).`;
+    const plan = revalidateStart(String(ann?.status ?? ''));
+    if (!plan.ok) {
+      store.revalidateError.value = plan.error;
       return;
     }
-    if (status === 'to_review') {
+    if (plan.start) {
       await api.startAnnotation(id);
       started = true;
     }

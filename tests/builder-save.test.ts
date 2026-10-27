@@ -1,5 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
-import { saveSchema, mapValidateErrors, landedDiff, type SaveDeps } from '../src/builder/save.js';
+import {
+  saveSchema,
+  mapValidateErrors,
+  landedDiff,
+  errorsByRow,
+  type SaveDeps,
+} from '../src/builder/save.js';
 import { withKeys, setAttr, setDeleted, stripForSave } from '../src/builder/model.js';
 import { section, dp, keyOf } from './support/builder.js';
 import { rateLimitError } from '../src/net/rateLimit.js';
@@ -226,5 +232,17 @@ describe('saveSchema', () => {
       stage: 'local',
       errors: [{ key: null, message: 'Schema name is empty' }],
     });
+  });
+});
+
+describe('errorsByRow', () => {
+  it('groups messages per row and keeps the rest general', () => {
+    const r = errorsByRow([
+      { key: 'k1', message: 'a' },
+      { key: null, message: 'b' },
+      { key: 'k1', message: 'c' },
+    ]);
+    expect(r.byRow).toEqual(new Map([['k1', ['a', 'c']]]));
+    expect(r.general).toEqual(['b']);
   });
 });

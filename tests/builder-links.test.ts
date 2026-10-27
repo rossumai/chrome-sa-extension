@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { queueGroups, orphanSchemas } from '../src/builder/links.js';
+import { queueGroups, orphanSchemas, annotationRows } from '../src/builder/links.js';
 
 const ws = [
   { id: 1, url: 'w/1', name: 'AP' },
@@ -40,5 +40,22 @@ describe('orphanSchemas', () => {
   it('lists the schemas no queue uses, filtered by name', () => {
     expect(orphanSchemas(schemas, qs, '').map((x) => x.id)).toEqual([103]);
     expect(orphanSchemas(schemas, qs, 'nope')).toEqual([]);
+  });
+});
+
+describe('annotationRows', () => {
+  it('labels each annotation with its file name, id and status', () => {
+    const page = {
+      results: [
+        { id: 5, document: 'd/1', status: 'to_review' },
+        { id: 6, document: 'd/2', status: 'exported' },
+      ],
+      documents: [{ url: 'd/1', original_file_name: 'inv.pdf' }],
+    };
+    expect(annotationRows(page)).toEqual([
+      { id: 5, label: 'inv.pdf (5) · to_review' },
+      { id: 6, label: 'annotation (6) · exported' },
+    ]);
+    expect(annotationRows(null)).toEqual([]);
   });
 });

@@ -19,6 +19,20 @@ export type SaveDeps = {
   patchSchema: (id: number, content: any[], name?: string) => Promise<any>;
 };
 
+/** Errors for display: per row key, and those tied to no row. */
+export function errorsByRow(errors: RowError[]): {
+  byRow: Map<string, string[]>;
+  general: string[];
+} {
+  const byRow = new Map<string, string[]>();
+  const general: string[] = [];
+  for (const e of errors) {
+    if (e.key) byRow.set(e.key, [...(byRow.get(e.key) || []), e.message]);
+    else general.push(e.message);
+  }
+  return { byRow, general };
+}
+
 function liveKids(n: Node | undefined): Node[] {
   return n ? kids(n).filter((k) => !k.__deleted) : [];
 }

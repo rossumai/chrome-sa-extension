@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { placeMessages, firedRuleIds } from '../src/builder/validation.js';
+import { placeMessages, firedRuleIds, revalidateStart } from '../src/builder/validation.js';
 
 const ids = new Map<number, { schemaId: string; row: number }>([
   [101, { schemaId: 'doc_id', row: 0 }],
@@ -47,5 +47,17 @@ describe('firedRuleIds', () => {
       ]),
     ]).toEqual([4, 5, 6, 7]);
     expect(firedRuleIds(undefined).size).toBe(0);
+  });
+});
+
+describe('revalidateStart', () => {
+  it('starts a document in to_review, keeps one in review, refuses the rest', () => {
+    expect(revalidateStart('to_review')).toEqual({ ok: true, start: true });
+    expect(revalidateStart('reviewing')).toEqual({ ok: true, start: false });
+    expect(revalidateStart('exported')).toEqual({
+      ok: false,
+      error: 'Only a document in review can be revalidated (this one is exported).',
+    });
+    expect(revalidateStart('')).toMatchObject({ ok: false });
   });
 });

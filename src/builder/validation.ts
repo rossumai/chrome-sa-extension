@@ -52,3 +52,20 @@ export function firedRuleIds(matched: unknown): Set<number> {
   }
   return out;
 }
+
+// Validation needs the document in `reviewing`: one in `to_review` is started first (and
+// handed back afterwards); any other status is refused.
+const REVIEWABLE = ['to_review', 'reviewing'];
+
+/** Whether an annotation in `status` can be revalidated, and whether it must be started. */
+export function revalidateStart(
+  status: string,
+): { ok: true; start: boolean } | { ok: false; error: string } {
+  if (!REVIEWABLE.includes(status)) {
+    return {
+      ok: false,
+      error: `Only a document in review can be revalidated (this one is ${status || 'unknown'}).`,
+    };
+  }
+  return { ok: true, start: status === 'to_review' };
+}

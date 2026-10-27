@@ -16,6 +16,7 @@ import { sameDraft, type RuleDraft } from './ruleDraft.js';
 import { enginePlan, deletableFields, isHiddenCaptured, type EngineKind } from './engine.js';
 import type { RuleEval } from './ruleEval.js';
 import { hookWordSets, hooksByFieldText } from './codeRefs.js';
+import { parseSettings } from './hookDraft.js';
 
 export const domain = signal('');
 export const token = signal('');
@@ -272,15 +273,14 @@ export const hookAssist = signal<AssistState>(IDLE_ASSIST);
 export const hookAssistRev = signal(0);
 
 // The hook as edited: settings parsed from the editor (live) — or the saved settings while
-// the editor holds JSON that does not parse.
+// the editor holds text that is not a JSON object.
 export const hookLive = computed(() => {
   const ed = hookEditor.value;
   if (!ed) return null;
-  try {
-    return { settings: JSON.parse(ed.draft) };
-  } catch {
-    return { settings: hooks.value.find((h) => h.id === ed.hookId)?.settings };
-  }
+  const parsed = parseSettings(ed.draft);
+  return {
+    settings: parsed.ok ? parsed.value : hooks.value.find((h) => h.id === ed.hookId)?.settings,
+  };
 });
 // One configuration picked in the hook panel (null = all of them).
 export const hookConfigIndex = signal<number | null>(null);

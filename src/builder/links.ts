@@ -1,5 +1,6 @@
 // src/builder/links.ts
-// Pure data for the left panel: queues grouped by workspace, and the schemas no queue uses.
+// Pure data for the pickers: queues grouped by workspace, the schemas no queue uses, and a
+// queue's annotations.
 
 export type QueueGroup = { ws: any; qs: any[] };
 
@@ -29,4 +30,13 @@ export function orphanSchemas(
   return schemas.filter(
     (x) => !used.has(x.url) && (!f || String(x.name).toLowerCase().includes(f)),
   );
+}
+
+/** The annotation picker's rows, from one listAnnotations page (documents sideloaded). */
+export function annotationRows(page: any): { id: number; label: string }[] {
+  const docs = new Map<string, any>((page?.documents || []).map((d: any) => [d.url, d]));
+  return (page?.results || []).map((a: any) => ({
+    id: a.id,
+    label: `${docs.get(a.document)?.original_file_name || 'annotation'} (${a.id}) · ${a.status}`,
+  }));
 }
