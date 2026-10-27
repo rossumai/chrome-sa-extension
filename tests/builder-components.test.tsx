@@ -426,6 +426,33 @@ describe('Builder annotation values', () => {
     );
   });
 
+  it('Rule eval follows Value, and steps through table rows with the Value stepper', () => {
+    act(() => {
+      store.rules.value = [
+        ...store.rules.value,
+        { id: 42, name: 'Lines', enabled: true, trigger_condition: 'field.item_desc', actions: [] },
+      ];
+    });
+    pick();
+    pickRule('42');
+    const heads = [...root.querySelectorAll('th[data-col]')].map((th) =>
+      th.getAttribute('data-col'),
+    );
+    expect(heads.slice(-2)).toEqual(['value', 'eval']);
+    act(() => {
+      store.ruleEval.value = { values: [false, true], errors: [], busy: false, error: null };
+    });
+    const ev = (id: string) => row(id).querySelector('td[data-col="eval"]')!.textContent;
+    const doc = root.querySelector('[data-doc-row] td[data-col="eval"] [data-eval]')!;
+    expect([ev('items'), ev('item_desc')]).toEqual(['false', 'false']);
+    expect(doc.textContent).toBe('true'); // True on some row
+    expect(doc.getAttribute('title')).toBe('True on row 2 of 2');
+    act(() => {
+      (row('items').querySelector('[data-action="next-row"]') as HTMLElement).click();
+    });
+    expect([ev('items'), ev('item_desc')]).toEqual(['true', 'true']);
+  });
+
   it('has no Value column until an annotation is picked', () => {
     expect(root.querySelector('th[data-col="value"]')).toBeNull();
     pick();

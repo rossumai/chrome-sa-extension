@@ -283,7 +283,18 @@ function EvalValue({ v }: { v: boolean }) {
   );
 }
 
-// The whole-document result: one value, or how many table rows the condition is True on.
+// Whether the open rule's condition reads a column of this table: its row then shows the
+// result for the row its Value stepper points at.
+function readsTable(node: Node): boolean {
+  const roles = ruleRoleById.value;
+  const walk = (n: any): boolean =>
+    n.category === 'datapoint'
+      ? ['condition', 'both'].includes(roles?.get(n.id) as string)
+      : [n.children ?? []].flat().some(walk);
+  return walk(node);
+}
+
+// The whole-document result: True when the condition is True anywhere (on any table row).
 function DocEval() {
   const ev = ruleEval.value;
   if (!ev) return null;
@@ -295,8 +306,21 @@ function DocEval() {
       </span>
     );
   }
-  if (ev.values.length === 1) return <EvalValue v={ev.values[0]} />;
-  return ev.values.length ? <span data-eval="rows">{evalSummary(ev.values)}</span> : null;
+  if (ev.values.length <= 1) return ev.values.length ? <EvalValue v={ev.values[0]} /> : null;
+  const on = ev.values.flatMap((v, i) => (v ? [i + 1] : []));
+  return (
+    <span
+      class={on.length ? s.evalTrue : s.dim}
+      data-eval={String(on.length > 0)}
+      title={
+        on.length
+          ? `True on row${on.length > 1 ? 's' : ''} ${on.join(', ')} of ${ev.values.length}`
+          : `False on all ${ev.values.length} rows`
+      }
+    >
+      {String(on.length > 0)}
+    </span>
+  );
 }
 
 // A count of the rules (or MDH hooks) that use a field: one opens it in the right panel,
@@ -752,11 +776,6 @@ function Row({
           )}
         </td>
       )}
-      {on('eval') && (
-        <td data-col="eval">
-          {dp && (role === 'condition' || role === 'both') && <EvalCell tableId={tableId} />}
-        </td>
-      )}
       {on('mdh') && (
         <td data-col="mdh">
           {kind !== 'section' && <HookBadges fieldId={String(node.id ?? '')} />}
@@ -765,6 +784,12 @@ function Row({
       {on('value') && (
         <td data-col="value" class={s.value}>
           <ValueCell node={node} tableId={tableId} />
+        </td>
+      )}
+      {on('eval') && (
+        <td data-col="eval">
+          {dp && (role === 'condition' || role === 'both') && <EvalCell tableId={tableId} />}
+          {kind === 'multivalue' && readsTable(node) && <EvalCell tableId={node.id} />}
         </td>
       )}
     </tr>
@@ -866,9 +891,9 @@ const columns = computed(() => {
     'hooks',
     'actions',
     ...(ruleMarks.value ? ['rule'] : []),
-    ...(ruleMarks.value && values.value ? ['eval'] : []),
     ...(hookRoleById.value ? ['mdh'] : []),
     ...(values.value ? ['value'] : []),
+    ...(ruleMarks.value && values.value ? ['eval'] : []),
   ].filter(
     (c) =>
       !(panelOpen.value && DETAIL.includes(c) && !(c === 'ai' && engineMode.value)) &&
@@ -1086,11 +1111,6 @@ export default function Grid() {
                   <MarkIcons marks={ruleGlobalMarks.value || []} />
                 </td>
               )}
-              {on('eval') && (
-                <td data-col="eval">
-                  <DocEval />
-                </td>
-              )}
               {on('mdh') && <td />}
               {on('value') && (
                 <td data-col="value" class={s.docMessages}>
@@ -1106,6 +1126,11 @@ export default function Grid() {
                       <pre class={s.code}>{JSON.stringify(validation.value.raw, null, 2)}</pre>
                     </details>
                   )}
+                </td>
+              )}
+              {on('eval') && (
+                <td data-col="eval">
+                  <DocEval />
                 </td>
               )}
             </tr>
