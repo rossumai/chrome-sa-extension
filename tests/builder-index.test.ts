@@ -21,6 +21,8 @@ vi.mock('../src/builder/api.js', () => ({
   listRules: vi.fn(async () => []),
   listHooks: vi.fn(async () => []),
   patchHookSettings: vi.fn(),
+  getHook: vi.fn(),
+  getRule: vi.fn(),
   getAnnotation: vi.fn(),
   startAnnotation: vi.fn(async () => ({})),
   validateAnnotation: vi.fn(),
@@ -588,6 +590,18 @@ describe('rule editor', () => {
     });
   });
 
+  it('refuses to patch a rule someone changed after it was opened', async () => {
+    store.rules.value = [{ ...store.rules.value[0], modified_at: 't0' }];
+    openRuleEditor(4);
+    updateRuleDraft({ trigger_condition: 'field.a > 2' });
+    vi.mocked(api.getRule).mockResolvedValue({ id: 4, modified_at: 't1' });
+    await saveRule();
+    expect(api.getRule).toHaveBeenCalledWith(4);
+    expect(api.patchRule).not.toHaveBeenCalled();
+    expect(store.ruleErrors.value[0]).toContain('Someone changed this rule');
+    expect(store.ruleDirty.value).toBe(true);
+  });
+
   it('refuses to save a rule without a name, and asks before closing with unsaved edits', async () => {
     openRuleEditor(null);
     await saveRule();
@@ -975,6 +989,32 @@ describe('hook mode (MDH)', () => {
     expect(api.patchHookSettings).toHaveBeenCalledWith(7, next);
     expect(store.hooks.value[0].settings).toEqual(next);
     expect(store.hookDirty.value).toBe(false);
+  });
+
+  it('refuses to patch a hook someone changed after it was opened', async () => {
+    store.hooks.value = [{ ...hook, modified_at: 't0' }];
+    openHookEditor(7);
+    updateHookDraft('{"configurations": []}');
+    vi.mocked(api.getHook).mockResolvedValue({ id: 7, modified_at: 't1' });
+    await saveHook();
+    expect(api.getHook).toHaveBeenCalledWith(7);
+    expect(api.patchHookSettings).not.toHaveBeenCalled();
+    expect(store.hookErrors.value[0]).toContain('Someone changed this hook');
+    expect(store.hookDirty.value).toBe(true);
+  });
+
+  it('a saved hook keeps its new modified_at, so the next save is not stale', async () => {
+    store.hooks.value = [{ ...hook, modified_at: 't0' }];
+    openHookEditor(7);
+    updateHookDraft('{"configurations": []}');
+    vi.mocked(api.getHook).mockResolvedValueOnce({ id: 7, modified_at: 't0' });
+    vi.mocked(api.patchHookSettings).mockResolvedValue({
+      id: 7,
+      modified_at: 't1',
+      settings: { configurations: [] },
+    });
+    await saveHook();
+    expect(store.hooks.value[0].modified_at).toBe('t1');
   });
 
   it('Mr. Fabry fills the editor with new settings; Discard brings back the saved ones', async () => {

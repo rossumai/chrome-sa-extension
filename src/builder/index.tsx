@@ -768,6 +768,17 @@ export async function saveRule() {
   if (errors.length) return;
   store.ruleSaving.value = true;
   try {
+    // Like the schema's stale check: a PATCH would overwrite another user's change unseen.
+    if (ed.ruleId != null) {
+      const current = await api.getRule(ed.ruleId);
+      const opened = store.rules.value.find((r) => r.id === ed.ruleId);
+      if (current?.modified_at !== opened?.modified_at) {
+        store.ruleErrors.value = [
+          'Someone changed this rule after you opened it. Reopen the queue to load their version.',
+        ];
+        return;
+      }
+    }
     const saved =
       ed.ruleId != null
         ? await api.patchRule(ed.ruleId, draftBody(ed.draft))
@@ -1099,9 +1110,21 @@ export async function saveHook() {
   store.hookErrors.value = [];
   store.hookSaving.value = true;
   try {
+    // Like the schema's stale check: the PATCH replaces the whole settings object.
+    const current = await api.getHook(ed.hookId);
+    const opened = store.hooks.value.find((h) => h.id === ed.hookId);
+    if (current?.modified_at !== opened?.modified_at) {
+      store.hookErrors.value = [
+        'Someone changed this hook after you opened it. Reopen the queue to load their version.',
+      ];
+      return;
+    }
     const saved = await api.patchHookSettings(ed.hookId, parsed.value);
     const settings = saved?.settings ?? parsed.value;
-    store.hooks.value = store.hooks.value.map((h) => (h.id === ed.hookId ? { ...h, settings } : h));
+    const modified_at = saved?.modified_at ?? opened?.modified_at;
+    store.hooks.value = store.hooks.value.map((h) =>
+      h.id === ed.hookId ? { ...h, settings, modified_at } : h,
+    );
     const text = pretty(settings);
     store.hookEditor.value = { hookId: ed.hookId, base: text, draft: text };
     store.hookAssistRev.value++;

@@ -165,6 +165,10 @@ export function createRule(body: Record<string, unknown>): Promise<any> {
   return request('POST', '/api/v1/rules/', body);
 }
 
+export function getRule(id: number): Promise<any> {
+  return get(`/api/v1/rules/${id}`);
+}
+
 export function patchRule(id: number, body: Record<string, unknown>): Promise<any> {
   return request('PATCH', `/api/v1/rules/${id}`, body);
 }
@@ -196,6 +200,10 @@ export function deleteEngineField(id: number): Promise<any> {
 /** The hooks attached to a queue (the Builder keeps the MDH ones). */
 export function listHooks(queueId: number): Promise<RawResource[]> {
   return listAll(`/api/v1/hooks/?queue=${queueId}&page_size=100`);
+}
+
+export function getHook(id: number): Promise<any> {
+  return get(`/api/v1/hooks/${id}`);
 }
 
 /** Replaces the hook's whole `settings` object; secrets are a separate field and untouched. */
