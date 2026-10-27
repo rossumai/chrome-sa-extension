@@ -2,7 +2,11 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import type { AssistState } from '../store.js';
 import FabryMark from '../../ui/FabryMark.jsx';
+import GerundLoader from '../../ui/GerundLoader.jsx';
+import FabryMarkdown from '../../ui/fabry/FabryMarkdown.jsx';
 import s from './Builder.module.css';
+
+const GERUNDS = ['Thinking', 'Reading the schema', 'Drafting', 'Checking'];
 
 // "Ask Mr. Fabry": a plain-language request box, shared by the rule editor and the field
 // inspector. The caller does the asking and holds the state; this only draws it.
@@ -57,8 +61,13 @@ export default function AskFabry({
           onClick={ask}
           title="Ask (Enter; Shift+Enter for a new line)"
         >
-          {state.busy ? 'Mr. Fabry is writing…' : state.chatId ? 'Ask again' : 'Ask'}
+          {state.chatId ? 'Ask again' : 'Ask'}
         </button>
+        {state.busy && (
+          <span class={s.fabryWorking}>
+            <GerundLoader gerunds={GERUNDS} />
+          </span>
+        )}
         {!state.busy && state.chatId && !state.error && <span class={s.dim}>{doneText}</span>}
       </div>
       {state.error && <div class={s.rowError}>{state.error}</div>}
@@ -68,7 +77,7 @@ export default function AskFabry({
       {state.reply && (
         <details>
           <summary class={s.dim}>Mr. Fabry's reply</summary>
-          <pre class={s.code}>{state.reply}</pre>
+          <FabryMarkdown text={state.reply} />
         </details>
       )}
     </div>

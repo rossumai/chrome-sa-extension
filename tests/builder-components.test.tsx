@@ -67,11 +67,12 @@ const pickIn = (picker: string, v: string) => {
       .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
   });
 };
+const FIELD_FILTER = 'input[aria-label="Find field by ID or label"]';
 const pickerValue = (picker: string) =>
   (root.querySelector(`[data-picker="${picker}"]`) as HTMLElement).dataset.value;
 const pickRule = (v: string) => pickIn('rule', v);
 const typeFilter = (v: string) => {
-  const input = root.querySelector('input[data-filter="fields"]') as HTMLInputElement;
+  const input = root.querySelector(FIELD_FILTER) as HTMLInputElement;
   act(() => {
     input.value = v;
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -678,7 +679,7 @@ describe('Builder formula editor', () => {
 
 describe('Builder field filter', () => {
   it('typing narrows the grid to matches and their parents, and hides the add links', () => {
-    const input = root.querySelector('input[data-filter="fields"]') as HTMLInputElement;
+    const input = root.querySelector(FIELD_FILTER) as HTMLInputElement;
     act(() => {
       input.value = 'desc';
       input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -695,6 +696,12 @@ describe('Builder field filter', () => {
     });
     expect(store.fieldFilter.value).toBe('');
     expect(root.querySelectorAll('[data-row-key]').length).toBe(flatten(store.work.value).length);
+  });
+
+  it('the clear button empties the filter', () => {
+    typeFilter('desc');
+    act(() => (root.querySelector('button[aria-label="Clear filter"]') as HTMLElement).click());
+    expect(store.fieldFilter.value).toBe('');
   });
 });
 
@@ -924,9 +931,9 @@ describe('Builder rule filter', () => {
   });
 
   it('the filter bar holds text, rule, hook (and configuration), then the annotation', () => {
-    const bar = root.querySelector('input[data-filter="fields"]')!.parentElement!;
-    const order = [...bar.querySelectorAll('input[data-filter], [data-picker]')].map(
-      (e) => e.getAttribute('data-filter') || e.getAttribute('data-picker'),
+    const bar = root.querySelector(FIELD_FILTER)!.parentElement!.parentElement!; // input, its wrap, the bar
+    const order = [...bar.querySelectorAll(`${FIELD_FILTER}, [data-picker]`)].map(
+      (e) => e.getAttribute('data-picker') ?? 'fields',
     );
     expect(order).toEqual(['fields', 'rule', 'hook', 'annotation']);
     expect(root.querySelector('[data-toolbar] select[data-picker="annotation"]')).toBeNull();
@@ -1084,6 +1091,20 @@ describe('Builder rule editor: Mr. Fabry box', () => {
     const box = root.querySelector('textarea[data-fabry-prompt]') as HTMLTextAreaElement;
     expect(box.value).toContain('doc_id');
     expect(root.querySelector('[data-action="ask-fabry"]')).not.toBeNull();
+  });
+
+  it('shows a gerund while busy and the reply as Markdown', () => {
+    act(() => {
+      (row('doc_id').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
+    });
+    act(() => {
+      store.assist.value = { ...store.IDLE_ASSIST, busy: true };
+    });
+    expect(root.querySelector('[data-panel="rule"]')!.textContent).toContain('Thinking…');
+    act(() => {
+      store.assist.value = { ...store.IDLE_ASSIST, chatId: 'c', reply: 'Use **this** rule.' };
+    });
+    expect(root.querySelector('[data-panel="rule"] details strong')!.textContent).toBe('this');
   });
 
   it('the condition editor shows a proposal once it fills the draft', () => {

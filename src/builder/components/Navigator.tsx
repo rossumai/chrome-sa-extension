@@ -13,6 +13,7 @@ import { queueGroups, orphanSchemas } from '../links.js';
 import { openCreateDialog } from './CreateDialog.jsx';
 import { confirmQueueDelete, confirmSchemaDelete } from './DeleteDialogs.jsx';
 import { navDrawer } from './panels.js';
+import FilterInput from '../../ui/FilterInput.jsx';
 import s from './Builder.module.css';
 
 function DeleteBtn({
@@ -69,11 +70,14 @@ export default function Navigator() {
         data-nav-drawer={drawer ? '' : undefined}
       >
         <div class={s.navTop}>
-          <input
-            class={s.input}
-            placeholder="Filter queues and schemas"
+          <FilterInput
+            className={s.navFilter}
             value={filter}
-            onInput={(e) => setFilter((e.currentTarget as HTMLInputElement).value)}
+            onInput={setFilter}
+            onClear={() => setFilter('')}
+            active={!!filter.trim()}
+            placeholder="Filter queues and schemas"
+            ariaLabel="Filter queues and schemas"
           />
           {drawer && (
             <button

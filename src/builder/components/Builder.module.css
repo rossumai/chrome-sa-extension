@@ -718,6 +718,11 @@
   align-items: center;
 }
 
+.navFilter {
+  flex: 1;
+  min-width: 0;
+}
+
 @keyframes inspectorIn {
   from {
     transform: translateX(24px);
@@ -900,6 +905,15 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 4px;
+}
+
+/* The rotating gerund while Mr. Fabry answers: GerundLoader is absolute, so this sizes it. */
+.fabryWorking {
+  position: relative;
+  align-self: center;
+  height: 22px;
+  min-width: 132px;
+  white-space: nowrap;
 }
 
 .fabryBtn {

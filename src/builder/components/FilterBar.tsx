@@ -22,6 +22,7 @@ import { mdhHooks, configSummaries } from '../matching.js';
 import { pickHookConfig } from './hookJump.js';
 import AnnotationPicker from './AnnotationPicker.jsx';
 import SearchPicker from './SearchPicker.jsx';
+import FilterInput from '../../ui/FilterInput.jsx';
 import s from './Builder.module.css';
 
 // The bar above the grid: its filters — text (id or label), a rule, an MDH hook and one of
@@ -43,12 +44,15 @@ export default function FilterBar() {
     : [];
   return (
     <div class={s.pickBar}>
-      <input
-        class={s.input + ' ' + s.fieldFilter}
-        data-filter="fields"
-        placeholder="Find field by ID or label"
+      {/* Active only when trimmed text is left: the matcher trims (fieldFilter.ts). */}
+      <FilterInput
+        className={s.fieldFilter}
         value={fieldFilter.value}
-        onInput={(e) => (fieldFilter.value = (e.currentTarget as HTMLInputElement).value)}
+        onInput={(v) => (fieldFilter.value = v)}
+        onClear={() => (fieldFilter.value = '')}
+        active={!!fieldFilter.value.trim()}
+        placeholder="Find field by ID or label"
+        ariaLabel="Find field by ID or label"
         onKeyDown={(e) => {
           if (e.key === 'Escape') fieldFilter.value = '';
         }}
