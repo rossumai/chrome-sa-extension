@@ -155,11 +155,9 @@ describe('custom engine', () => {
       calls.push('patch schema');
       return {};
     });
-    vi.mocked(api.getSchema).mockResolvedValue({
-      id: 33,
-      name: 'Invoices',
-      modified_at: 't0',
-      content: content(),
+    vi.mocked(api.getSchema).mockImplementation(async () => {
+      calls.push('get schema');
+      return { id: 33, name: 'Invoices', modified_at: 't0', content: content() };
     });
     await openQueue(3);
     await new Promise((r) => setTimeout(r));
@@ -176,8 +174,34 @@ describe('custom engine', () => {
     expect(store.engineChanges.value).toBe(1);
     expect(store.dirty.value).toBe(true);
     await save();
-    expect(calls.slice(0, 3)).toEqual(['create po', 'list', 'validate']);
-    expect(calls).toContain('patch schema');
+    expect(calls).toEqual([
+      'get schema',
+      'create po',
+      'list',
+      'validate',
+      'patch schema',
+      'get schema',
+    ]);
+  });
+
+  it('a stale schema stops before any engine write; Save anyway goes on in order', async () => {
+    vi.mocked(api.getSchema).mockImplementation(async () => {
+      calls.push('get schema');
+      return { id: 33, name: 'Invoices', modified_at: 't1', content: content() };
+    });
+    const r = await save();
+    expect(r).toMatchObject({ ok: false, stage: 'stale' });
+    expect(calls).toEqual(['get schema']);
+    calls.length = 0;
+    await save(true);
+    expect(calls).toEqual([
+      'get schema',
+      'create po',
+      'list',
+      'validate',
+      'patch schema',
+      'get schema',
+    ]);
   });
 
   it('stops before any call when the API would reject the schema', async () => {
@@ -219,7 +243,7 @@ describe('custom engine', () => {
     expect(byName.has('calc')).toBe(false); // a formula does not use an engine field
   });
 
-  it('Save deletes a marked engine field after creating, before the schema', async () => {
+  it('Save deletes a marked engine field after the schema', async () => {
     vi.mocked(api.listEngineFields).mockImplementation(async () => {
       calls.push('list');
       return [
@@ -239,8 +263,52 @@ describe('custom engine', () => {
     toggleEngineDelete(9);
     calls.length = 0;
     await save();
-    expect(calls.slice(0, 4)).toEqual(['create po', 'delete 9', 'list', 'validate']);
+    expect(calls).toEqual([
+      'get schema',
+      'create po',
+      'list',
+      'validate',
+      'patch schema',
+      'get schema',
+      'delete 9',
+      'list',
+    ]);
     expect(store.engineDeletes.value.size).toBe(0);
+  });
+
+  it('a failed delete after the schema landed is shown, and its mark kept', async () => {
+    const fields = [
+      { id: 1, name: 'doc_id', type: 'string', pre_trained_field_id: 'document_id' },
+      { id: 9, name: 'gone', type: 'string', pre_trained_field_id: null },
+    ];
+    vi.mocked(api.listEngineFields).mockResolvedValue(fields);
+    vi.mocked(api.deleteEngineField).mockRejectedValueOnce(new Error('still used'));
+    store.engineState.value = { ...store.engineState.value!, fields };
+    store.engineUsers.value = { byName: new Map(), error: null };
+    toggleEngineDelete(9);
+    const r = await save();
+    expect(r).toMatchObject({ ok: true });
+    expect([...store.engineDeletes.value]).toEqual([9]);
+    expect(store.generalErrors.value).toContain('Engine fields: still used');
+  });
+
+  it('a failed schema PATCH deletes nothing and keeps the delete marks', async () => {
+    store.engineState.value = {
+      ...store.engineState.value!,
+      fields: [
+        ...store.engineState.value!.fields,
+        { id: 9, name: 'gone', type: 'string', pre_trained_field_id: null },
+      ],
+    };
+    store.engineUsers.value = { byName: new Map(), error: null };
+    toggleEngineDelete(9);
+    vi.mocked(api.patchSchema).mockRejectedValueOnce(
+      Object.assign(new Error('conflict'), { status: 409 }),
+    );
+    const r = await save();
+    expect(r).toMatchObject({ ok: false, stage: 'patch' });
+    expect(api.deleteEngineField).not.toHaveBeenCalled();
+    expect([...store.engineDeletes.value]).toEqual([9]);
   });
 
   it('a failed engine-field write stops before the schema save', async () => {

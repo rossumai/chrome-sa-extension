@@ -219,10 +219,12 @@ export async function save(force = false): Promise<SaveResult | null> {
   store.error.value = null;
   store.retryable.value = false;
   try {
-    // Engine fields are written before the schema, so the schema's own local checks go first.
+    // Local checks, the stale check, engine field creates and patches, the schema, then
+    // engine field deletes: the API refuses a datapoint without its engine field, and the
+    // delete of an engine field a saved schema still uses.
     const r =
       localStage(store.work.value, store.draftName.value) ??
-      (await saveEngineFields()) ??
+      engineLocalStage() ??
       (await saveSchema(
         {
           schemaId: schema.id,
@@ -231,6 +233,7 @@ export async function save(force = false): Promise<SaveResult | null> {
           force,
           name: store.draftName.value,
           baseName: store.baseName.value,
+          beforeWrite: writeEngineFields,
         },
         api,
       ));
@@ -242,7 +245,13 @@ export async function save(force = false): Promise<SaveResult | null> {
         else general.push(e.message);
       }
     } else {
+      const deleteError = await deleteEngineFields();
+      const marks = store.engineDeletes.value;
       setBase(r.schema);
+      if (deleteError) {
+        store.engineDeletes.value = marks;
+        general.push(deleteError);
+      }
       store.schemas.value = store.schemas.value.map((x) =>
         x.id === r.schema?.id ? { ...x, name: r.schema.name ?? x.name } : x,
       );
@@ -337,12 +346,8 @@ async function loadCatalog() {
   }
 }
 
-/**
- * On a custom engine, before the schema: stop on what the API would reject, then create and
- * patch the engine fields the schema needs (it rejects a datapoint with no engine field).
- * Returns a failed SaveResult, or null to go on.
- */
-async function saveEngineFields(): Promise<SaveResult | null> {
+/** On a custom engine: stop on what the API would reject, before any request. */
+function engineLocalStage(): SaveResult | null {
   const es = store.engineState.value;
   if (es?.kind !== 'custom') return null;
   const local = bindingErrors(store.work.value);
@@ -354,12 +359,21 @@ async function saveEngineFields(): Promise<SaveResult | null> {
       errors: [{ key: null, message: `The queue's engine did not load: ${es.error ?? ''}` }],
     };
   }
+  return null;
+}
+
+/**
+ * On a custom engine, after the stale check and before the schema: create and patch the
+ * engine fields the schema needs. Returns a failed SaveResult, or null to go on.
+ */
+async function writeEngineFields(): Promise<SaveResult | null> {
+  const es = store.engineState.value;
+  if (es?.kind !== 'custom' || !es.engine) return null;
   const plan = store.enginePlanNow.value!;
   let failed: SaveResult | null = null;
   try {
     for (const body of plan.create) await api.createEngineField(body);
     for (const p of plan.patch) await api.patchEngineField(p.id, p.body);
-    for (const f of store.engineDeletesNow.value) await api.deleteEngineField(f.id);
   } catch (err: any) {
     if (isRateLimited(err)) throw err;
     failed = {
@@ -371,8 +385,27 @@ async function saveEngineFields(): Promise<SaveResult | null> {
   // Re-read what landed, whether or not all of it did, so the next Save plans from there.
   const fields = await api.listEngineFields(es.engine.id);
   store.engineState.value = { ...es, fields };
-  store.engineDeletes.value = new Set();
   return failed;
+}
+
+/**
+ * After the schema landed: delete the marked engine fields. Returns an error message, or
+ * null. A 429 is reported here rather than thrown, since the schema is already saved.
+ */
+async function deleteEngineFields(): Promise<string | null> {
+  const es = store.engineState.value;
+  const doomed = store.engineDeletesNow.value;
+  if (!es?.engine || !doomed.length) return null;
+  try {
+    for (const f of doomed) await api.deleteEngineField(f.id);
+    return null;
+  } catch (err: any) {
+    return `Engine fields: ${isRateLimited(err) ? rateLimitMessage(err) : (err?.message ?? err)}`;
+  } finally {
+    // Re-read what is left, whether or not every delete landed.
+    const fields = await api.listEngineFields(es.engine.id).catch(() => null);
+    if (fields) store.engineState.value = { ...es, fields };
+  }
 }
 
 /** Show a hook read-only in the right panel, at the first place it mentions the field. */

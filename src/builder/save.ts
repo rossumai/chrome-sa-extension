@@ -1,6 +1,6 @@
 // src/builder/save.ts
-// The Builder's save pipeline: local checks -> stale check -> validate (dry run) ->
-// PATCH -> re-fetch and compare. Network calls are injected so the order and the stops
+// The Builder's save pipeline: local checks -> stale check -> the caller's earlier writes ->
+// validate (dry run) -> PATCH -> re-fetch and compare. Network calls are injected so the order and the stops
 // are unit-tested. A 429 is thrown through untouched: the caller shows it and the user
 // retries (spec 2026-10-13 §4.3).
 
@@ -112,6 +112,7 @@ export async function saveSchema(
     force,
     name,
     baseName,
+    beforeWrite,
   }: {
     schemaId: number;
     baseModifiedAt: string | null;
@@ -119,6 +120,8 @@ export async function saveSchema(
     force: boolean;
     name?: string;
     baseName?: string;
+    /** Writes that must land after the stale check and before the schema; a result stops. */
+    beforeWrite?: () => Promise<SaveResult | null>;
   },
   deps: SaveDeps,
 ): Promise<SaveResult> {
@@ -134,6 +137,9 @@ export async function saveSchema(
       errors: [{ key: null, message: 'Someone changed this schema after you opened it.' }],
     };
   }
+
+  const blocked = await beforeWrite?.();
+  if (blocked) return blocked;
 
   const content = stripForSave(work);
   const verdict = await deps.validateSchema(schemaId, content);

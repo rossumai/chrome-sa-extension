@@ -122,8 +122,24 @@ describe('saveSchema', () => {
     });
     const r = await saveSchema({ schemaId: 7, baseModifiedAt: 't0', work, force: false }, d);
     expect(r).toMatchObject({ ok: false, stage: 'stale' });
+    expect(d.validateSchema).not.toHaveBeenCalled();
+    expect(d.patchSchema).not.toHaveBeenCalled();
     const forced = await saveSchema({ schemaId: 7, baseModifiedAt: 't0', work, force: true }, d);
     expect(forced.ok).toBe(true);
+  });
+
+  it('runs beforeWrite after the stale check, and stops when it fails', async () => {
+    const work = withKeys(fixture());
+    const failed = { ok: false as const, stage: 'engine' as const, errors: [] };
+    const beforeWrite = vi.fn(async () => failed);
+    const stale = deps({ getSchema: vi.fn(async () => ({ id: 7, modified_at: 't1' })) });
+    const args = { schemaId: 7, baseModifiedAt: 't0', work, force: false, beforeWrite };
+    expect(await saveSchema(args, stale)).toMatchObject({ stage: 'stale' });
+    expect(beforeWrite).not.toHaveBeenCalled();
+    const d = deps();
+    expect(await saveSchema(args, d)).toBe(failed);
+    expect(d.getSchema).toHaveBeenCalledTimes(1);
+    expect(d.validateSchema).not.toHaveBeenCalled();
   });
 
   it('patches the stripped content and returns the re-fetched schema', async () => {
