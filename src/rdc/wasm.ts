@@ -40,6 +40,7 @@ export interface CycleOutcome {
 }
 export interface RdcProject {
   files(): Map<string, Uint8Array>;
+  addEnv(input: EnvInput): unknown;
   sync(
     env: string,
     opts: SyncOptions,

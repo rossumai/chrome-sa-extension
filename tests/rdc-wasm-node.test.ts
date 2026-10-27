@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { envInputFor, ENV } from '../src/rdc/core.js';
+import { sourceEnvInput, TARGET_ENV } from '../src/rdc/deploy.js';
 
 // Loads the real rdc wasm in Node from the optional @mrtnzlml/rdc-wasm package. Skipped when
 // it is not installed (no GitHub Packages token, CI included). No network: only create + read
@@ -30,6 +31,35 @@ describe.skipIf(!present)('rdc wasm package (Node)', () => {
     expect(toml).toContain('https://acme.rossum.app/api/v1');
     expect(toml).toContain('42');
     expect(typeof project.sync).toBe('function');
+    project.free();
+  });
+
+  it('holds the target and the source as two envs of one in-memory project', async () => {
+    const glue = await import(pathToFileURL(join(VENDOR, 'rdc_wasm.js')).href);
+    glue.initSync({ module: readFileSync(join(VENDOR, 'rdc_wasm_bg.wasm')) });
+    const target = envInputFor(
+      'https://acme.rossum.app',
+      'tok',
+      { results: [{ id: 31007, name: 'Acme' }] },
+      TARGET_ENV,
+    );
+    if (typeof target === 'string') throw new Error(target);
+    const project = glue.Project.create('console', target);
+    const src = sourceEnvInput(
+      {
+        name: 'test',
+        domain: 'https://partner-sandbox.rossum.app',
+        orgId: 20412,
+        orgName: 'Acme Test',
+      },
+      'tok2',
+    );
+    if (typeof src === 'string') throw new Error(src);
+    project.addEnv(src);
+    const toml = new TextDecoder().decode(project.files().get('rdc.toml'));
+    expect(toml).toContain('[envs.target]');
+    expect(toml).toContain('[envs.source]');
+    expect(toml).toContain('20412');
     project.free();
   });
 });
