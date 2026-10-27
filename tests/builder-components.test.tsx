@@ -298,17 +298,25 @@ describe('Builder screen', () => {
 });
 
 describe('Builder keyboard and dialog', () => {
-  it('⌘Z undoes right after a switch was flipped (focus still on the switch)', () => {
+  it('⌘Z undoes right after a switch was flipped (focus still on the switch); ⇧⌘Z redoes', () => {
     const input = row('doc_id').querySelector('button[data-col="visible"]') as HTMLButtonElement;
+    const key = (shiftKey: boolean) =>
+      act(() => {
+        input.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'z', metaKey: true, shiftKey, bubbles: true }),
+        );
+      });
     act(() => {
       input.focus();
       input.click();
     });
+    const flipped = store.work.value;
     expect(store.history.value.past.length).toBe(1);
-    act(() => {
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', metaKey: true, bubbles: true }));
-    });
+    key(false);
     expect(store.history.value.past.length).toBe(0);
+    key(true);
+    expect(store.history.value.past.length).toBe(1);
+    expect(store.work.value).toBe(flipped);
   });
 
   it('the save dialog does not close on an overlay click while saving', () => {
