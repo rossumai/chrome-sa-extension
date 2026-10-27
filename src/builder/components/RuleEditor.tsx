@@ -22,7 +22,8 @@ import {
 import { ACTION_TYPES, ACTION_EVENTS, newAction, withActionType } from '../ruleDraft.js';
 import CodeEditor from './CodeEditor.jsx';
 import AskFabry from './AskFabry.jsx';
-import WideButton from './WideButton.jsx';
+import PanelHead from './PanelHead.jsx';
+import DraftFooter from './DraftFooter.jsx';
 import s from './Builder.module.css';
 
 function setAction(i: number, next: any) {
@@ -192,19 +193,11 @@ export default function RuleEditor() {
   const ev = ruleEval.value;
   return (
     <aside class={s.inspector} data-panel="rule">
-      <div class={s.ruleHead}>
-        <h4 class={s.inspTitle}>{ed.ruleId != null ? `Rule (${ed.ruleId})` : 'New rule'}</h4>
-        <WideButton />
-        <button
-          type="button"
-          class="icon-btn"
-          data-action="close-rule"
-          title="Close (Esc)"
-          onClick={closeRuleEditor}
-        >
-          ✕
-        </button>
-      </div>
+      <PanelHead
+        title={ed.ruleId != null ? `Rule (${ed.ruleId})` : 'New rule'}
+        closeAction="close-rule"
+        onClose={closeRuleEditor}
+      />
       <AskFabry
         key={`fabry:${ed.ruleId ?? 'new'}:${ed.fromField ?? ''}`}
         state={assist.value}
@@ -271,36 +264,15 @@ export default function RuleEditor() {
           + Action
         </button>
       </div>
-      {ruleErrors.value.length > 0 && (
-        <div class={s.rowError}>
-          {ruleErrors.value.map((m) => (
-            <div>{m}</div>
-          ))}
-        </div>
-      )}
-      <div class={s.dialogActions}>
-        <button type="button" class="btn btn-sm" onClick={closeRuleEditor}>
-          Close
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm"
-          data-action="discard-rule"
-          disabled={!ruleDirty.value}
-          onClick={discardRule}
-        >
-          Discard
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm btn-primary"
-          data-action="save-rule"
-          disabled={!ruleDirty.value || ruleSaving.value}
-          onClick={saveRule}
-        >
-          {ruleSaving.value ? 'Saving…' : 'Save rule'}
-        </button>
-      </div>
+      <DraftFooter
+        what="rule"
+        errors={ruleErrors.value}
+        dirty={ruleDirty.value}
+        saving={ruleSaving.value}
+        onClose={closeRuleEditor}
+        onDiscard={discardRule}
+        onSave={saveRule}
+      />
     </aside>
   );
 }

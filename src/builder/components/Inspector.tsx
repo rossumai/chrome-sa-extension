@@ -8,7 +8,7 @@ import AskFabry from './AskFabry.jsx';
 import FieldLinks from './FieldLinks.jsx';
 import Extraction from './Extraction.jsx';
 import { isHiddenCaptured, HIDDEN_CAPTURED } from '../engine.js';
-import WideButton from './WideButton.jsx';
+import PanelHead from './PanelHead.jsx';
 import s from './Builder.module.css';
 
 function get(node: Node, path: string[]): any {
@@ -270,19 +270,12 @@ export default function Inspector() {
   );
   // Closing clears the selection, as Esc or a click into empty grid space does.
   const head = (
-    <div class={s.ruleHead}>
-      <h4 class={s.mono + ' ' + s.inspTitle}>{node.id}</h4>
-      <WideButton />
-      <button
-        type="button"
-        class="icon-btn"
-        data-action="close-field"
-        title="Close (Esc)"
-        onClick={() => (selectedKey.value = null)}
-      >
-        ✕
-      </button>
-    </div>
+    <PanelHead
+      title={node.id}
+      mono
+      closeAction="close-field"
+      onClose={() => (selectedKey.value = null)}
+    />
   );
   const formulaEditor = (fill: boolean) => (
     <div class={s.field + (fill ? ' ' + s.grow : '')}>

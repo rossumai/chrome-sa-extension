@@ -4,7 +4,7 @@ import { rightPanel, hooks, type RightPanel } from '../store.js';
 import { closeCodeView } from '../index.jsx';
 import { hookText, codeHidden, occurrences } from '../codeRefs.js';
 import CodeEditor, { type CodeEditorHandle } from './CodeEditor.jsx';
-import WideButton from './WideButton.jsx';
+import PanelHead from './PanelHead.jsx';
 import s from './Builder.module.css';
 
 // A hook that mentions a field, read-only: its code or its settings, scrolled to each place
@@ -31,21 +31,11 @@ export default function HookCodeView() {
   };
   return (
     <aside class={s.inspector + ' ' + s.inspectorFill} data-panel="code">
-      <div class={s.ruleHead}>
-        <h4 class={s.inspTitle}>
-          {hook.name} ({hook.id})
-        </h4>
-        <WideButton />
-        <button
-          type="button"
-          class="icon-btn"
-          data-action="close-code"
-          title="Close (Esc)"
-          onClick={closeCodeView}
-        >
-          ✕
-        </button>
-      </div>
+      <PanelHead
+        title={`${hook.name} (${hook.id})`}
+        closeAction="close-code"
+        onClose={closeCodeView}
+      />
       <div class={s.dim}>
         {hook.type ?? 'hook'} · read-only · mentions <span class={s.mono}>{cv.fieldId}</span>{' '}
         {inCode.length + inSettings.length}×

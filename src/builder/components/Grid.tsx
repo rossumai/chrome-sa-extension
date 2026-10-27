@@ -60,6 +60,7 @@ import {
   type Node,
 } from '../model.js';
 import EditableCell from './EditableCell.jsx';
+import Stepper from './Stepper.jsx';
 import Icon, { type IconName } from './icons.jsx';
 import type { ActionMark } from '../rules.js';
 import { panelOpen, panelWide } from './panels.js';
@@ -205,35 +206,17 @@ function ValueCell({ node, tableId }: { node: Node; tableId: string | null }) {
   const v = values.value!;
   if (node.category === 'multivalue') {
     const n = v.rows.get(node.id) ?? 0;
-    const at = Math.min(lineRow.value[node.id] ?? 0, Math.max(0, n - 1));
-    const go = (d: number) => (e: Event) => {
-      e.stopPropagation();
-      lineRow.value = { ...lineRow.value, [node.id]: at + d };
-    };
     return (
       <span class={s.stepper}>
         {n} rows
         {n > 1 && (
           <span>
-            <button
-              type="button"
-              class="icon-btn"
-              data-action="prev-row"
-              disabled={at === 0}
-              onClick={go(-1)}
-            >
-              ‹
-            </button>
-            {at + 1}/{n}
-            <button
-              type="button"
-              class="icon-btn"
-              data-action="next-row"
-              disabled={at >= n - 1}
-              onClick={go(1)}
-            >
-              ›
-            </button>
+            <Stepper
+              at={Math.min(lineRow.value[node.id] ?? 0, n - 1)}
+              count={n}
+              action="row"
+              onStep={(i) => (lineRow.value = { ...lineRow.value, [node.id]: i })}
+            />
           </span>
         )}
       </span>

@@ -2,7 +2,7 @@ import { h } from 'preact';
 import { schemaFabry, fabryChangedKeys, onlyFabryChanges } from '../store.js';
 import { askSchemaFabry, closeSchemaFabry, fixWithFabry } from '../index.jsx';
 import AskFabry from './AskFabry.jsx';
-import WideButton from './WideButton.jsx';
+import PanelHead from './PanelHead.jsx';
 import s from './Builder.module.css';
 
 // Mr. Fabry for the whole schema: the conversation, what each answer changed, what is still
@@ -12,19 +12,11 @@ export default function SchemaFabryPanel() {
   const changed = fabryChangedKeys.value.size;
   return (
     <aside class={s.inspector} data-panel="schema-fabry">
-      <div class={s.ruleHead}>
-        <h4 class={s.inspTitle}>Mr. Fabry · schema</h4>
-        <WideButton />
-        <button
-          type="button"
-          class="icon-btn"
-          data-action="close-schema-fabry"
-          title="Close (Esc)"
-          onClick={closeSchemaFabry}
-        >
-          ✕
-        </button>
-      </div>
+      <PanelHead
+        title="Mr. Fabry · schema"
+        closeAction="close-schema-fabry"
+        onClose={closeSchemaFabry}
+      />
       <div class={s.dim}>
         Changes land as one edit: highlighted like your own, undone with one Undo, saved only with
         Save schema.

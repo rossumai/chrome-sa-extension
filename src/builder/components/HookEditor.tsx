@@ -20,7 +20,8 @@ import {
 import CodeEditor from './CodeEditor.jsx';
 import { hookEditorRef, revealPendingConfig } from './hookJump.js';
 import AskFabry from './AskFabry.jsx';
-import WideButton from './WideButton.jsx';
+import PanelHead from './PanelHead.jsx';
+import DraftFooter from './DraftFooter.jsx';
 import s from './Builder.module.css';
 
 // "Format" for JSON: parse and print with two-space indent. A parse error is the message.
@@ -34,21 +35,11 @@ export default function HookEditor() {
   const refs = hookRefs.value;
   return (
     <aside class={s.inspector + ' ' + s.inspectorFill} data-panel="hook">
-      <div class={s.ruleHead}>
-        <h4 class={s.inspTitle}>
-          {hook?.name ?? 'Hook'} ({ed.hookId})
-        </h4>
-        <WideButton />
-        <button
-          type="button"
-          class="icon-btn"
-          data-action="close-hook"
-          title="Close (Esc)"
-          onClick={closeHookEditor}
-        >
-          ✕
-        </button>
-      </div>
+      <PanelHead
+        title={`${hook?.name ?? 'Hook'} (${ed.hookId})`}
+        closeAction="close-hook"
+        onClose={closeHookEditor}
+      />
       <div class={s.dim}>
         Matches on {refs?.inputs.size ?? 0} field(s), fills {refs?.outputs.size ?? 0}. The grid
         shows only those.
@@ -74,36 +65,15 @@ export default function HookEditor() {
           onCommit={updateHookDraft}
         />
       </div>
-      {hookErrors.value.length > 0 && (
-        <div class={s.rowError}>
-          {hookErrors.value.map((m) => (
-            <div>{m}</div>
-          ))}
-        </div>
-      )}
-      <div class={s.dialogActions}>
-        <button type="button" class="btn btn-sm" onClick={closeHookEditor}>
-          Close
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm"
-          data-action="discard-hook"
-          disabled={!hookDirty.value}
-          onClick={discardHook}
-        >
-          Discard
-        </button>
-        <button
-          type="button"
-          class="btn btn-sm btn-primary"
-          data-action="save-hook"
-          disabled={!hookDirty.value || hookSaving.value}
-          onClick={saveHook}
-        >
-          {hookSaving.value ? 'Saving…' : 'Save hook'}
-        </button>
-      </div>
+      <DraftFooter
+        what="hook"
+        errors={hookErrors.value}
+        dirty={hookDirty.value}
+        saving={hookSaving.value}
+        onClose={closeHookEditor}
+        onDiscard={discardHook}
+        onSave={saveHook}
+      />
     </aside>
   );
 }

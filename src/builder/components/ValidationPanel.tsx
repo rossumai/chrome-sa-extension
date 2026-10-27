@@ -33,7 +33,8 @@ import {
 } from '../provenance.js';
 import { pickHookConfig } from './hookJump.js';
 import Icon from './icons.jsx';
-import WideButton from './WideButton.jsx';
+import PanelHead from './PanelHead.jsx';
+import Stepper from './Stepper.jsx';
 import s from './Builder.module.css';
 
 const ICON = { error: 'error', warning: 'warning', info: 'info' } as const;
@@ -279,23 +280,14 @@ function ConfigRow({
           {scope && (
             <span class={s.stepper}>
               row
-              <button
-                type="button"
-                class="icon-btn"
-                disabled={row === 0}
-                onClick={() => setRow(row - 1)}
+              <Stepper
+                at={Math.min(row, scope.rowCount - 1)}
+                count={scope.rowCount}
+                onStep={setRow}
               >
-                ‹
-              </button>
-              {Math.min(row, scope.rowCount - 1) + 1}/{scope.rowCount} of {scope.tableSchemaId}
-              <button
-                type="button"
-                class="icon-btn"
-                disabled={row >= scope.rowCount - 1}
-                onClick={() => setRow(row + 1)}
-              >
-                ›
-              </button>
+                {' '}
+                of {scope.tableSchemaId}
+              </Stepper>
             </span>
           )}
           {cfg.queries.map((q: any, i: number) => {
@@ -422,13 +414,10 @@ export default function ValidationPanel() {
   const { tab } = rightPanel.value as Extract<RightPanel, { kind: 'validation' }>;
   return (
     <aside class={s.inspector} data-panel="validation">
-      <div class={s.ruleHead}>
-        <h4 class={s.inspTitle}>Validation · annotation ({annotationId.value})</h4>
-        <WideButton />
-        <button type="button" class="icon-btn" title="Close (Esc)" onClick={closeValidationPanel}>
-          ✕
-        </button>
-      </div>
+      <PanelHead
+        title={`Validation · annotation (${annotationId.value})`}
+        onClose={closeValidationPanel}
+      />
       <div class={'tab-bar ' + s.tabs}>
         {(['rules', 'provenance'] as const).map((t) => (
           <button

@@ -15,7 +15,7 @@ import { closeEnginePanel, toggleEngineDelete } from '../index.jsx';
 import { flatten } from '../model.js';
 import { extractedFields, engineStatus, unusedEngineFields, isRejected } from '../engine.js';
 import Extraction from './Extraction.jsx';
-import WideButton from './WideButton.jsx';
+import PanelHead from './PanelHead.jsx';
 import Icon from './icons.jsx';
 import s from './Builder.module.css';
 
@@ -136,19 +136,11 @@ export default function EnginePanel() {
   const es = engineState.value!;
   const e = es.engine;
   const head = (
-    <div class={s.ruleHead}>
-      <h4 class={s.inspTitle}>{e ? `Engine · ${e.name} (${e.id})` : 'Engine'}</h4>
-      <WideButton />
-      <button
-        type="button"
-        class="icon-btn"
-        data-action="close-engine"
-        title="Close (Esc)"
-        onClick={closeEnginePanel}
-      >
-        ✕
-      </button>
-    </div>
+    <PanelHead
+      title={e ? `Engine · ${e.name} (${e.id})` : 'Engine'}
+      closeAction="close-engine"
+      onClose={closeEnginePanel}
+    />
   );
   if (!e) {
     return (
