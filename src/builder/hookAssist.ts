@@ -1,7 +1,7 @@
 // src/builder/hookAssist.ts
 // Mr. Fabry in hook mode: change an MDH hook's settings (its match configurations) as asked.
 // The answer is the WHOLE settings object, which fills the JSON editor unsaved.
-import { extractJson, fieldLines, type FieldInfo } from './assist.js';
+import { parseReplyObject, fieldLines, type FieldInfo } from './assist.js';
 import { hookFieldRefs } from './matching.js';
 
 const CONTRACT = [
@@ -47,21 +47,16 @@ export type ParsedHook =
   | { ok: false; error: string };
 
 export function parseHookReply(text: string, schemaIds: Set<string>): ParsedHook {
-  const raw = extractJson(text);
-  if (!raw) return { ok: false, error: 'Mr. Fabry did not return hook settings' };
-  let obj: any;
-  try {
-    obj = JSON.parse(raw);
-  } catch {
-    return { ok: false, error: 'Mr. Fabry returned settings that are not valid JSON' };
-  }
+  const none = 'Mr. Fabry did not return hook settings';
+  const r = parseReplyObject(text, {
+    none,
+    invalid: 'Mr. Fabry returned settings that are not valid JSON',
+  });
+  if (!r.ok) return r;
+  let obj = r.value;
   // Accept {"settings": {...}} too, when the wrapper is all there is.
-  if (obj && typeof obj === 'object' && obj.settings && !obj.configurations && !obj.configs) {
-    obj = obj.settings;
-  }
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-    return { ok: false, error: 'Mr. Fabry did not return hook settings' };
-  }
+  if (obj.settings && !obj.configurations && !obj.configs) obj = obj.settings;
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return { ok: false, error: none };
   const refs = hookFieldRefs({ settings: obj });
   const unknown = [...new Set([...refs.inputs, ...refs.outputs])].filter(
     (id) => !schemaIds.has(id),

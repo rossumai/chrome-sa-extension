@@ -22,7 +22,7 @@ describe('parseHookReply', () => {
   });
 
   it('refuses an array', () => {
-    expect(parseHookReply('```json\n[{"a": 1}]\n```', ids)).toEqual({
+    expect(parseHookReply('[{"a": 1}]', ids)).toEqual({
       ok: false,
       error: 'Mr. Fabry did not return hook settings',
     });

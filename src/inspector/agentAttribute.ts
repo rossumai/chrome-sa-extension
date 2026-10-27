@@ -4,6 +4,7 @@
 // queue ids, the question, and a compact candidate list, and tells the agent to fetch
 // what it needs. Pure prompt/parse here; runAttribution reuses the shared transport.
 import { newAcc, foldEvents, replyText } from '../agent/agentStream.js';
+import { firstJsonObject } from '../agent/replyJson.js';
 import { budgetedJoin } from './promptBudget.js';
 
 const trunc = (s: unknown, n: number) => {
@@ -70,32 +71,6 @@ export function buildAttributionPrompt({
     'Respond with ONLY this JSON object and nothing else: {"culprit":{"kind":"hook|webhook|rule|manual|unknown","id":<number|null>,"name":"<name>"},"confidence":"high|medium|low","explanation":"<one short paragraph>"}',
   ];
   return budgetedJoin(head, middle, tail);
-}
-
-// The first complete brace-balanced {…} object in the text (string-aware), so a
-// trailing '}' in prose after the JSON can't make extraction overshoot.
-function firstJsonObject(text: string): string | null {
-  const start = text.indexOf('{');
-  if (start < 0) return null;
-  let depth = 0,
-    inStr = false,
-    esc = false;
-  for (let i = start; i < text.length; i++) {
-    const ch = text[i];
-    if (inStr) {
-      if (esc) esc = false;
-      else if (ch === '\\') esc = true;
-      else if (ch === '"') inStr = false;
-      continue;
-    }
-    if (ch === '"') inStr = true;
-    else if (ch === '{') depth++;
-    else if (ch === '}') {
-      depth--;
-      if (depth === 0) return text.slice(start, i + 1);
-    }
-  }
-  return null;
 }
 
 export function parseAttribution(text: unknown) {

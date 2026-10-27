@@ -4,7 +4,7 @@
 // before it may fill the editor (the user still saves). Shared plumbing is in assist.ts.
 import { draftFromRule, draftErrors, type RuleDraft } from './ruleDraft.js';
 import { ruleFieldRefs } from './rules.js';
-import { extractJson, fieldLines, type FieldInfo } from './assist.js';
+import { parseReplyObject, fieldLines, type FieldInfo } from './assist.js';
 
 const CONTRACT = [
   'You write ONE Rossum native Rule. Do not create or change anything in Rossum — only propose.',
@@ -57,17 +57,12 @@ export type ParsedRule =
 
 /** Parse and check a reply. Missing action ids, `enabled` and `event` get their defaults. */
 export function parseRuleReply(text: string, schemaIds: Set<string>): ParsedRule {
-  const raw = extractJson(text);
-  if (!raw) return { ok: false, error: 'Mr. Fabry did not return a rule' };
-  let obj: any;
-  try {
-    obj = JSON.parse(raw);
-  } catch {
-    return { ok: false, error: 'Mr. Fabry returned a rule that is not valid JSON' };
-  }
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-    return { ok: false, error: 'Mr. Fabry did not return a rule' };
-  }
+  const r = parseReplyObject(text, {
+    none: 'Mr. Fabry did not return a rule',
+    invalid: 'Mr. Fabry returned a rule that is not valid JSON',
+  });
+  if (!r.ok) return r;
+  const obj = r.value;
   if (obj.actions != null && !Array.isArray(obj.actions)) {
     return { ok: false, error: "The rule's actions are not a list" };
   }

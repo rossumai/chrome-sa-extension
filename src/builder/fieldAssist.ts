@@ -2,11 +2,10 @@
 // Mr. Fabry in the field inspector, formulas first: a plain-language request comes back as
 // the attributes to change on ONE field, which the caller applies as one undoable schema
 // edit. Formula rules follow the rossum-sa txscript reference.
-import { extractJson, fieldLines, type FieldInfo } from './assist.js';
+import { parseReplyObject, fieldLines, NEVER_SET, type FieldInfo } from './assist.js';
 import { FIELD_RE } from './rules.js';
 
 const FORMULA_MAX = 2000;
-const NEVER = ['category', 'children', '__key', '__deleted', '__engine'];
 
 const CONTRACT = [
   'You change ONE field of a Rossum schema. Do not create or change anything in Rossum — only propose.',
@@ -64,19 +63,15 @@ export function parseFieldReply(
   text: string,
   { selfId, schemaIds }: { selfId: string; schemaIds: Set<string> },
 ): ParsedField {
-  const none = { ok: false as const, error: 'Mr. Fabry did not return any field changes' };
-  const raw = extractJson(text);
-  if (!raw) return none;
-  let obj: any;
-  try {
-    obj = JSON.parse(raw);
-  } catch {
-    return { ok: false, error: 'Mr. Fabry returned changes that are not valid JSON' };
-  }
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return none;
+  const none = 'Mr. Fabry did not return any field changes';
+  const r = parseReplyObject(text, {
+    none,
+    invalid: 'Mr. Fabry returned changes that are not valid JSON',
+  });
+  if (!r.ok) return r;
   const patch: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) if (!NEVER.includes(k)) patch[k] = v;
-  if (!Object.keys(patch).length) return none;
+  for (const [k, v] of Object.entries(r.value)) if (!NEVER_SET.includes(k)) patch[k] = v;
+  if (!Object.keys(patch).length) return { ok: false, error: none };
 
   const warnings: string[] = [];
   if (typeof patch.formula === 'string') {

@@ -4,6 +4,7 @@
 // agent proposes, the user decides. Injected transport, like src/audit/fabry.ts.
 import { flatten, type Node } from './model.js';
 import { newAcc, foldEvents, replyText } from '../agent/agentStream.js';
+import { firstJsonObject } from '../agent/replyJson.js';
 
 export type FieldInfo = { id: string; label: string; type: string; table: string | null };
 
@@ -34,13 +35,38 @@ export function fieldLines(fields: FieldInfo[]): string {
     .join('\n');
 }
 
-/** The JSON in a reply: a fenced block if there is one, else the outermost {...}. */
-export function extractJson(text: string): string | null {
+/** Attributes no assistant may set on a schema node: structure and Builder's own markers. */
+export const NEVER_SET = ['category', 'children', '__key', '__deleted', '__engine'];
+
+/**
+ * The JSON in a reply: a fenced block if there is one; else the whole reply when it is a bare
+ * array (so a caller can refuse it, rather than take its first element); else the first
+ * complete {...} object.
+ */
+function extractJson(text: string): string | null {
   const fence = /```(?:json)?\s*\n([\s\S]*?)```/.exec(text);
   if (fence) return fence[1];
-  const a = text.indexOf('{');
-  const b = text.lastIndexOf('}');
-  return a >= 0 && b > a ? text.slice(a, b + 1) : null;
+  const bare = text.trim();
+  return bare.startsWith('[') ? bare : firstJsonObject(text);
+}
+
+/** The JSON object in a reply, or the failure: `none` (no JSON, or not an object), `invalid`. */
+export function parseReplyObject(
+  text: string,
+  errors: { none: string; invalid: string },
+): { ok: true; value: Record<string, any> } | { ok: false; error: string } {
+  const raw = extractJson(text);
+  if (!raw) return { ok: false, error: errors.none };
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    return { ok: false, error: errors.invalid };
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return { ok: false, error: errors.none };
+  }
+  return { ok: true, value: value as Record<string, any> };
 }
 
 /** One turn: a new cautious chat the first time, the same chat for follow-ups. Read-only. */

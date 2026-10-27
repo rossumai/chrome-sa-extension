@@ -21,7 +21,7 @@ import {
   type Node,
   type Row,
 } from './model.js';
-import { extractJson } from './assist.js';
+import { parseReplyObject, NEVER_SET } from './assist.js';
 import { MAX_PROMPT } from '../inspector/promptBudget.js';
 
 // ---- What Mr. Fabry sees --------------------------------------------------------------
@@ -146,16 +146,14 @@ export type ParsedChanges =
   { ok: true; summary: string; changes: SchemaChange[] } | { ok: false; error: string };
 
 export function parseSchemaReply(text: string): ParsedChanges {
-  const none = { ok: false as const, error: 'Mr. Fabry did not return a list of changes' };
-  const raw = extractJson(text);
-  if (!raw) return none;
-  let obj: any;
-  try {
-    obj = JSON.parse(raw);
-  } catch {
-    return { ok: false, error: 'Mr. Fabry returned changes that are not valid JSON' };
-  }
-  if (!obj || !Array.isArray(obj.changes)) return none;
+  const none = 'Mr. Fabry did not return a list of changes';
+  const r = parseReplyObject(text, {
+    none,
+    invalid: 'Mr. Fabry returned changes that are not valid JSON',
+  });
+  if (!r.ok) return r;
+  const obj = r.value;
+  if (!Array.isArray(obj.changes)) return { ok: false, error: none };
   return {
     ok: true,
     summary: typeof obj.summary === 'string' ? obj.summary : '',
@@ -171,13 +169,11 @@ export type ApplyResult = {
   skipped: { change: SchemaChange; reason: string }[];
 };
 
-const NEVER = ['category', 'children', '__key', '__deleted', '__engine'];
-
 function clean(attrs: unknown, drop: string[] = []): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (attrs && typeof attrs === 'object' && !Array.isArray(attrs)) {
     for (const [k, v] of Object.entries(attrs))
-      if (!NEVER.includes(k) && !drop.includes(k)) out[k] = v;
+      if (!NEVER_SET.includes(k) && !drop.includes(k)) out[k] = v;
   }
   return out;
 }
