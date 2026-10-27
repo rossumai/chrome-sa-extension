@@ -255,19 +255,34 @@ describe('rowStatus / changeSummary', () => {
     expect(s.get(keyOf(base, 'document_id'))).toBe('edited');
     expect(s.get(keyOf(base, 'item_amount'))).toBe('deleted');
     expect(s.get(keyOf(base, 'basic_info_section'))).toBeUndefined();
-    expect(changeSummary(base, work)).toEqual({ added: 1, edited: 1, deleted: 1, moved: 0 });
+    expect(changeSummary(rowStatus(base, work), movedKeys(base, work))).toEqual({
+      added: 1,
+      edited: 1,
+      deleted: 1,
+      moved: 0,
+    });
   });
 
   it('counts a moved field as moved, not edited', () => {
     const base = withKeys(fixture());
     const work = move(base, keyOf(base, 'document_id'), keyOf(base, 'line_items_section'), 1);
-    expect(changeSummary(base, work)).toEqual({ added: 0, edited: 0, deleted: 0, moved: 1 });
+    expect(changeSummary(rowStatus(base, work), movedKeys(base, work))).toEqual({
+      added: 0,
+      edited: 0,
+      deleted: 0,
+      moved: 1,
+    });
     expect(rowStatus(base, work).get(keyOf(base, 'document_id'))).toBeUndefined();
   });
 
   it('reports no changes for an untouched tree', () => {
     const base = withKeys(fixture());
-    expect(changeSummary(base, base)).toEqual({ added: 0, edited: 0, deleted: 0, moved: 0 });
+    expect(changeSummary(rowStatus(base, base), movedKeys(base, base))).toEqual({
+      added: 0,
+      edited: 0,
+      deleted: 0,
+      moved: 0,
+    });
   });
 });
 

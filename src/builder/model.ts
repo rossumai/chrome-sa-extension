@@ -334,17 +334,17 @@ export function movedKeys(base: Node[], work: Node[]): Set<string> {
   return out;
 }
 
+/** Counts from rowStatus and movedKeys, passed in so a caller computes each once. */
 export function changeSummary(
-  base: Node[],
-  work: Node[],
+  status: Map<string, 'new' | 'edited' | 'deleted'>,
+  moved: Set<string>,
 ): { added: number; edited: number; deleted: number; moved: number } {
-  const s = { added: 0, edited: 0, deleted: 0, moved: 0 };
-  for (const v of rowStatus(base, work).values()) {
+  const s = { added: 0, edited: 0, deleted: 0, moved: moved.size };
+  for (const v of status.values()) {
     if (v === 'new') s.added++;
     else if (v === 'edited') s.edited++;
     else s.deleted++;
   }
-  s.moved = movedKeys(base, work).size;
   return s;
 }
 

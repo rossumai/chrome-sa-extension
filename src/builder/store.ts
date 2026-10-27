@@ -15,7 +15,7 @@ import {
 import { sameDraft, type RuleDraft } from './ruleDraft.js';
 import { enginePlan, deletableFields, isHiddenCaptured, type EngineKind } from './engine.js';
 import type { RuleEval } from './ruleEval.js';
-import { hooksByFieldText } from './codeRefs.js';
+import { hookWordSets, hooksByFieldText } from './codeRefs.js';
 
 export const domain = signal('');
 export const token = signal('');
@@ -58,7 +58,8 @@ export const work = computed(() => history.value.present.content);
 export const draftName = computed(() => history.value.present.name);
 export const renamed = computed(() => draftName.value !== baseName.value);
 export const status = computed(() => rowStatus(base.value, work.value));
-export const summary = computed(() => changeSummary(base.value, work.value));
+const moved = computed(() => movedKeys(base.value, work.value));
+export const summary = computed(() => changeSummary(status.value, moved.value));
 export const dirty = computed(() => {
   const s = summary.value;
   return renamed.value || s.added + s.edited + s.deleted + s.moved > 0 || engineChanges.value > 0;
@@ -242,10 +243,7 @@ export const fabryTouched = signal<Set<string>>(new Set());
 // …of which, the rows that still differ from the saved schema: an undone or saved change
 // drops out by itself. This is what "only Mr. Fabry's changes" shows.
 export const fabryChangedKeys = computed(() => {
-  const differs = new Set([
-    ...rowStatus(base.value, work.value).keys(),
-    ...movedKeys(base.value, work.value),
-  ]);
+  const differs = new Set([...status.value.keys(), ...moved.value]);
   return new Set([...fabryTouched.value].filter((k) => differs.has(k)));
 });
 export const onlyFabryChanges = signal(false);
@@ -255,9 +253,11 @@ export const onlyFabryChanges = signal(false);
 // settings as JSON text in the right panel (base = as saved, draft = in the editor).
 export const hooks = signal<any[]>([]);
 // Per field id: the queue's other hooks (not MDH) whose code or settings mention it.
+// Each hook's words are read once per hooks list, not on every schema edit.
+const hookWords = computed(() => hookWordSets(hooks.value));
 export const fieldCodeHooks = computed(() =>
   hooksByFieldText(
-    hooks.value,
+    hookWords.value,
     flatten(work.value)
       .map((r) => String(r.node.id ?? ''))
       .filter(Boolean),

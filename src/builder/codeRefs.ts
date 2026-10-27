@@ -30,14 +30,22 @@ function words(text: string): Set<string> {
   return new Set(text.match(WORD) || []);
 }
 
+export type HookWords = { hook: any; code: Set<string>; settings: Set<string> };
+
+/** The words of each non-MDH hook's code and settings, for hooksByFieldText. */
+export function hookWordSets(hooks: any[]): HookWords[] {
+  return hooks
+    .filter((hook) => !isMdhHook(hook))
+    .map((hook) => {
+      const t = hookText(hook);
+      return { hook, code: words(t.code), settings: words(t.settings) };
+    });
+}
+
 /** Per field id: the non-MDH hooks that mention it, and where. */
-export function hooksByFieldText(hooks: any[], ids: string[]): Map<string, CodeHit[]> {
+export function hooksByFieldText(hooks: HookWords[], ids: string[]): Map<string, CodeHit[]> {
   const out = new Map<string, CodeHit[]>();
-  for (const hook of hooks) {
-    if (isMdhHook(hook)) continue;
-    const t = hookText(hook);
-    const code = words(t.code);
-    const settings = words(t.settings);
+  for (const { hook, code, settings } of hooks) {
     for (const id of ids) {
       const hit = { hook, inCode: code.has(id), inSettings: settings.has(id) };
       if (hit.inCode || hit.inSettings) out.set(id, [...(out.get(id) || []), hit]);

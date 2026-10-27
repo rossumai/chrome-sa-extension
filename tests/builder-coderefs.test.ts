@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { hooksByFieldText, occurrences, hookText, codeHidden } from '../src/builder/codeRefs.js';
+import {
+  hookWordSets,
+  hooksByFieldText,
+  occurrences,
+  hookText,
+  codeHidden,
+} from '../src/builder/codeRefs.js';
 
 const fn = {
   id: 1,
@@ -33,7 +39,12 @@ const mdh = {
 
 describe('codeRefs', () => {
   it('finds a field id as a whole word in code and in settings, skipping MDH hooks', () => {
-    const map = hooksByFieldText([fn, exporter, web, mdh], ['doc_id', 'doc_id_2', 'total', 'none']);
+    const map = hooksByFieldText(hookWordSets([fn, exporter, web, mdh]), [
+      'doc_id',
+      'doc_id_2',
+      'total',
+      'none',
+    ]);
     expect(map.get('doc_id')!.map((h) => [h.hook.id, h.inCode, h.inSettings])).toEqual([
       [1, true, false],
       [2, false, true],
