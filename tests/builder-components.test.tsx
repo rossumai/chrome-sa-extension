@@ -1566,7 +1566,7 @@ describe('Builder engine', () => {
     expect(pickerValueIn(row('item_desc'))).toBe('');
   });
 
-  it('shows the settings read-only and warns when the use case extracts no tables', () => {
+  it('shows the settings read-only and the training queues one per line', () => {
     custom();
     act(() => {
       store.queues.value = [
@@ -1584,11 +1584,11 @@ describe('Builder engine', () => {
       store.enginePanel.value = true;
     });
     const settings = panel()!.querySelector('[data-engine-settings]')!.textContent;
-    expect(settings).toContain('Use case generic_ap');
-    expect(settings).toContain('Learns from: Training (77)');
-    expect(panel()!.querySelector('[data-engine-warning="use-case"]')!.textContent).toContain(
-      'its 1 table column stays empty',
-    );
+    expect(settings).toContain('Use casegeneric_ap');
+    expect(panel()!.querySelector('[data-engine-warning]')).toBeNull(); // facts, no verdicts
+    expect(
+      [...panel()!.querySelectorAll('[data-training-queue]')].map((r) => r.textContent),
+    ).toEqual(['Training77']);
     expect(panel()!.querySelector('[data-engine-unused]')!.textContent).toContain('unused_f');
   });
 

@@ -1493,6 +1493,36 @@
   background: var(--bg-hover);
 }
 
+/* Engine panel: a thin rule between its sections. */
+.enginePanel > .field {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.idInLabel {
+  font-family: ui-monospace, Menlo, monospace;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 3px 12px;
+  margin: 0;
+}
+
+.kv dt {
+  color: var(--text-secondary);
+}
+
+.kv dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .engineDeleted .linkName {
   text-decoration: line-through;
   color: var(--text-secondary);

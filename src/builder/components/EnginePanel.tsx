@@ -3,6 +3,7 @@ import {
   work,
   queues,
   selectedKey,
+  selectedQueueId,
   engineState,
   engineFieldsByName,
   enginePlanNow,
@@ -19,14 +20,6 @@ import Icon from './icons.jsx';
 import s from './Builder.module.css';
 
 const STATES = ['seeded', 'learning', 'new', 'rejected'] as const;
-
-// Use cases measured to extract no line items: a table column on them stays empty.
-const HEADER_ONLY = ['generic_ap'];
-
-function queueName(url: string): string {
-  const q = queues.value.find((x) => x.url === url);
-  return q ? `${q.name} (${q.id})` : url.split('/').filter(Boolean).pop() || url;
-}
 
 function seedText(f: any): string {
   return f.pre_trained_field_id ? `seed ${f.pre_trained_field_id}` : 'learning';
@@ -159,7 +152,7 @@ export default function EnginePanel() {
   );
   if (!e) {
     return (
-      <aside class={s.inspector} data-panel="engine">
+      <aside class={s.inspector + ' ' + s.enginePanel} data-panel="engine">
         {head}
         <div class={es.error ? s.warn : s.dim}>{es.error ?? 'Loading the engine…'}</div>
       </aside>
@@ -172,14 +165,12 @@ export default function EnginePanel() {
     const rejected = (node.rir_field_names?.length ?? 0) > 0 || node.disable_prediction === true;
     counts[rejected ? 'rejected' : engineStatus(node, byName).state]++;
   }
-  const tables = extracted.filter((x) => x.tabular).length;
-  const useCase = e.settings?.use_case ?? 'generic_ap';
   const unused = unusedEngineFields(work.value, es.fields);
   const plan = enginePlanNow.value;
   const sel = flatten(work.value).find((r) => r.key === selectedKey.value)?.node;
   const training: string[] = Array.isArray(e.training_queues) ? e.training_queues : [];
   return (
-    <aside class={s.inspector} data-panel="engine">
+    <aside class={s.inspector + ' ' + s.enginePanel} data-panel="engine">
       {head}
       <div class={s.dim}>
         {extracted.length} extracted fields:{' '}
@@ -190,27 +181,51 @@ export default function EnginePanel() {
         ))}
       </div>
       {sel && sel.category === 'datapoint' ? (
-        <Extraction node={sel}>{null}</Extraction>
+        <Extraction
+          node={sel}
+          label={
+            <Fragment>
+              Selected field · <span class={s.idInLabel}>{sel.id}</span>
+            </Fragment>
+          }
+        >
+          {null}
+        </Extraction>
       ) : (
         <div class={s.dim}>Pick a seed in the AI column, or click a row for its details.</div>
       )}
       <div class={s.field} data-engine-settings="">
         <span class={s.fieldLabel}>Settings (read-only)</span>
-        <div>
-          Use case <span class={s.mono}>{useCase}</span> · learning{' '}
-          {e.learning_enabled ? 'on' : 'off'} · {es.fields.length} engine fields
-        </div>
-        {tables > 0 && HEADER_ONLY.includes(useCase) && (
-          <div class={s.warn} data-engine-warning="use-case">
-            Use case {useCase} extracts no line items: its {tables} table{' '}
-            {tables === 1 ? 'column stays' : 'columns stay'} empty.
-          </div>
+        <dl class={s.kv}>
+          <dt>Use case</dt>
+          <dd class={s.mono}>{e.settings?.use_case ?? <span class={s.dim}>not set</span>}</dd>
+          <dt>Learning</dt>
+          <dd>{e.learning_enabled ? 'on' : 'off'}</dd>
+          <dt>Engine fields</dt>
+          <dd>{es.fields.length}</dd>
+          {e.description && <dt>Description</dt>}
+          {e.description && <dd>{e.description}</dd>}
+        </dl>
+      </div>
+      <div class={s.field + ' ' + s.engineList} data-engine-training="">
+        <span class={s.fieldLabel}>Learns from ({training.length})</span>
+        {training.length ? (
+          training.map((url) => {
+            const q = queues.value.find((x) => x.url === url);
+            const id = q?.id ?? url.split('/').filter(Boolean).pop();
+            return (
+              <div class={s.engineRow} data-training-queue={String(id)}>
+                <span class={s.linkName}>{q?.name ?? `Queue ${id}`}</span>
+                <span class={s.dim}>
+                  {q?.id === selectedQueueId.value ? 'this queue · ' : ''}
+                  {id}
+                </span>
+              </div>
+            );
+          })
+        ) : (
+          <div class={s.dim}>No training queues: it learns from no confirmed documents.</div>
         )}
-        <div>
-          Learns from:{' '}
-          {training.length ? training.map(queueName).join(', ') : <span class={s.dim}>none</span>}
-        </div>
-        {e.description && <div class={s.dim}>{e.description}</div>}
       </div>
       {plan && plan.create.length + plan.patch.length + engineDeletesNow.value.length > 0 && (
         <div class={s.field + ' ' + s.engineList} data-engine-save="">

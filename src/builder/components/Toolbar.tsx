@@ -74,7 +74,7 @@ function EngineBadge() {
         e
           ? [
               `${e.name} (${e.id})`,
-              `use case: ${e.settings?.use_case ?? 'generic_ap'}`,
+              `use case: ${e.settings?.use_case ?? 'not set'}`,
               `learning: ${e.learning_enabled ? 'on' : 'off'}`,
               `${es.fields.length} engine fields`,
               unused.length ? `not in this schema: ${unused.map((f) => f.name).join(', ')}` : '',

@@ -51,9 +51,12 @@ export function SeedPicker({ node }: { node: Node }) {
 export default function Extraction({
   node,
   children,
+  label,
 }: {
   node: Node;
   children: ComponentChildren;
+  /** The section's heading; the field panel names the engine, the engine panel the field. */
+  label?: ComponentChildren;
 }) {
   const es = engineState.value;
   if (es?.kind !== 'custom') {
@@ -97,7 +100,7 @@ export default function Extraction({
   return (
     <div class={s.field} data-extraction={st.state}>
       <span class={s.fieldLabel}>
-        Extraction · {es.engine.name} ({es.engine.id})
+        {label ?? `Extraction · ${es.engine.name} (${es.engine.id})`}
       </span>
       <div>
         <span class={s.aiChip + ' ' + s['ai_' + st.state]}>{st.state}</span>{' '}
