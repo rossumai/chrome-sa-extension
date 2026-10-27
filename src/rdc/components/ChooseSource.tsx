@@ -1,7 +1,7 @@
 // The modal that picks the one org this org deploys from. The token lives in this component's
 // state only: closing the modal unmounts it and the token goes with it.
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { apiBaseOf } from '../core.js';
 import { readableOrgs, type Source } from '../deploy.js';
 import { isRateLimited, rateLimitError, rateLimitMessage } from '../../net/rateLimit.js';
@@ -36,45 +36,62 @@ export default function ChooseSource({
   const [name, setName] = useState('test');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // The origin the list was read from, and a counter that voids a read an edit has outdated.
+  const [foundDomain, setFoundDomain] = useState('');
+  const edits = useRef(0);
+
+  const edited = () => {
+    edits.current++;
+    setOrgs(null);
+    setOrgId(null);
+    setFoundDomain('');
+  };
 
   const find = async () => {
     setError('');
     setOrgs(null);
-    const base = apiBaseOf(address.trim());
+    const addr = address.trim();
+    const tok = token.trim();
+    const base = apiBaseOf(addr);
     if (!base) {
-      setError(`Not a Rossum URL: ${address.trim()}`);
+      setError(`Not a Rossum URL: ${addr}`);
       return;
     }
-    if (!token) {
+    if (!tok) {
       setError('Give a token for it.');
       return;
     }
+    const origin = new URL(addr).origin;
+    const mine = ++edits.current;
     setBusy(true);
     try {
-      const list = readableOrgs(await fetcher(new URL(address.trim()).origin, token));
+      const list = readableOrgs(await fetcher(origin, tok));
+      if (mine !== edits.current) return;
       if (!list.length) setError('This token can read no organizations.');
       else {
         setOrgs(list);
         setOrgId(list[0].id);
+        setFoundDomain(origin);
       }
     } catch (e) {
+      if (mine !== edits.current) return;
       setError(
         isRateLimited(e)
           ? rateLimitMessage(e)
           : `Could not read the organizations: ${(e as Error).message}`,
       );
     } finally {
-      setBusy(false);
+      if (mine === edits.current) setBusy(false);
     }
   };
 
   const chosen = orgs?.find((o) => o.id === orgId);
   const shortName = name.trim();
   const confirm = () => {
-    if (!chosen || !shortName) return;
+    if (!chosen || !shortName || !foundDomain) return;
     onChosen({
       name: shortName,
-      domain: new URL(address.trim()).origin,
+      domain: foundDomain,
       orgId: chosen.id,
       orgName: chosen.name,
     });
@@ -97,7 +114,10 @@ export default function ChooseSource({
               type="text"
               placeholder="https://partner-sandbox.rossum.app"
               value={address}
-              onInput={(e) => setAddress((e.target as HTMLInputElement).value)}
+              onInput={(e) => {
+                setAddress((e.target as HTMLInputElement).value);
+                edited();
+              }}
             />
           </div>
           <div class={styles.fld}>
@@ -107,7 +127,10 @@ export default function ChooseSource({
               type="password"
               autocomplete="off"
               value={token}
-              onInput={(e) => setToken((e.target as HTMLInputElement).value)}
+              onInput={(e) => {
+                setToken((e.target as HTMLInputElement).value);
+                edited();
+              }}
             />
             <small>Only to find the organization. It is not kept.</small>
           </div>
@@ -155,7 +178,11 @@ export default function ChooseSource({
           <button class="btn btn-secondary" onClick={onCancel}>
             Cancel
           </button>
-          <button class="btn btn-primary" disabled={!chosen || !shortName} onClick={confirm}>
+          <button
+            class="btn btn-primary"
+            disabled={!chosen || !shortName || !foundDomain}
+            onClick={confirm}
+          >
             Deploy from {shortName || 'source'}
           </button>
         </div>

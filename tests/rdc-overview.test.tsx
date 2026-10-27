@@ -3,8 +3,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import Overview from '../src/rdc/components/Overview.jsx';
-import ChooseSource from '../src/rdc/components/ChooseSource.jsx';
-import { rateLimitError } from '../src/net/rateLimit.js';
+import ChooseSource, {
+  fetchOrgs as defaultFetchOrgs,
+} from '../src/rdc/components/ChooseSource.jsx';
+import { rateLimitError, isRateLimited } from '../src/net/rateLimit.js';
 
 const source = {
   name: 'test',
@@ -100,5 +102,65 @@ describe('ChooseSource', () => {
     await flush();
     expect(root.textContent).toContain('Not a Rossum URL: ftp://x');
     expect(fetchOrgs).not.toHaveBeenCalled();
+  });
+
+  it('forgets the found organizations when the address changes', async () => {
+    const fetchOrgs = vi.fn(async (_d: string, _t: string) => ({
+      results: [{ id: 20412, name: 'Acme Test' }],
+    }));
+    const onChosen = vi.fn();
+    mount(<ChooseSource onCancel={vi.fn()} onChosen={onChosen} fetchOrgs={fetchOrgs} />);
+    await type('rdc-src-address', 'https://partner-sandbox.rossum.app');
+    await type('rdc-src-token', 'tok');
+    act(() => byText('button', 'Find organizations').click());
+    await flush();
+    expect(root.querySelector('select')).not.toBeNull();
+    await type('rdc-src-address', 'https://other.rossum.app');
+    expect(root.querySelector('select')).toBeNull();
+    const confirm = byText('button', 'Deploy from test') as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+    act(() => confirm.click());
+    expect(onChosen).not.toHaveBeenCalled();
+  });
+
+  it('trims the address and the token', async () => {
+    const fetchOrgs = vi.fn(async (_d: string, _t: string) => ({
+      results: [{ id: 1, name: 'x' }],
+    }));
+    mount(<ChooseSource onCancel={vi.fn()} onChosen={vi.fn()} fetchOrgs={fetchOrgs} />);
+    await type('rdc-src-address', ' https://partner-sandbox.rossum.app ');
+    await type('rdc-src-token', 'tok \n');
+    act(() => byText('button', 'Find organizations').click());
+    await flush();
+    expect(fetchOrgs).toHaveBeenCalledWith('https://partner-sandbox.rossum.app', 'tok');
+  });
+});
+
+describe('default fetchOrgs', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const stub = (res: object) => {
+    const f = vi.fn(async () => res);
+    vi.stubGlobal('fetch', f);
+    return f;
+  };
+
+  it('sends the bearer token to the organizations endpoint', async () => {
+    const f = stub({ ok: true, status: 200, json: async () => ({ results: [] }) });
+    await defaultFetchOrgs('https://partner-sandbox.rossum.app', 'tok');
+    expect(f).toHaveBeenCalledWith('https://partner-sandbox.rossum.app/api/v1/organizations', {
+      headers: { Authorization: 'Bearer tok' },
+    });
+  });
+
+  it('throws the rate-limit error on 429', async () => {
+    stub({ ok: false, status: 429, headers: { get: () => '7' } });
+    const err: any = await defaultFetchOrgs('https://x.example', 't').catch((e: any) => e);
+    expect(isRateLimited(err)).toBe(true);
+    expect(err.retryAfter).toBe(7);
+  });
+
+  it('throws HTTP <status> otherwise', async () => {
+    stub({ ok: false, status: 500 });
+    await expect(defaultFetchOrgs('https://x.example', 't')).rejects.toThrow('HTTP 500');
   });
 });

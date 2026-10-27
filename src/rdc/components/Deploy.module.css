@@ -81,10 +81,6 @@
   cursor: pointer;
 }
 .hero {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  align-items: center;
   padding: 40px 0 80px;
 }
 .hero h1 {
@@ -224,8 +220,7 @@
   margin-top: 4px;
 }
 @media (max-width: 900px) {
-  .ov,
-  .hero {
+  .ov {
     grid-template-columns: 1fr;
   }
 }
