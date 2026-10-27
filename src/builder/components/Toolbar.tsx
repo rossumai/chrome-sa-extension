@@ -120,8 +120,10 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
           schema.value ? ` · schema ${draftName.value} (${schema.value.id})` : '',
         ].join('')}
       >
-        {ws ? `${ws.name} › ` : ''}
-        <b>{q ? `${q.name} (${q.id})` : 'No queue'}</b>
+        <span class={s.queueCrumb}>
+          {ws ? `${ws.name} › ` : ''}
+          <b>{q ? `${q.name} (${q.id})` : 'No queue'}</b>
+        </span>
         {schema.value && (
           <span class={s.schemaCrumb + (renamed.value ? ' ' + s.renamedItem : '')}>
             {' · schema '}

@@ -169,7 +169,25 @@
 }
 
 .toolbar > .crumb {
+  display: flex;
   min-width: 120px;
+}
+
+/* The queue gives way first, so the schema name (and its rename box) stays readable. */
+.crumb > .queueCrumb,
+.crumb > .schemaCrumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+
+.crumb > .queueCrumb {
+  flex: 0 100 auto;
+}
+
+.crumb > .schemaCrumb {
+  flex: 0 1 auto;
 }
 
 .toolbar > .engineBadge {
@@ -208,6 +226,14 @@
 
 .crumb b {
   color: var(--text-primary);
+}
+
+/* The schema name being renamed: as wide as its text, not the whole breadcrumb. */
+.crumb .cellInput {
+  width: auto;
+  field-sizing: content;
+  min-width: 8ch;
+  max-width: 240px;
 }
 
 .shared {
