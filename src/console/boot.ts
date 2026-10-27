@@ -20,9 +20,9 @@ export function isValidApp(v: unknown): v is AppId {
   );
 }
 
-// The apps behind the experimental gate (`gated: true` in Rail.tsx): the Builder, the Academy
-// and the rdc proof of concept. Everything else, Mr. Fabry included, is always available.
-const GATED_APPS: readonly AppId[] = ['builder', 'academy', 'rdc'];
+// The apps behind the experimental gate (`gated: true` in Rail.tsx): the Academy and the rdc
+// proof of concept. Everything else, Mr. Fabry included, is always available.
+const GATED_APPS: readonly AppId[] = ['academy', 'rdc'];
 
 function isGatedApp(app: AppId): boolean {
   return GATED_APPS.includes(app);

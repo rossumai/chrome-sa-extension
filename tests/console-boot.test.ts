@@ -133,14 +133,14 @@ describe('fabry is public (no gate)', () => {
   });
 });
 
-// The experimental gate hides every app marked `gated` in Rail.tsx — today the Builder, the
-// Academy and the rdc proof of concept — and boot must agree with the rail on all three.
-describe('gated apps (builder, academy, rdc)', () => {
+// The experimental gate hides every app marked `gated` in Rail.tsx — today the Academy and
+// the rdc proof of concept — and boot must agree with the rail on both.
+describe('gated apps (academy, rdc)', () => {
   it('isValidApp accepts rdc', () => {
     expect(isValidApp('rdc')).toBe(true);
   });
   it('picks a gated app on boot only when unlocked', () => {
-    for (const app of ['builder', 'academy', 'rdc']) {
+    for (const app of ['academy', 'rdc']) {
       expect(pickInitialApp({ persistedApp: app, unlocked: true })).toBe(app);
       expect(pickInitialApp({ stagingApp: app, unlocked: true })).toBe(app);
       expect(pickInitialApp({ persistedApp: app, unlocked: false })).toBe('mdh');
@@ -154,7 +154,6 @@ describe('gated apps (builder, academy, rdc)', () => {
     expect(appAfterGateChange('rdc', false)).toBe('mdh');
     expect(appAfterGateChange('rdc', true)).toBe('rdc');
     expect(appAfterGateChange('academy', false)).toBe('mdh');
-    expect(appAfterGateChange('builder', false)).toBe('mdh');
     for (const app of ['mdh', 'audit', 'galaxy', 'inspector', 'fabry', 'cib'] as const)
       expect(appAfterGateChange(app, false)).toBe(app);
   });
