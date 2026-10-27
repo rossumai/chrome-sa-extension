@@ -300,6 +300,9 @@
 .flags {
   display: inline-flex;
   gap: 8px;
+  /* On the baseline the buttons left room for a descender under them, making every row 3px
+     taller than without this column — so rows shrank when a panel hid it. */
+  vertical-align: middle;
 }
 
 .flags > span {
