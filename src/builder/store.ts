@@ -99,16 +99,15 @@ export const engineChanges = computed(() => {
   const p = enginePlanNow.value;
   return (p ? p.create.length + p.patch.length : 0) + engineDeletesNow.value.length;
 });
-// The engine panel (custom engine only): the grid shows only extracted fields, each with its
-// seed picker in the AI column.
-export const enginePanel = signal(false);
 // For the engine panel: engine field name -> the other queues on this engine that use it,
 // read from their schemas when the panel first opens. null until then.
 export const engineUsers = signal<{
   byName: Map<string, string[]> | null;
   error: string | null;
 } | null>(null);
-export const engineMode = computed(() => enginePanel.value && engineState.value?.kind === 'custom');
+// The engine panel (custom engine only): the grid shows only extracted fields, each with its
+// seed picker in the AI column.
+export const engineMode = computed(() => rightPanel.value?.kind === 'engine');
 
 export const selectedQueue = computed(
   () => queues.value.find((q) => q.id === selectedQueueId.value) || null,
@@ -136,6 +135,17 @@ export function startDraft(name: string, content: Node[]) {
 export const rules = signal<any[]>([]);
 export const ruleId = signal<number | null>(null);
 export const pickedRule = computed(() => rules.value.find((r) => r.id === ruleId.value) || null);
+// The right-hand panel, one at a time; null = the field inspector (empty with no row selected).
+// Mr. Fabry's chat and the validation results live on in their own signals when it closes.
+export type RightPanel =
+  | { kind: 'fabry' }
+  | { kind: 'validation'; tab: 'rules' | 'provenance' }
+  | { kind: 'rule'; editor: RuleEditorState }
+  | { kind: 'hook'; editor: HookEditorState }
+  | { kind: 'code'; hookId: number; fieldId: string } // a hook read-only, at one field's mention
+  | { kind: 'engine' };
+export const rightPanel = signal<RightPanel | null>(null);
+
 // Rule mode: the right panel edits one rule (ruleId null = a new one).
 export type RuleEditorState = {
   ruleId: number | null;
@@ -144,7 +154,10 @@ export type RuleEditorState = {
   /** The field a new rule was started from (its Rules-column +), for Mr. Fabry's prompt. */
   fromField?: string | null;
 };
-export const ruleEditor = signal<RuleEditorState | null>(null);
+export const ruleEditor = computed(() => {
+  const p = rightPanel.value;
+  return p?.kind === 'rule' ? p.editor : null;
+});
 export const ruleDirty = computed(() =>
   ruleEditor.value ? !sameDraft(ruleEditor.value.base, ruleEditor.value.draft) : false,
 );
@@ -219,7 +232,6 @@ export type SchemaTurn = {
   reply?: string; // the raw reply, when it held no usable list of changes
 };
 export type SchemaFabryState = {
-  open: boolean;
   chatId: string | null;
   busy: boolean;
   error: string | null;
@@ -227,7 +239,6 @@ export type SchemaFabryState = {
   problems: string[]; // what is still wrong after the last answer — "Ask Mr. Fabry to fix"
 };
 export const schemaFabry = signal<SchemaFabryState>({
-  open: false,
   chatId: null,
   busy: false,
   error: null,
@@ -259,11 +270,12 @@ export const fieldCodeHooks = computed(() =>
       .filter(Boolean),
   ),
 );
-// The read-only hook view in the right panel: one hook, at the first mention of one field.
-export const codeView = signal<{ hookId: number; fieldId: string } | null>(null);
 export const fieldHooks = computed(() => hooksByField(mdhHooks(hooks.value)));
 export type HookEditorState = { hookId: number; base: string; draft: string };
-export const hookEditor = signal<HookEditorState | null>(null);
+export const hookEditor = computed(() => {
+  const p = rightPanel.value;
+  return p?.kind === 'hook' ? p.editor : null;
+});
 export const hookDirty = computed(() =>
   hookEditor.value ? hookEditor.value.base !== hookEditor.value.draft : false,
 );
@@ -319,9 +331,7 @@ export const warningKeys = computed(
 );
 export const onlyWarnings = signal(false);
 
-// The validation panel (right side) and its tab; null = closed. A row briefly flashed after
-// a jump from the panel.
-export const validationPanel = signal<'rules' | 'provenance' | null>(null);
+// A row briefly flashed after a jump from the validation panel.
 export const flashRowKey = signal<string | null>(null);
 
 // The picked annotation's content tree as fetched (the provenance replay reads it).

@@ -1,28 +1,12 @@
 // Fixed layout for a 13" screen: the right panel has one width (.inspector); the queue list is
 // a drawer while a schema is open; the grid turns compact while a right panel is open.
 import { signal, computed } from '@preact/signals';
-import {
-  schemaFabry,
-  validationPanel,
-  ruleEditor,
-  hookEditor,
-  selectedKey,
-  codeView,
-  enginePanel,
-} from '../store.js';
+import { rightPanel, selectedKey } from '../store.js';
 
 export const navDrawer = signal(false);
 
-export const panelOpen = computed(
-  () =>
-    schemaFabry.value.open ||
-    !!validationPanel.value ||
-    !!ruleEditor.value ||
-    !!hookEditor.value ||
-    !!codeView.value ||
-    enginePanel.value ||
-    selectedKey.value != null,
-);
+// A right panel, or the inspector for a selected row.
+export const panelOpen = computed(() => rightPanel.value != null || selectedKey.value != null);
 
 // Wide: the right panel takes all but a narrow grid (for long code). One choice for every
 // panel, remembered per browser.

@@ -7,7 +7,7 @@ import {
   revalidating,
   revalidateError,
   validation,
-  validationPanel,
+  rightPanel,
 } from '../store.js';
 import { pickAnnotation, clearAnnotation, revalidate, openValidationPanel } from '../index.jsx';
 import { annotationIdFromInput } from '../../rossum/annotationUrl.js';
@@ -65,7 +65,7 @@ export default function AnnotationPicker() {
       {id != null && !values.value && !annotationError.value && <span class={s.dim}>Loading…</span>}
       {annotationError.value && <span class={s.warn}>{annotationError.value}</span>}
       {revalidateError.value && <span class={s.warn}>{revalidateError.value}</span>}
-      {validation.value && !validationPanel.value && (
+      {validation.value && rightPanel.value?.kind !== 'validation' && (
         <button
           type="button"
           class={s.linkBtn}

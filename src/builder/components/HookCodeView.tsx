@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { codeView, hooks } from '../store.js';
+import { rightPanel, hooks, type RightPanel } from '../store.js';
 import { closeCodeView } from '../index.jsx';
 import { hookText, codeHidden, occurrences } from '../codeRefs.js';
 import CodeEditor, { type CodeEditorHandle } from './CodeEditor.jsx';
@@ -10,7 +10,7 @@ import s from './Builder.module.css';
 // A hook that mentions a field, read-only: its code or its settings, scrolled to each place
 // the field id appears (↑/↓ step through them). Editing other hooks is out of scope.
 export default function HookCodeView() {
-  const cv = codeView.value!;
+  const cv = rightPanel.value as Extract<RightPanel, { kind: 'code' }>;
   const hook = hooks.value.find((x) => x.id === cv.hookId);
   const text = hookText(hook);
   const inCode = occurrences(text.code, cv.fieldId);

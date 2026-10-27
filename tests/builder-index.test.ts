@@ -538,8 +538,7 @@ describe('create and delete', () => {
     store.rules.value = [{ id: 4, name: 'R', trigger_condition: 'field.a', actions: [] }];
     store.hooks.value = [{ id: 7, name: 'H', settings: {} }];
     store.engineState.value = { kind: 'generic', engine: null, fields: [], error: null };
-    store.codeView.value = { hookId: 7, fieldId: 'a' };
-    store.validationPanel.value = 'rules';
+    store.rightPanel.value = { kind: 'code', hookId: 7, fieldId: 'a' };
     store.schemaFabry.value = { ...store.schemaFabry.value, chatId: 'c', turns: [] };
     openRuleEditor(4);
     vi.spyOn(window, 'confirm').mockReturnValue(true);
@@ -548,8 +547,7 @@ describe('create and delete', () => {
     expect(store.rules.value).toEqual([]);
     expect(store.hooks.value).toEqual([]);
     expect(store.engineState.value).toBeNull();
-    expect(store.codeView.value).toBeNull();
-    expect(store.validationPanel.value).toBeNull();
+    expect(store.rightPanel.value).toBeNull();
     expect(store.schemaFabry.value.chatId).toBeNull();
     vi.mocked(window.confirm).mockRestore();
   });
@@ -600,7 +598,7 @@ describe('rule editor', () => {
   beforeEach(() => {
     vi.mocked(api.createRule).mockReset();
     vi.mocked(api.patchRule).mockReset();
-    store.ruleEditor.value = null;
+    store.rightPanel.value = null;
     store.queues.value = [{ id: 1, name: 'A', url: 'q/1', schema: 's/7' }];
     store.selectedQueueId.value = 1;
     store.workspaces.value = [{ id: 10, url: 'w/10', name: 'AP', organization: 'o/1' }];
@@ -697,7 +695,7 @@ describe('Mr. Fabry in the rule editor', () => {
     );
     store.queues.value = [{ id: 1, name: 'A', url: 'q/1', schema: 's/7' }];
     store.selectedQueueId.value = 1;
-    store.ruleEditor.value = null;
+    store.rightPanel.value = null;
   });
 
   it('fills the editor with the proposal, unsaved, and reuses the chat for a follow-up', async () => {
@@ -760,7 +758,7 @@ describe('Mr. Fabry on a field', () => {
   beforeEach(() => {
     vi.mocked(agentApi.createChat).mockClear();
     vi.mocked(agentApi.streamMessage).mockReset();
-    store.ruleEditor.value = null;
+    store.rightPanel.value = null;
     store.fieldAssist.value = {
       forKey: null,
       chatId: null,
@@ -851,11 +849,10 @@ describe('Mr. Fabry on the whole schema', () => {
     vi.mocked(agentApi.createChat).mockClear();
     vi.mocked(agentApi.streamMessage).mockReset();
     vi.mocked(api.validateSchema).mockReset();
-    store.ruleEditor.value = null;
+    store.rightPanel.value = null;
     store.schema.value = { id: 7, name: 'S', modified_at: 't0', content: content() };
     store.startDraft('S', withKeys(content()));
     store.schemaFabry.value = {
-      open: false,
       chatId: null,
       busy: false,
       error: null,
@@ -866,7 +863,7 @@ describe('Mr. Fabry on the whole schema', () => {
 
   it('applies the changes as one edit, validates the result, and reports what it skipped', async () => {
     openSchemaFabry();
-    expect(store.schemaFabry.value.open).toBe(true);
+    expect(store.rightPanel.value).toEqual({ kind: 'fabry' });
     fabryReply(
       JSON.stringify({
         summary: 'Added a PO field',
@@ -952,8 +949,8 @@ describe('Mr. Fabry on the whole schema', () => {
   });
 
   it('opening another schema starts a new conversation', async () => {
+    store.rightPanel.value = { kind: 'fabry' };
     store.schemaFabry.value = {
-      open: true,
       chatId: 'c',
       busy: false,
       error: null,
@@ -1003,8 +1000,7 @@ describe('hook mode (MDH)', () => {
   beforeEach(() => {
     vi.mocked(api.patchHookSettings).mockReset();
     vi.mocked(agentApi.streamMessage).mockReset();
-    store.ruleEditor.value = null;
-    store.hookEditor.value = null;
+    store.rightPanel.value = null;
     store.hooks.value = [hook];
     store.startDraft(
       'S',
@@ -1144,9 +1140,9 @@ describe('revalidate', () => {
       matched_trigger_rules: [4],
     });
     vi.mocked(api.getAnnotationContent).mockResolvedValue(content('NEW'));
-    store.validationPanel.value = null;
+    store.rightPanel.value = null;
     await revalidate();
-    expect(store.validationPanel.value).toBe('rules'); // results open in the right panel
+    expect(store.rightPanel.value).toEqual({ kind: 'validation', tab: 'rules' }); // results open in the right panel
     expect(api.startAnnotation).toHaveBeenCalledWith(5);
     expect(api.cancelAnnotation).toHaveBeenCalledWith(5);
     expect(store.values.value!.values.get('doc_id')).toEqual(['NEW']);
@@ -1190,17 +1186,20 @@ describe('rule evaluation on the picked annotation', () => {
       store.selectedQueueId.value = 3;
       store.annotationId.value = 55;
       store.annotationContent.value = [{ category: 'section', schema_id: 's', children: [] }];
-      store.ruleEditor.value = {
-        ruleId: 40,
-        base: { name: 'R', description: '', enabled: true, trigger_condition: 'x', actions: [] },
-        draft: {
-          name: 'R',
-          description: '',
-          enabled: true,
-          trigger_condition: 'field.a > 1',
-          actions: [],
+      store.rightPanel.value = {
+        kind: 'rule',
+        editor: {
+          ruleId: 40,
+          base: { name: 'R', description: '', enabled: true, trigger_condition: 'x', actions: [] },
+          draft: {
+            name: 'R',
+            description: '',
+            enabled: true,
+            trigger_condition: 'field.a > 1',
+            actions: [],
+          },
+          fromField: null,
         },
-        fromField: null,
       };
       vi.mocked(api.evaluateRules).mockResolvedValue({
         condition_values: [[false, true]],
@@ -1235,7 +1234,7 @@ describe('rule evaluation on the picked annotation', () => {
       });
     } finally {
       vi.useRealTimers();
-      store.ruleEditor.value = null;
+      store.rightPanel.value = null;
     }
   });
 });

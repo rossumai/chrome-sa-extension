@@ -2,7 +2,8 @@ import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import {
   validation,
-  validationPanel,
+  rightPanel,
+  type RightPanel,
   rules,
   values,
   work,
@@ -418,7 +419,7 @@ function ProvenanceTab() {
 }
 
 export default function ValidationPanel() {
-  const tab = validationPanel.value!;
+  const { tab } = rightPanel.value as Extract<RightPanel, { kind: 'validation' }>;
   return (
     <aside class={s.inspector} data-panel="validation">
       <div class={s.ruleHead}>
@@ -434,7 +435,7 @@ export default function ValidationPanel() {
             type="button"
             data-tab={t}
             class={s.tab + (tab === t ? ' ' + s.tabOn : '')}
-            onClick={() => (validationPanel.value = t)}
+            onClick={() => (rightPanel.value = { kind: 'validation', tab: t })}
           >
             {t === 'rules' ? 'Rules' : 'Provenance'}
           </button>

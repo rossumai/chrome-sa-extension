@@ -13,7 +13,7 @@ import {
   schemaFabry,
   engineState,
   engineChanges,
-  enginePanel,
+  engineMode,
   work,
 } from '../store.js';
 import {
@@ -62,7 +62,7 @@ function EngineBadge() {
   }
   const e = es.engine;
   const unused = e ? unusedEngineFields(work.value, es.fields) : [];
-  const open = enginePanel.value;
+  const open = engineMode.value;
   return (
     <button
       type="button"

@@ -29,12 +29,18 @@ import {
   engineState,
   engineFieldsByName,
   fieldCodeHooks,
-  codeView,
   engineMode,
   ruleEval,
 } from '../store.js';
 import { visibleKeys, withAncestors } from '../fieldFilter.js';
-import { apply, openRuleEditor, openHookEditor, openCodeView, openEnginePanel } from '../index.jsx';
+import {
+  apply,
+  openRuleEditor,
+  openHookEditor,
+  openCodeView,
+  closeCodeView,
+  openEnginePanel,
+} from '../index.jsx';
 import {
   setAttr,
   setDeleted,
@@ -559,7 +565,7 @@ function Row({
       data-deleted={deleted ? 'true' : undefined}
       data-rule={role}
       onClick={() => {
-        codeView.value = null; // a row click shows that field, not the hook being read
+        closeCodeView(); // a row click shows that field, not the hook being read
         selectedKey.value = key;
       }}
       onDragOver={(e) => e.preventDefault()}

@@ -164,8 +164,9 @@ export async function openSchema(schemaId: number) {
 
 /** Drop everything that belonged to the open queue or schema. */
 function clearOpen() {
-  store.ruleEditor.value = null;
-  store.hookEditor.value = null;
+  // Mr. Fabry and the validation panel stay open for the next schema; the rest belong to this one.
+  const kind = store.rightPanel.value?.kind;
+  if (kind !== 'fabry' && kind !== 'validation') store.rightPanel.value = null;
   store.hooks.value = [];
   // A new schema, a new conversation: Mr. Fabry's context and its row keys belong to the old one.
   assistSeq.schema++;
@@ -185,8 +186,6 @@ function clearOpen() {
   store.ruleId.value = null;
   store.selectedKey.value = null;
   store.engineState.value = null;
-  store.codeView.value = null;
-  store.enginePanel.value = false;
   store.engineUsers.value = null;
   store.onlyWarnings.value = false;
   store.schema.value = null;
@@ -194,8 +193,7 @@ function clearOpen() {
 
 async function load(queueId: number | null, schemaId: number | null) {
   if (store.dirty.value && !confirm('Discard the staged changes to this schema?')) return;
-  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
-  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
+  if (!leaveEditors()) return;
   const seq = ++openSeq;
   clearOpen();
   store.selectedQueueId.value = queueId;
@@ -446,34 +444,57 @@ async function deleteEngineFields(): Promise<string | null> {
   }
 }
 
+// ---- The right panel ---------------------------------------------------------------------
+// One panel at a time (store.rightPanel). Opening one replaces the one open.
+
+/** Show `panel` and select row `key` (the inspector shows a selected row when none is open). */
+function showPanel(panel: store.RightPanel, key: string | null = null) {
+  store.rightPanel.value = panel;
+  store.selectedKey.value = key;
+}
+
+/** Close the panel if it is a `kind` one. */
+function hidePanel(kind: store.RightPanel['kind']) {
+  if (store.rightPanel.value?.kind === kind) store.rightPanel.value = null;
+}
+
+/**
+ * Close an open rule or hook editor before something replaces it, asking first when it holds
+ * unsaved changes. False: the user kept it open.
+ */
+function leaveEditors(): boolean {
+  if (store.ruleEditor.value) closeRuleEditor();
+  else if (store.hookEditor.value) closeHookEditor();
+  return !store.ruleEditor.value && !store.hookEditor.value;
+}
+
+/** Esc: close whichever panel is open. */
+export function closeRightPanel() {
+  const close = {
+    fabry: closeSchemaFabry,
+    validation: closeValidationPanel,
+    rule: closeRuleEditor,
+    hook: closeHookEditor,
+    code: closeCodeView,
+    engine: closeEnginePanel,
+  };
+  const kind = store.rightPanel.value?.kind;
+  if (kind) close[kind]();
+}
+
 /** Show a hook read-only in the right panel, at the first place it mentions the field. */
 export function openCodeView(hookId: number, fieldId: string) {
-  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
-  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
-  store.validationPanel.value = null;
-  store.ruleEditor.value = null;
-  store.hookEditor.value = null;
-  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
-  store.selectedKey.value = null;
-  store.enginePanel.value = false;
-  store.codeView.value = { hookId, fieldId };
+  if (leaveEditors()) showPanel({ kind: 'code', hookId, fieldId });
 }
 
 export function closeCodeView() {
-  store.codeView.value = null;
+  hidePanel('code');
 }
 
 /** The engine panel; `key` selects that row (a click on its AI cell). Custom engine only. */
 export function openEnginePanel(key?: string) {
-  if (store.engineState.value?.kind !== 'custom') return;
-  if (store.ruleEditor.value) closeRuleEditor();
-  if (store.hookEditor.value) closeHookEditor();
-  if (store.ruleEditor.value || store.hookEditor.value) return; // the user kept unsaved work open
-  store.validationPanel.value = null;
-  store.codeView.value = null;
-  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
-  store.selectedKey.value = key ?? null;
-  store.enginePanel.value = true;
+  if (store.engineState.value?.kind !== 'custom' || !leaveEditors()) return;
+  showPanel({ kind: 'engine' }, key ?? null);
   if (!store.engineUsers.value) loadEngineUsers();
 }
 
@@ -516,7 +537,7 @@ export function toggleEngineDelete(id: number) {
 
 /** Closing also drops the selection, so the field panel does not take the engine's place. */
 export function closeEnginePanel() {
-  store.enginePanel.value = false;
+  hidePanel('engine');
   store.selectedKey.value = null;
 }
 
@@ -650,7 +671,7 @@ export async function createUnlinkedSchema(name: string, mode: 'copy' | 'empty')
 function closeEditor() {
   openSeq++;
   clearOpen();
-  store.validationPanel.value = null;
+  store.rightPanel.value = null;
   store.selectedQueueId.value = null;
   store.selectedSchemaId.value = null;
   setBase(null);
@@ -690,32 +711,28 @@ export async function deleteSchema(id: number) {
 
 /** Open a rule from the queue's list, or a new one (null) — started from `fieldId` if given. */
 export function openRuleEditor(id: number | null, fieldId?: string) {
-  store.validationPanel.value = null;
-  store.codeView.value = null;
-  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
-  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
-  store.hookEditor.value = null;
+  if (!leaveEditors()) return;
   const rule = id == null ? null : store.rules.value.find((r) => r.id === id);
   const draft = rule ? draftFromRule(rule) : emptyDraft(fieldId);
-  store.schemaFabry.value = { ...store.schemaFabry.value, open: false }; // one right panel at a time
-  store.ruleEditor.value = {
-    ruleId: rule ? rule.id : null,
-    base: draft,
-    draft,
-    fromField: rule ? null : (fieldId ?? null),
-  };
+  showPanel({
+    kind: 'rule',
+    editor: {
+      ruleId: rule ? rule.id : null,
+      base: draft,
+      draft,
+      fromField: rule ? null : (fieldId ?? null),
+    },
+  });
   assistSeq.rule++;
   store.assist.value = store.IDLE_ASSIST;
   store.ruleErrors.value = [];
-  store.selectedKey.value = null;
-  store.enginePanel.value = false;
   if (rule) store.ruleId.value = rule.id;
 }
 
 export function updateRuleDraft(patch: Partial<RuleDraft>) {
   const ed = store.ruleEditor.value;
   if (!ed) return;
-  store.ruleEditor.value = { ...ed, draft: { ...ed.draft, ...patch } };
+  store.rightPanel.value = { kind: 'rule', editor: { ...ed, draft: { ...ed.draft, ...patch } } };
 }
 
 // The open rule on the picked annotation, through Rossum's preview endpoint. Debounced: the
@@ -756,7 +773,7 @@ export function scheduleRuleEval() {
 
 export function closeRuleEditor() {
   if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
-  store.ruleEditor.value = null;
+  hidePanel('rule');
   store.ruleErrors.value = [];
   store.ruleId.value = null;
   scheduleRuleEval();
@@ -794,7 +811,12 @@ export async function saveRule() {
           );
     if (queue) await loadRules(queue.id);
     const draft = draftFromRule(saved);
-    store.ruleEditor.value = { ruleId: saved?.id ?? ed.ruleId, base: draft, draft };
+    if (store.ruleEditor.value?.ruleId === ed.ruleId) {
+      store.rightPanel.value = {
+        kind: 'rule',
+        editor: { ruleId: saved?.id ?? ed.ruleId, base: draft, draft },
+      };
+    }
     if (saved?.id != null) store.ruleId.value = saved.id;
   } catch (err: any) {
     store.ruleErrors.value = [errorText(err, 'Failed to save the rule')];
@@ -807,7 +829,7 @@ export async function saveRule() {
 export function discardRule() {
   const ed = store.ruleEditor.value;
   if (!ed) return;
-  store.ruleEditor.value = { ...ed, draft: ed.base };
+  store.rightPanel.value = { kind: 'rule', editor: { ...ed, draft: ed.base } };
   store.ruleErrors.value = [];
   store.assistRev.value++;
 }
@@ -916,18 +938,11 @@ export async function askFieldAssistant(key: string, request: string) {
 // ---- Mr. Fabry for the whole schema --------------------------------------------------------
 
 export function openSchemaFabry() {
-  store.validationPanel.value = null;
-  store.codeView.value = null;
-  if (store.ruleEditor.value) closeRuleEditor();
-  if (store.hookEditor.value) closeHookEditor();
-  if (store.ruleEditor.value || store.hookEditor.value) return; // the user kept unsaved work open
-  store.schemaFabry.value = { ...store.schemaFabry.value, open: true };
-  store.selectedKey.value = null;
-  store.enginePanel.value = false;
+  if (leaveEditors()) showPanel({ kind: 'fabry' });
 }
 
 export function closeSchemaFabry() {
-  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
+  hidePanel('fabry');
   store.onlyFabryChanges.value = false;
 }
 
@@ -1028,40 +1043,31 @@ export function fixWithFabry() {
 const pretty = (v: unknown) => JSON.stringify(v ?? {}, null, 2);
 
 export function openHookEditor(id: number) {
-  store.validationPanel.value = null;
-  store.codeView.value = null;
-  if (store.ruleDirty.value && !confirm('Discard the unsaved changes to this rule?')) return;
-  if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
   const hook = store.hooks.value.find((h) => h.id === id);
-  if (!hook) return;
-  store.ruleEditor.value = null;
-  store.ruleId.value = null;
-  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
+  if (!hook || !leaveEditors()) return;
   const text = pretty(hook.settings);
-  store.hookEditor.value = { hookId: id, base: text, draft: text };
+  showPanel({ kind: 'hook', editor: { hookId: id, base: text, draft: text } });
   store.hookConfigIndex.value = null;
   store.hookErrors.value = [];
   assistSeq.hook++;
   store.hookAssist.value = store.IDLE_ASSIST;
-  store.selectedKey.value = null;
-  store.enginePanel.value = false;
 }
 
 export function updateHookDraft(text: string) {
   const ed = store.hookEditor.value;
-  if (ed) store.hookEditor.value = { ...ed, draft: text };
+  if (ed) store.rightPanel.value = { kind: 'hook', editor: { ...ed, draft: text } };
 }
 
 export function closeHookEditor() {
   if (store.hookDirty.value && !confirm('Discard the unsaved changes to this hook?')) return;
-  store.hookEditor.value = null;
+  hidePanel('hook');
   store.hookErrors.value = [];
 }
 
 export function discardHook() {
   const ed = store.hookEditor.value;
   if (!ed) return;
-  store.hookEditor.value = { ...ed, draft: ed.base };
+  store.rightPanel.value = { kind: 'hook', editor: { ...ed, draft: ed.base } };
   store.hookErrors.value = [];
   store.hookAssistRev.value++;
 }
@@ -1093,7 +1099,12 @@ export async function saveHook() {
       h.id === ed.hookId ? { ...h, settings, modified_at } : h,
     );
     const text = pretty(settings);
-    store.hookEditor.value = { hookId: ed.hookId, base: text, draft: text };
+    if (store.hookEditor.value?.hookId === ed.hookId) {
+      store.rightPanel.value = {
+        kind: 'hook',
+        editor: { hookId: ed.hookId, base: text, draft: text },
+      };
+    }
     store.hookAssistRev.value++;
   } catch (err: any) {
     store.hookErrors.value = [errorText(err, 'Failed to save the hook')];
@@ -1199,17 +1210,12 @@ export async function revalidate() {
 /** Show the results in the right panel — unless an edited rule or hook is open there. */
 export function openValidationPanel(tab: 'rules' | 'provenance' = 'rules') {
   if (store.ruleDirty.value || store.hookDirty.value) return; // keep unsaved work in view
-  store.codeView.value = null;
-  store.ruleEditor.value = null;
-  store.hookEditor.value = null;
-  store.schemaFabry.value = { ...store.schemaFabry.value, open: false };
-  store.selectedKey.value = null;
-  store.enginePanel.value = false;
-  store.validationPanel.value = tab;
+  leaveEditors();
+  showPanel({ kind: 'validation', tab });
 }
 
 export function closeValidationPanel() {
-  store.validationPanel.value = null;
+  hidePanel('validation');
 }
 
 const FLASH_ROW_MS = 1200;

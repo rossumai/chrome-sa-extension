@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { h, type ComponentType } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import {
   error,
@@ -10,13 +10,9 @@ import {
   generalErrors,
   queues,
   selectedKey,
-  ruleEditor,
-  schemaFabry,
-  hookEditor,
-  validationPanel,
-  codeView,
-  enginePanel,
-  engineMode,
+  schemaLocked,
+  rightPanel,
+  type RightPanel,
 } from '../store.js';
 import {
   undoChange,
@@ -24,12 +20,7 @@ import {
   loadQueues,
   openQueue,
   openSchema,
-  closeRuleEditor,
-  closeSchemaFabry,
-  closeHookEditor,
-  closeValidationPanel,
-  closeCodeView,
-  closeEnginePanel,
+  closeRightPanel,
 } from '../index.jsx';
 import Navigator from './Navigator.jsx';
 import Toolbar from './Toolbar.jsx';
@@ -45,6 +36,16 @@ import SaveDialog from './SaveDialog.jsx';
 import FilterBar from './FilterBar.jsx';
 import { navDrawer, panelOpen, panelWide, loadPanelWide } from './panels.js';
 import s from './Builder.module.css';
+
+// The component for each right panel (store.RightPanel); with none, the field inspector.
+const PANELS: Record<RightPanel['kind'], ComponentType> = {
+  fabry: SchemaFabryPanel,
+  validation: ValidationPanel,
+  rule: RuleEditor,
+  hook: HookEditor,
+  code: HookCodeView,
+  engine: EnginePanel,
+};
 
 function inField(t: EventTarget | null): boolean {
   const el = t as HTMLElement | null;
@@ -64,17 +65,12 @@ export default function App({ connected }: { connected: boolean | null }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !inField(e.target)) {
         if (navDrawer.value) navDrawer.value = false;
-        else if (schemaFabry.value.open) closeSchemaFabry();
-        else if (validationPanel.value) closeValidationPanel();
-        else if (ruleEditor.value) closeRuleEditor();
-        else if (hookEditor.value) closeHookEditor();
-        else if (codeView.value) closeCodeView();
-        else if (enginePanel.value) closeEnginePanel();
+        else if (rightPanel.value) closeRightPanel();
         else selectedKey.value = null; // closes the inspector
         return;
       }
       if (!(e.metaKey || e.ctrlKey) || inField(e.target)) return;
-      if (ruleEditor.value || hookEditor.value) return; // the schema is read-only there
+      if (schemaLocked.value) return; // the schema is read-only while a rule or hook is edited
       const k = e.key.toLowerCase();
       if (k === 'z' && !e.shiftKey) undoChange();
       else if ((k === 'z' && e.shiftKey) || k === 'y') redoChange();
@@ -94,6 +90,10 @@ export default function App({ connected }: { connected: boolean | null }) {
       </div>
     );
   }
+
+  const panel = rightPanel.value;
+  const Panel = panel ? PANELS[panel.kind] : Inspector;
+  const panelKey = panel?.kind === 'code' ? `${panel.hookId}:${panel.fieldId}` : panel?.kind;
 
   const retry = () => {
     if (!queues.value.length) loadQueues();
@@ -148,21 +148,7 @@ export default function App({ connected }: { connected: boolean | null }) {
               >
                 <Grid />
               </div>
-              {schemaFabry.value.open ? (
-                <SchemaFabryPanel />
-              ) : validationPanel.value ? (
-                <ValidationPanel />
-              ) : ruleEditor.value ? (
-                <RuleEditor />
-              ) : hookEditor.value ? (
-                <HookEditor />
-              ) : codeView.value ? (
-                <HookCodeView key={`${codeView.value.hookId}:${codeView.value.fieldId}`} />
-              ) : engineMode.value ? (
-                <EnginePanel />
-              ) : (
-                <Inspector />
-              )}
+              <Panel key={panelKey} />
             </div>
           </div>
         )}

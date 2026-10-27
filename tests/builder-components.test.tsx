@@ -1024,9 +1024,12 @@ describe('Builder rule editor: Mr. Fabry box', () => {
       (row('doc_id').querySelector('[data-action="new-rule-for-field"]') as HTMLElement).click();
     });
     act(() => {
-      store.ruleEditor.value = {
-        ...store.ruleEditor.value!,
-        draft: { ...store.ruleEditor.value!.draft, trigger_condition: 'is_empty(field.doc_id)' },
+      store.rightPanel.value = {
+        kind: 'rule',
+        editor: {
+          ...store.ruleEditor.value!,
+          draft: { ...store.ruleEditor.value!.draft, trigger_condition: 'is_empty(field.doc_id)' },
+        },
       };
       store.assistRev.value++;
     });
@@ -1596,7 +1599,7 @@ describe('Builder engine', () => {
           training_queues: ['https://x/api/v1/queues/77'],
         },
       };
-      store.enginePanel.value = true;
+      store.rightPanel.value = { kind: 'engine' };
     });
     const settings = panel().querySelector('[data-engine-settings]')!.textContent;
     expect(settings).toContain('Use casegeneric_ap');
@@ -1621,7 +1624,7 @@ describe('Builder engine', () => {
         byName: new Map([['credit_ref', ['Credit notes (6)']]]),
         error: null,
       };
-      store.enginePanel.value = true;
+      store.rightPanel.value = { kind: 'engine' };
     });
     const rows = (sel: string) =>
       [...panel().querySelectorAll(`${sel} [data-engine-field]`)].map((r) => r.textContent);
@@ -1641,7 +1644,7 @@ describe('Builder engine', () => {
     custom();
     act(() => {
       store.engineUsers.value = { byName: new Map(), error: null };
-      store.enginePanel.value = true;
+      store.rightPanel.value = { kind: 'engine' };
     });
     const before = store.engineChanges.value;
     const btn = () =>
@@ -1950,7 +1953,7 @@ describe('Builder validation panel', () => {
           actions: [],
         },
       ];
-      store.validationPanel.value = 'rules';
+      store.rightPanel.value = { kind: 'validation', tab: 'rules' };
     });
   }
   const panel = () => root.querySelector('aside[data-panel="validation"]') as HTMLElement;
@@ -2010,7 +2013,7 @@ describe('Builder validation panel', () => {
     act(() => {
       (panel().querySelector('[data-tab="provenance"]') as HTMLElement).click();
     });
-    expect(store.validationPanel.value).toBe('provenance');
+    expect(store.rightPanel.value).toEqual({ kind: 'validation', tab: 'provenance' });
     await vi.waitFor(() =>
       expect(
         panel().querySelector('[data-provenance-config][data-outcome="matched"]'),
