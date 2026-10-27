@@ -124,6 +124,15 @@ function Stack() {
   );
 }
 
+// A malformed domain is shown as it is rather than crashing the band on every screen.
+const hostOf = (domain: string) => {
+  try {
+    return new URL(domain).host;
+  } catch {
+    return domain;
+  }
+};
+
 const pulse = (el: Element | null | undefined, cls: string) => {
   if (!el) return;
   el.classList.remove(cls);
@@ -165,6 +174,7 @@ function useConveyor(
       return () => el.querySelectorAll('[data-belt-icon]').forEach((n) => n.remove());
     }
 
+    const animations: Animation[] = [];
     let n = 0;
     const spawn = () => {
       if (document.hidden || typeof el.animate !== 'function') return;
@@ -217,6 +227,7 @@ function useConveyor(
         ],
         { duration: CROSS_MS, easing: 'linear' },
       );
+      animations.push(a);
       a.onfinish = () => {
         t.remove();
         pulse(kindIcon(dst.current, kind), styles.got);
@@ -226,6 +237,7 @@ function useConveyor(
     const timer: ReturnType<typeof setInterval> = setInterval(spawn, SPAWN_MS);
     return () => {
       clearInterval(timer);
+      animations.forEach((a) => a.cancel());
       el.querySelectorAll('[data-belt-icon]').forEach((x) => x.remove());
     };
   }, [active]);
@@ -236,13 +248,11 @@ export default function Band({
   target,
   step,
   lastDeployment,
-  locked,
 }: {
   source: Source | null;
   target: BandTarget;
   step: StepId | null;
   lastDeployment: string | null;
-  locked: boolean;
 }) {
   const track = useRef<HTMLDivElement>(null);
   const srcStack = useRef<HTMLDivElement>(null);
@@ -251,7 +261,7 @@ export default function Band({
   useConveyor(track, srcStack, dstStack, !compact);
 
   const srcName = source ? source.name : 'Your test org';
-  const srcHost = source ? new URL(source.domain).host : '';
+  const srcHost = source ? hostOf(source.domain) : 'for example a Sandbox';
   const stepIdx = STEPS.findIndex((s) => s.id === step);
   const envChip = target.env && (
     <span class={`${styles.env} ${target.env === 'Production' ? styles.prd : styles.sbx}`}>
@@ -263,11 +273,7 @@ export default function Band({
     <div class={`${styles.lane} ${compact ? styles.compact : ''}`}>
       <Sprite />
       <div class={styles.laneIn}>
-        <div
-          class={`${styles.org} ${styles.src}`}
-          data-role="source"
-          data-locked={locked ? 'true' : 'false'}
-        >
+        <div class={`${styles.org} ${styles.src}`} data-role="source">
           <div class={styles.who}>
             {compact ? (
               <span class={styles.ro}>
@@ -277,7 +283,7 @@ export default function Band({
             ) : (
               <>
                 <Icon id="i-lock" size={11} />
-                Deploys from
+                {source ? 'Deploys from' : 'Another org, only read'}
               </>
             )}
           </div>

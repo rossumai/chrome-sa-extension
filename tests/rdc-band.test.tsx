@@ -33,19 +33,18 @@ afterEach(() => {
 });
 
 describe('Band', () => {
-  it('without a source, asks for a test org and is locked', () => {
+  it('without a source, shows the first-visit copy', () => {
     stubMotion(true);
-    mount(<Band source={null} target={target} step={null} lastDeployment={null} locked />);
+    mount(<Band source={null} target={target} step={null} lastDeployment={null} />);
     const card = root.querySelector('[data-role="source"]')!;
     expect(card.textContent).toContain('Your test org');
-    expect(card.getAttribute('data-locked')).toBe('true');
+    expect(card.textContent).toContain('Another org, only read');
+    expect(card.textContent).toContain('for example a Sandbox');
   });
 
   it('shows the source name and host', () => {
     stubMotion(true);
-    mount(
-      <Band source={source} target={target} step={null} lastDeployment={null} locked={false} />,
-    );
+    mount(<Band source={source} target={target} step={null} lastDeployment={null} />);
     const card = root.querySelector('[data-role="source"]')!;
     expect(card.textContent).toContain('test');
     expect(card.textContent).toContain('partner-sandbox.rossum.app');
@@ -53,9 +52,7 @@ describe('Band', () => {
 
   it('marks earlier steps done and the current one current', () => {
     stubMotion(true);
-    mount(
-      <Band source={source} target={target} step="plan" lastDeployment={null} locked={false} />,
-    );
+    mount(<Band source={source} target={target} step="plan" lastDeployment={null} />);
     const state = (id: string) =>
       root.querySelector(`[data-step="${id}"]`)!.getAttribute('data-state');
     expect(state('connect')).toBe('done');
@@ -70,9 +67,7 @@ describe('Band', () => {
     const animate = vi.fn();
     (Element.prototype as any).animate = animate;
     try {
-      mount(
-        <Band source={source} target={target} step={null} lastDeployment={null} locked={false} />,
-      );
+      mount(<Band source={source} target={target} step={null} lastDeployment={null} />);
       expect(root.querySelectorAll('[data-belt-icon]')).toHaveLength(3);
       expect(animate).not.toHaveBeenCalled();
     } finally {
@@ -83,17 +78,17 @@ describe('Band', () => {
   it('spawns animated icons and removes them on unmount', () => {
     stubMotion(false);
     vi.useFakeTimers();
-    const animate = vi.fn(() => ({}) as Animation);
+    const cancel = vi.fn();
+    const animate = vi.fn(() => ({ cancel }) as unknown as Animation);
     (Element.prototype as any).animate = animate;
     try {
-      mount(
-        <Band source={source} target={target} step={null} lastDeployment={null} locked={false} />,
-      );
+      mount(<Band source={source} target={target} step={null} lastDeployment={null} />);
       expect(root.querySelectorAll('[data-belt-icon]')).toHaveLength(1);
       vi.advanceTimersByTime(2700);
       expect(root.querySelectorAll('[data-belt-icon]')).toHaveLength(2);
       unmount();
       expect(root.querySelectorAll('[data-belt-icon]')).toHaveLength(0);
+      expect(cancel).toHaveBeenCalledTimes(2);
       vi.advanceTimersByTime(5400);
       expect(animate).toHaveBeenCalledTimes(2);
     } finally {
@@ -101,11 +96,22 @@ describe('Band', () => {
     }
   });
 
-  it('says so when nothing was deployed yet', () => {
+  it('shows a malformed source domain as it is', () => {
     stubMotion(true);
     mount(
-      <Band source={source} target={target} step={null} lastDeployment={null} locked={false} />,
+      <Band
+        source={{ ...source, domain: 'not a url' }}
+        target={target}
+        step={null}
+        lastDeployment={null}
+      />,
     );
+    expect(root.querySelector('[data-role="source"]')!.textContent).toContain('not a url');
+  });
+
+  it('says so when nothing was deployed yet', () => {
+    stubMotion(true);
+    mount(<Band source={source} target={target} step={null} lastDeployment={null} />);
     expect(root.textContent).toContain('No deployment yet');
   });
 });
