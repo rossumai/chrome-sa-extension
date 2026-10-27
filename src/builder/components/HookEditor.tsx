@@ -41,7 +41,7 @@ export default function HookEditor() {
         <WideButton />
         <button
           type="button"
-          class={s.iconBtn}
+          class="icon-btn"
           data-action="close-hook"
           title="Close (Esc)"
           onClick={closeHookEditor}
@@ -82,12 +82,12 @@ export default function HookEditor() {
         </div>
       )}
       <div class={s.dialogActions}>
-        <button type="button" class={s.btn} onClick={closeHookEditor}>
+        <button type="button" class="btn btn-sm" onClick={closeHookEditor}>
           Close
         </button>
         <button
           type="button"
-          class={s.btn}
+          class="btn btn-sm"
           data-action="discard-hook"
           disabled={!hookDirty.value}
           onClick={discardHook}
@@ -96,7 +96,7 @@ export default function HookEditor() {
         </button>
         <button
           type="button"
-          class={s.btn + ' ' + s.primary}
+          class="btn btn-sm btn-primary"
           data-action="save-hook"
           disabled={!hookDirty.value || hookSaving.value}
           onClick={saveHook}

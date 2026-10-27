@@ -105,7 +105,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
     <div class={s.toolbar} data-toolbar="">
       <button
         type="button"
-        class={s.iconBtn + ' ' + s.navOpen}
+        class={'icon-btn ' + s.navOpen}
         data-action="open-nav"
         title="Queues and schemas"
         onClick={() => (navDrawer.value = true)}
@@ -144,7 +144,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       {text && <span class={s.staged}>{text}</span>}
       <button
         type="button"
-        class={s.btn + ' ' + s.fabryBtn}
+        class={'btn btn-sm ' + s.fabryBtn}
         data-action="open-schema-fabry"
         title="Ask Mr. Fabry to change the schema"
         onClick={openSchemaFabry}
@@ -153,7 +153,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       </button>
       <button
         type="button"
-        class={s.btn + ' ' + s.fabryBtn}
+        class={'btn btn-sm ' + s.fabryBtn}
         data-action="undo"
         disabled={!canUndo(history.value)}
         onClick={undoChange}
@@ -163,7 +163,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       </button>
       <button
         type="button"
-        class={s.btn + ' ' + s.fabryBtn}
+        class={'btn btn-sm ' + s.fabryBtn}
         data-action="redo"
         disabled={!canRedo(history.value)}
         onClick={redoChange}
@@ -173,7 +173,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       </button>
       <button
         type="button"
-        class={s.btn}
+        class="btn btn-sm"
         data-action="discard"
         disabled={!dirty.value}
         onClick={discard}
@@ -182,7 +182,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       </button>
       <button
         type="button"
-        class={s.btn + ' ' + s.primary}
+        class="btn btn-sm btn-primary"
         data-action="save"
         disabled={!dirty.value || saving.value}
         onClick={onSave}

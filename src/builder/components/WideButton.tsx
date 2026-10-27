@@ -9,7 +9,7 @@ export default function WideButton() {
   return (
     <button
       type="button"
-      class={s.iconBtn + ' ' + s.wideBtn}
+      class={'icon-btn ' + s.wideBtn}
       data-action="panel-wide"
       aria-pressed={wide ? 'true' : 'false'}
       title={wide ? 'Narrow panel' : 'Wide panel'}

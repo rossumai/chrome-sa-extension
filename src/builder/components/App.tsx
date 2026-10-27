@@ -116,7 +116,7 @@ export default function App({ connected }: { connected: boolean | null }) {
           <div class={s.banner}>
             {error.value}
             {retryable.value && (
-              <button type="button" class={s.btn} onClick={retry}>
+              <button type="button" class="btn btn-sm" onClick={retry}>
                 Retry
               </button>
             )}

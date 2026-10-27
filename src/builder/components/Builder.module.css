@@ -121,8 +121,8 @@
   font-weight: 600;
 }
 
-.wsName .linkBtn,
-.groupTitle .linkBtn {
+.wsName :global(.btn-link),
+.groupTitle :global(.btn-link) {
   font-size: 11px;
   font-weight: 400;
   text-transform: none;
@@ -262,28 +262,6 @@
   background: var(--warning-bg);
   color: var(--warning-fg);
   border: 1px solid var(--warning-border);
-}
-
-.btn {
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font: inherit;
-  cursor: pointer;
-}
-
-.btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  font-weight: 600;
 }
 
 .body {
@@ -484,31 +462,9 @@
   text-decoration: none;
 }
 
-.iconBtn {
-  padding: 0 5px;
-  border: none;
-  background: none;
-  color: var(--text-secondary);
-  font: inherit;
-  cursor: pointer;
-}
-
-.iconBtn:hover {
-  color: var(--danger);
-}
-
-.iconBtn:disabled {
+.root :global(.icon-btn:disabled) {
   opacity: 0.3;
-}
-
-.linkBtn {
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--accent);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
+  cursor: default;
 }
 
 .addRow td {
@@ -1026,27 +982,9 @@
   overflow: auto;
 }
 
+/* With the shared .tab-bar: the spacing it had in a panel. */
 .tabs {
-  display: flex;
-  gap: 4px;
   margin: 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.tab {
-  padding: 4px 10px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--text-secondary);
-  font: inherit;
-  cursor: pointer;
-}
-
-.tabOn {
-  color: var(--text-primary);
-  border-bottom-color: var(--accent);
-  font-weight: 600;
 }
 
 .resultItem {
@@ -1425,7 +1363,7 @@
   color: var(--text-secondary);
 }
 
-.engineList .engineRow .iconBtn {
+.engineList .engineRow :global(.icon-btn) {
   flex: none;
   margin-left: auto;
 }

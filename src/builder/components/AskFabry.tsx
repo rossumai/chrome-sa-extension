@@ -51,7 +51,7 @@ export default function AskFabry({
       <div class={s.codeBar}>
         <button
           type="button"
-          class={s.btn}
+          class="btn btn-sm"
           data-action="ask-fabry"
           disabled={state.busy || !text.trim()}
           onClick={ask}

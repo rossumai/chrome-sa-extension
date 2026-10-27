@@ -1888,7 +1888,7 @@ describe('Builder hooks that mention a field', () => {
     });
     const panel = root.querySelector('aside[data-panel="code"]') as HTMLElement;
     expect(panel.textContent).toContain('only its settings are searched');
-    expect(panel.querySelector('[data-tab="settings"]')!.className).toContain('tabOn');
+    expect(panel.querySelector('[data-tab="settings"]')!.className).toContain('active');
     act(() => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     });

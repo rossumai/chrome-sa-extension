@@ -85,7 +85,7 @@ function RulesTab() {
           Validated · {onFields} message{onFields === 1 ? '' : 's'} on fields · {v.fired.size} rule
           {v.fired.size === 1 ? '' : 's'} fired
         </span>
-        <button type="button" class={s.linkBtn} disabled={revalidating.value} onClick={revalidate}>
+        <button type="button" class="btn-link" disabled={revalidating.value} onClick={revalidate}>
           {revalidating.value ? 'Validating…' : '↻ Revalidate again'}
         </button>
       </div>
@@ -99,7 +99,7 @@ function RulesTab() {
             data-fired={fired ? 'true' : 'false'}
           >
             <span class={fired ? s.firedDot : s.quietDot}>{fired ? '●' : '○'}</span>
-            <button type="button" class={s.linkBtn} onClick={() => openRuleEditor(r.id)}>
+            <button type="button" class="btn-link" onClick={() => openRuleEditor(r.id)}>
               {r.name} ({r.id})
             </button>
             {msgs
@@ -257,7 +257,7 @@ function ConfigRow({
             {extra.length ? ` (+ ${extra.join(', ')})` : ''}{' '}
             <button
               type="button"
-              class={s.linkBtn}
+              class="btn-link"
               title="Open this configuration in hook mode"
               onClick={() => {
                 openHookEditor(item.hook.id);
@@ -281,7 +281,7 @@ function ConfigRow({
               row
               <button
                 type="button"
-                class={s.iconBtn}
+                class="icon-btn"
                 disabled={row === 0}
                 onClick={() => setRow(row - 1)}
               >
@@ -290,7 +290,7 @@ function ConfigRow({
               {Math.min(row, scope.rowCount - 1) + 1}/{scope.rowCount} of {scope.tableSchemaId}
               <button
                 type="button"
-                class={s.iconBtn}
+                class="icon-btn"
                 disabled={row >= scope.rowCount - 1}
                 onClick={() => setRow(row + 1)}
               >
@@ -425,16 +425,16 @@ export default function ValidationPanel() {
       <div class={s.ruleHead}>
         <h4 class={s.inspTitle}>Validation · annotation ({annotationId.value})</h4>
         <WideButton />
-        <button type="button" class={s.iconBtn} title="Close (Esc)" onClick={closeValidationPanel}>
+        <button type="button" class="icon-btn" title="Close (Esc)" onClick={closeValidationPanel}>
           ✕
         </button>
       </div>
-      <div class={s.tabs}>
+      <div class={'tab-bar ' + s.tabs}>
         {(['rules', 'provenance'] as const).map((t) => (
           <button
             type="button"
             data-tab={t}
-            class={s.tab + (tab === t ? ' ' + s.tabOn : '')}
+            class={'tab' + (tab === t ? ' active' : '')}
             onClick={() => (rightPanel.value = { kind: 'validation', tab: t })}
           >
             {t === 'rules' ? 'Rules' : 'Provenance'}

@@ -17,7 +17,7 @@ export default function SchemaFabryPanel() {
         <WideButton />
         <button
           type="button"
-          class={s.iconBtn}
+          class="icon-btn"
           data-action="close-schema-fabry"
           title="Close (Esc)"
           onClick={closeSchemaFabry}
@@ -67,7 +67,7 @@ export default function SchemaFabryPanel() {
         )}
       </div>
       {st.problems.length > 0 && !st.busy && (
-        <button type="button" class={s.btn} data-action="fix-fabry" onClick={fixWithFabry}>
+        <button type="button" class="btn btn-sm" data-action="fix-fabry" onClick={fixWithFabry}>
           Ask Mr. Fabry to fix {st.problems.length === 1 ? 'this' : `these ${st.problems.length}`}
         </button>
       )}

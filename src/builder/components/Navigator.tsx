@@ -27,7 +27,7 @@ function DeleteBtn({
   return (
     <button
       type="button"
-      class={s.iconBtn + ' ' + s.rowDelete}
+      class={'icon-btn ' + s.rowDelete}
       data-action={action}
       {...data}
       title="Delete"
@@ -78,7 +78,7 @@ export default function Navigator() {
           {drawer && (
             <button
               type="button"
-              class={s.iconBtn}
+              class="icon-btn"
               data-action="close-nav"
               title="Close (Esc)"
               onClick={close}
@@ -92,7 +92,7 @@ export default function Navigator() {
             Queues
             <button
               type="button"
-              class={s.linkBtn}
+              class="btn-link"
               data-action="new-workspace"
               onClick={() => openCreateDialog({ kind: 'workspace' })}
             >
@@ -107,7 +107,7 @@ export default function Navigator() {
                 </span>
                 <button
                   type="button"
-                  class={s.linkBtn}
+                  class="btn-link"
                   data-action="new-queue"
                   data-workspace={ws.url}
                   onClick={() =>
@@ -167,7 +167,7 @@ export default function Navigator() {
               Schemas without a queue
               <button
                 type="button"
-                class={s.linkBtn}
+                class="btn-link"
                 data-action="new-schema"
                 onClick={() => openCreateDialog({ kind: 'schema' })}
               >

@@ -108,7 +108,7 @@ function Unused({ fields }: { fields: any[] }) {
                 <span class={s.dim}>{marked ? 'deleted on Save' : seedText(f)}</span>
                 <button
                   type="button"
-                  class={s.iconBtn}
+                  class="icon-btn"
                   data-action="delete-engine-field"
                   title={
                     marked
@@ -141,7 +141,7 @@ export default function EnginePanel() {
       <WideButton />
       <button
         type="button"
-        class={s.iconBtn}
+        class="icon-btn"
         data-action="close-engine"
         title="Close (Esc)"
         onClick={closeEnginePanel}

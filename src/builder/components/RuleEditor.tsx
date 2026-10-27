@@ -86,7 +86,7 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
         </label>
         <button
           type="button"
-          class={s.iconBtn}
+          class="icon-btn"
           title="Remove this action"
           onClick={() =>
             updateRuleDraft({ actions: ruleEditor.value!.draft.actions.filter((_, j) => j !== i) })
@@ -197,7 +197,7 @@ export default function RuleEditor() {
         <WideButton />
         <button
           type="button"
-          class={s.iconBtn}
+          class="icon-btn"
           data-action="close-rule"
           title="Close (Esc)"
           onClick={closeRuleEditor}
@@ -265,7 +265,7 @@ export default function RuleEditor() {
         ))}
         <button
           type="button"
-          class={s.linkBtn}
+          class="btn-link"
           onClick={() => updateRuleDraft({ actions: [...d.actions, newAction(d.actions)] })}
         >
           + Action
@@ -279,12 +279,12 @@ export default function RuleEditor() {
         </div>
       )}
       <div class={s.dialogActions}>
-        <button type="button" class={s.btn} onClick={closeRuleEditor}>
+        <button type="button" class="btn btn-sm" onClick={closeRuleEditor}>
           Close
         </button>
         <button
           type="button"
-          class={s.btn}
+          class="btn btn-sm"
           data-action="discard-rule"
           disabled={!ruleDirty.value}
           onClick={discardRule}
@@ -293,7 +293,7 @@ export default function RuleEditor() {
         </button>
         <button
           type="button"
-          class={s.btn + ' ' + s.primary}
+          class="btn btn-sm btn-primary"
           data-action="save-rule"
           disabled={!ruleDirty.value || ruleSaving.value}
           onClick={saveRule}

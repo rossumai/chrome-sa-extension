@@ -61,7 +61,7 @@ export default function FilterBar() {
       {(warningKeys.value.size > 0 || onlyWarnings.value) && (
         <button
           type="button"
-          class={s.btn + ' ' + s.warnFilter}
+          class={'btn btn-sm ' + s.warnFilter}
           data-action="only-warnings"
           aria-pressed={onlyWarnings.value ? 'true' : 'false'}
           title={
@@ -112,7 +112,7 @@ export default function FilterBar() {
           {editing && (
             <button
               type="button"
-              class={s.iconBtn}
+              class="icon-btn"
               data-action="clear-rule"
               title="Stop filtering by this rule"
               onClick={closeRuleEditor}
@@ -161,7 +161,7 @@ export default function FilterBar() {
               </select>
               <button
                 type="button"
-                class={s.iconBtn}
+                class="icon-btn"
                 data-action="clear-hook"
                 title="Stop filtering by this hook"
                 onClick={closeHookEditor}

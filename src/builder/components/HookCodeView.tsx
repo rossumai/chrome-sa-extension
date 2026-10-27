@@ -38,7 +38,7 @@ export default function HookCodeView() {
         <WideButton />
         <button
           type="button"
-          class={s.iconBtn}
+          class="icon-btn"
           data-action="close-code"
           title="Close (Esc)"
           onClick={closeCodeView}
@@ -53,12 +53,12 @@ export default function HookCodeView() {
       {codeHidden(hook) && (
         <div class={s.dim}>A webhook runs on its own server: only its settings are searched.</div>
       )}
-      <div class={s.tabs}>
+      <div class={'tab-bar ' + s.tabs}>
         {text.code && (
           <button
             type="button"
             data-tab="code"
-            class={s.tab + (tab === 'code' ? ' ' + s.tabOn : '')}
+            class={'tab' + (tab === 'code' ? ' active' : '')}
             onClick={() => pick('code')}
           >
             Code ({inCode.length})
@@ -68,7 +68,7 @@ export default function HookCodeView() {
           <button
             type="button"
             data-tab="settings"
-            class={s.tab + (tab === 'settings' ? ' ' + s.tabOn : '')}
+            class={'tab' + (tab === 'settings' ? ' active' : '')}
             onClick={() => pick('settings')}
           >
             Settings ({inSettings.length})
@@ -80,7 +80,7 @@ export default function HookCodeView() {
             {i + 1} of {hits.length}{' '}
             <button
               type="button"
-              class={s.iconBtn}
+              class="icon-btn"
               data-action="prev-match"
               title="Previous"
               onClick={() => setAt((i - 1 + hits.length) % hits.length)}
@@ -89,7 +89,7 @@ export default function HookCodeView() {
             </button>
             <button
               type="button"
-              class={s.iconBtn}
+              class="icon-btn"
               data-action="next-match"
               title="Next"
               onClick={() => setAt((i + 1) % hits.length)}

@@ -159,7 +159,7 @@ export default function CodeEditor({
         {!readOnly && (
           <button
             type="button"
-            class={s.linkBtn}
+            class="btn-link"
             data-action={`format-${name}`}
             disabled={busy}
             onClick={format}
@@ -175,7 +175,7 @@ export default function CodeEditor({
         {onToggleExpand && (
           <button
             type="button"
-            class={s.linkBtn}
+            class="btn-link"
             data-action={`expand-${name}`}
             onClick={onToggleExpand}
           >

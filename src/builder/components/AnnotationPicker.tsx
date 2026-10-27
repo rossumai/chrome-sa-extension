@@ -42,7 +42,7 @@ export default function AnnotationPicker() {
       {id != null && (
         <button
           type="button"
-          class={s.btn}
+          class="btn btn-sm"
           data-action="revalidate"
           disabled={revalidating.value}
           title="Run validation on this document (formulas, hooks, rules) without changing a value"
@@ -54,7 +54,7 @@ export default function AnnotationPicker() {
       {id != null && (
         <button
           type="button"
-          class={s.iconBtn}
+          class="icon-btn"
           data-action="clear-annotation"
           title="Stop showing annotation values"
           onClick={clearAnnotation}
@@ -68,7 +68,7 @@ export default function AnnotationPicker() {
       {validation.value && rightPanel.value?.kind !== 'validation' && (
         <button
           type="button"
-          class={s.linkBtn}
+          class="btn-link"
           data-action="open-validation"
           onClick={() => openValidationPanel()}
         >

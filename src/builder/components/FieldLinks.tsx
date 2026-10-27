@@ -19,7 +19,7 @@ export default function FieldLinks({ fieldId }: { fieldId: string }) {
         <span class={s.fieldLabel}>Rules ({rules.length})</span>
         <button
           type="button"
-          class={s.linkBtn}
+          class="btn-link"
           data-action="new-rule-for-field"
           onClick={() => openRuleEditor(null, fieldId)}
         >

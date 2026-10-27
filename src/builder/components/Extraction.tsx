@@ -125,7 +125,7 @@ export default function Extraction({
           AI fields must be empty on a custom engine ({rir.join(', ')}).{' '}
           <button
             type="button"
-            class={s.linkBtn}
+            class="btn-link"
             data-action="clear-rir"
             onClick={() => edit(node, ['rir_field_names'], [])}
           >
@@ -138,7 +138,7 @@ export default function Extraction({
           Disable prediction must be off on a custom engine.{' '}
           <button
             type="button"
-            class={s.linkBtn}
+            class="btn-link"
             data-action="enable-prediction"
             onClick={() => edit(node, ['disable_prediction'], undefined)}
           >

@@ -189,7 +189,7 @@ function Options({ node }: { node: Node }) {
           />
           <button
             type="button"
-            class={s.iconBtn}
+            class="icon-btn"
             disabled={i === 0}
             onClick={() => swap(i, i - 1)}
             title="Move up"
@@ -198,7 +198,7 @@ function Options({ node }: { node: Node }) {
           </button>
           <button
             type="button"
-            class={s.iconBtn}
+            class="icon-btn"
             disabled={i === opts.length - 1}
             onClick={() => swap(i, i + 1)}
             title="Move down"
@@ -207,7 +207,7 @@ function Options({ node }: { node: Node }) {
           </button>
           <button
             type="button"
-            class={s.iconBtn}
+            class="icon-btn"
             onClick={() => set(opts.filter((_, j) => j !== i))}
             title="Remove"
           >
@@ -217,7 +217,7 @@ function Options({ node }: { node: Node }) {
       ))}
       <button
         type="button"
-        class={s.linkBtn}
+        class="btn-link"
         onClick={() =>
           set([...opts, { value: `option_${opts.length + 1}`, label: `Option ${opts.length + 1}` }])
         }
@@ -281,7 +281,7 @@ export default function Inspector() {
       <WideButton />
       <button
         type="button"
-        class={s.iconBtn}
+        class="icon-btn"
         data-action="close-field"
         title="Close (Esc)"
         onClick={() => (selectedKey.value = null)}
@@ -326,7 +326,7 @@ export default function Inspector() {
           {HIDDEN_CAPTURED}{' '}
           <button
             type="button"
-            class={s.linkBtn}
+            class="btn-link"
             data-action="show-field"
             onClick={() => edit(node, ['hidden'], false)}
           >

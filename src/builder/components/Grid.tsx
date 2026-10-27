@@ -215,7 +215,7 @@ function ValueCell({ node, tableId }: { node: Node; tableId: string | null }) {
           <span>
             <button
               type="button"
-              class={s.iconBtn}
+              class="icon-btn"
               data-action="prev-row"
               disabled={at === 0}
               onClick={go(-1)}
@@ -225,7 +225,7 @@ function ValueCell({ node, tableId }: { node: Node; tableId: string | null }) {
             {at + 1}/{n}
             <button
               type="button"
-              class={s.iconBtn}
+              class="icon-btn"
               data-action="next-row"
               disabled={at >= n - 1}
               onClick={go(1)}
@@ -703,7 +703,7 @@ function Row({
           {locked ? null : node.__deleted ? (
             <button
               type="button"
-              class={s.linkBtn}
+              class="btn-link"
               data-action="restore"
               onClick={(e) => {
                 e.stopPropagation();
@@ -715,7 +715,7 @@ function Row({
           ) : !deleted && kind !== 'tuple' ? (
             <button
               type="button"
-              class={s.iconBtn}
+              class="icon-btn"
               data-action="delete"
               title="Delete"
               onClick={(e) => {
@@ -767,7 +767,7 @@ function AddRow({
   const link = (action: string, label: string, onClick: () => void) => (
     <button
       type="button"
-      class={s.linkBtn}
+      class="btn-link"
       data-action={action}
       data-parent={parentKey}
       onClick={onClick}
@@ -1090,7 +1090,7 @@ export default function Grid() {
               <td colSpan={cols.length}>
                 <button
                   type="button"
-                  class={s.linkBtn}
+                  class="btn-link"
                   data-action="add-section"
                   onClick={addNewSection}
                 >
