@@ -1,6 +1,6 @@
 import { h, Fragment } from 'preact';
 import { signal, computed } from '@preact/signals';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import {
   work,
   status,
@@ -869,14 +869,37 @@ function CellTip() {
   ) : null;
 }
 
+// Cut off: the cell itself, or the ID inside it (beside a warning mark the ID is shortened
+// on its own, so the cell no longer overflows).
+const isCut = (el: Element) => el.scrollWidth > el.clientWidth;
+
 function showTip(e: MouseEvent) {
   const td = (e.target as Element).closest?.('td[data-full]') as HTMLElement | null;
-  if (!td || td.scrollWidth <= td.clientWidth) {
+  if (!td || !(isCut(td) || [...td.children].some(isCut))) {
     if (cellTip.value) cellTip.value = null;
     return;
   }
   const r = td.getBoundingClientRect();
   cellTip.value = { text: td.dataset.full ?? '', x: r.left, y: r.bottom + 2 };
+}
+
+function rowEl(wrap: Element, key: string): Element | undefined {
+  return [...wrap.querySelectorAll('tr[data-row-key]')].find(
+    (r) => (r as HTMLElement).dataset.rowKey === key,
+  );
+}
+
+function findAnchor(wrap: Element | null | undefined, selected: string | null) {
+  if (!wrap) return null;
+  const view = wrap.getBoundingClientRect();
+  const rows = [...wrap.querySelectorAll('tr[data-row-key]')] as HTMLElement[];
+  const inView = (r: Element) => {
+    const b = r.getBoundingClientRect();
+    return b.bottom > view.top && b.top < view.bottom;
+  };
+  const sel = selected != null ? rows.find((r) => r.dataset.rowKey === selected) : undefined;
+  const row = sel && inView(sel) ? sel : rows.find(inView);
+  return row ? { key: row.dataset.rowKey!, top: row.getBoundingClientRect().top } : null;
 }
 
 export default function Grid() {
@@ -930,6 +953,25 @@ export default function Grid() {
   // The annotation's values go after every editing column, the row actions included.
   const ruleOn = !!ruleMarks.value;
   const cols = columns.value;
+  // Opening or closing a panel changes the columns, and with them the row heights: keep the
+  // selected (or last selected) row, else the top visible one, where it was on screen.
+  const colKey = cols.join();
+  const prevCols = useRef(colKey);
+  const anchor = useRef<{ key: string; top: number } | null>(null);
+  const lastSelected = useRef<string | null>(null); // closing a panel clears the selection
+  if (prevCols.current !== colKey) {
+    prevCols.current = colKey; // rendering, so the DOM still has the old rows
+    const key = selectedKey.value ?? lastSelected.current;
+    anchor.current = findAnchor(tableRef.current?.parentElement, key);
+  }
+  if (selectedKey.value != null) lastSelected.current = selectedKey.value;
+  useLayoutEffect(() => {
+    const a = anchor.current;
+    anchor.current = null;
+    const wrap = tableRef.current?.parentElement;
+    const el = a && wrap && rowEl(wrap, a.key);
+    if (el) wrap.scrollTop += el.getBoundingClientRect().top - a.top;
+  }, [colKey]);
   // Before the first measurement (and in tests): base widths, Label takes the rest.
   // 2px less: the collapsed table borders add a pixel past the columns, enough for a scrollbar.
   const fit = avail ? fitColumns(cols, avail - 2) : null;
