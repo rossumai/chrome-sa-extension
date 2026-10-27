@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { withKeys, flatten } from '../src/builder/model.js';
-import { visibleKeys } from '../src/builder/fieldFilter.js';
+import { visibleKeys, narrow } from '../src/builder/fieldFilter.js';
 import { section, dp } from './support/builder.js';
 
 const tree = withKeys([
@@ -97,6 +97,28 @@ describe('visibleKeys in rule mode (union)', () => {
       'line_items',
       'line_item',
       'item_code',
+    ]);
+  });
+});
+
+describe('narrow', () => {
+  const keyOfId = (id: string) => flatten(tree).find((r) => r.node.id === id)!.key;
+
+  it('from everything: the keys and their ancestors', () => {
+    expect(ids(narrow(tree, null, new Set([keyOfId('item_code')])))).toEqual([
+      'items_section',
+      'line_items',
+      'line_item',
+      'item_code',
+    ]);
+  });
+
+  it('from a shown set: only what is in both', () => {
+    const shown = visibleKeys(tree, 'issue');
+    expect(ids(narrow(tree, shown, new Set([keyOfId('item_code')])))).toEqual([]);
+    expect(ids(narrow(tree, shown, new Set([keyOfId('date_issue')])))).toEqual([
+      'basic_section',
+      'date_issue',
     ]);
   });
 });

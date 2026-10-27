@@ -58,7 +58,7 @@ export function countMatches(nodes: Node[], query: string): number {
 }
 
 /** `keys` plus every ancestor of them, so a changed column still shows under its table. */
-export function withAncestors(nodes: Node[], keys: Set<string>): Set<string> {
+function withAncestors(nodes: Node[], keys: Set<string>): Set<string> {
   const parent = new Map(flatten(nodes).map((r) => [r.key, r.parentKey]));
   const out = new Set<string>();
   for (const key of keys) {
@@ -66,4 +66,10 @@ export function withAncestors(nodes: Node[], keys: Set<string>): Set<string> {
       out.add(k);
   }
   return out;
+}
+
+/** Narrow `show` (null: every row) to `keys` and their ancestors. */
+export function narrow(nodes: Node[], show: Set<string> | null, keys: Set<string>): Set<string> {
+  const mine = withAncestors(nodes, keys);
+  return show ? new Set([...show].filter((k) => mine.has(k))) : mine;
 }
