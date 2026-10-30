@@ -191,15 +191,17 @@ Tests (`tests/**/*.test.ts`):
 
 ## Architecture
 
-Nine entry points, plus two bundles nothing imports that are script-injected on demand:
-`console/mermaid` (`src/fabry/mermaidEntry.ts`, the ~1.5MB diagram renderer) and
-`console/doc-print` (`src/docs/printEntry.ts`).
+Nine entry points, plus three bundles nothing imports that are script-injected on demand:
+`console/mermaid` (`src/fabry/mermaidEntry.ts`, the ~1.5MB diagram renderer), `console/ruff`
+(`src/builder/ruffEntry.ts`, the Builder's Python formatter, which fetches `ruff.wasm` from
+beside it — see Ruff under Dependencies) and `console/doc-print` (`src/docs/printEntry.ts`).
+`src/ui/lazyScript.ts` is the one loader for the first two.
 
 | Entry | Surface |
 |---|---|
 | `src/rossum/index.ts` · `src/netsuite/index.ts` · `src/coupa/index.ts` | content scripts |
 | `src/popup/popup.tsx` | extension popup (Preact) |
-| `src/console/index.tsx` | Console page — an app rail over eight apps |
+| `src/console/index.tsx` | Console page — an app rail over nine apps |
 | `src/background/index.ts` | MV3 service worker |
 | `src/devtools/devtools.ts` · `src/devtools/panel.tsx` | DevTools "Rossum" panel |
 | `src/sidepanel/index.tsx` | Chrome side panel |
@@ -281,7 +283,7 @@ Reloading the extension does NOT re-inject content scripts into open tabs — re
 
 ### Console apps (`src/console/`)
 
-An app-switcher rail over eight apps. Adding one touches three hardcoded switch points
+An app-switcher rail over nine apps. Adding one touches three hardcoded switch points
 (`Rail.tsx` APPS, `Console.tsx` render switch, `boot.ts` `isValidApp`) plus `console/index.tsx`.
 `Console.tsx` unmounts the app you leave — except CIB deploy, which stays mounted (hidden) once
 opened, because its form, log and a deploy in flight live in component state.
@@ -302,6 +304,38 @@ opened, because its form, log and a deploy in flight live in component state.
   query is a full scan). What creates it is not established — treat it as an observation.
 - **Audit Log Viewer** (`src/audit/`) — one generic shell driven by per-source descriptors in
   `sources/`. Only `audit_logs` is registered; the descriptor shape exists to host more.
+- **Builder** (`src/builder/`) — a queue's schema as an editable grid, beside right-hand
+  panels for a field, a native Rule, an MDH hook's settings and a custom engine's fields.
+  **Public, with a `beta` badge** — NOT behind `experimentalUnlocked`: the owner gated it, then
+  reversed that (`f7998e0`); its opens count as `sa_console_app_builder`. **Only the schema is
+  staged**: field edits, the schema's name and the engine fields go into an undoable draft
+  (⌘Z / ⇧⌘Z) and nothing reaches the org until Save, which runs local checks, the
+  `modified_at` stale check, engine field creates and patches, schema validate and PATCH, then
+  engine field deletes — the API refuses a datapoint without its engine field, and the delete
+  of an engine field a saved schema still uses. A failed stage keeps the engine-field delete marks.
+  **Everything else writes at once**, on its own click:
+  - creating a workspace, a queue (with a copied, shared or empty schema) or a schema no
+    queue uses;
+  - deleting a queue, in a dialog: "Delete in 24 h" is a plain `DELETE` (Rossum's default; the
+    queue stays listed in `deletion_requested`, marked Deleting) and "Delete now" adds
+    `delete_after=0`, for good;
+  - deleting a schema, which has no grace window: it is fetched first and its `{ name,
+    content }` kept in memory (the last one only — never storage, lost on reload), so Undo
+    can POST it back, under a new ID;
+  - a rule's and a hook's own Save, each refusing when the object's `modified_at` moved since
+    it was loaded (a hook PATCH replaces the whole `settings` object);
+  - Revalidate: `content/validate` runs the annotation's formulas, hooks and rules as a
+    reviewer's edit would; a `to_review` document is started first and handed back with
+    `cancel` after.
+
+  A picked annotation fills a Value column, and the open rule is evaluated on it by Rossum's
+  INTERNAL `POST /v1/internal/rules/evaluate_rules` (the endpoint behind Rossum's own
+  rule-editor preview; shapes read off its public web-app bundle, undocumented — see
+  `ruleEval.ts`); it evaluates and saves nothing. Mr. Fabry's four assistants (rule, field,
+  hook settings, whole schema) are read-only agent turns: a reply lands in the draft as one
+  undoable edit (or in the open rule's or hook's editor), and only the user's Save writes it.
+  Layout is tuned for a 13" screen (1440px): the grid drops columns while a panel is open
+  rather than scroll sideways.
 - **Galaxy** (`src/galaxy/`) — the live org as a 3D force graph on raw three.js + d3-force-3d.
   `3d-force-graph` is deliberately avoided: its ngraph engine uses `new Function`, which the
   Console page's MV3 CSP forbids.
@@ -321,8 +355,11 @@ opened, because its form, log and a deploy in flight live in component state.
   It bundles NO CIB content: at run time it lists the releases of the public
   `rossumai/rossum-coupa-integration` repo, reads the chosen release's prd2 org folder from
   `raw.githubusercontent.com` and compiles it in the browser into a create plan (`release.ts`;
-  v1.x releases take their deploy settings from the public deploy tool's `_config/`). `cib.ts` checks (read-only), then creates, patches and invokes — **the extension's one
-  bulk WRITE path into an org**, used only on the user's Deploy click. Progress is a checkpoint
+  v1.x releases take their deploy settings from the public deploy tool's `_config/`). `cib.ts`
+  checks (read-only), then creates, patches and invokes, only on the user's Deploy click. It
+  is **the one path that writes a whole configuration in one run** — not the only write path:
+  the Builder, the DevTools panel's Save, the popup's Unlock and Dataset Management write too,
+  each one object or one collection per user action. Progress is a checkpoint
   document in the org's `_SA_EXTENSION__cib_deploy_runs` collection (the Coupa secret only as a placeholder),
   so a re-run with the same run id resumes, and it is deleted once a deploy is complete. The
   optional Coupa check function is a hook the user deploys and tears down by hand.
@@ -470,15 +507,17 @@ Enforced by tests, not by convention. Do not weaken them.
 - Guard Chrome-only APIs for jsdom (`CSS.escape`, `scrollIntoView`), and use the repo's own tween
   (`src/mdh/smoothScroll.ts`) for navigation jumps rather than `behavior: 'smooth'`, whose
   duration scales with distance (measured ≥1481ms vs 198ms).
-- **A 429 is never "empty" and never retried automatically.** The Inspector, Galaxy and
+- **A 429 is never "empty" and never retried automatically.** The Inspector, Galaxy, Builder and
   popup-provenance transports throw `rateLimitError` from `src/net/rateLimit.ts` (the DevTools,
   Dataset Management, Audit, changelog, Academy and content-script transports do not yet), and
   code that maps an error to an empty result (`safe()` in the Inspector, `loadSchemaForQueue` in
-  the popup) must let a 429 through or record it; the Inspector's queue lists use `safeList()`,
-  which returns a `RATE_LIMITED` marker for their OWN 429, so another request's 429 cannot make a
-  500 read as throttled. The user retries — Refresh, reopen, Retry. The API ignores `fields=` on
-  list endpoints (measured 2026-10-13), so a "cheap" list check downloads every full object;
-  `/queues/{id}?fields=hooks` and `/schemas?queue={id}` are the small ones.
+  the popup, the Builder's side lists) must let a 429 through or record it. The Inspector's
+  queue lists use `safeList()`, which returns a `RATE_LIMITED` marker for their OWN 429, so
+  another request's 429 cannot make a 500 read as throttled; the Builder records which side
+  list failed, so its banner's Retry reloads exactly those. The user retries — Refresh, reopen,
+  Retry. The API ignores `fields=` on list endpoints (measured 2026-10-13), so a "cheap" list
+  check downloads every full object; `/queues/{id}?fields=hooks` and `/schemas?queue={id}` are
+  the small ones.
 
 ## Chrome Storage Keys
 
@@ -500,7 +539,7 @@ Enforced by tests, not by convention. Do not weaken them.
   `mdhOverviewChartsScale`, `mdhResultsView`, `mdhStages*`, `mdhStatsMode`,
   `mdhShowHiddenCollections`, `mdhProvenanceFilter`, `fabrySidebarWidth`,
   `fabryArchDocView`, `fabryArchRailOpen`, `fabryArchRailWidth`, `fabryArchPdfOptions`,
-  `devtoolsLineWrap`.
+  `devtoolsLineWrap`, `builderPanelWide`.
 - **Per-tab navigation**, read session-first from `sessionStorage` with a `chrome.storage.local`
   seed (`src/console/tabState.ts`), all content-free — `consoleActiveApp`, `mdhActiveView`,
   `mdhSelectedCollection`, `mdhActivePanel`, `mdhOpsSearch`, `fabryActiveChat`, `fabryMode`,
@@ -511,6 +550,8 @@ Enforced by tests, not by convention. Do not weaken them.
 - **Usage** — `usageConsent` (`true`/`false`/**absent**, where absent means never answered),
   `usageClientId` (minted lazily by the worker on the first event, deleted on revoke),
   `usageAsked`; plus `usageSessionId` in `chrome.storage.session`.
+- The Builder persists only `builderPanelWide`; the schema it keeps for Undo after a delete is
+  a signal, never storage.
 - Galaxy, CIB deploy and rdc persist nothing on the device (CIB keeps its credentials in component
   state only; its checkpoint lives in the org). Chat content, and Architect deliverable text, versions and
   transcripts, never touch storage — they live in the org's own Data Storage collection.
@@ -601,6 +642,16 @@ and all their classes are prefixed `rossum-sa-extension-*`.
 - **json5** — lenient parsing for the pipeline editor (trailing commas, unquoted keys)
 - **beautiful-mermaid** — diagrams; one flat ~1.5MB module, so it ships as its own lazy entry
 - **three** + **d3-force-3d** — Galaxy (~360KB)
+- **@codemirror/lang-python** — Python highlighting in the Builder's formula editor
+- **@astral-sh/ruff-wasm-web** — the Builder's Format button: Ruff's Python formatter as
+  WebAssembly, its own lazy bundle `console/ruff` (`src/builder/ruffEntry.ts`), script-injected
+  on first use. `build.js` copies the `.wasm` to `dist/console/ruff.wasm`. **It is most of the
+  download** (measured 2026-10-27, `zip -9` of `dist/` without rdc's optional wasm):
+  `ruff.wasm` is 10.9MB raw and 3.8MB of the 5.4MB zip; without Ruff the zip is 1.5MB. The
+  owner accepted that cost for the Format button. Its glue has no `eval`/`new Function`;
+  compiling the wasm needs the manifest's `'wasm-unsafe-eval'` (see the CSP below) — the
+  default MV3 CSP refuses it. Not yet confirmed in a live Console; Ruff itself was
+  smoke-tested in Node.
 - **@types/node** (dev) — for the tests program only; see Two programs under TypeScript. Pin it
   to the major of the Node in use, or it types APIs the runtime does not have.
 - **typescript** (dev) — type-checking only; esbuild does the building. After a major bump,
@@ -613,12 +664,13 @@ All are CSP-clean (no `eval`, no `new Function`) — check the BUILT bundles, an
 
 **The extension-page CSP is the MV3 default plus `'wasm-unsafe-eval'` and nothing else**
 (`manifest.json`: `script-src 'self' 'wasm-unsafe-eval'; object-src 'self';`, pinned by
-`tests/rdc-csp.test.ts`). It is there for the rdc app's WebAssembly only: the default
-`script-src 'self'` refuses to compile any wasm (measured in Chrome for Testing 156; Chrome's
-CSP docs say the same). It allows compiling wasm and nothing more — `eval`, `new Function` and
-remote scripts are still refused, so every bundle must stay CSP-clean exactly as before. It
-applies to every extension page (Console, popup, DevTools panel, side panel). Never add
-`'unsafe-eval'` (Chrome rejects it for extension pages anyway).
+`tests/rdc-csp.test.ts`). It is there for WebAssembly — the rdc app's sync engine and the
+Builder's Ruff formatter: the default `script-src 'self'` refuses to compile any wasm
+(measured in Chrome for Testing 156; Chrome's CSP docs say the same). It allows compiling wasm
+and nothing more — `eval`, `new Function` and remote scripts are still refused, so every bundle
+must stay CSP-clean exactly as before. It applies to every extension page (Console, popup,
+DevTools panel, side panel). Never add `'unsafe-eval'` (Chrome rejects it for extension pages
+anyway).
 
 ## JSX escape sequences
 
@@ -700,6 +752,10 @@ older ones as history. Currently authoritative per area:
   DevTools version rail and diff for the open object; the pure core in `src/changelog/`)
 - **Galaxy** — `2026-06-04-galaxy-3d-org-birdview-design.md`
 - **CIB deploy** — `2026-10-24-cib-deploy-console-design.md`
+- **Builder** — `2026-10-27-builder-delta-design.md` (what was built beyond the first spec:
+  rules, hooks, engines, Mr. Fabry, Revalidate, the immediate writes, the public beta), a delta
+  on `2026-10-18-builder-schema-editor-design.md` (kept as the base record for the grid,
+  editing model and Save)
 - **Release automation** — `2026-06-12-chrome-web-store-auto-release-design.md`
 - **API calls and 429s** — `2026-10-13-api-call-reduction-design.md` (the Inspector request
   scope, Galaxy's abort on 429, the popup's background checks)

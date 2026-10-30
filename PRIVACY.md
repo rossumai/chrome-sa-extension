@@ -108,6 +108,7 @@ once per document — the extension deliberately does not count repeatedly.
 | `sa_console_open` | you opened the Console page |
 | `sa_console_app_mdh` | Dataset Management became the active app |
 | `sa_console_app_audit` | the Audit Log viewer became the active app |
+| `sa_console_app_builder` | the Builder (beta) became the active app |
 | `sa_console_app_inspector` | the Inspector became the active app |
 | `sa_console_app_galaxy` | Galaxy became the active app |
 | `sa_console_app_fabry` | Mr. Fabry became the active app |

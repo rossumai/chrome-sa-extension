@@ -37,6 +37,7 @@ export const EVENT_NAMES = [
   'sa_console_open',
   'sa_console_app_mdh',
   'sa_console_app_audit',
+  'sa_console_app_builder',
   'sa_console_app_inspector',
   'sa_console_app_galaxy',
   'sa_console_app_fabry',

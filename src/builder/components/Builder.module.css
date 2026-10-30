@@ -1,0 +1,1479 @@
+.root {
+  position: relative;
+  min-height: 0;
+  height: 100vh;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-base);
+}
+
+.nav {
+  position: relative;
+  flex: none;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  min-height: 0;
+}
+
+.navScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.groupTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 12px 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sharedOn {
+  background: var(--info-bg);
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+.renamedItem {
+  box-shadow: inset 2px 0 var(--warning);
+  background: var(--warning-bg);
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+}
+
+.navRow:hover {
+  background: var(--bg-hover);
+}
+
+.navRow .queue {
+  flex: 1;
+  min-width: 0;
+  background: none;
+}
+
+.rowDelete {
+  visibility: hidden;
+}
+
+.navRow:hover .rowDelete {
+  visibility: visible;
+}
+
+/* A queue deleted in 24 h, still listed: it takes the delete button's place. */
+.deleting {
+  flex: none;
+  padding: 0 6px;
+  font-size: 10px;
+  color: var(--warning-fg);
+}
+
+.wsName {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.queue {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue:hover {
+  background: var(--bg-hover);
+}
+
+.queueOn {
+  background: var(--info-bg);
+  color: var(--info-fg);
+  font-weight: 600;
+}
+
+.queueOn .queue {
+  color: var(--info-fg);
+  font-weight: 600;
+}
+
+.wsName :global(.btn-link),
+.groupTitle :global(.btn-link) {
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+/* One line at any width: buttons and pills keep their size; the breadcrumb and the engine
+   badge give up room first and end in an ellipsis (hover shows the full text). */
+.toolbar > * {
+  flex: none;
+  white-space: nowrap;
+}
+
+.toolbar > .spacer {
+  flex: 1;
+}
+
+.toolbar > .crumb,
+.toolbar > .engineBadge {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar > .crumb {
+  display: flex;
+  min-width: 120px;
+}
+
+.toolbar > .engineBadge {
+  min-width: 80px;
+}
+
+/* The queue gives way first, so the schema name (and its rename box) stays readable. */
+.crumb > .queueCrumb,
+.crumb > .schemaCrumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+
+.crumb > .queueCrumb {
+  flex: 0 100 auto;
+}
+
+.crumb > .schemaCrumb {
+  flex: 0 1 auto;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+.crumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+/* Once a schema is open the queue list is a drawer over the grid (see Navigator). */
+.navDrawer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.18);
+}
+
+.navBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 19;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.navOpen {
+  flex: none;
+  display: inline-flex;
+}
+
+.crumb b {
+  color: var(--text-primary);
+}
+
+/* The schema name being renamed: as wide as its text, not the whole breadcrumb. */
+.crumb .cellInput {
+  width: auto;
+  field-sizing: content;
+  min-width: 8ch;
+  max-width: 240px;
+}
+
+.shared {
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border: 1px solid var(--info-border);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.staged {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border: 1px solid var(--warning-border);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.gridWrap {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: var(--bg-card);
+}
+
+.grid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.grid th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 6px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--bg-code);
+  border-bottom: 1px solid var(--border);
+}
+
+.grid td {
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flags {
+  display: inline-flex;
+  gap: 8px;
+  /* On the baseline the buttons left room for a descender under them, making every row 3px
+     taller than without this column — so rows shrank when a panel hid it. */
+  vertical-align: middle;
+}
+
+.flags > span {
+  display: inline-flex;
+  justify-content: center;
+  width: 26px;
+}
+
+.row {
+  cursor: default;
+}
+
+.row:hover td {
+  background: var(--bg-hover);
+}
+
+/* A section row reads as a header: one step darker than the rows, a rule above, a bit taller. */
+.sectionRow td {
+  background: var(--bg-base);
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-weight: 600;
+}
+
+.selected td {
+  background: var(--info-bg);
+}
+
+.isNew td {
+  background: var(--success-bg);
+}
+
+.isEdited td[data-col='id'],
+.isEdited td[data-col='label'] {
+  box-shadow: inset 2px 0 var(--warning);
+}
+
+.isEdited td {
+  background: var(--warning-bg);
+}
+
+/* Staged changes: green = new, yellow = edited, red = deleted (struck through until Save). */
+.isDeleted td {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  text-decoration: line-through;
+}
+
+.isDeleted td.actions {
+  text-decoration: none;
+}
+
+.flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.flag:hover {
+  background: var(--bg-hover);
+  opacity: 1;
+}
+
+.flagOn {
+  color: var(--success);
+  opacity: 1;
+}
+
+.grip {
+  width: 14px;
+  color: var(--text-secondary);
+  cursor: grab;
+  user-select: none;
+}
+
+.caret {
+  color: var(--text-secondary);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.dim {
+  color: var(--text-secondary);
+}
+
+.editable {
+  display: inline-block;
+  min-width: 40px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  cursor: text;
+}
+
+.editable:hover {
+  outline: 1px dashed var(--border);
+}
+
+.cellInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1px 4px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.select {
+  max-width: 100%;
+  padding: 1px 2px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+}
+
+.readonly {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.kind {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.actions {
+  width: 60px;
+  text-align: right;
+  opacity: 1;
+  text-decoration: none;
+}
+
+.root :global(.icon-btn:disabled) {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.addRow td {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.addSectionRow td {
+  padding: 10px;
+  text-align: center;
+  border: 1px dashed var(--info-border);
+}
+
+.evalTrue {
+  color: var(--warning-fg);
+  font-weight: 600;
+}
+
+.warnMark {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--warning-fg);
+  color: var(--bg-card);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  vertical-align: middle;
+  cursor: help;
+}
+
+/* The ID beside the mark must fit the rest of the cell: an inline-block that overflows a cell
+   with text-overflow: ellipsis is hidden whole, not cut, so a long ID vanished. */
+.warnMark + .editable {
+  max-width: calc(100% - 18px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.warnMark + .cellInput {
+  width: calc(100% - 18px);
+}
+
+.rowError {
+  margin-top: 2px;
+  white-space: normal;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--danger-fg);
+}
+
+/* "Schema X deleted. Undo" — a status line, not an error. */
+.notice {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border-bottom: 1px solid var(--info-border);
+}
+
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border-bottom: 1px solid var(--danger-border);
+}
+
+.inspector {
+  animation: inspectorIn 0.14s ease-out;
+  position: relative;
+  flex: none;
+  /* 400px on a 13" screen; on a bigger one the grid keeps about 1000px and the panel gets
+     the rest, up to half the width. Wide (.bodyWide) overrides. */
+  width: clamp(400px, calc(100% - 1000px), 50%);
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+}
+
+.inspTitle {
+  margin: 0 0 2px;
+  font-size: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 10px;
+}
+
+.fieldLabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.checkField {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.code {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-code);
+  color: var(--text-code);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+  resize: vertical;
+}
+
+.optRow {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Selects and inputs share the row; the remove button stays inside the fixed-width panel. */
+.optRow > .select,
+.optRow > .input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.warn {
+  color: var(--warning-fg);
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--success);
+  border-left: 1px solid var(--border);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+
+.pickBar {
+  display: flex;
+  flex-wrap: wrap; /* only when every filter and the annotation are in use at once */
+  align-items: center;
+  gap: 6px 8px;
+  padding: 6px 12px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.pickBar .select,
+.pickBar .input {
+  width: auto;
+  max-width: 200px;
+}
+
+.codeBar {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-top: 3px;
+}
+
+/* Expanded formula: the editor takes every pixel the inspector has. */
+.inspectorFill {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* In a fill panel only the .grow block (the editor) gives up height; every other block keeps
+   its natural size — without this the configuration list and the Ask box shrank to slivers. */
+.inspectorFill > * {
+  flex-shrink: 0;
+}
+
+.inspectorFill > .grow,
+.grow {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.codeFill {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.codeHost {
+  flex: 1;
+  min-height: 0;
+}
+
+.codeHost :global(.cm-editor) {
+  height: 100%;
+}
+
+.addLinks {
+  display: inline-flex;
+  gap: 14px;
+}
+
+.pickBar .fieldFilter {
+  width: 200px;
+}
+
+.navTop {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.navFilter {
+  flex: 1;
+  min-width: 0;
+}
+
+@keyframes inspectorIn {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Fields the picked rule uses: a violet edge and a small "if" / "→" badge. */
+.ruleHit td:first-child {
+  box-shadow: inset 3px 0 var(--rule-violet);
+}
+
+.ruleBadge {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--bg-card); /* white on violet in light mode, dark on the lighter violet in dark */
+  background: var(--rule-violet);
+  white-space: nowrap;
+}
+
+.ruleHead {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ruleHead > h4 {
+  flex: 1;
+  min-width: 0;
+}
+
+.wideBtn {
+  display: inline-flex;
+}
+
+/* Wide panel: the grid keeps 360px — ID plus the mode's column (see Grid's columns). */
+.bodyWide > .inspector {
+  width: calc(100% - 360px);
+}
+
+.actionCard {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-sidebar);
+}
+
+.rulesCell {
+  overflow: visible !important;
+}
+
+.rulesWrap {
+  position: relative;
+}
+
+.rulesCount {
+  min-width: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--rule-violet);
+  border-radius: 10px;
+  background: none;
+  color: var(--rule-violet);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rulesMenu {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  z-index: 5;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.rulesOption {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.rulesOption:hover {
+  background: var(--bg-hover);
+}
+
+.rulesAdd {
+  margin-left: 4px;
+  padding: 0 4px;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  visibility: hidden;
+}
+
+.row:hover .rulesAdd {
+  visibility: visible;
+}
+
+.marks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  row-gap: 2px;
+  gap: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.mark {
+  display: inline-flex;
+  color: var(--text-secondary);
+}
+
+.mark_error {
+  color: var(--danger);
+}
+
+.mark_warning {
+  color: var(--warning);
+}
+
+.mark_info {
+  color: var(--accent);
+}
+
+.mark_show_hide {
+  color: var(--rule-violet);
+}
+
+.mark_blocker {
+  color: var(--danger);
+}
+
+.docRow td {
+  font-style: italic;
+}
+
+/* Rule mode shows the flags read-only. */
+.flag:disabled {
+  cursor: default;
+  background: none;
+}
+
+.fabryBox {
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid var(--info-border);
+  border-radius: 6px;
+  background: var(--info-bg);
+}
+
+.fabryHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+/* The rotating gerund while Mr. Fabry answers: GerundLoader is absolute, so this sizes it. */
+.fabryWorking {
+  position: relative;
+  align-self: center;
+  height: 22px;
+  min-width: 132px;
+  white-space: nowrap;
+}
+
+.fabryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.turns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.turnYou {
+  align-self: flex-end;
+  max-width: 85%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--bg-hover);
+}
+
+.turnFabry {
+  padding: 6px 8px;
+  border: 1px solid var(--info-border);
+  border-radius: 8px;
+  background: var(--info-bg);
+}
+
+.badgeOut {
+  background: var(--success);
+}
+
+/* Badge cells wrap instead of clipping: several "in 1 / out 2" badges must all stay visible
+   (measured: 2 of 4 were cut off in an 80px cell). Each badge keeps its words together. */
+.grid td[data-col='mdh'],
+.grid td[data-col='rule'] {
+  white-space: normal;
+  text-overflow: clip;
+}
+
+.annoPick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.rulesCountFired {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.warnFilter {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.warnFilter[aria-pressed='true'] {
+  border-color: var(--warning-fg);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.barToggle {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+.docMessages {
+  white-space: normal !important;
+}
+
+.docMessages pre {
+  max-height: 240px;
+  overflow: auto;
+}
+
+/* With the shared .tab-bar: the spacing it had in a panel. */
+.tabs {
+  margin: 8px 0;
+}
+
+.resultItem {
+  display: block;
+  width: 100%;
+  margin: 2px 0;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+}
+
+.resultClick {
+  cursor: pointer;
+}
+
+.resultClick:hover {
+  background: var(--bg-hover);
+}
+
+.resultMsg {
+  margin-left: 18px;
+}
+
+.msgLine {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.firedDot {
+  margin-right: 4px;
+  color: var(--danger);
+}
+
+.quietDot {
+  margin-right: 4px;
+  color: var(--text-secondary);
+}
+
+/* A row jumped to from the validation panel flashes, then fades. */
+.rowFlash td {
+  animation: rowFlash 1.2s ease-out;
+}
+
+@keyframes rowFlash {
+  from {
+    background: var(--info-bg);
+  }
+}
+
+.queryGlyph {
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.q_winner {
+  color: var(--success);
+}
+
+.q_gated,
+.q_error {
+  color: var(--danger);
+}
+
+.q_empty,
+.q_skipped,
+.q_pending {
+  color: var(--text-secondary);
+}
+
+/* Provenance: one line per configuration, details on click. */
+.outcomeFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.filterChip {
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.filterChipOn {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  font-weight: 600;
+}
+
+.provHook {
+  margin-top: 10px;
+}
+
+.provHookHead {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.provRow {
+  border-bottom: 1px solid var(--border);
+}
+
+.provLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 2px;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.provLine:hover {
+  background: var(--bg-hover);
+}
+
+.provMeta {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outcomeChip {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.oc_matched {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.oc_nomatch {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.oc_gated {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.oc_error {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.oc_pending {
+  background: var(--info-bg);
+  color: var(--info-fg);
+}
+
+.qDots {
+  display: inline-flex;
+  gap: 2px;
+  flex: none;
+}
+
+.qDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.provDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 4px 8px 20px;
+  font-size: 12px;
+}
+
+/* SearchPicker: an input with its list dropped below, over the grid. */
+.searchPick {
+  position: relative;
+  display: inline-flex;
+}
+
+.pickBar .searchPick .input {
+  width: 200px;
+  padding-right: 20px;
+  text-overflow: ellipsis;
+}
+
+.searchPick::after {
+  content: '▾';
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.searchList {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 30;
+  min-width: 100%;
+  width: max-content;
+  max-width: 420px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 3px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.searchOption {
+  padding: 4px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.searchOption[aria-selected='true'] {
+  font-weight: 600;
+}
+
+.searchActive {
+  background: var(--bg-hover);
+}
+
+.searchEmpty {
+  padding: 4px 10px;
+  color: var(--text-secondary);
+}
+
+/* The grid's tooltip over a cut-off ID or label: immediate, unlike a native title. */
+.cellTip {
+  position: fixed;
+  z-index: 40;
+  max-width: 480px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-card);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+/* The field panel's "Used by": one clickable row per rule and per MDH configuration. */
+.linksHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 10px;
+}
+
+.linkGroup {
+  margin-top: 4px;
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 2px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.linkRow:hover {
+  background: var(--bg-hover);
+}
+
+.linkGroup .linkRow {
+  margin-left: 10px;
+  width: calc(100% - 10px);
+}
+
+.engineRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+/* The engine panel's lists: one compact line per engine field. */
+.engineList .linkRow,
+.engineList .engineRow {
+  margin: 0;
+  padding: 2px 6px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+}
+
+.engineList .linkName {
+  flex: 1 0 auto;
+  max-width: 60%;
+}
+
+.engineList .linkRow:hover {
+  background: var(--bg-hover);
+}
+
+/* Engine panel: a thin rule between its sections. */
+.enginePanel > .field {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.idInLabel {
+  font-family: var(--font-mono);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 3px 12px;
+  margin: 0;
+}
+
+.kv dt {
+  color: var(--text-secondary);
+}
+
+.kv dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.engineDeleted .linkName {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.engineList .engineRow :global(.icon-btn) {
+  flex: none;
+  margin-left: auto;
+}
+
+/* An engine field's detail (seed, or the queues that use it) shortens before its name. */
+.engineRow > .dim,
+.linkRow > .dim {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Engine: the toolbar badge and the AI column's state chips (see engine.ts). */
+.engineBadge {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.aiChip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.aiBtn {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.engineBadge.aiBtn {
+  border: 1px solid var(--border);
+  font-size: 11px;
+  background: none;
+}
+
+.engineBadge[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Engine mode: the seed picker fills the AI cell; a left bar shows the state. The cell must
+   not clip, or the picker's list is cut off at the cell's edge. */
+.grid td:has(> .aiPick) {
+  overflow: visible;
+}
+
+.aiPick {
+  display: flex;
+  padding-left: 4px;
+}
+
+.aiPick .searchPick,
+.aiPick .input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.aiPick[data-ai='new'] {
+  box-shadow: inset 3px 0 var(--warning-fg);
+}
+
+.ai_seeded,
+.ai_learning {
+  background: none;
+  color: var(--text-secondary);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.ai_new {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.ai_rejected {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}

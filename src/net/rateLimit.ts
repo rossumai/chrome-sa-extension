@@ -30,3 +30,9 @@ export function rateLimitMessage(err: { retryAfter?: number | null }): string {
     ? `Rossum is rate-limiting requests. Try again in ${err.retryAfter} s.`
     : 'Rossum is rate-limiting requests. Try again shortly.';
 }
+
+/** A failure as one line for the user: the rate-limit text for a 429, else its message. */
+export function errorText(err: unknown, fallback: string): string {
+  if (isRateLimited(err)) return rateLimitMessage(err);
+  return (err as { message?: string } | null | undefined)?.message || fallback;
+}

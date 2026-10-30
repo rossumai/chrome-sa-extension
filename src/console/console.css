@@ -16,6 +16,8 @@
   --success: #22883e;
   --warning: #b45309;
   --mdh-special-bidi: #7c3aed;
+  /* The Builder's native Rules: the same violet as above, under its own name. */
+  --rule-violet: #7c3aed;
   --success-hover: #1a6e32;
   --success-bg: #d1fae5;
   --success-fg: #065f46;
@@ -74,6 +76,7 @@
     --success: #34d058;
     --warning: #f59e0b;
     --mdh-special-bidi: #a78bfa;
+    --rule-violet: #a78bfa;
     --success-hover: #2ea44f;
     --success-bg: #0a3020;
     --success-fg: #34d058;
@@ -5703,7 +5706,7 @@ tbody.uploads-row-failed tr {
   font-size: 13px;
   font-weight: 600;
 }
-.inspector-step .dt {
+.inspector-step .inspector-step-dt {
   font-size: 11px;
   color: var(--text-secondary);
   font-family: var(--font-mono);

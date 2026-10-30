@@ -1,0 +1,344 @@
+// src/builder/store.ts
+import { signal, computed } from '@preact/signals';
+import { initHistory, type History } from './history.js';
+import { changeSummary, rowStatus, movedKeys, flatten, type Node } from './model.js';
+import type { AnnotationValues } from './values.js';
+import type { PlacedMessages } from './validation.js';
+import { mdhHooks, hooksByField, hookFieldRefs, hookRoles, fieldConfigs } from './matching.js';
+import {
+  ruleFieldRefs,
+  ruleRoles,
+  rulesByField,
+  fieldActionMarks,
+  globalActionMarks,
+} from './rules.js';
+import { sameDraft, type RuleDraft } from './ruleDraft.js';
+import { enginePlan, deletableFields, isHiddenCaptured, type EngineKind } from './engine.js';
+import type { RuleEval } from './ruleEval.js';
+import { hookWordSets, hooksByFieldText } from './codeRefs.js';
+import { parseSettings } from './hookDraft.js';
+
+export const domain = signal('');
+export const token = signal('');
+export const connected = signal<boolean | null>(null); // null = not yet probed
+
+// Raw API objects (untyped on the wire).
+export const workspaces = signal<any[]>([]);
+export const queues = signal<any[]>([]);
+export const loading = signal(false);
+export const error = signal<string | null>(null);
+export const retryable = signal(false); // the last failure was a 429; the user retries
+
+export const selectedQueueId = signal<number | null>(null);
+// The open schema: the selected queue's, or one opened directly because no queue uses it.
+export const selectedSchemaId = signal<number | null>(null);
+export const schema = signal<any | null>(null); // the schema as last loaded or saved
+export const base = signal<Node[]>([]);
+// One undo stack for everything staged: the schema's name and its content.
+export type Draft = { name: string; content: Node[] };
+export const baseName = signal('');
+export const history = signal<History<Draft>>(initHistory({ name: '', content: [] }));
+// Every schema in the org, names only (the list call returns full objects; content is dropped).
+export const schemas = signal<{ id: number; url: string; name: string }[]>([]);
+// The last schema deleted here, for Undo (recreated under a new id). Memory only: a reload
+// loses it, and it is not part of the draft's undo history.
+export const deletedSchema = signal<{ name: string; content: any[] } | null>(null);
+export const selectedKey = signal<string | null>(null);
+// The grid's id/label filter (see fieldFilter.ts); '' shows every row.
+export const fieldFilter = signal('');
+export const rowErrors = signal<Map<string, string[]>>(new Map());
+export const generalErrors = signal<string[]>([]); // save errors not tied to a row
+export const saving = signal(false);
+
+// The annotation whose values the grid shows next to each field (read-only).
+export const annotations = signal<{ id: number; label: string }[]>([]);
+export const annotationId = signal<number | null>(null);
+export const values = signal<AnnotationValues | null>(null);
+export const annotationError = signal<string | null>(null);
+// Which table row the Value column shows, per table (multivalue) schema id; 0-based.
+export const lineRow = signal<Record<string, number>>({});
+
+export const work = computed(() => history.value.present.content);
+export const draftName = computed(() => history.value.present.name);
+export const renamed = computed(() => draftName.value !== baseName.value);
+export const status = computed(() => rowStatus(base.value, work.value));
+const moved = computed(() => movedKeys(base.value, work.value));
+export const summary = computed(() => changeSummary(status.value, moved.value));
+export const dirty = computed(() => {
+  const s = summary.value;
+  return renamed.value || s.added + s.edited + s.deleted + s.moved > 0 || engineChanges.value > 0;
+});
+
+// The open queue's extraction engine (engine.ts). `engine` and `fields` load for a custom
+// engine only; null while no queue is open.
+export const engineState = signal<{
+  kind: EngineKind;
+  engine: any | null;
+  fields: any[];
+  error: string | null;
+} | null>(null);
+// The pretrained catalog (loaded once): seeds for engine fields, AI fields on the generic engine.
+export const engineCatalog = signal<any[]>([]);
+export const engineFieldsByName = computed(
+  () => new Map((engineState.value?.fields ?? []).map((f) => [String(f.name), f])),
+);
+// Engine fields Save creates or patches before it saves the schema (custom engine only).
+export const enginePlanNow = computed(() => {
+  const es = engineState.value;
+  if (es?.kind !== 'custom' || !es.engine) return null;
+  return enginePlan(work.value, es.fields, es.engine.url, engineCatalog.value);
+});
+// Engine fields marked for deletion (their ids). Save deletes those still unused anywhere.
+export const engineDeletes = signal<Set<number>>(new Set());
+export const engineDeletesNow = computed(() => {
+  const byName = engineUsers.value?.byName;
+  const es = engineState.value;
+  if (!byName || !es?.engine || !engineDeletes.value.size) return [];
+  return deletableFields(work.value, es.fields, byName).filter((f) =>
+    engineDeletes.value.has(f.id),
+  );
+});
+export const engineChanges = computed(() => {
+  const p = enginePlanNow.value;
+  return (p ? p.create.length + p.patch.length : 0) + engineDeletesNow.value.length;
+});
+// For the engine panel: engine field name -> the other queues on this engine that use it,
+// read from their schemas when the panel first opens. null until then.
+export const engineUsers = signal<{
+  byName: Map<string, string[]> | null;
+  error: string | null;
+} | null>(null);
+// The engine panel (custom engine only): the grid shows only extracted fields, each with its
+// seed picker in the AI column.
+export const engineMode = computed(() => rightPanel.value?.kind === 'engine');
+
+export const selectedQueue = computed(
+  () => queues.value.find((q) => q.id === selectedQueueId.value) || null,
+);
+
+// The URL of the open schema, from the loaded schema or else from the selected queue.
+const openSchemaUrl = computed(() => schema.value?.url ?? selectedQueue.value?.schema ?? null);
+
+// Queues that use the open schema: editing it changes all of them.
+export const sharedQueueIds = computed(() => {
+  const url = openSchemaUrl.value;
+  return new Set(url ? queues.value.filter((q) => q.schema === url).map((q) => q.id) : []);
+});
+export const sharedCount = computed(() => sharedQueueIds.value.size);
+
+/** Make (name, content) the saved state and clear the undo stack. */
+export function startDraft(name: string, content: Node[]) {
+  base.value = content;
+  baseName.value = name;
+  history.value = initHistory({ name, content });
+  engineDeletes.value = new Set();
+}
+
+// Native Rules of the selected queue, and the one picked to highlight its fields.
+export const rules = signal<any[]>([]);
+export const ruleId = signal<number | null>(null);
+export const pickedRule = computed(() => rules.value.find((r) => r.id === ruleId.value) || null);
+// The right-hand panel, one at a time; null = the field inspector (empty with no row selected).
+// Mr. Fabry's chat and the validation results live on in their own signals when it closes.
+export type RightPanel =
+  | { kind: 'fabry' }
+  | { kind: 'validation'; tab: 'rules' | 'provenance' }
+  | { kind: 'rule'; editor: RuleEditorState }
+  | { kind: 'hook'; editor: HookEditorState }
+  | { kind: 'code'; hookId: number; fieldId: string } // a hook read-only, at one field's mention
+  | { kind: 'engine' };
+export const rightPanel = signal<RightPanel | null>(null);
+
+// Rule mode: the right panel edits one rule (ruleId null = a new one).
+export type RuleEditorState = {
+  ruleId: number | null;
+  base: RuleDraft;
+  draft: RuleDraft;
+  /** The field a new rule was started from (its Rules-column +), for Mr. Fabry's prompt. */
+  fromField?: string | null;
+};
+export const ruleEditor = computed(() => {
+  const p = rightPanel.value;
+  return p?.kind === 'rule' ? p.editor : null;
+});
+export const ruleDirty = computed(() =>
+  ruleEditor.value ? !sameDraft(ruleEditor.value.base, ruleEditor.value.draft) : false,
+);
+export const ruleErrors = signal<string[]>([]);
+export const ruleSaving = signal(false);
+
+// The fields to highlight: the rule being edited (live, as it is typed), else the picked one.
+export const ruleRefs = computed(() =>
+  ruleEditor.value
+    ? ruleFieldRefs(ruleEditor.value.draft)
+    : pickedRule.value
+      ? ruleFieldRefs(pickedRule.value)
+      : null,
+);
+export const ruleRoleById = computed(() => (ruleRefs.value ? ruleRoles(ruleRefs.value) : null));
+
+// Every queue rule that uses each field, for the grid's Rules column.
+export const fieldRules = computed(() => rulesByField(rules.value));
+
+// Rule mode filters the grid to the open rule's fields (live, as the condition is typed);
+// the text filter then ADDS matches, so a new field can be found and clicked in.
+export const ruleFilterIds = computed(() => {
+  if (!ruleEditor.value) return null;
+  const r = ruleFieldRefs(ruleEditor.value.draft);
+  return new Set([...r.condition, ...r.actions]);
+});
+
+// The open rule's actions per field, for the grid's icons.
+export const ruleMarks = computed(() =>
+  ruleEditor.value ? fieldActionMarks(ruleEditor.value.draft) : null,
+);
+
+// The open rule's actions that anchor on no field (document messages and blockers, emails…).
+export const ruleGlobalMarks = computed(() =>
+  ruleEditor.value ? globalActionMarks(ruleEditor.value.draft) : null,
+);
+
+// In rule mode the schema is read-only: one thing is edited at a time.
+export const schemaLocked = computed(() => !!ruleEditor.value || !!hookEditor.value);
+
+// Mr. Fabry in the rule editor: one read-only chat per opened rule. assistRev bumps when a
+// proposal (or Discard) replaces the draft from outside, so the condition editor reloads.
+export type AssistState = {
+  chatId: string | null;
+  busy: boolean;
+  error: string | null;
+  reply: string | null; // the raw reply, shown when it held no usable rule
+  warnings: string[];
+};
+/** No chat yet, nothing asked. */
+export const IDLE_ASSIST: AssistState = {
+  chatId: null,
+  busy: false,
+  error: null,
+  reply: null,
+  warnings: [],
+};
+export const assist = signal<AssistState>(IDLE_ASSIST);
+export const assistRev = signal(0);
+
+// Mr. Fabry in the field inspector: one read-only chat per field (forKey).
+export type FieldAssistState = AssistState & { forKey: string | null };
+export const fieldAssist = signal<FieldAssistState>({ ...IDLE_ASSIST, forKey: null });
+
+// Mr. Fabry for the whole schema: a panel with the conversation; each answer's changes land
+// as one undoable edit.
+export type SchemaTurn = {
+  role: 'you' | 'fabry';
+  text: string;
+  applied?: number;
+  problems?: string[];
+  reply?: string; // the raw reply, when it held no usable list of changes
+};
+export type SchemaFabryState = {
+  chatId: string | null;
+  busy: boolean;
+  error: string | null;
+  turns: SchemaTurn[];
+  problems: string[]; // what is still wrong after the last answer — "Ask Mr. Fabry to fix"
+};
+export const schemaFabry = signal<SchemaFabryState>({
+  chatId: null,
+  busy: false,
+  error: null,
+  turns: [],
+  problems: [],
+});
+// Every row an answer in this conversation touched; reset when another schema opens.
+export const fabryTouched = signal<Set<string>>(new Set());
+// …of which, the rows that still differ from the saved schema: an undone or saved change
+// drops out by itself. This is what "only Mr. Fabry's changes" shows.
+export const fabryChangedKeys = computed(() => {
+  const differs = new Set([...status.value.keys(), ...moved.value]);
+  return new Set([...fabryTouched.value].filter((k) => differs.has(k)));
+});
+export const onlyFabryChanges = signal(false);
+
+// ---- Hook mode (MDH) ---------------------------------------------------------------------
+// The queue's hooks; the MDH ones feed the Matching column. Hook mode edits one hook's
+// settings as JSON text in the right panel (base = as saved, draft = in the editor).
+export const hooks = signal<any[]>([]);
+// Per field id: the queue's other hooks (not MDH) whose code or settings mention it.
+// Each hook's words are read once per hooks list, not on every schema edit.
+const hookWords = computed(() => hookWordSets(hooks.value));
+export const fieldCodeHooks = computed(() =>
+  hooksByFieldText(
+    hookWords.value,
+    flatten(work.value)
+      .map((r) => String(r.node.id ?? ''))
+      .filter(Boolean),
+  ),
+);
+export const fieldHooks = computed(() => hooksByField(mdhHooks(hooks.value)));
+export type HookEditorState = { hookId: number; base: string; draft: string };
+export const hookEditor = computed(() => {
+  const p = rightPanel.value;
+  return p?.kind === 'hook' ? p.editor : null;
+});
+export const hookDirty = computed(() =>
+  hookEditor.value ? hookEditor.value.base !== hookEditor.value.draft : false,
+);
+export const hookErrors = signal<string[]>([]);
+export const hookSaving = signal(false);
+export const hookAssist = signal<AssistState>(IDLE_ASSIST);
+export const hookAssistRev = signal(0);
+
+// The hook as edited: settings parsed from the editor (live) — or the saved settings while
+// the editor holds text that is not a JSON object.
+export const hookLive = computed(() => {
+  const ed = hookEditor.value;
+  if (!ed) return null;
+  const parsed = parseSettings(ed.draft);
+  return {
+    settings: parsed.ok ? parsed.value : hooks.value.find((h) => h.id === ed.hookId)?.settings,
+  };
+});
+// One configuration picked in the hook panel (null = all of them).
+export const hookConfigIndex = signal<number | null>(null);
+export const hookRefs = computed(() =>
+  hookLive.value ? hookFieldRefs(hookLive.value, hookConfigIndex.value ?? undefined) : null,
+);
+// Per field: the configurations (numbered from 1 in the grid) that use it, and how.
+export const hookFieldConfigs = computed(() =>
+  hookLive.value ? fieldConfigs(hookLive.value, hookConfigIndex.value ?? undefined) : null,
+);
+export const hookFilterIds = computed(() =>
+  hookRefs.value ? new Set([...hookRefs.value.inputs, ...hookRefs.value.outputs]) : null,
+);
+export const hookRoleById = computed(() => (hookRefs.value ? hookRoles(hookRefs.value) : null));
+
+// The last Revalidate of the picked annotation: its messages placed on fields and rows, and
+// the rules whose condition was True.
+export const validation = signal<{
+  placed: PlacedMessages;
+  fired: Set<number>;
+  raw: unknown; // the validate response as received, for the strip's "Raw response"
+} | null>(null);
+export const revalidating = signal(false);
+export const revalidateError = signal<string | null>(null);
+
+// After a Revalidate: show only the fields that got a message (and their parents).
+export const onlyMessages = signal(false);
+// Fields with a warning mark (today: captured but hidden), and the filter to show only them.
+export const warningKeys = computed(
+  () =>
+    new Set(
+      flatten(work.value)
+        .filter((r) => !r.node.__deleted && isHiddenCaptured(r.node))
+        .map((r) => r.key),
+    ),
+);
+export const onlyWarnings = signal(false);
+
+// A row briefly flashed after a jump from the validation panel.
+export const flashRowKey = signal<string | null>(null);
+
+// The picked annotation's content tree as fetched (the provenance replay reads it).
+export const annotationContent = signal<any[]>([]);
+// The open rule's condition evaluated on the picked annotation (ruleEval.ts); null when there
+// is no rule, no annotation or no condition.
+export const ruleEval = signal<(RuleEval & { busy: boolean; error: string | null }) | null>(null);

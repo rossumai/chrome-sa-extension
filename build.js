@@ -56,6 +56,9 @@ const options = {
     // first mermaid fence): beautiful-mermaid ships one flat ~1.5MB module,
     // so it gets its own bundle instead of weighing down console.js.
     'console/mermaid': 'src/fabry/mermaidEntry.ts',
+    // Lazy-loaded by the Builder's Format button (src/builder/format.ts): Ruff's Python
+    // formatter as WebAssembly, ~11MB, so it gets its own bundle; ruff.wasm is copied below.
+    'console/ruff': 'src/builder/ruffEntry.ts',
     'background': 'src/background/index.ts',
     'devtools/devtools': 'src/devtools/devtools.ts',
     'devtools/panel': 'src/devtools/panel.tsx',
@@ -99,6 +102,8 @@ function copyDocStylesheets() {
   // The print page links the three sheets above plus its own extras.
   cpSync('src/docs/print.html', 'dist/console/print.html');
   cpSync('src/docs/print.css', 'dist/console/print.css');
+  // The Builder's formatter binary, fetched by dist/console/ruff.js relative to the page.
+  cpSync('node_modules/@astral-sh/ruff-wasm-web/ruff_wasm_bg.wasm', 'dist/console/ruff.wasm');
 }
 
 function hljsCombinedCss() {

@@ -29,6 +29,9 @@ import * as fabryStore from '../fabry/store.js';
 import { initFabry } from '../fabry/index.jsx';
 import * as academyStore from '../academy/store.js';
 import { initAcademy } from '../academy/index.jsx';
+import * as builderApi from '../builder/api.js';
+import * as builderStore from '../builder/store.js';
+import { initBuilder } from '../builder/index.jsx';
 import * as cibStore from '../cib/store.js';
 import * as rdcStore from '../rdc/store.js';
 
@@ -36,6 +39,7 @@ const AUTH_TTL_MS = 24 * 60 * 60 * 1000;
 const TITLES = {
   mdh: 'Dataset Management — Rossum SA',
   audit: 'Audit Logs — Rossum SA',
+  builder: 'Builder — Rossum SA',
   galaxy: 'Org Galaxy — Rossum SA',
   inspector: 'Inspector — Rossum SA',
   fabry: 'Mr. Fabry — Rossum SA',
@@ -49,6 +53,7 @@ const TITLES = {
 const APP_EVENTS: Record<string, any> = {
   mdh: 'sa_console_app_mdh',
   audit: 'sa_console_app_audit',
+  builder: 'sa_console_app_builder',
   galaxy: 'sa_console_app_galaxy',
   inspector: 'sa_console_app_inspector',
   fabry: 'sa_console_app_fabry',
@@ -79,6 +84,7 @@ let galaxyInited = false;
 let inspectorInited = false;
 let fabryInited = false;
 let academyInited = false;
+let builderInited = false;
 let pendingCtx = {};
 
 function ensureInited(app: any) {
@@ -104,6 +110,10 @@ function ensureInited(app: any) {
   if (app === 'fabry' && !fabryInited) {
     fabryInited = true;
     return initFabry();
+  }
+  if (app === 'builder' && !builderInited) {
+    builderInited = true;
+    return initBuilder();
   }
   if (app === 'academy' && !academyInited) {
     academyInited = true;
@@ -187,6 +197,7 @@ async function boot() {
     inspectorStore.connected.value = false;
     fabryStore.connected.value = false;
     academyStore.connected.value = false;
+    builderStore.connected.value = false;
     cibStore.connected.value = false;
     rdcStore.connected.value = false;
     render(<Console />, document.getElementById('app')!);
@@ -225,6 +236,10 @@ async function boot() {
   // recent-annotations list rather than jumping back into the last one. (A
   // `pendingAnnotationId` deep-link consumer lived here until 2026-08-20 and was
   // removed — nothing ever staged that key.)
+
+  builderStore.domain.value = domain;
+  builderStore.token.value = token;
+  builderApi.init(domain, token);
 
   // Fabry reuses the Agent API transport already initialized above (agentApi.init).
   fabryStore.domain.value = domain;

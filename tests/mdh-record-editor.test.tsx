@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { h, render } from 'preact';
+import { act } from 'preact/test-utils';
 import { EditorView } from 'codemirror';
 
 vi.mock('../src/mdh/api.js');
@@ -47,12 +48,14 @@ afterEach(() => {
   // Unmount Modal + clear modalContent synchronously so Modal's useEffect
   // cleanup (which touches document.removeEventListener) runs inside the test
   // environment, not after jsdom is torn down. Prevents stray "document is not
-  // defined" errors when a test leaves the modal open.
-  modalContent.value = null;
-  if (mountedRoot) {
-    render(null, mountedRoot);
-    mountedRoot = null;
-  }
+  // defined" errors when a test leaves the modal open. Inside act(), because Preact 11 defers
+  // an unmounted component's useEffect cleanups to after paint: bare, the JsonEditor's
+  // view.destroy() could still run after teardown ("window is not defined", CI on PR 27).
+  act(() => {
+    modalContent.value = null;
+    if (mountedRoot) render(null, mountedRoot);
+  });
+  mountedRoot = null;
 });
 
 describe('openRecordEditor — edit mode', () => {

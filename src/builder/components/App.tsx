@@ -1,0 +1,174 @@
+import { h, type ComponentType } from 'preact';
+import { useEffect } from 'preact/hooks';
+import Modal, { openModal } from '../../ui/Modal.jsx';
+import {
+  error,
+  retryable,
+  loading,
+  schema,
+  selectedQueueId,
+  selectedSchemaId,
+  generalErrors,
+  queues,
+  selectedKey,
+  schemaLocked,
+  rightPanel,
+  deletedSchema,
+  type RightPanel,
+} from '../store.js';
+import {
+  undoChange,
+  redoChange,
+  loadQueues,
+  openQueue,
+  openSchema,
+  closeRightPanel,
+  retryFailedLists,
+  undoSchemaDelete,
+} from '../index.jsx';
+import Navigator from './Navigator.jsx';
+import Toolbar from './Toolbar.jsx';
+import Grid from './Grid.jsx';
+import Inspector from './Inspector.jsx';
+import RuleEditor from './RuleEditor.jsx';
+import HookEditor from './HookEditor.jsx';
+import SchemaFabryPanel from './SchemaFabryPanel.jsx';
+import ValidationPanel from './ValidationPanel.jsx';
+import HookCodeView from './HookCodeView.jsx';
+import EnginePanel from './EnginePanel.jsx';
+import SaveDialog from './SaveDialog.jsx';
+import FilterBar from './FilterBar.jsx';
+import { navDrawer, panelOpen, panelWide, loadPanelWide } from './panels.js';
+import s from './Builder.module.css';
+
+// The component for each right panel (store.RightPanel); with none, the field inspector.
+const PANELS: Record<RightPanel['kind'], ComponentType> = {
+  fabry: SchemaFabryPanel,
+  validation: ValidationPanel,
+  rule: RuleEditor,
+  hook: HookEditor,
+  code: HookCodeView,
+  engine: EnginePanel,
+};
+
+function inField(t: EventTarget | null): boolean {
+  const el = t as HTMLElement | null;
+  // Text entry only: a focused switch or select must not swallow ⌘Z after a change. A code
+  // editor (CodeMirror's contenteditable) is text entry with its own undo and Esc.
+  if (!el) return false;
+  if (el.tagName === 'TEXTAREA' || el.isContentEditable || el.closest?.('.cm-editor')) return true;
+  return el.tagName === 'INPUT' && (el as HTMLInputElement).type !== 'checkbox';
+}
+
+export default function App({ connected }: { connected: boolean | null }) {
+  useEffect(loadPanelWide, []);
+
+  // ⌘Z / Ctrl+Z undo, ⇧⌘Z / Ctrl+Shift+Z / Ctrl+Y redo — not while typing in a field.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // The modal closes itself on Escape; the panel under it stays.
+      if (e.key === 'Escape' && (e.target as Element).closest?.('[role="dialog"]')) return;
+      if (e.key === 'Escape' && !inField(e.target)) {
+        if (navDrawer.value) navDrawer.value = false;
+        else if (rightPanel.value) closeRightPanel();
+        else selectedKey.value = null; // closes the inspector
+        return;
+      }
+      if (!(e.metaKey || e.ctrlKey) || inField(e.target)) return;
+      if (schemaLocked.value) return; // the schema is read-only while a rule or hook is edited
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) undoChange();
+      else if ((k === 'z' && e.shiftKey) || k === 'y') redoChange();
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  if (!connected) {
+    return (
+      <div class="app-root">
+        <div class="empty-state">
+          {error.value || 'Open the Console from a Rossum tab to connect.'}
+        </div>
+      </div>
+    );
+  }
+
+  const panel = rightPanel.value;
+  const Panel = panel ? PANELS[panel.kind] : Inspector;
+  const panelKey = panel?.kind === 'code' ? `${panel.hookId}:${panel.fieldId}` : panel?.kind;
+
+  const retry = () => {
+    retryFailedLists();
+    if (!queues.value.length) loadQueues();
+    else if (selectedQueueId.value != null && !schema.value) openQueue(selectedQueueId.value);
+    else if (selectedSchemaId.value != null && !schema.value) openSchema(selectedSchemaId.value);
+    else error.value = null;
+  };
+
+  return (
+    <div class={'app-root ' + s.root}>
+      <Navigator />
+      <main class={s.main}>
+        {error.value && (
+          <div class={s.banner}>
+            {error.value}
+            {retryable.value && (
+              <button type="button" class="btn btn-sm" onClick={retry}>
+                Retry
+              </button>
+            )}
+          </div>
+        )}
+        {deletedSchema.value && (
+          <div class={s.notice} data-deleted-schema="">
+            Schema {deletedSchema.value.name} deleted.
+            <button type="button" class="btn btn-sm" onClick={undoSchemaDelete}>
+              Undo
+            </button>
+            <span class={s.dim}>The restored schema gets a new ID.</span>
+          </div>
+        )}
+        {generalErrors.value.length > 0 && (
+          <div class={s.banner}>
+            {generalErrors.value.map((m) => (
+              <div>{m}</div>
+            ))}
+          </div>
+        )}
+        {selectedQueueId.value == null && selectedSchemaId.value == null ? (
+          <div class="empty-state">
+            {loading.value ? 'Loading queues…' : 'Pick a queue to edit its schema.'}
+          </div>
+        ) : !schema.value ? (
+          <div class="empty-state">{loading.value ? 'Loading schema…' : ''}</div>
+        ) : (
+          <div class={s.editor}>
+            <Toolbar onSave={() => openModal('Save schema', () => <SaveDialog />)} />
+            <FilterBar />
+            <div class={s.body + (panelWide.value && panelOpen.value ? ' ' + s.bodyWide : '')}>
+              <div
+                class={s.gridWrap}
+                data-grid-wrap=""
+                onClick={(e) => {
+                  // A click into empty grid space clears the selection, which hides the
+                  // inspector. Rows select themselves; buttons and inputs act, not deselect.
+                  const hit = (e.target as Element).closest(
+                    '[data-row-key], button, input, select, textarea, label, a',
+                  );
+                  if (!hit) selectedKey.value = null;
+                }}
+              >
+                <Grid />
+              </div>
+              <Panel key={panelKey} />
+            </div>
+          </div>
+        )}
+      </main>
+      <Modal />
+    </div>
+  );
+}

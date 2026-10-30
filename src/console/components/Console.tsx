@@ -8,6 +8,7 @@ import GalaxyApp from '../../galaxy/components/App.jsx';
 import InspectorApp from '../../inspector/components/App.jsx';
 import FabryApp from '../../fabry/components/App.jsx';
 import AcademyApp from '../../academy/components/App.jsx';
+import BuilderApp from '../../builder/components/App.jsx';
 import CibApp from '../../cib/components/App.jsx';
 import RdcApp from '../../rdc/components/App.jsx';
 import * as mdhStore from '../../mdh/store.js';
@@ -16,6 +17,7 @@ import * as galaxyStore from '../../galaxy/store.js';
 import * as inspectorStore from '../../inspector/store.js';
 import * as fabryStore from '../../fabry/store.js';
 import * as academyStore from '../../academy/store.js';
+import * as builderStore from '../../builder/store.js';
 import * as cibStore from '../../cib/store.js';
 import * as rdcStore from '../../rdc/store.js';
 
@@ -49,6 +51,9 @@ export default function Console() {
   } else if (app === 'fabry') {
     const c = fabryStore.connected.value;
     view = c === null ? <Connecting /> : <FabryApp connected={c} />;
+  } else if (app === 'builder') {
+    const c = builderStore.connected.value;
+    view = c === null ? <Connecting /> : <BuilderApp connected={c} />;
   } else if (app === 'cib') {
     view = cibC === null ? <Connecting /> : null;
   } else if (app === 'rdc') {

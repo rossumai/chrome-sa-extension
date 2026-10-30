@@ -1,0 +1,79 @@
+import { h } from 'preact';
+import { useEffect } from 'preact/hooks';
+import {
+  hookEditor,
+  hookDirty,
+  hookErrors,
+  hookSaving,
+  hookAssist,
+  hookAssistRev,
+  hooks,
+  hookRefs,
+} from '../store.js';
+import {
+  updateHookDraft,
+  closeHookEditor,
+  saveHook,
+  discardHook,
+  askHookAssistant,
+} from '../index.jsx';
+import CodeEditor from './CodeEditor.jsx';
+import { hookEditorRef, revealPendingConfig } from './hookJump.js';
+import AskFabry from './AskFabry.jsx';
+import PanelHead from './PanelHead.jsx';
+import DraftFooter from './DraftFooter.jsx';
+import { Field } from './fields.jsx';
+import s from './Builder.module.css';
+
+// "Format" for JSON: parse and print with two-space indent. A parse error is the message.
+const formatJson = async (src: string) => JSON.stringify(JSON.parse(src), null, 2);
+
+// Hook mode's right panel: one MDH hook's settings as JSON, Mr. Fabry, and its own Save.
+export default function HookEditor() {
+  useEffect(revealPendingConfig, []); // after the code editor below has mounted
+  const ed = hookEditor.value!;
+  const hook = hooks.value.find((h) => h.id === ed.hookId);
+  const refs = hookRefs.value;
+  return (
+    <aside class={s.inspector + ' ' + s.inspectorFill} data-panel="hook">
+      <PanelHead
+        title={`${hook?.name ?? 'Hook'} (${ed.hookId})`}
+        closeAction="close-hook"
+        onClose={closeHookEditor}
+      />
+      <div class={s.dim}>
+        Matches on {refs?.inputs.size ?? 0} field(s), fills {refs?.outputs.size ?? 0}. The grid
+        shows only those.
+      </div>
+      <AskFabry
+        key={`fabry-hook:${ed.hookId}`}
+        state={hookAssist.value}
+        onAsk={askHookAssistant}
+        placeholder="Describe how the matching should change"
+        followupPlaceholder="What should change?"
+        doneText="Proposal filled in — review, then Save hook or Discard."
+      />
+      <Field block extra={s.grow} label="Settings (JSON)">
+        <CodeEditor
+          key={`hook:${ed.hookId}:${hookAssistRev.value}`}
+          name="hook"
+          handleRef={hookEditorRef}
+          language="json"
+          formatter={formatJson}
+          expanded
+          value={ed.draft}
+          onCommit={updateHookDraft}
+        />
+      </Field>
+      <DraftFooter
+        what="hook"
+        errors={hookErrors.value}
+        dirty={hookDirty.value}
+        saving={hookSaving.value}
+        onClose={closeHookEditor}
+        onDiscard={discardHook}
+        onSave={saveHook}
+      />
+    </aside>
+  );
+}

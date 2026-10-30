@@ -1,6 +1,11 @@
 // tests/net-rate-limit.test.ts
 import { describe, it, expect } from 'vitest';
-import { isRateLimited, rateLimitError, rateLimitMessage } from '../src/net/rateLimit.js';
+import {
+  isRateLimited,
+  rateLimitError,
+  rateLimitMessage,
+  errorText,
+} from '../src/net/rateLimit.js';
 
 const resp = (retryAfter: string | null) => ({
   headers: { get: (name: string) => (name === 'Retry-After' ? retryAfter : null) },
@@ -59,5 +64,16 @@ describe('rateLimitMessage', () => {
       'Rossum is rate-limiting requests. Try again shortly.',
     );
     expect(rateLimitMessage({})).toBe('Rossum is rate-limiting requests. Try again shortly.');
+  });
+});
+
+describe('errorText', () => {
+  it('shows a 429 as the rate-limit text, else the message, else the fallback', () => {
+    expect(errorText(rateLimitError(resp('5'), 'x'), 'f')).toBe(
+      'Rossum is rate-limiting requests. Try again in 5 s.',
+    );
+    expect(errorText(new Error('boom'), 'f')).toBe('boom');
+    expect(errorText(new Error(''), 'f')).toBe('f');
+    expect(errorText(null, 'f')).toBe('f');
   });
 });

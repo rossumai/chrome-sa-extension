@@ -2,13 +2,15 @@
 // Pure helpers for the console shell boot. Kept side-effect-free so they can be
 // unit-tested without chrome / DOM / sessionStorage.
 
-/** The eight apps on the rail. Adding one touches this, Rail.jsx and Console.jsx. */
-export type AppId = 'mdh' | 'audit' | 'galaxy' | 'inspector' | 'fabry' | 'cib' | 'academy' | 'rdc';
+/** The nine apps on the rail. Adding one touches this, Rail.jsx and Console.jsx. */
+export type AppId =
+  'mdh' | 'audit' | 'builder' | 'galaxy' | 'inspector' | 'fabry' | 'cib' | 'academy' | 'rdc';
 
 export function isValidApp(v: unknown): v is AppId {
   return (
     v === 'mdh' ||
     v === 'audit' ||
+    v === 'builder' ||
     v === 'galaxy' ||
     v === 'inspector' ||
     v === 'fabry' ||

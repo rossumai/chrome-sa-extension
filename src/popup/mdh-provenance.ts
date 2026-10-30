@@ -179,7 +179,7 @@ export function extractConfigsFromHook(hook: any): any[] {
   return out;
 }
 
-function isMdhHook(hook: any): boolean {
+export function isMdhHook(hook: any): boolean {
   if (!hook) return false;
   return hookConfigs(hook).some(
     (c) => Array.isArray(c?.source?.queries) || Array.isArray(c?.matching?.queries),
@@ -1023,7 +1023,8 @@ export async function replayConfig(
   cfg: any,
   values: Record<string, any>,
   signal?: AbortSignal | null,
-  onStatus?: (i: number, status: string, hint?: string) => void,
+  // Called with the query's whole status object (as `record` builds it), not its parts.
+  onStatus?: (i: number, status: { status: string; hint?: string }) => void,
   types?: Record<string, string>,
 ) {
   const statuses = new Array(cfg.queries.length).fill(null);
