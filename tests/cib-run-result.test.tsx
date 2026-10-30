@@ -93,6 +93,18 @@ describe('RunResult', () => {
     expect(states.slice(0, 3)).toEqual(['done', 'now', 'idle']);
   });
 
+  it('the running detail is one fixed line with the full text on hover', () => {
+    const detail =
+      'rossumai/rossum-coupa-integration v2.1.0: cib/default/workspaces/x/queues/y/schema.json';
+    mount({ ...base, running: true, detail });
+    const el = root.querySelector<HTMLElement>('[data-detail]')!;
+    expect(el.textContent).toBe(detail);
+    expect(el.title).toBe(detail);
+    // the line keeps its place before the first progress event too, so nothing below it moves
+    mount({ ...base, running: true });
+    expect(root.querySelector('[data-detail]')).not.toBeNull();
+  });
+
   it('the log starts open only after a failure', () => {
     mount({ ...base, running: true });
     expect(root.querySelector<HTMLDetailsElement>('[data-log]')!.open).toBe(false);

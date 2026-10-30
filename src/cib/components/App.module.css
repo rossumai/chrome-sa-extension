@@ -520,6 +520,21 @@
   opacity: 0.85;
 }
 
+.detail {
+  height: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  /* rtl puts the ellipsis on the left; the ltr span inside keeps the path's own order */
+  direction: rtl;
+  text-align: left;
+}
+.meta,
+.phCount {
+  font-variant-numeric: tabular-nums;
+}
+
 /* Step 5: the run result. The verdict box takes its tone from verdict(). */
 .verdict {
   border-radius: 10px;

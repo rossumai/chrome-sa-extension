@@ -49,7 +49,14 @@ export default function RunResult({ run }: { run: RunView }) {
   const copy = () => navigator.clipboard?.writeText(run.log).catch(() => {});
   return (
     <div class={styles.stepBody}>
-      {run.running && run.detail && <div class={styles.hint}>{run.detail}</div>}
+      {run.running && (
+        // one line of fixed height: release file paths differ in length on every progress event,
+        // and a wrapping line moved everything below it. Cut at the START, where the repo and tag
+        // repeat, so the file name stays readable
+        <div class={`${styles.hint} ${styles.detail}`} title={run.detail} data-detail>
+          <span dir="ltr">{run.detail}</span>
+        </div>
+      )}
       {o && v && (
         <div class={`${styles.verdict} ${styles[o.verdict.tone]}`} data-verdict>
           <span class={styles.verdictIco}>{ICON[o.verdict.tone]}</span>
