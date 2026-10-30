@@ -428,3 +428,241 @@
   color: inherit;
   opacity: 0.85;
 }
+
+/* Step 5: the run result. The verdict box takes its tone from verdict(). */
+.verdict {
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.verdict b {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.verdict.ok {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-fg);
+}
+.verdict.warn {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-fg);
+}
+.verdict.fail {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-fg);
+}
+.verdictIco {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--bg-card);
+  background: currentColor;
+}
+.verdict.ok .verdictIco {
+  background: var(--success);
+}
+.verdict.warn .verdictIco {
+  background: var(--warning);
+}
+.verdict.fail .verdictIco {
+  background: var(--danger);
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.stat {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat b {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.stat span {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+.statWarn b {
+  color: var(--warning);
+}
+.issues {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.groupHead {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.count {
+  font-size: 10px;
+  background: var(--bg-hover);
+  border-radius: 999px;
+  padding: 1px 7px;
+  letter-spacing: 0;
+}
+.issue {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid;
+  overflow-wrap: anywhere;
+}
+.issueBlock {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-fg);
+}
+.issueNote {
+  background: var(--bg-base);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.phaseBar {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+.seg {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-hover);
+}
+.seg_done {
+  background: var(--success);
+}
+.seg_now {
+  background: linear-gradient(90deg, var(--accent) 50%, var(--bg-hover) 50%);
+}
+.seg_fail {
+  background: var(--danger);
+}
+.phaseList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 18px;
+}
+.phaseList li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 5px 0;
+  color: var(--text-secondary);
+}
+.phMark {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.phaseList .ph_done {
+  color: var(--text-primary);
+}
+.ph_done .phMark {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.phaseList .ph_now {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.ph_now .phMark {
+  border-color: var(--accent);
+  border-top-color: transparent;
+  animation: spin 0.9s linear infinite;
+}
+.phaseList .ph_fail {
+  color: var(--danger-fg);
+  font-weight: 600;
+}
+.ph_fail .phMark {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.ro {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--info-fg);
+  background: var(--info-bg);
+  border-radius: 999px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.phCount {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.log {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-base);
+}
+.log summary {
+  padding: 9px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.log .pre {
+  margin: 0;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border);
+}
