@@ -45,6 +45,7 @@ export default function RunResult({ run }: { run: RunView }) {
       ? ['The Coupa check function is still deployed. Remove it in step 3.']
       : []),
   ];
+  const lines = run.log.trimEnd().split('\n').length;
   const copy = () => navigator.clipboard?.writeText(run.log).catch(() => {});
   return (
     <div class={styles.stepBody}>
@@ -144,7 +145,7 @@ export default function RunResult({ run }: { run: RunView }) {
       {run.log && (
         <details class={styles.log} open={run.failed} data-log>
           <summary>
-            <span>Log · {run.log.trimEnd().split('\n').length} lines</span>
+            <span>Log · {lines === 1 ? '1 line' : `${lines} lines`}</span>
             <button
               type="button"
               class="btn btn-sm"

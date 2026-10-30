@@ -100,6 +100,12 @@ describe('RunResult', () => {
     expect(root.querySelector<HTMLDetailsElement>('[data-log]')!.open).toBe(true);
   });
 
+  it('the log summary counts lines in the singular for one', () => {
+    mount(base);
+    expect(root.querySelector('[data-log] summary')!.textContent).toContain('Log · 1 line');
+    expect(root.querySelector('[data-log] summary')!.textContent).not.toContain('1 lines');
+  });
+
   it('runTitle names the run', () => {
     expect(runTitle({ ...base, mode: 'deploy', running: true }, 'v2.1.0')).toBe(
       'Deploying CIB v2.1.0',
