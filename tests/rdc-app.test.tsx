@@ -6,6 +6,7 @@ import App from '../src/rdc/components/App.jsx';
 import { WipStep } from '../src/rdc/components/WipSteps.jsx';
 import { domain, token } from '../src/rdc/store.js';
 import type { Rdc } from '../src/rdc/wasm.js';
+import { rateLimitError } from '../src/net/rateLimit.js';
 
 const outcome = {
   itemsPushed: 0,
@@ -110,6 +111,19 @@ describe('rdc App', () => {
     await flush();
     expect(root.textContent).toContain('does not list exactly one organization');
     expect(byText('button', 'Choose the org to deploy from')).toBeUndefined();
+  });
+
+  it('says Rossum is rate-limiting when the org cannot be read for a 429', async () => {
+    const limited = vi.fn(async () => {
+      throw rateLimitError({ headers: new Headers({ 'Retry-After': '7' }) }, 'HTTP 429');
+    });
+    mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={limited} />);
+    await flush();
+    expect(root.querySelector('.error-banner')!.textContent).toBe(
+      'Rossum is rate-limiting requests. Try again in 7 s.',
+    );
+    expect(root.textContent).not.toContain('Could not read this organization');
+    expect(ds).not.toHaveBeenCalled();
   });
 
   it('remembers the chosen source in the org, without its token', async () => {
