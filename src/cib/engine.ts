@@ -191,7 +191,8 @@ export async function deploy(
       status: 'failed',
       error: `${what} -> ${r.status} ${JSON.stringify(r.data).slice(0, 500)}`,
     });
-    throw new Error(`${what} failed: ${r.status}`);
+    // the API's own reason, so the user sees why and not only the status
+    throw new Error(`${what} failed: ${r.status} ${JSON.stringify(r.data ?? '').slice(0, 300)}`);
   };
   const ctx = {
     idmap: st.idmap,

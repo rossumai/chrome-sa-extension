@@ -1,186 +1,796 @@
-/* Each step of the form is its own boxed card, numbered in the order the
-   fields are actually needed, instead of one dense stack of filter rows. A
-   real border (not just a rule) is what reads as "a group" at a glance; the
-   numbering is what reads as "do these in order". */
-.formCard {
+/* CIB deploy, one column of numbered steps (2026-10-30-cib-deploy-ux-refinement-design.md).
+   Accent tints are color-mix over --bg-card: the monolith has no --accent-bg. */
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg-base);
+}
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+.fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.errorBox {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-fg);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.errorBox > span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.errorBox b {
+  font-weight: 700;
+}
+.logTime {
+  color: var(--text-secondary);
+}
+.hero {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.heroIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), #7c5cf0);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.hero h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.hero p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.hero a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* A step: a circle on a vertical line, then its card. The card must not clip (overflow stays
+   visible), or the token-owner list is cut off at the card's edge. */
+.step {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 16px;
+  position: relative;
+  padding-bottom: 20px;
+}
+.step::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 34px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.fieldset > .step:last-child::before,
+.page > div > .step::before {
+  display: none;
+}
+.complete::before {
+  background: color-mix(in srgb, var(--success) 45%, transparent);
+}
+.num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+}
+.current .num {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.complete .num {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.optional .num {
+  border-style: dashed;
+}
+.card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-top: 12px;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgba(20, 24, 40, 0.04),
+    0 4px 16px rgba(20, 24, 40, 0.04);
+}
+.cardHead {
+  padding: 14px 18px 0;
   display: flex;
-  flex-direction: column;
   gap: 10px;
+  align-items: flex-start;
 }
-.formCard:first-child {
-  margin-top: 0;
-}
-.stepHeader {
+.cardHead h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.stepBadge,
-.stepBadgeMuted {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  font-family: var(--font-sans);
+.cardHead p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+.meta {
+  font-family: var(--font-mono);
   font-size: 11px;
+  color: var(--text-secondary);
+  padding-top: 3px;
+}
+.cardBody {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cardFoot {
+  padding: 10px 18px;
+  background: var(--bg-base);
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 12px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.g3 {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 14px;
+}
+.g2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.narrow {
+  max-width: 220px;
+}
+.hasToggle {
+  padding-right: 52px;
+}
+.eye {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 5px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Step 4: the collapsed resume options first, then the two buttons. */
+.resume {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.resume summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.resume summary code {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+.resume[open] summary {
+  margin-bottom: 12px;
+}
+.checkbox {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding-top: 22px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.checkbox input {
+  margin: 1px 0 0;
+  accent-color: var(--accent);
+}
+.checkbox .hint {
+  display: block;
+  font-weight: 400;
+  margin-top: 2px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.btnLg {
+  height: 40px;
+  padding: 0 22px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+.deployBtn {
+  min-width: 140px;
+  justify-content: center;
+}
+
+.pre {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow: auto;
+  color: var(--text-primary);
+}
+
+/* Form fields of the refined page: plain 12px labels (not the uppercase mono filter-label), a
+   taller input with an accent focus ring, and a one-line hint under each field. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  position: relative;
+}
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.hint {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+.hint a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.hintOk {
+  color: var(--success);
+}
+.input {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  width: 100%;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.inputWrap {
+  position: relative;
+}
+.lead {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+.hasLead {
+  padding-left: 34px;
+}
+
+/* Token owner combobox: the list floats over the cards below it, so no step card may clip it. */
+.comboList {
+  position: absolute;
+  top: 62px;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+  z-index: 5;
+  padding: 6px;
+}
+.comboOpt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.comboOpt:hover,
+.comboActive {
+  background: var(--info-bg);
+}
+.avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--info-bg);
+  color: var(--info-fg);
+  font-size: 10px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
-.stepBadge {
-  background: var(--accent);
-  color: #fff;
+.comboUser {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
-.stepBadgeMuted {
-  background: var(--bg-hover);
+.comboName {
+  display: block;
+  font-size: 11px;
   color: var(--text-secondary);
 }
-.stepTitle {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-family: var(--font-sans);
+.comboEmpty {
+  padding: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
-.optionalTag {
+.comboFoot {
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+  padding: 7px 8px 2px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Step bodies and small tags shared by the steps. */
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.tag {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
   background: var(--bg-hover);
-  padding: 1px 6px;
-  border-radius: 10px;
-  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
 }
 
-/* The Coupa check function controls: explanation on its own line, so it never
-   fights a button row (or a native "fill this field" tooltip) for the same
-   horizontal space. */
-.checkRow {
+/* Step 3: the two login routes as radio cards, and the one panel under them. */
+.routes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.route {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+}
+.route input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.route b {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 12.5px;
+  margin-bottom: 4px;
+}
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+.route:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
+}
+.route:has(input:checked) .dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--bg-card);
+}
+.route:has(input:focus-visible) {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.setup {
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px solid var(--border);
+  background: var(--bg-base);
+}
+.setupTxt {
+  flex: 1;
+  min-width: 0;
+}
+.setupTxt b {
+  display: block;
+  font-size: 12.5px;
+  margin-bottom: 2px;
+}
+.setupTxt .hint {
+  display: block;
+  margin-top: 2px;
+}
+.setupTxt a {
+  color: inherit;
+  word-break: break-all;
+}
+.setupIco {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+.setupOk {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-fg);
+}
+.setupOk .setupIco {
+  background: var(--success);
+  color: #fff;
+}
+.setupWarn {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-fg);
+}
+.setupWarn .setupIco {
+  background: var(--warning);
+  color: #fff;
+}
+.setupOk .hint,
+.setupWarn .hint {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.detail {
+  height: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  /* rtl puts the ellipsis on the left; the ltr span inside keeps the path's own order */
+  direction: rtl;
+  text-align: left;
+}
+.meta,
+.phCount {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Step 5: the run result. The verdict box takes its tone from verdict(). */
+.verdict {
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.verdict b {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.verdict.ok {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-fg);
+}
+.verdict.warn {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-fg);
+}
+.verdict.fail {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-fg);
+}
+.errText {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+  margin-bottom: 4px;
+}
+.verdictIco {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--bg-card);
+  background: currentColor;
+}
+.verdict.ok .verdictIco {
+  background: var(--success);
+}
+.verdict.warn .verdictIco {
+  background: var(--warning);
+}
+.verdict.fail .verdictIco {
+  background: var(--danger);
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.stat {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat b {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.stat span {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+.statWarn b {
+  color: var(--warning);
+}
+.issues {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.check {
-  font-size: 12px;
+.groupHead {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--text-secondary);
-  line-height: 1.4;
-}
-.checkActions {
   display: flex;
   gap: 6px;
-  flex-wrap: wrap;
-}
-.checkboxLabel {
-  display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-secondary);
 }
-
-/* Coupa URL / client ID / client secret read as one triple, so they share the
-   row as three EQUAL columns instead of one growing field crowding the other
-   two into a thin strip on the far right. */
-.credRow {
+.count {
+  font-size: 10px;
+  background: var(--bg-hover);
+  border-radius: 999px;
+  padding: 1px 7px;
+  letter-spacing: 0;
+}
+.issue {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: 20px 1fr;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid;
+  overflow-wrap: anywhere;
 }
-.credRow .filter {
-  min-width: 0;
+.issueBlock {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-fg);
 }
-
-/* The last card is the "go" bar: a different background marks it as the step
-   that actually does something, and its primary button is bigger than the
-   usual .btn so Deploy is unmistakably the main action on the page. */
-.actionCard {
+.issueNote {
+  background: var(--bg-base);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.phaseBar {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+.seg {
+  height: 6px;
+  border-radius: 3px;
   background: var(--bg-hover);
 }
-.deployBtn {
-  padding: 7px 22px;
-  font-size: 13px;
-  font-weight: 700;
+.seg_done {
+  background: var(--success);
 }
-.body {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.seg_now {
+  background: linear-gradient(90deg, var(--accent) var(--p, 0%), var(--bg-hover) var(--p, 0%));
 }
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
+.seg_skip {
+  background: repeating-linear-gradient(45deg, var(--bg-hover) 0 4px, transparent 4px 8px);
+}
+.seg_fail {
+  background: var(--danger);
+}
+.phaseList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 18px;
+}
+.phaseList li {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
+  padding: 5px 0;
+  color: var(--text-secondary);
 }
-.status {
+.phMark {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-weight: 600;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.phaseList .ph_done {
   color: var(--text-primary);
 }
-.muted {
-  color: var(--text-secondary);
-  font-weight: 400;
+.ph_done .phMark {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
 }
-.bar {
-  width: 100%;
-  height: 6px;
-  accent-color: var(--accent);
-}
-.verdict {
-  font-size: 15px;
+.phaseList .ph_now {
+  color: var(--text-primary);
   font-weight: 600;
 }
-.ok {
-  color: var(--success);
+.ph_now .phMark {
+  border-color: var(--accent);
+  border-top-color: transparent;
+  animation: spin 0.9s linear infinite;
 }
-.fail {
-  color: var(--danger);
-}
-.warn {
-  color: var(--warning-fg);
-}
-.blocker {
-  background: var(--danger-bg);
+.phaseList .ph_fail {
   color: var(--danger-fg);
-  border: 1px solid var(--danger-border);
-  border-radius: var(--radius);
-  padding: 6px 8px;
+  font-weight: 600;
 }
-.pre {
-  margin: 4px 0 0;
+.ph_fail .phMark {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.phaseList .ph_skip {
+  opacity: 0.5;
+  text-decoration: line-through;
+  text-decoration-color: var(--border);
+}
+.ro {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--info-fg);
+  background: var(--info-bg);
+  border-radius: 999px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.phCount {
+  margin-left: auto;
   font-family: var(--font-mono);
   font-size: 11px;
-  white-space: pre-wrap;
-  max-height: 50vh;
-  overflow: auto;
-  color: var(--text-primary);
+  font-weight: 400;
 }
-/* <summary> is block-level by default, so an unstyled focus ring stretches
-   across the whole card instead of hugging the word "Details". */
-.detailsSummary {
-  display: inline-flex;
-  width: fit-content;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.log {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-base);
+}
+.log summary,
+.logHead {
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.log summary {
   cursor: pointer;
 }
-.detailsSummary:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 3px;
+.log .pre {
+  margin: 0;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border);
 }

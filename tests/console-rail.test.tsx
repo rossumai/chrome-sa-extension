@@ -45,17 +45,15 @@ describe('Rail', () => {
     expect(idx('Annotation Inspector')).toBeLessThan(idx('Org Galaxy')); // above Galaxy
   });
 
-  // CIB sits after Galaxy and before the Academy (visible once the gate is unlocked).
-  it('orders CIB after Galaxy and before Academy when the gate is unlocked', () => {
+  // CIB sits right under Audit; Galaxy still comes before the Academy (visible once unlocked).
+  it('orders CIB right after Audit, and Galaxy before Academy when the gate is unlocked', () => {
     experimentalUnlocked.value = true;
     const items = [...mount().querySelectorAll('.app-rail-item')];
     const title = (b: any) => b.getAttribute('title');
     const idx = (t: any) => items.findIndex((b) => title(b) === t);
     expect(idx('Mr. Fabry')).toBeLessThan(idx('Org Galaxy'));
-    expect(idx('Org Galaxy')).toBeLessThan(idx('CIB deploy (Coupa Integration Baseline)'));
-    expect(idx('CIB deploy (Coupa Integration Baseline)')).toBeLessThan(
-      idx('Onboarding training — experimental'),
-    );
+    expect(idx('CIB deploy (Coupa Integration Baseline)')).toBe(idx('Audit Log Viewer') + 1);
+    expect(idx('Org Galaxy')).toBeLessThan(idx('Onboarding training — experimental'));
   });
 
   it('renders the Galaxy app button and switches to it on click', () => {
