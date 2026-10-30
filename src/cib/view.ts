@@ -25,16 +25,31 @@ export const trackPhase = (log: PhaseLog, p: Progress): PhaseLog => ({
   current: p.phase,
 });
 
-export type PhaseState = 'done' | 'now' | 'fail' | 'idle';
+export type PhaseState = 'done' | 'now' | 'fail' | 'idle' | 'skip';
 
 // a phase that reported is done, except the current one, which takes the run's end state; a phase
-// that never reported (e.g. restore, which runs only after an earlier teardown) stays idle
+// that never reported waits while the run goes on, and did not run once it has ended (a check
+// stops after Checks; restore runs only after an earlier teardown)
 export const phaseStates = (log: PhaseLog, end: 'running' | 'ok' | 'fail'): PhaseState[] =>
   PHASES.map(([k]) => {
-    if (!(k in log.counts)) return 'idle';
+    if (!(k in log.counts)) return end === 'running' ? 'idle' : 'skip';
     if (k !== log.current || end === 'ok') return 'done';
     return end === 'running' ? 'now' : 'fail';
   });
+
+// how far the current phase is, as a percentage of its total
+export const phasePercent = (c: { done: number; total: number } | undefined): number =>
+  c && c.total ? Math.round((100 * Math.min(c.done, c.total)) / c.total) : 0;
+
+// what a run that threw left behind: a check and the read-only phases write nothing, and a deploy
+// that got further keeps its progress in the run's checkpoint
+export const stopNote = (mode: 'check' | 'deploy', phase: string | null, run: string): string => {
+  if (mode === 'check')
+    return 'Check only writes nothing. Fix the cause, then press Check only again.';
+  if (!phase || PHASES.find(([k]) => k === phase)?.[2])
+    return 'Nothing was written: the run stopped before creating anything. Fix the cause, then press Check and deploy again.';
+  return `Nothing is lost: checkpoint ${run} keeps what was created so far. Resume deploy continues from there.`;
+};
 
 // verdict() texts read "Headline: the rest"
 export const splitVerdict = (text: string): { head: string; rest: string } => {

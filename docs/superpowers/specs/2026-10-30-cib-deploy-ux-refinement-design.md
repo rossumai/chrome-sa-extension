@@ -134,20 +134,27 @@ one fails. **Check only** runs the checks and stops."
 - **Notes:** neutral rows with a count heading ("Notes, not blocking" when there are blockers),
   the text verbatim.
 - **Phases:** an 8-segment bar (one segment per `PHASES` key, in order), then a two-column list
-  of the phases. Each phase is done ✓, current (spinner + `done/total`), failed (!) or not run.
+  of the phases. Each phase is done ✓, current (spinner + `done/total`; its bar segment fills by
+  `done/total`), failed (!), waiting, or — once the run has ended — did not run (hatched segment,
+  struck-through row).
   "Read the release" and "Checks" carry a small read-only tag. Each phase keeps the last
   `done/total` it reported, so finished phases still show their counts.
-- **Details (JSON)** and the **Log** are collapsed `<details>` blocks. The log has a Copy
-  button. The log is open by default only after an error.
+- **Details (JSON)** is a collapsed `<details>` block. The **Log** is always shown, not
+  collapsible: a header with a Copy button over the log, which scrolls past 240px. Each line starts
+  with a greyed `HH:MM:SS`, whatever the browser's language.
 
 ### 4.3 Error
 
-When a run throws, the existing `error-banner` text is shown as an inline red box at the top of
-the column. The **Resume deploy** button appears only when the run that threw was a Check and
+When a run throws, an inline red box at the top of the column shows the error in bold, then what
+the run left behind (`stopNote`): a Check only run writes nothing; a deploy that stopped in a
+read-only phase wrote nothing; a deploy that got further keeps its progress in checkpoint
+`<run ID>`. The **Resume deploy** button appears only when the run that threw was a Check and
 deploy run (the component remembers the last run's mode). It does exactly what pressing Check and
 deploy again with the same run ID does. It never appears after a Check only run, nor for errors
 that are not run errors (`listReleases`, the check function's create or remove). Step 5 shows
-"Stopped with an error". (Builder's-check call.)
+a red "Stopped with an error" verdict with the error itself and how to continue (the run ID for a
+deploy), and the log gets an `error:` line. A failed API request's error carries the API's own
+response body (first 300 characters), not only the status. (Builder's-check call.)
 
 ### 4.4 Why two buttons, not a gate
 

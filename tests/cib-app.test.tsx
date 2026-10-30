@@ -106,7 +106,13 @@ describe('CIB deploy page', () => {
     for (const id of ['cib-coupa-url', 'cib-coupa-id', 'cib-coupa-secret'])
       typeInto(root.querySelector<HTMLInputElement>('#' + id)!, 'x');
     await submit('deploy');
-    expect(root.textContent).toContain('press Check and deploy again with the same run ID');
+    // bold error, then what the run left behind; it stopped before writing anything
+    const box = root.querySelector('[data-run-error]')!;
+    expect(box.querySelector('b')!.textContent).toBe('502 Bad Gateway');
+    expect(box.textContent).toContain('Nothing was written');
+    // step 5 says why too, and the log keeps the line
+    expect(root.querySelector('[data-verdict]')!.textContent).toContain('502 Bad Gateway');
+    expect(root.querySelector('[data-log]')!.textContent).toContain('error: 502 Bad Gateway');
     await act(async () => button('Resume deploy')!.click());
     await flush();
     expect(vi.mocked(deployCib)).toHaveBeenCalledTimes(2);

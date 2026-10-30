@@ -40,7 +40,11 @@ test('adopts an existing object by match instead of creating it', async () => {
 test('resumes from the checkpoint after a failure and does not create twice', async () => {
   const { f, c } = setup();
   f.fail.push({ method: 'POST', match: /\/queues$/, status: 500, times: 1 });
-  await assert.rejects(deploy(c, { run: 'r', orgId: ORG, ops: wsQueue }), /create q failed: 500/);
+  // the error carries the API's own reason, not only the status
+  await assert.rejects(
+    deploy(c, { run: 'r', orgId: ORG, ops: wsQueue }),
+    /create q failed: 500 \{"detail":"injected failure"\}/,
+  );
   await deploy(c, { run: 'r', orgId: ORG, ops: wsQueue });
   assert.equal(f.db.workspaces.length, 1);
   assert.equal(f.db.queues.length, 1);

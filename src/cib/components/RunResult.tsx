@@ -1,8 +1,8 @@
 // src/cib/components/RunResult.tsx
 // Step 5: what the last run did. Everything shown comes from the engine as it is (verdict(),
 // blockers, notes, progress); this component only arranges it.
-import { h } from 'preact';
-import { PHASES, phaseStates, splitVerdict } from '../view.js';
+import { h, Fragment } from 'preact';
+import { PHASES, phasePercent, phaseStates, splitVerdict, stopNote } from '../view.js';
 import type { PhaseLog } from '../view.js';
 import styles from './App.module.css';
 
@@ -10,6 +10,9 @@ export type RunView = {
   mode: 'check' | 'deploy';
   running: boolean;
   failed: boolean;
+  // the message of the error a run threw
+  error?: string;
+  runId: string;
   status: string;
   clock: string;
   detail?: string;
@@ -55,6 +58,16 @@ export default function RunResult({ run }: { run: RunView }) {
         // repeat, so the file name stays readable
         <div class={`${styles.hint} ${styles.detail}`} title={run.detail} data-detail>
           <span dir="ltr">{run.detail}</span>
+        </div>
+      )}
+      {run.error && !run.running && (
+        <div class={`${styles.verdict} ${styles.fail}`} data-verdict>
+          <span class={styles.verdictIco}>⏸</span>
+          <div>
+            <b>Stopped with an error</b>
+            <div class={styles.errText}>{run.error}</div>
+            <div>{stopNote(run.mode, run.phases.current, run.runId)}</div>
+          </div>
         </div>
       )}
       {o && v && (
@@ -118,8 +131,13 @@ export default function RunResult({ run }: { run: RunView }) {
         </div>
       )}
       <div class={styles.phaseBar}>
-        {states.map((s) => (
-          <span class={`${styles.seg} ${styles['seg_' + s]}`}></span>
+        {states.map((s, i) => (
+          <span
+            class={`${styles.seg} ${styles['seg_' + s]}`}
+            style={
+              s === 'now' ? `--p:${phasePercent(run.phases.counts[PHASES[i][0]])}%` : undefined
+            }
+          ></span>
         ))}
       </div>
       <ul class={styles.phaseList}>
@@ -150,22 +168,33 @@ export default function RunResult({ run }: { run: RunView }) {
         </details>
       )}
       {run.log && (
-        <details class={styles.log} open={run.failed} data-log>
-          <summary>
+        <div class={styles.log} data-log>
+          <div class={styles.logHead}>
             <span>Log · {lines === 1 ? '1 line' : `${lines} lines`}</span>
-            <button
-              type="button"
-              class="btn btn-sm"
-              onClick={(e) => {
-                e.preventDefault();
-                copy();
-              }}
-            >
+            <button type="button" class="btn btn-sm" onClick={copy}>
               Copy
             </button>
-          </summary>
-          <pre class={styles.pre}>{run.log}</pre>
-        </details>
+          </div>
+          <pre class={styles.pre}>
+            {run.log.split('\n').map((l, i) => {
+              // the time, greyed, so the messages read as one column
+              const m = /^(\d\d:\d\d:\d\d) /.exec(l);
+              return (
+                <>
+                  {i ? '\n' : ''}
+                  {m ? (
+                    <>
+                      <span class={styles.logTime}>{m[1]}</span>
+                      {l.slice(8)}
+                    </>
+                  ) : (
+                    l
+                  )}
+                </>
+              );
+            })}
+          </pre>
+        </div>
       )}
     </div>
   );

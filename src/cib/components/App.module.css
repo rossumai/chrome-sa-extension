@@ -30,9 +30,15 @@
   line-height: 1.5;
   margin-bottom: 16px;
 }
-.errorBox span {
+.errorBox > span {
   flex: 1;
   overflow-wrap: anywhere;
+}
+.errorBox b {
+  font-weight: 700;
+}
+.logTime {
+  color: var(--text-secondary);
 }
 .hero {
   display: flex;
@@ -568,6 +574,11 @@
   border-color: var(--danger-border);
   color: var(--danger-fg);
 }
+.errText {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+  margin-bottom: 4px;
+}
 .verdictIco {
   width: 28px;
   height: 28px;
@@ -673,7 +684,10 @@
   background: var(--success);
 }
 .seg_now {
-  background: linear-gradient(90deg, var(--accent) 50%, var(--bg-hover) 50%);
+  background: linear-gradient(90deg, var(--accent) var(--p, 0%), var(--bg-hover) var(--p, 0%));
+}
+.seg_skip {
+  background: repeating-linear-gradient(45deg, var(--bg-hover) 0 4px, transparent 4px 8px);
 }
 .seg_fail {
   background: var(--danger);
@@ -732,6 +746,11 @@
   border-color: var(--danger);
   color: #fff;
 }
+.phaseList .ph_skip {
+  opacity: 0.5;
+  text-decoration: line-through;
+  text-decoration-color: var(--border);
+}
 .ro {
   font-size: 9.5px;
   font-weight: 700;
@@ -758,14 +777,17 @@
   border-radius: 10px;
   background: var(--bg-base);
 }
-.log summary {
+.log summary,
+.logHead {
   padding: 9px 12px;
-  cursor: pointer;
   font-size: 12px;
   font-weight: 600;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.log summary {
+  cursor: pointer;
 }
 .log .pre {
   margin: 0;

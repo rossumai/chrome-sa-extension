@@ -1,5 +1,13 @@
 import { test, expect } from 'vitest';
-import { PHASES, trackPhase, phaseStates, splitVerdict, loginPanel } from '../src/cib/view.js';
+import {
+  PHASES,
+  trackPhase,
+  phaseStates,
+  phasePercent,
+  stopNote,
+  splitVerdict,
+  loginPanel,
+} from '../src/cib/view.js';
 import type { PhaseLog } from '../src/cib/view.js';
 
 test('PHASES lists the engine phases in run order', () => {
@@ -23,7 +31,7 @@ test('trackPhase keeps the last count of every phase and moves current', () => {
   expect(l.current).toBe('objects');
 });
 
-test('phaseStates: earlier reported = done, current by end, unreported = idle', () => {
+test('phaseStates: earlier reported = done, current by end, unreported = idle or skipped', () => {
   const l: PhaseLog = {
     counts: { release: { done: 1, total: 1 }, checks: { done: 0, total: 6 } },
     current: 'checks',
@@ -31,7 +39,23 @@ test('phaseStates: earlier reported = done, current by end, unreported = idle', 
   expect(phaseStates(l, 'running').slice(0, 3)).toEqual(['done', 'now', 'idle']);
   expect(phaseStates(l, 'fail')[1]).toBe('fail');
   expect(phaseStates(l, 'ok')[1]).toBe('done');
-  expect(phaseStates(l, 'ok')[6]).toBe('idle'); // restore never reported
+  // unreported phases wait while the run goes on, and did not run once it ended
+  expect(phaseStates(l, 'running')[6]).toBe('idle');
+  expect(phaseStates(l, 'ok')[6]).toBe('skip'); // restore never reported
+  expect(phaseStates(l, 'fail').slice(2)).toEqual(Array(6).fill('skip'));
+});
+
+test('phasePercent: done over total, 0 without a total', () => {
+  expect(phasePercent({ done: 63, total: 112 })).toBe(56);
+  expect(phasePercent({ done: 0, total: 0 })).toBe(0);
+  expect(phasePercent(undefined)).toBe(0);
+});
+
+test('stopNote: what a run that threw left behind', () => {
+  expect(stopNote('check', 'checks', 'r1')).toContain('Check only writes nothing');
+  expect(stopNote('deploy', 'checks', 'r1')).toContain('Nothing was written');
+  expect(stopNote('deploy', null, 'r1')).toContain('Nothing was written');
+  expect(stopNote('deploy', 'objects', 'r1')).toContain('checkpoint r1 keeps');
 });
 
 test('splitVerdict splits at the first colon', () => {

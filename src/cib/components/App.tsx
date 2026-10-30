@@ -20,7 +20,7 @@ import {
   verdict,
 } from '../cib.js';
 import { CIB_REPO, listReleases, loadRelease, TOOL_REF, TOOL_REFS } from '../release.js';
-import { trackPhase } from '../view.js';
+import { stopNote, trackPhase } from '../view.js';
 import type { LoginRoute, PhaseLog } from '../view.js';
 import Step from './Step.jsx';
 import OwnerCombobox, { ownerLabel } from './OwnerCombobox.jsx';
@@ -92,6 +92,8 @@ export default function App({ connected }: { connected: boolean | null }) {
   const [outcome, setOutcome] = useState<RunView['outcome']>(null);
   const [runFailed, setRunFailed] = useState(false);
   const [error, setError] = useState('');
+  // why the last run threw; step 5 shows it beside the phases
+  const [runError, setRunError] = useState('');
   // the error came from a Check and deploy run, so the same run ID can be resumed
   const [canResume, setCanResume] = useState(false);
   const [log, setLog] = useState('');
@@ -185,7 +187,8 @@ export default function App({ connected }: { connected: boolean | null }) {
 
   const line = (l: string) => {
     tLast.current = Date.now();
-    setLog((o) => `${o}${new Date().toLocaleTimeString()} ${l}\n`);
+    // HH:MM:SS whatever the browser's language, so every line's message starts in one column
+    setLog((o) => `${o}${new Date().toTimeString().slice(0, 8)} ${l}\n`);
   };
 
   // deploy or tear down the Coupa check function; only on the user's click, never as a side effect
@@ -219,6 +222,7 @@ export default function App({ connected }: { connected: boolean | null }) {
     setOutcome(null);
     setError('');
     setCanResume(false);
+    setRunError('');
     setRunFailed(false);
     setProg(null);
     setPhases(NO_PHASES);
@@ -292,7 +296,8 @@ export default function App({ connected }: { connected: boolean | null }) {
           setProbe(h?.url ?? null),
         );
     } catch (err: any) {
-      setError(`${err.message} — press Check and deploy again with the same run ID to resume`);
+      line(`error: ${err.message}`);
+      setRunError(err.message);
       setCanResume(!checkOnly);
       setRunFailed(true);
       setStatus('Stopped with an error');
@@ -308,6 +313,8 @@ export default function App({ connected }: { connected: boolean | null }) {
     mode,
     running: busy && !!mode,
     failed: runFailed,
+    error: runError || undefined,
+    runId: v.run.trim(),
     status,
     clock,
     detail: prog?.detail,
@@ -330,6 +337,13 @@ export default function App({ connected }: { connected: boolean | null }) {
             {error && (
               <div class={styles.errorBox}>
                 <span>{error}</span>
+              </div>
+            )}
+            {runError && (
+              <div class={styles.errorBox} data-run-error>
+                <span>
+                  <b>{runError}</b> {stopNote(mode!, phases.current, v.run.trim())}
+                </span>
                 {canResume && !busy && (
                   <button
                     type="button"
