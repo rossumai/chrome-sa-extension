@@ -159,6 +159,13 @@ type RailApp = {
 const APPS: RailApp[] = [
   { id: 'mdh', label: 'Data', title: 'Dataset Management', icon: DATA_ICON },
   { id: 'audit', label: 'Audit', title: 'Audit Log Viewer', icon: AUDIT_ICON },
+  {
+    id: 'cib',
+    label: 'CIB',
+    title: 'CIB deploy (Coupa Integration Baseline)',
+    icon: CIB_ICON,
+    beta: true,
+  },
   { id: 'builder', label: 'Builder', title: 'Schema Builder', icon: HAMMER_ICON, beta: true },
   {
     id: 'inspector',
@@ -169,13 +176,6 @@ const APPS: RailApp[] = [
   },
   { id: 'fabry', label: 'Fabry', title: 'Mr. Fabry', icon: FABRY_ICON, beta: true },
   { id: 'galaxy', label: 'Galaxy', title: 'Org Galaxy', icon: GALAXY_ICON },
-  {
-    id: 'cib',
-    label: 'CIB',
-    title: 'CIB deploy (Coupa Integration Baseline)',
-    icon: CIB_ICON,
-    beta: true,
-  },
   // `gated` hides the row unless experimentalUnlocked is set; `exp` is the
   // badge that names that gate. The title spells the abbreviation out, since
   // "EXP" alone does not tell a first-time reader what it means.
