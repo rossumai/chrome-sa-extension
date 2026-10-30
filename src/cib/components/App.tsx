@@ -99,6 +99,9 @@ export default function App({ connected }: { connected: boolean | null }) {
   const [showSecret, setShowSecret] = useState(false);
   const [runSeq, setRunSeq] = useState(0);
   const resultRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const deployRef = useRef<HTMLButtonElement>(null);
+  const resumeRef = useRef<HTMLDetailsElement>(null);
   const tLast = useRef(0);
   const set = (k: string) => (e: any) =>
     setV((o) => ({ ...o, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
@@ -328,7 +331,14 @@ export default function App({ connected }: { connected: boolean | null }) {
               <div class={styles.errorBox}>
                 <span>{error}</span>
                 {canResume && !busy && (
-                  <button type="button" class="btn btn-sm" onClick={() => run(false)}>
+                  <button
+                    type="button"
+                    class="btn btn-sm"
+                    onClick={() =>
+                      // through the form, so the same validation as Check and deploy applies
+                      formRef.current?.requestSubmit(deployRef.current)
+                    }
+                  >
                     Resume deploy
                   </button>
                 )}
@@ -361,6 +371,7 @@ export default function App({ connected }: { connected: boolean | null }) {
               </div>
             </header>
             <form
+              ref={formRef}
               onSubmit={(e: any) => {
                 e.preventDefault();
                 run(e.submitter?.name === 'check');
@@ -582,7 +593,7 @@ export default function App({ connected }: { connected: boolean | null }) {
                     </>
                   }
                 >
-                  <details class={styles.resume}>
+                  <details class={styles.resume} ref={resumeRef}>
                     <summary>
                       Resume and re-run · run ID <code>{v.run}</code>
                     </summary>
@@ -598,6 +609,8 @@ export default function App({ connected }: { connected: boolean | null }) {
                           required
                           value={v.run}
                           onInput={set('run')}
+                          // a closed <details> hides it, and Chrome cannot point at a hidden field
+                          onInvalid={() => resumeRef.current && (resumeRef.current.open = true)}
                         />
                         <span class={styles.hint}>
                           Deploy saves its progress under this ID. Deploy again with the same ID to
@@ -627,6 +640,7 @@ export default function App({ connected }: { connected: boolean | null }) {
                     <button
                       class={`btn btn-primary ${styles.btnLg} ${styles.deployBtn}`}
                       name="deploy"
+                      ref={deployRef}
                       disabled={busy || !v.version}
                     >
                       Check and deploy

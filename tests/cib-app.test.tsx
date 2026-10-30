@@ -103,12 +103,35 @@ describe('CIB deploy page', () => {
         pendingImports: [],
         notes: [],
       } as any);
+    for (const id of ['cib-coupa-url', 'cib-coupa-id', 'cib-coupa-secret'])
+      typeInto(root.querySelector<HTMLInputElement>('#' + id)!, 'x');
     await submit('deploy');
     expect(root.textContent).toContain('press Check and deploy again with the same run ID');
     await act(async () => button('Resume deploy')!.click());
     await flush();
     expect(vi.mocked(deployCib)).toHaveBeenCalledTimes(2);
     expect(vi.mocked(deployCib).mock.calls[1][1].checkOnly).toBe(false);
+  });
+
+  it('Resume goes through the form, so a field emptied after the error blocks it', async () => {
+    vi.mocked(deployCib).mockRejectedValueOnce(new Error('502 Bad Gateway'));
+    // fill the required credentials so the first submit is valid
+    for (const id of ['cib-coupa-url', 'cib-coupa-id', 'cib-coupa-secret'])
+      typeInto(root.querySelector<HTMLInputElement>('#' + id)!, 'x');
+    await submit('deploy');
+    typeInto(root.querySelector<HTMLInputElement>('#cib-coupa-url')!, '');
+    await act(async () => button('Resume deploy')!.click());
+    await flush();
+    expect(vi.mocked(deployCib)).toHaveBeenCalledTimes(1);
+  });
+
+  it('an invalid Run ID opens the collapsed resume section', async () => {
+    const details = root.querySelector<HTMLDetailsElement>('details')!;
+    expect(details.open).toBe(false);
+    const runId = root.querySelector<HTMLInputElement>('#cib-run')!;
+    typeInto(runId, '');
+    act(() => void runId.dispatchEvent(new Event('invalid', { cancelable: true })));
+    expect(details.open).toBe(true);
   });
 
   it('the form is locked while a run is in flight', async () => {
