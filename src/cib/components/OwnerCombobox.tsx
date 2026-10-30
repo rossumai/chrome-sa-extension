@@ -4,7 +4,7 @@
 // parent answers by clearing the owner. While the field has focus it shows what the user typed, so
 // a single match being auto-picked by the parent never rewrites the text under the cursor.
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import styles from './App.module.css';
 
 export type Owner = { username: string; name: string; email: string };
@@ -41,6 +41,12 @@ export default function OwnerCombobox({
   const [focused, setFocused] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
+  const ref = useRef<HTMLInputElement>(null);
+  // the old owner <select> was `required`; the form's own validation still refuses a submit
+  // without a picked owner, whatever text is typed
+  useEffect(() => {
+    ref.current?.setCustomValidity(owner ? '' : 'Select an admin from the list.');
+  }, [owner]);
 
   const pick = (o: Owner, input: HTMLInputElement | null) => {
     onPick(o);
@@ -81,6 +87,7 @@ export default function OwnerCombobox({
         </svg>
         <input
           id="cib-owner"
+          ref={ref}
           class={`input ${styles.input} ${styles.hasLead}`}
           role="combobox"
           aria-expanded={open ? 'true' : 'false'}

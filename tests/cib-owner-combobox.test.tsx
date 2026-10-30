@@ -93,6 +93,13 @@ describe('OwnerCombobox', () => {
     );
   });
 
+  it('is invalid until an owner is picked, so the form will not submit without one', () => {
+    mount({ query: 'jan' });
+    expect(input().validity.valid).toBe(false);
+    mount({ query: 'jan', owner: 'jnovak', label: 'jnovak · Jana Novak' });
+    expect(input().validity.valid).toBe(true);
+  });
+
   it('ownerLabel joins username and name, or gives the username alone', () => {
     expect(ownerLabel(owners[0])).toBe('jnovak · Jana Novak');
     expect(ownerLabel(owners[1])).toBe('acme-integration');

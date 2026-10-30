@@ -1,188 +1,279 @@
-/* Each step of the form is its own boxed card, numbered in the order the
-   fields are actually needed, instead of one dense stack of filter rows. A
-   real border (not just a rule) is what reads as "a group" at a glance; the
-   numbering is what reads as "do these in order". */
-.formCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.formCard:first-child {
-  margin-top: 0;
-}
-.stepHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.stepBadge,
-.stepBadgeMuted {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.stepBadge {
-  background: var(--accent);
-  color: #fff;
-}
-.stepBadgeMuted {
-  background: var(--bg-hover);
-  color: var(--text-secondary);
-}
-.stepTitle {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-}
-.optionalTag {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary);
-  background: var(--bg-hover);
-  padding: 1px 6px;
-  border-radius: 10px;
-  margin-left: 6px;
-}
-
-/* The Coupa check function controls: explanation on its own line, so it never
-   fights a button row (or a native "fill this field" tooltip) for the same
-   horizontal space. */
-.checkRow {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.check {
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-.checkActions {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* Coupa URL / client ID / client secret read as one triple, so they share the
-   row as three EQUAL columns instead of one growing field crowding the other
-   two into a thin strip on the far right. */
-.credRow {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-.credRow .filter {
-  min-width: 0;
-}
-
-/* The last card is the "go" bar: a different background marks it as the step
-   that actually does something, and its primary button is bigger than the
-   usual .btn so Deploy is unmistakably the main action on the page. */
-.actionCard {
-  background: var(--bg-hover);
-}
-.deployBtn {
-  padding: 7px 22px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.body {
+/* CIB deploy, one column of numbered steps (2026-10-30-cib-deploy-ux-refinement-design.md).
+   Accent tints are color-mix over --bg-card: the monolith has no --accent-bg. */
+.scroll {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 12px 16px;
+  background: var(--bg-base);
+}
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+.fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.errorBox {
   display: flex;
-  flex-direction: column;
   gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-fg);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.errorBox span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.hero {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.heroIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), #7c5cf0);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.hero h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.hero p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.hero a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* A step: a circle on a vertical line, then its card. The card must not clip (overflow stays
+   visible), or the token-owner list is cut off at the card's edge. */
+.step {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 16px;
+  position: relative;
+  padding-bottom: 20px;
+}
+.step::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 34px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.fieldset > .step:last-child::before,
+.page > div > .step::before {
+  display: none;
+}
+.complete::before {
+  background: color-mix(in srgb, var(--success) 45%, transparent);
+}
+.num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+}
+.current .num {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.complete .num {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.optional .num {
+  border-style: dashed;
 }
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgba(20, 24, 40, 0.04),
+    0 4px 16px rgba(20, 24, 40, 0.04);
+}
+.cardHead {
+  padding: 14px 18px 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.cardHead h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cardHead p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+.meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding-top: 3px;
+}
+.cardBody {
+  padding: 16px 18px 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
+  gap: 16px;
 }
-.status {
+.cardFoot {
+  padding: 10px 18px;
+  background: var(--bg-base);
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 12px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  align-items: center;
+}
+.g3 {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 14px;
+}
+.g2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.narrow {
+  max-width: 220px;
+}
+.hasToggle {
+  padding-right: 52px;
+}
+.eye {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 5px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Step 4: the collapsed resume options first, then the two buttons. */
+.resume {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.resume summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.resume summary code {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+.resume[open] summary {
+  margin-bottom: 12px;
+}
+.checkbox {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding-top: 22px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
 }
-.muted {
-  color: var(--text-secondary);
-  font-weight: 400;
-}
-.bar {
-  width: 100%;
-  height: 6px;
+.checkbox input {
+  margin: 1px 0 0;
   accent-color: var(--accent);
 }
-.verdict {
-  font-size: 15px;
+.checkbox .hint {
+  display: block;
+  font-weight: 400;
+  margin-top: 2px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.btnLg {
+  height: 40px;
+  padding: 0 22px;
+  font-size: 13.5px;
   font-weight: 600;
+  border-radius: 8px;
 }
-.ok {
-  color: var(--success);
+.deployBtn {
+  min-width: 140px;
+  justify-content: center;
 }
-.fail {
-  color: var(--danger);
-}
-.warn {
-  color: var(--warning-fg);
-}
-.blocker {
-  background: var(--danger-bg);
-  color: var(--danger-fg);
-  border: 1px solid var(--danger-border);
-  border-radius: var(--radius);
-  padding: 6px 8px;
-}
+
 .pre {
   margin: 4px 0 0;
   font-family: var(--font-mono);
   font-size: 11px;
   white-space: pre-wrap;
-  max-height: 50vh;
+  max-height: 240px;
   overflow: auto;
   color: var(--text-primary);
-}
-/* <summary> is block-level by default, so an unstyled focus ring stretches
-   across the whole card instead of hugging the word "Details". */
-.detailsSummary {
-  display: inline-flex;
-  width: fit-content;
-  cursor: pointer;
-}
-.detailsSummary:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 3px;
 }
 
 /* Form fields of the refined page: plain 12px labels (not the uppercase mono filter-label), a

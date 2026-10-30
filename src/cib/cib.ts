@@ -559,7 +559,10 @@ export function verdict(r: {
     };
   if (r.status === 'ready') return { tone: 'ok', text: 'Check passed: ready to deploy.' };
   if (r.status === 'resumable')
-    return { tone: 'warn', text: 'This run ID has a checkpoint: press Deploy to resume it.' };
+    return {
+      tone: 'warn',
+      text: 'This run ID has a checkpoint: press Check and deploy to resume it.',
+    };
   const objects = Object.keys(r.idmap ?? {}).length,
     invoked = r.invoked ?? [],
     started = invoked.filter((x) => x.status >= 200 && x.status < 300).length,
@@ -689,7 +692,7 @@ export async function deployCib(
   // with imports still pending it stays: Deploy with the same run ID then re-runs only the imports.
   if (pendingImports.length)
     notes.push(
-      `the checkpoint of run ${run} stays in Data Storage: press Deploy with the same run ID to re-run the imports`,
+      `the checkpoint of run ${run} stays in Data Storage: press Check and deploy with the same run ID to re-run the imports`,
     );
   else {
     await c.ds('delete_one', { filter: { kind: 'plan', run } });
