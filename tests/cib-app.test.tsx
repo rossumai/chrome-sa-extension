@@ -5,39 +5,40 @@ import { act } from 'preact/test-utils';
 
 vi.mock('../src/cib/release.js', async (orig) => ({
   ...(await orig<typeof import('../src/cib/release.js')>()),
-  listReleases: vi.fn(async () => ['v2.1.0', 'v1.4.2']),
+  latestRelease: vi.fn(async () => 'v2.1.0'),
   loadRelease: vi.fn(async () => ({ plan: { ops: [] }, deployConfig: 'deploy/' })),
 }));
 vi.mock('../src/cib/engine.js', () => ({
   makeClient: () => ({
     call: async (_m: string, path: string) =>
-      path.startsWith('organizations')
-        ? { data: { results: [{ id: 123456 }] } }
-        : path.startsWith('users')
-          ? {
-              data: {
-                results: [
-                  {
-                    username: 'jnovak',
-                    first_name: 'Jana',
-                    last_name: 'Novak',
-                    email: 'j@example.com',
-                  },
-                ],
-              },
-            }
-          : { data: {} },
+      path.startsWith('users')
+        ? {
+            data: {
+              results: [
+                {
+                  username: 'jnovak',
+                  first_name: 'Jana',
+                  last_name: 'Novak',
+                  email: 'j@example.com',
+                },
+              ],
+            },
+          }
+        : { data: {} },
     list: async () => [],
   }),
 }));
 vi.mock('../src/cib/cib.js', async (orig) => ({
   ...(await orig<typeof import('../src/cib/cib.js')>()),
   findCoupaProbes: vi.fn(async () => []),
+  readTarget: vi.fn(async () => ({ orgId: 123456, orgName: 'Acme', region: 'prod-eu2' })),
+  checkpointRelease: vi.fn(async () => null),
   deployCib: vi.fn(),
 }));
 
 import App from '../src/cib/components/App.jsx';
-import { deployCib } from '../src/cib/cib.js';
+import { checkpointRelease, deployCib, readTarget } from '../src/cib/cib.js';
+import { loadRelease } from '../src/cib/release.js';
 import { domain, token } from '../src/cib/store.js';
 
 let root: HTMLElement;
@@ -71,6 +72,8 @@ beforeEach(async () => {
   token.value = 't';
   (globalThis as any).chrome = { permissions: { request: vi.fn(async () => false) } };
   vi.mocked(deployCib).mockReset();
+  vi.mocked(loadRelease).mockClear();
+  vi.mocked(checkpointRelease).mockResolvedValue(null);
   Element.prototype.scrollIntoView = vi.fn();
   await act(async () => void render(<App connected={true} />, root));
   await flush();
@@ -146,19 +149,64 @@ describe('CIB deploy page', () => {
     expect(root.querySelector('fieldset')!.disabled).toBe(true);
   });
 
-  it('a v1.x version shows the Deploy tool field, and v2.x hides it', async () => {
-    const ver = root.querySelector<HTMLSelectElement>('#cib-version')!;
-    expect(root.textContent).not.toContain('Deploy tool (v1.x settings)');
-    await act(async () => {
-      ver.value = 'v1.4.2';
-      ver.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-    expect(root.textContent).toContain('Deploy tool (v1.x settings)');
+  it('step 1 shows the latest release, the session organization and its region, read-only', () => {
+    const t = root.querySelector('dl')!.textContent!;
+    expect(t).toContain('v2.1.0');
+    expect(t).toContain('Acme');
+    expect(t).toContain('123456');
+    expect(t).toContain('prod-eu2');
+    for (const id of ['cib-version', 'cib-org', 'cib-region', 'cib-tool'])
+      expect(root.querySelector('#' + id)).toBeNull();
+    expect(root.textContent).not.toContain('Deploy tool');
   });
 
-  it('editing the organization id hides the session hint', async () => {
-    expect(root.textContent).toContain('Filled from your session');
-    typeInto(root.querySelector<HTMLInputElement>('#cib-org')!, '999');
-    expect(root.textContent).not.toContain('Filled from your session');
+  it('a run deploys the latest release into the read organization and region', async () => {
+    vi.mocked(deployCib).mockResolvedValue({ status: 'ready', notes: [] } as any);
+    await submit('check');
+    expect(vi.mocked(loadRelease).mock.calls[0][0]).toBe('v2.1.0');
+    const opts = vi.mocked(deployCib).mock.calls[0][1];
+    expect([opts.orgId, opts.region]).toEqual([123456, 'prod-eu2']);
+  });
+
+  it('a run with a checkpoint keeps the release it started with', async () => {
+    vi.mocked(checkpointRelease).mockResolvedValueOnce('v2.0.0');
+    vi.mocked(deployCib).mockResolvedValue({ status: 'ready', notes: [] } as any);
+    await submit('check');
+    expect(vi.mocked(loadRelease).mock.calls[0][0]).toBe('v2.0.0');
+    expect(root.querySelector('[data-log]')!.textContent).toContain(
+      'was started with CIB v2.0.0; it continues with it',
+    );
+  });
+
+  it('step 1 shows the checkpoint release a run would resume with, not the latest', async () => {
+    render(null, root);
+    vi.mocked(checkpointRelease).mockResolvedValue('v2.0.0');
+    await act(async () => void render(<App connected={true} />, root));
+    await flush();
+    const cell = root.querySelector('dl > div')!;
+    expect(cell.textContent).toContain('v2.0.0');
+    expect(cell.textContent).toContain('From checkpoint');
+    expect(cell.textContent).not.toContain('latest');
+    expect(cell.querySelector('a')!.getAttribute('href')).toMatch(/releases\/tag\/v2\.0\.0$/);
+    // another run ID has no checkpoint: back to the latest
+    vi.mocked(checkpointRelease).mockResolvedValue(null);
+    typeInto(root.querySelector<HTMLInputElement>('#cib-run')!, 'cib-new');
+    await flush();
+    expect(cell.textContent).toContain('v2.1.0');
+    expect(cell.textContent).toContain('Latest on GitHub');
+  });
+
+  it('a target that cannot be read is shown as an error, and nothing can run', async () => {
+    render(null, root);
+    vi.mocked(readTarget).mockRejectedValueOnce(
+      new Error('this session does not see exactly one organization'),
+    );
+    await act(async () => void render(<App connected={true} />, root));
+    await flush();
+    expect(root.querySelector('[data-target-error]')!.textContent).toContain(
+      'does not see exactly one organization',
+    );
+    expect(root.querySelector<HTMLButtonElement>('button[name="check"]')!.disabled).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('button[name="deploy"]')!.disabled).toBe(true);
   });
 });

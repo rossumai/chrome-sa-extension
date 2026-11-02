@@ -185,18 +185,80 @@
   gap: 8px;
   align-items: center;
 }
-.g3 {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr;
-  gap: 14px;
-}
 .g2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
-.narrow {
-  max-width: 220px;
+
+/* Step 1: the release, organization and region, read and shown, never chosen. */
+/* The three columns share one set of rows (subgrid), so label, value and caption line up across
+   them; a caption fits one line at the page's 760px. */
+.target {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto auto;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-base);
+}
+.target > div {
+  grid-row: span 3;
+  display: grid;
+  grid-template-rows: subgrid;
+  row-gap: 3px;
+  align-items: baseline;
+  padding: 11px 13px;
+  min-width: 0;
+}
+.target .hint {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.target > div + div {
+  border-left: 1px solid var(--border);
+}
+.target dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+.target dd {
+  margin: 0;
+}
+.targetValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.targetValue code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.latest {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--success-bg);
+  color: var(--success-fg);
+  border: 1px solid var(--success-border);
+}
+.cardBody > .errorBox {
+  margin-bottom: 0;
 }
 .hasToggle {
   padding-right: 52px;
@@ -304,9 +366,6 @@
 .hint a {
   color: var(--accent);
   text-decoration: none;
-}
-.hintOk {
-  color: var(--success);
 }
 .input {
   height: 34px;

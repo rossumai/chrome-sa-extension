@@ -352,10 +352,17 @@ opened, because its form, log and a deploy in flight live in component state.
   Markdown deliverables kept in a Data Storage collection, rendered as ONE scrolling
   specification (`components/SpecView.tsx`) and checked against live org state.
 - **CIB deploy** (`src/cib/`) — deploys the Coupa Integration Baseline into the connected org.
-  It bundles NO CIB content: at run time it lists the releases of the public
-  `rossumai/rossum-coupa-integration` repo, reads the chosen release's prd2 org folder from
-  `raw.githubusercontent.com` and compiles it in the browser into a create plan (`release.ts`;
-  v1.x releases take their deploy settings from the public deploy tool's `_config/`). `cib.ts`
+  It bundles NO CIB content: at run time it reads the LATEST release of the public
+  `rossumai/rossum-coupa-integration` repo (GitHub's `/releases/latest`), its prd2 org folder
+  and `deploy/` settings from `raw.githubusercontent.com`, and compiles them in the browser into
+  a create plan (`release.ts`). Only v2.x releases have `deploy/`; a release without it is
+  refused, and the v1.x path through the deploy tool's `_config/` was removed (2026-11-02).
+  **Nothing about the target is chosen**: the organization is the one `GET /organizations`
+  lists (`currentOrg`) and the region is its group's `deployment_location`, both read by
+  `readTarget` in `cib.ts`; when either is unknown the page shows an error and cannot run. The
+  checkpoint stores the release tag, so a resume keeps the release it started with even after a
+  newer one is published, and step 1 shows that release while the run ID has such a checkpoint
+  (an older checkpoint without the tag resumes with the latest). `cib.ts`
   checks (read-only), then creates, patches and invokes, only on the user's Deploy click. It
   is **the one path that writes a whole configuration in one run** — not the only write path:
   the Builder, the DevTools panel's Save, the popup's Unlock and Dataset Management write too,
@@ -762,7 +769,8 @@ older ones as history. Currently authoritative per area:
 - **Configuration changelog** — `2026-09-29-config-changelog-in-context-design.md` (the
   DevTools version rail and diff for the open object; the pure core in `src/changelog/`)
 - **Galaxy** — `2026-06-04-galaxy-3d-org-birdview-design.md`
-- **CIB deploy** — `2026-10-24-cib-deploy-console-design.md`
+- **CIB deploy** — `2026-11-02-cib-deploy-auto-target-design.md` (latest release, session
+  organization and region read, not chosen), a delta on `2026-10-24-cib-deploy-console-design.md`
 - **Builder** — `2026-10-27-builder-delta-design.md` (what was built beyond the first spec:
   rules, hooks, engines, Mr. Fabry, Revalidate, the immediate writes, the public beta), a delta
   on `2026-10-18-builder-schema-editor-design.md` (kept as the base record for the grid,

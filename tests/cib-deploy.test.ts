@@ -847,3 +847,58 @@ test('verdict: one line says how the run ended', async () => {
   assert.equal(verdict({ status: 'ready' }).text, 'Check passed: ready to deploy.');
   assert.equal(verdict({ status: 'resumable' }).tone, 'warn');
 });
+
+// the deploy target is read, never chosen: one organization, and its group's deployment location
+const target = async (setupFake: (f: FakeRossum) => void) => {
+  const { f, c, m } = await post();
+  f.db.organizations[0].name = 'Acme';
+  setupFake(f);
+  return m.readTarget(c);
+};
+
+test('readTarget: the one organization of the session and its group deployment location', async () => {
+  assert.deepEqual(await target(() => {}), { orgId: 1, orgName: 'Acme', region: 'prod-eu' });
+  assert.deepEqual(
+    await target((f) => (f.db.organization_groups[0].deployment_location = 'prod-eu2')),
+    { orgId: 1, orgName: 'Acme', region: 'prod-eu2' },
+  );
+});
+
+test('readTarget: no organization, or more than one, is an error', async () => {
+  await assert.rejects(
+    target((f) => (f.db.organizations = [])),
+    /does not see exactly one organization/,
+  );
+  await assert.rejects(
+    target((f) => f.db.organizations.push({ id: 2, name: 'Other' })),
+    /does not see exactly one organization/,
+  );
+});
+
+test('readTarget: an unreadable group, or a location CIB does not deploy to, is an error', async () => {
+  await assert.rejects(
+    target((f) =>
+      f.fail.push({ method: 'GET', match: /organization_groups/, status: 403, times: 1 }),
+    ),
+    /could not read the organization group \(403\), so the region is unknown/,
+  );
+  await assert.rejects(
+    target((f) => delete f.db.organization_groups[0].deployment_location),
+    /deployment location is not set; CIB deploys only to prod-eu, prod-eu2, prod-us2, prod-jp/,
+  );
+  await assert.rejects(
+    target((f) => (f.db.organization_groups[0].deployment_location = 'prod-xx')),
+    /deployment location is 'prod-xx'/,
+  );
+});
+
+test('deployCib keeps the release in the checkpoint; checkpointRelease reads it back', async () => {
+  const { f, c, m, opts } = await full();
+  assert.equal(await m.checkpointRelease(c, 'r1'), null);
+  f.fail.push({ method: 'POST', match: /\/rules$/, status: 500, times: 1 });
+  await assert.rejects(m.deployCib(c, opts), /failed: 500/);
+  assert.equal(await m.checkpointRelease(c, 'r1'), 'v2.0.1');
+  // a checkpoint written before the tag was stored names no release
+  await c.ds('insert_one', { document: { kind: 'plan', run: 'old', ops: [] } });
+  assert.equal(await m.checkpointRelease(c, 'old'), null);
+});

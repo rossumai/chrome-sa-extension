@@ -2,21 +2,17 @@
 // Reads a CIB release from GitHub at deploy time and compiles it into the engine's create plan.
 // Nothing of CIB is bundled with the extension: the objects come from the public release repo, the
 // deploy settings (cib_target.yaml, hooks.csv, required_scopes.json) from the release's deploy/
-// folder or, for v1.x which have none, from the official deploy tool's _config/ (the same fallback
-// as its cib_assets.resolve_assets). Both hosts answer with Access-Control-Allow-Origin: *.
-// Release files and API objects are raw JSON, hence the `any`s.
+// folder. Only releases with that folder (v2.x) are supported; v1.x releases had none and took their
+// settings from the deploy tool, which this page no longer reads. GitHub answers with
+// Access-Control-Allow-Origin: *. Release files and API objects are raw JSON, hence the `any`s.
 import type { Progress } from './engine.js';
 import { readRequiredScopes } from './cib.js';
 
 export const CIB_REPO = 'rossumai/rossum-coupa-integration';
-export const TOOL_REPO = 'rossumai/coupa-integration-deploy-tool';
-// deploy tool tags whose _config/ the extension supports; v1.3.4's "only covers v1.0.0 and v1.1.0"
-export const TOOL_REFS = ['v1.3.4'];
-export const TOOL_REF = TOOL_REFS[0];
 
 const api = (path: string) => `https://api.github.com/repos/${path}`;
-const raw = (repo: string, ref: string, path: string) =>
-  `https://raw.githubusercontent.com/${repo}/${ref}/${path.split('/').map(encodeURIComponent).join('/')}`;
+const raw = (ref: string, path: string) =>
+  `https://raw.githubusercontent.com/${CIB_REPO}/${ref}/${path.split('/').map(encodeURIComponent).join('/')}`;
 
 async function get(f: typeof fetch, url: string): Promise<string> {
   const r = await f(url);
@@ -30,11 +26,12 @@ async function get(f: typeof fetch, url: string): Promise<string> {
   return r.text();
 }
 
-// published releases, newest first
-export const listReleases = async (f: typeof fetch = fetch): Promise<string[]> =>
-  JSON.parse(await get(f, api(`${CIB_REPO}/releases?per_page=100`)))
-    .filter((r: any) => !r.draft && !r.prerelease)
-    .map((r: any) => r.tag_name);
+// the newest published release: GitHub's own "latest", which skips drafts and pre-releases
+export async function latestRelease(f: typeof fetch = fetch): Promise<string> {
+  const tag = JSON.parse(await get(f, api(`${CIB_REPO}/releases/latest`))).tag_name;
+  if (typeof tag !== 'string' || !tag) throw new Error(`github.com/${CIB_REPO} has no release`);
+  return tag;
+}
 
 // the files of a prd2 org folder (paths relative to it) that make up the plan
 const WANTED = [
@@ -51,36 +48,28 @@ export async function loadRelease(
   {
     fetchImpl = fetch,
     onProgress = () => {},
-    toolRef = TOOL_REF,
-  }: { fetchImpl?: typeof fetch; onProgress?: (p: Progress) => void; toolRef?: string } = {},
+  }: { fetchImpl?: typeof fetch; onProgress?: (p: Progress) => void } = {},
 ) {
-  if (!TOOL_REFS.includes(toolRef))
-    throw new Error(`${toolRef} is not a supported deploy tool version (${TOOL_REFS.join(', ')})`);
   const f = fetchImpl;
   const tree = JSON.parse(
     await get(f, api(`${CIB_REPO}/git/trees/${encodeURIComponent(tag)}?recursive=1`)),
   );
   if (tree.truncated) throw new Error(`the GitHub file list of ${tag} is truncated`);
   const paths: string[] = tree.tree.filter((e: any) => e.type === 'blob').map((e: any) => e.path);
-  const [repo, ref, dir] = paths.includes('deploy/hooks.csv')
-    ? [CIB_REPO, tag, 'deploy']
-    : [TOOL_REPO, toolRef, '_config'];
+  if (!paths.includes('deploy/hooks.csv'))
+    throw new Error(`${tag} has no deploy/ folder; only v2.x releases can be deployed`);
   const [yaml, hooksCsv, scopes] = await Promise.all(
     ['cib_target.yaml', 'hooks.csv', 'required_scopes.json'].map((n) =>
-      get(f, raw(repo, ref, `${dir}/${n}`)),
+      get(f, raw(tag, `deploy/${n}`)),
     ),
   );
   // only two top-level keys are needed, so no YAML parser
   const key = (k: string) => yaml.match(new RegExp(`^${k}:\\s*(\\S+)\\s*$`, 'm'))?.[1];
   const sourceUrl = key('source_url');
-  if (!sourceUrl) throw new Error(`no source_url in ${dir}/cib_target.yaml`);
-  let root = key('source_dir') ?? '';
-  if (!paths.some((p) => p.startsWith(`${root}/`))) {
-    // the tool's legacy yaml names cib/cib; v1.x trees hold the org folder as <org>/default
-    const org = paths.find((p) => /^[^/]+\/organization\.json$/.test(p));
-    if (!org) throw new Error(`${tag}: no organization folder found`);
-    root = org.replace(/organization\.json$/, 'default');
-  }
+  if (!sourceUrl) throw new Error('no source_url in deploy/cib_target.yaml');
+  const root = key('source_dir');
+  if (!root || !paths.some((p) => p.startsWith(`${root}/`)))
+    throw new Error(`${tag}: deploy/cib_target.yaml names no source_dir with files in it`);
   const orgFile = root.replace(/[^/]+$/, 'organization.json');
   const rel = paths
     .filter((p) => p.startsWith(`${root}/`))
@@ -94,7 +83,7 @@ export async function loadRelease(
     for (let p; (p = next.shift());) {
       files.set(
         p === orgFile ? '../organization.json' : p.slice(root.length + 1),
-        JSON.parse(await get(f, raw(CIB_REPO, tag, p))),
+        JSON.parse(await get(f, raw(tag, p))),
       );
       onProgress({ phase: 'release', done: ++done, total, detail: `${CIB_REPO} ${tag}: ${p}` });
     }
@@ -104,7 +93,7 @@ export async function loadRelease(
     plan: compilePlan(files, { sourceUrl, release: tag }),
     hooksCsv,
     requiredScopes: readRequiredScopes(scopes),
-    deployConfig: `${repo}@${ref}/${dir}`,
+    deployConfig: `${CIB_REPO}@${tag}/deploy`,
   };
 }
 

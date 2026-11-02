@@ -149,6 +149,7 @@ export async function deploy(
   {
     run,
     orgId,
+    release,
     ops,
     patches = [],
     secrets = {},
@@ -158,6 +159,8 @@ export async function deploy(
   }: {
     run: string;
     orgId: number;
+    // what the ops were compiled from; kept in the checkpoint so a resume reads the same release
+    release?: string;
     ops: any[];
     patches?: any[];
     secrets?: Record<string, string>;
@@ -172,6 +175,7 @@ export async function deploy(
     st = {
       kind: 'plan',
       run,
+      ...(release && { release }),
       status: 'running',
       ops,
       patches,
