@@ -12,14 +12,16 @@ import { connectedOrg } from '../../console/store.js';
 import { makeClient } from '../engine.js';
 import type { Progress } from '../engine.js';
 import {
+  checkpointRelease,
   deployCib,
   deployCoupaProbe,
   findCoupaProbes,
-  REGIONS,
+  readTarget,
   teardownCoupaProbes,
   verdict,
 } from '../cib.js';
-import { CIB_REPO, listReleases, loadRelease, TOOL_REF, TOOL_REFS } from '../release.js';
+import type { Target } from '../cib.js';
+import { CIB_REPO, latestRelease, loadRelease } from '../release.js';
 import { stopNote, trackPhase } from '../view.js';
 import type { LoginRoute, PhaseLog } from '../view.js';
 import Step from './Step.jsx';
@@ -60,10 +62,6 @@ const hookPage = (url: string) =>
 
 export default function App({ connected }: { connected: boolean | null }) {
   const [v, setV] = useState<Record<string, any>>({
-    version: '',
-    org: '',
-    region: REGIONS[0],
-    toolRef: TOOL_REF,
     owner: '',
     ownerQuery: '',
     ownerLabel: '',
@@ -73,8 +71,15 @@ export default function App({ connected }: { connected: boolean | null }) {
     run: `cib-${new Date().toISOString().slice(0, 10)}`,
     allow: false,
   });
-  // the org id the session filled in, so the form can say so while it is unchanged
-  const [sessionOrg, setSessionOrg] = useState('');
+  // what step 1 shows and the run uses: read, never chosen (design: 2026-11-02-cib-deploy-auto-target-design.md)
+  const [release, setRelease] = useState('');
+  const [target, setTarget] = useState<Target | null>(null);
+  // why the release or the target could not be read; the run stays disabled
+  const [targetErrors, setTargetErrors] = useState<string[]>([]);
+  // the release the current run uses: the checkpoint's on a resume, else the latest
+  const [runRelease, setRunRelease] = useState('');
+  // the release the run ID's checkpoint was started with: a run resumes with it, so step 1 shows it
+  const [resumeRelease, setResumeRelease] = useState<string | null>(null);
   // url of the Coupa check function in the org, while the user keeps it deployed
   const [probe, setProbe] = useState<string | null>(null);
   // which login route step 3 shows; UI only, the engine picks the function whenever it exists
@@ -83,7 +88,6 @@ export default function App({ connected }: { connected: boolean | null }) {
   // email in part, without case (users API, checked on a test org 2026-10-20)
   const [owners, setOwners] = useState<Owner[]>([]);
   const adminIds = useRef<Promise<string> | null>(null);
-  const [versions, setVersions] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [prog, setProg] = useState<Progress | null>(null);
   const [phases, setPhases] = useState<PhaseLog>(NO_PHASES);
@@ -110,32 +114,21 @@ export default function App({ connected }: { connected: boolean | null }) {
 
   useEffect(() => {
     if (!connected) return;
-    // the org id, when the session sees exactly one organization
-    makeClient(domain.value, token.value)
-      .call('GET', 'organizations?page_size=2')
-      .then((r) => {
-        const res = r.data?.results;
-        if (res?.length === 1) {
-          setSessionOrg(String(res[0].id));
-          setV((o) => (o.org ? o : { ...o, org: String(res[0].id) }));
-        }
-      });
+    const fail = (e: Error) => setTargetErrors((l) => [...l, e.message]);
+    readTarget(makeClient(domain.value, token.value)).then(setTarget, fail);
+    latestRelease().then(setRelease, (e) =>
+      fail(
+        new Error(`could not read the latest CIB release of github.com/${CIB_REPO}: ${e.message}`),
+      ),
+    );
     findCoupaProbes(makeClient(domain.value, token.value)).then(([h]) => {
       setProbe(h?.url ?? null);
       if (h) setRoute('org');
     });
-    listReleases()
-      .then((vs) => {
-        setVersions(vs);
-        setV((o) => (vs.includes(o.version) ? o : { ...o, version: vs[0] ?? '' }));
-      })
-      .catch((e) =>
-        setError(`could not list the CIB releases of github.com/${CIB_REPO}: ${e.message}`),
-      );
   }, [connected]);
 
   useEffect(() => {
-    if (!connected || !/^\d+$/.test(v.org)) return setOwners([]);
+    if (!connected || !target) return setOwners([]);
     const c = makeClient(domain.value, token.value);
     adminIds.current ??= c.list('groups').then((gs) =>
       gs
@@ -145,7 +138,7 @@ export default function App({ connected }: { connected: boolean | null }) {
     );
     const t = setTimeout(async () => {
       const q = new URLSearchParams({
-        organization: v.org,
+        organization: String(target.orgId),
         groups: await adminIds.current!,
         is_active: 'true',
         ordering: 'username',
@@ -166,7 +159,25 @@ export default function App({ connected }: { connected: boolean | null }) {
       });
     }, 300);
     return () => clearTimeout(t);
-  }, [connected, v.org, v.ownerQuery]);
+  }, [connected, target, v.ownerQuery]);
+
+  // re-read when the run ID changes and after each run, which can create or delete the checkpoint;
+  // a failed read shows the latest release, and the run's own read decides
+  useEffect(() => {
+    const run = v.run.trim();
+    if (!connected || busy || !run) return setResumeRelease(null);
+    let live = true;
+    const t = setTimeout(() => {
+      checkpointRelease(makeClient(domain.value, token.value), run).then(
+        (r) => live && setResumeRelease(r),
+        () => live && setResumeRelease(null),
+      );
+    }, 300);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [connected, v.run, busy]);
 
   // a run that starts brings its result into view
   useEffect(() => {
@@ -235,25 +246,28 @@ export default function App({ connected }: { connected: boolean | null }) {
       setClock(`elapsed ${s(t0)} s · last activity ${s(tLast.current)} s ago`);
     }, 1000);
     try {
-      line(`${checkOnly ? 'check' : 'deploy'} CIB ${v.version} into organization ${v.org}`);
+      const c = makeClient(domain.value, token.value);
+      // a run with a checkpoint keeps the release it started with, whatever is latest now
+      const tag = (await checkpointRelease(c, v.run.trim())) ?? release;
+      setRunRelease(tag);
+      if (tag !== release)
+        line(`run ${v.run.trim()} was started with CIB ${tag}; it continues with it`);
+      line(`${checkOnly ? 'check' : 'deploy'} CIB ${tag} into organization ${target!.orgId}`);
       const progress = (p: Progress) => {
         tLast.current = Date.now();
         setProg(p);
         setPhases((l) => trackPhase(l, p));
         setStatus(`${PHASES[p.phase] ?? p.phase}: ${p.done} / ${p.total}`);
       };
-      const { deployConfig, ...rel } = await loadRelease(v.version, {
-        onProgress: progress,
-        toolRef: v.toolRef,
-      });
+      const { deployConfig, ...rel } = await loadRelease(tag, { onProgress: progress });
       line(
-        `read ${v.version} from github.com/${CIB_REPO}: ${rel.plan.ops.length} objects; deploy settings from ${deployConfig}`,
+        `read ${tag} from github.com/${CIB_REPO}: ${rel.plan.ops.length} objects; deploy settings from ${deployConfig}`,
       );
-      const r = await deployCib(makeClient(domain.value, token.value), {
+      const r = await deployCib(c, {
         ...rel,
-        orgId: +v.org,
+        orgId: target!.orgId,
         run: v.run.trim(),
-        region: v.region,
+        region: target!.region,
         coupa: {
           baseUrl: v.coupaUrl.trim(),
           clientId: v.coupaId.trim(),
@@ -307,7 +321,9 @@ export default function App({ connected }: { connected: boolean | null }) {
     }
   };
 
-  const s1 = !!(v.version && v.org && v.region && v.owner);
+  const shownRelease = resumeRelease ?? release;
+  const ready = !!(shownRelease && target);
+  const s1 = !!(ready && v.owner);
   const s2 = !!(v.coupaUrl && v.coupaId && v.coupaSecret);
   const runView: RunView | null = mode && {
     mode,
@@ -376,11 +392,11 @@ export default function App({ connected }: { connected: boolean | null }) {
               <div>
                 <h1>Deploy the Coupa Integration Baseline</h1>
                 <p>
-                  Reads a CIB release from{' '}
+                  Creates the latest CIB release from{' '}
                   <a href={`https://github.com/${CIB_REPO}`} target="_blank" rel="noreferrer">
                     github.com/{CIB_REPO}
                   </a>{' '}
-                  and creates it in the connected organization.
+                  in the organization you are signed in to.
                 </p>
               </div>
             </header>
@@ -395,103 +411,66 @@ export default function App({ connected }: { connected: boolean | null }) {
                 <Step
                   n={1}
                   state={s1 ? 'complete' : 'current'}
-                  title="Release and organization"
-                  sub="Which CIB release goes where, and which admin the hooks run as."
+                  title="Target and token owner"
+                  sub="The release, organization and region are read for you. Choose the admin the hooks run as."
                 >
-                  <div class={styles.g3}>
-                    <div class={styles.field}>
-                      <label class={styles.label} for="cib-version">
-                        CIB version
-                      </label>
-                      <select
-                        id="cib-version"
-                        class={`input ${styles.input}`}
-                        value={v.version}
-                        onChange={set('version')}
+                  {targetErrors.map((e) => (
+                    <div class={styles.errorBox} data-target-error>
+                      <span>{e}</span>
+                    </div>
+                  ))}
+                  <dl class={styles.target}>
+                    <div>
+                      <dt>Release</dt>
+                      <dd class={styles.targetValue}>
+                        {shownRelease || '…'}
+                        {shownRelease && shownRelease === release && (
+                          <span class={styles.latest}>latest</span>
+                        )}
+                      </dd>
+                      <dd
+                        class={styles.hint}
+                        title={
+                          resumeRelease
+                            ? `Run ${v.run.trim()} was started with ${resumeRelease} and resumes with it`
+                            : undefined
+                        }
                       >
-                        {versions.map((o) => (
-                          <option value={o}>{o}</option>
-                        ))}
-                      </select>
-                      <span class={styles.hint}>
-                        Newest first
-                        {v.version && (
+                        {resumeRelease ? 'From checkpoint' : 'Latest on GitHub'}
+                        {shownRelease && (
                           <>
                             {' · '}
                             <a
-                              href={`https://github.com/${CIB_REPO}/releases/tag/${v.version}`}
+                              href={`https://github.com/${CIB_REPO}/releases/tag/${shownRelease}`}
                               target="_blank"
                               rel="noreferrer"
                             >
-                              release notes ↗
+                              notes ↗
                             </a>
                           </>
                         )}
-                      </span>
+                      </dd>
                     </div>
-                    <div class={styles.field}>
-                      <label class={styles.label} for="cib-org">
-                        Organization ID
-                      </label>
-                      <input
-                        id="cib-org"
-                        class={`input ${styles.input}`}
-                        type="text"
-                        required
-                        value={v.org}
-                        onInput={set('org')}
-                      />
-                      {sessionOrg && v.org === sessionOrg && (
-                        <span class={`${styles.hint} ${styles.hintOk}`}>
-                          ✓ Filled from your session
-                        </span>
-                      )}
+                    <div>
+                      <dt>Organization</dt>
+                      <dd class={styles.targetValue}>
+                        {target ? target.orgName : '…'}
+                        {target && <code>{target.orgId}</code>}
+                      </dd>
+                      <dd class={styles.hint}>From your session</dd>
                     </div>
-                    <div class={styles.field}>
-                      <label class={styles.label} for="cib-region">
-                        Region
-                      </label>
-                      <select
-                        id="cib-region"
-                        class={`input ${styles.input}`}
-                        value={v.region}
-                        onChange={set('region')}
-                      >
-                        {REGIONS.map((o) => (
-                          <option value={o}>{o}</option>
-                        ))}
-                      </select>
-                      <span class={styles.hint}>
-                        Must match the org's location. Check verifies it.
-                      </span>
+                    <div>
+                      <dt>Region</dt>
+                      <dd class={styles.targetValue}>{target ? target.region : '…'}</dd>
+                      <dd class={styles.hint}>From the organization group</dd>
                     </div>
-                  </div>
-                  {/^v1\./.test(v.version) && (
-                    <div class={styles.field}>
-                      <label class={styles.label} for="cib-tool">
-                        Deploy tool (v1.x settings)
-                      </label>
-                      <select
-                        id="cib-tool"
-                        class={`input ${styles.input} ${styles.narrow}`}
-                        value={v.toolRef}
-                        onChange={set('toolRef')}
-                      >
-                        {TOOL_REFS.map((o) => (
-                          <option value={o}>{o}</option>
-                        ))}
-                      </select>
-                      <span class={styles.hint}>
-                        v1.x releases take their deploy settings from this tag of the deploy tool.
-                      </span>
-                    </div>
-                  )}
+                  </dl>
                   <OwnerCombobox
                     query={v.ownerQuery}
                     owner={v.owner}
                     label={v.ownerLabel}
                     owners={owners}
-                    orgId={v.org}
+                    orgId={target ? String(target.orgId) : ''}
                     onQuery={(q) =>
                       setV((o) => ({ ...o, ownerQuery: q, owner: '', ownerLabel: '' }))
                     }
@@ -644,18 +623,14 @@ export default function App({ connected }: { connected: boolean | null }) {
                     </div>
                   </details>
                   <div class={styles.actions}>
-                    <button
-                      class={`btn ${styles.btnLg}`}
-                      name="check"
-                      disabled={busy || !v.version}
-                    >
+                    <button class={`btn ${styles.btnLg}`} name="check" disabled={busy || !ready}>
                       Check only
                     </button>
                     <button
                       class={`btn btn-primary ${styles.btnLg} ${styles.deployBtn}`}
                       name="deploy"
                       ref={deployRef}
-                      disabled={busy || !v.version}
+                      disabled={busy || !ready}
                     >
                       Check and deploy
                     </button>
@@ -668,7 +643,7 @@ export default function App({ connected }: { connected: boolean | null }) {
                 <Step
                   n={runView.running ? '…' : runView.failed ? '!' : 5}
                   state={runView.running ? 'current' : runView.failed ? undefined : 'complete'}
-                  title={runTitle(runView, v.version)}
+                  title={runTitle(runView, runRelease)}
                   meta={runView.running ? clock : status}
                 >
                   <RunResult run={runView} />

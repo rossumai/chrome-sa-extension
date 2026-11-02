@@ -1,14 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import {
-  compilePlan,
-  listReleases,
-  loadRelease,
-  CIB_REPO,
-  TOOL_REPO,
-  TOOL_REF,
-  TOOL_REFS,
-} from '../src/cib/release.js';
+import { compilePlan, latestRelease, loadRelease, CIB_REPO } from '../src/cib/release.js';
 
 // a small synthetic prd2 org folder: one engine, workspace, queue, two hooks (one from a template), one rule
 const S = 'https://src.example.com/api/v1';
@@ -148,7 +140,7 @@ test('compilePlan refuses a plan that still points at the source org', () => {
 });
 
 // a fake GitHub: the API tree of the release plus raw files
-const github = (withDeploy: boolean) => {
+const github = (withDeploy: boolean, sourceDir = 'cib-org/default') => {
   const root = 'cib-org/default',
     files: Record<string, string> = {};
   for (const [p, v] of org())
@@ -156,15 +148,15 @@ const github = (withDeploy: boolean) => {
       JSON.stringify(v);
   files[`${root}/hooks/a b.py`] = 'x'; // not part of the plan, never read
   const deploy = {
-    'cib_target.yaml': `source_dir: ${withDeploy ? root : 'cib/cib'}\nsource_url: ${S}\n`,
+    'cib_target.yaml': `source_dir: ${sourceDir}\nsource_url: ${S}\n`,
     'hooks.csv': 'hook_name,invoke\nA,true\n',
     'required_scopes.json': '{"required_scopes": {"core.a.read": "x"}}',
   };
   const raw: Record<string, string> = {};
   for (const [p, v] of Object.entries(files)) raw[`${CIB_REPO}/v9/${p}`] = v;
-  for (const [n, v] of Object.entries(deploy))
-    if (withDeploy) ((raw[`${CIB_REPO}/v9/deploy/${n}`] = v), (files[`deploy/${n}`] = v));
-    else raw[`${TOOL_REPO}/${TOOL_REF}/_config/${n}`] = v;
+  if (withDeploy)
+    for (const [n, v] of Object.entries(deploy))
+      ((raw[`${CIB_REPO}/v9/deploy/${n}`] = v), (files[`deploy/${n}`] = v));
   const urls: string[] = [];
   const fetchImpl = (async (url: string) => {
     urls.push(url);
@@ -194,35 +186,31 @@ test('loadRelease: v2.x layout reads deploy/ of the release and compiles the org
   assert.equal(seen.at(-1).done, seen.at(-1).total);
 });
 
-test('loadRelease: v1.x layout (no deploy/) takes the deploy tool _config/ and finds the org folder', async () => {
-  const { fetchImpl } = github(false);
-  const r = await loadRelease('v9', { fetchImpl });
-  assert.deepEqual(r.plan, compile());
-  assert.equal(r.deployConfig, `${TOOL_REPO}@${TOOL_REF}/_config`);
-});
-
-test('loadRelease: a v1.x release takes the deploy tool version given, and only a supported one', async () => {
-  assert.ok(TOOL_REFS.includes(TOOL_REF));
+test('loadRelease refuses a release without deploy/ (v1.x) and reads nothing else', async () => {
   const { fetchImpl, urls } = github(false);
-  await loadRelease('v9', { fetchImpl, toolRef: TOOL_REF });
-  assert.ok(urls.some((u) => u.includes(`/${TOOL_REPO}/${TOOL_REF}/_config/hooks.csv`)));
   await assert.rejects(
-    loadRelease('v9', { fetchImpl, toolRef: 'v0.0.1' }),
-    /v0\.0\.1 is not a supported deploy tool version/,
+    loadRelease('v9', { fetchImpl }),
+    /v9 has no deploy\/ folder; only v2\.x releases can be deployed/,
   );
+  assert.equal(urls.length, 1); // the tree only
 });
 
-test('loadRelease and listReleases report GitHub errors; listReleases skips drafts and pre-releases', async () => {
+test('loadRelease refuses a source_dir with no files in the release', async () => {
+  const { fetchImpl } = github(true, 'cib/cib');
+  await assert.rejects(loadRelease('v9', { fetchImpl }), /names no source_dir with files in it/);
+});
+
+test('loadRelease and latestRelease report GitHub errors; latestRelease reads GitHub latest', async () => {
   const limited = (async () => new Response('limit', { status: 403 })) as unknown as typeof fetch;
   await assert.rejects(loadRelease('v9', { fetchImpl: limited }), /403.*60 calls per hour/);
-  const list = (async () =>
-    new Response(
-      JSON.stringify([
-        { tag_name: 'v3', draft: true },
-        { tag_name: 'v2.1', prerelease: true },
-        { tag_name: 'v2' },
-        { tag_name: 'v1' },
-      ]),
-    )) as unknown as typeof fetch;
-  assert.deepEqual(await listReleases(list), ['v2', 'v1']);
+  await assert.rejects(latestRelease(limited), /403.*60 calls per hour/);
+  const urls: string[] = [];
+  const latest = (async (url: string) => {
+    urls.push(url);
+    return new Response(JSON.stringify({ tag_name: 'v2.0.1' }));
+  }) as unknown as typeof fetch;
+  assert.equal(await latestRelease(latest), 'v2.0.1');
+  assert.deepEqual(urls, [`https://api.github.com/repos/${CIB_REPO}/releases/latest`]);
+  const none = (async () => new Response('{}')) as unknown as typeof fetch;
+  await assert.rejects(latestRelease(none), /has no release/);
 });

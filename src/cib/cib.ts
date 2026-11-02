@@ -1,4 +1,5 @@
 import { deploy } from './engine.js';
+import { currentOrg } from '../rossum/orgName.js';
 import type { ApiResult, Client, Progress } from './engine.js';
 
 // A compiled release plan and the API objects it creates are raw JSON, hence the `any`s.
@@ -16,6 +17,37 @@ type WaitOpts = {
 // the Coupa secret are created inactive; one patch then sets the secret and restores their active flag.
 
 export const REGIONS = ['prod-eu', 'prod-eu2', 'prod-us2', 'prod-jp'];
+
+export type Target = { orgId: number; orgName: string; region: string };
+
+// The deploy target, read and never chosen: the one organization the session sees (currentOrg, as
+// the connection bar names it) and the region its group is deployed in (`deployment_location`, the
+// field preflight compares the region with). Either one unknown is an error, not a guess.
+export async function readTarget(c: Client): Promise<Target> {
+  const org = currentOrg((await c.call('GET', 'organizations?page_size=2')).data);
+  if (!org || org.id === null)
+    throw new Error(
+      'this session does not see exactly one organization, so the deploy target is unknown. Sign in to the organization to deploy into, then open the Console again',
+    );
+  const g = org.groupPath ? await c.call('GET', `${c.base}${org.groupPath}`) : null;
+  if (g?.status !== 200)
+    throw new Error(
+      `could not read the organization group${g ? ` (${g.status})` : ''}, so the region is unknown`,
+    );
+  const loc = g.data?.deployment_location;
+  if (!REGIONS.includes(loc))
+    throw new Error(
+      `the organization group's deployment location is ${loc ? `'${loc}'` : 'not set'}; CIB deploys only to ${REGIONS.join(', ')}`,
+    );
+  return { orgId: org.id, orgName: org.name, region: loc };
+}
+
+// The release a run's checkpoint was started with, so a resume uses it even after a newer release
+// is published; null when there is no checkpoint, or one written before the tag was stored.
+export async function checkpointRelease(c: Client, run: string): Promise<string | null> {
+  const [st] = await c.ds('find', { query: { kind: 'plan', run } });
+  return typeof st?.release === 'string' ? st.release : null;
+}
 
 // the hooks build URLs by concatenation (f"{url}oauth2/token"), so: a scheme and exactly one trailing slash
 export const normalizeBaseUrl = (url: string | null | undefined): string => {
@@ -669,6 +701,7 @@ export async function deployCib(
   const idmap = await deploy(c, {
     run,
     orgId,
+    release: plan.release,
     ops: p.ops,
     patches: p.patches,
     secrets: { client_secret: coupa.clientSecret },
