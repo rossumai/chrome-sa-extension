@@ -13,6 +13,10 @@ all solution architects during customer onboarding. It adds three things:
 Install it from the
 [Chrome Web Store](https://chrome.google.com/webstore/detail/bljkbinljmhdbipklfcljongikhmnneh).
 
+It also runs in **Microsoft Edge**, which is built on Chromium. Install it from the same Chrome
+Web Store page: when Edge asks, allow extensions from other stores. There is no separate Edge
+Add-ons listing.
+
 ![An annotation in Rossum with the extension on: schema IDs on the line items, and the organization and environment in the top bar](./assets/annotation-screen.png)
 
 ## How to use it
@@ -127,13 +131,15 @@ npm test             # run the tests
 npm run typecheck    # type-check src/ and tests/
 ```
 
-Load `dist/` as an unpacked extension in `chrome://extensions` (turn on Developer mode). After
+Load `dist/` as an unpacked extension in `chrome://extensions` (turn on Developer mode). In
+Edge, use `edge://extensions` the same way; Edge for macOS is enough to test it. After
 you change HTML or CSS files, run `npm run build` again: watch mode picks up only JS changes.
 After you reload the extension, also reload open Rossum tabs.
 
 ## Release
 
 Run the **Release** workflow in GitHub Actions on `master`. It builds and tests the extension,
-then uploads it to the Chrome Web Store. The version comes from the git commit, so do not edit
+then uploads it to the Chrome Web Store. Edge users install that same listing, so there is
+no Edge release step. The version comes from the git commit, so do not edit
 it by hand. Setup details are in
 [docs/chrome-web-store-release.md](docs/chrome-web-store-release.md).

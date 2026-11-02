@@ -8,6 +8,11 @@ Chrome extension (Manifest V3) enhancing the Rossum, NetSuite and Coupa UIs for 
 architects during onboarding. Published to the Chrome Web Store. Community-supported, not an
 official Rossum product.
 
+**Microsoft Edge is supported through the Chrome Web Store listing** — deliberately NOT through
+an Edge Add-ons listing (owner, 2026-11-02). Edge is Chromium, and every `chrome.*` API in `src/`
+exists there, so the same `dist/` runs unchanged; keep it that way when adding an API, and test
+in Edge (Edge for macOS is fine) with `edge://extensions` → Load unpacked.
+
 ## Build System
 
 esbuild bundles ES modules from `src/` into `dist/`. No transpilation, no other build tools.
