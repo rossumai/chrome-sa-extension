@@ -637,10 +637,11 @@ test('deployCib onProgress: checks -> objects -> patches -> memorisation -> impo
   assert.equal(p.filter((x) => x.phase === 'imports').at(-1).done, 12);
 });
 
-// On a cold cache (every CI run, after `npm ci`) this downloads three releases from GitHub
-// one after another, measured at ~20s, so the suite's 20s timeout failed it.
-test('every CIB release on GitHub deploys into a clean fake org', async () => {
-  for (const v of ['v1.0.0', 'v1.1.0', 'v2.0.0', 'v2.0.1']) {
+// On a cold cache (every CI run, after `npm ci`) this downloads the releases from GitHub one after
+// another, measured at ~20s for three, so the suite's 20s timeout failed it. Only v2.x: v1.x
+// releases have no deploy/ folder and are refused (see cib-release.test.ts).
+test('every supported (v2.x) CIB release on GitHub deploys into a clean fake org', async () => {
+  for (const v of ['v2.0.0', 'v2.0.1']) {
     const { plan, hooksCsv, requiredScopes } = await realRelease(v);
     const { f, c, m, opts } = await full();
     const r = await m.deployCib(c, {
