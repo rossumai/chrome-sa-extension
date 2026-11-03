@@ -347,7 +347,11 @@ opened, because its form, log and a deploy in flight live in component state.
 - **Inspector** (`src/inspector/`) — read-only "what happened to this annotation, and why" as one
   progressively-filling Diagnosis Report: a deterministic evidence model and verdict
   (`evidence.ts`), then a Fabry narrative with `[e:<id>]` citations (`synthesize.ts`).
-- **Fabry Chat** (`src/fabry/`) — chat over the Rossum Agent API. There is **no 👍/👎
+- **Fabry Chat** (`src/fabry/`) — chat over the Rossum Agent API at
+  `${domain}/svc/rossum-agent/api/v1` (the `tools.rossum.cloud` service was retired on
+  2026-11-03 and its chats were not migrated). Chats are scoped by the exact
+  `X-Rossum-Api-Url` string, an unknown chat id answers 200 with no messages (never 404), and
+  the service has no personas. There is **no 👍/👎
   feedback**: `PUT /feedback`'s `turn_index` addresses the raw stored history while
   `GET /chats` drops text-less tool-only steps, so a thread index mis-targets feedback on any
   tool-using turn (live-confirmed 2026-07-13). The plumbing was kept dormant for a year and
@@ -463,7 +467,7 @@ Enforced by tests, not by convention. Do not weaken them.
   name-only by construction (no caller can supply a field), so the leak guard is structural.
   Adding an event means adding it to `EVENT_NAMES` **and** to `PRIVACY.md` in backticks; a test
   enforces the pairing. Only `src/usage/ga4Config.ts` may name `google-analytics.com`.
-- A **read-only agent framing** (cautious persona, standing notices) is defense-in-depth, never a
+- A **read-only agent framing** (standing notices) is defense-in-depth, never a
   guarantee.
 - **No customer identifies itself in this repo.** It is PUBLIC and shipped to the Chrome Web
   Store, so every fixture, comment, spec, commit message and PR body has to be readable by the
