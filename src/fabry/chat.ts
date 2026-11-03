@@ -55,6 +55,10 @@ export async function openChat(chatId: string, { restore = false }: { restore?: 
   try {
     const detail = await agentApi.getChat(chatId);
     if (id !== loadId) return;
+    // The agent service answers an unknown chat id with 200 and no messages, never
+    // 404, so an empty chat is a gone chat (an old-service id, an expired one).
+    if (!detail?.messages?.length)
+      throw Object.assign(new Error('Agent error 404'), { status: 404 });
     store.thread.value = normalizeMessages(detail.messages);
     store.files.value = detail.files || [];
   } catch (err: any) {

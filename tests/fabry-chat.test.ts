@@ -75,6 +75,29 @@ describe('loadChats / openChat', () => {
     expect(store.activeChatId.value).toBeNull(); // greeting, not a dead chat
     expect(store.sendError.value).toBeNull(); // silent
   });
+  it('an empty chat on restore falls back to the greeting silently (the service never 404s)', async () => {
+    vi.mocked(agentApi.getChat).mockResolvedValueOnce({
+      chat_id: 'gone_chat',
+      messages: [],
+      files: [],
+      created_at: 'x',
+    });
+    store.sendError.value = null;
+    await openChat('gone_chat', { restore: true });
+    expect(store.activeChatId.value).toBeNull();
+    expect(store.sendError.value).toBeNull();
+  });
+  it('an empty chat opened by the user resets to the greeting with a gentle note', async () => {
+    vi.mocked(agentApi.getChat).mockResolvedValueOnce({
+      chat_id: 'gone_chat',
+      messages: [],
+      files: [],
+      created_at: 'x',
+    });
+    await openChat('gone_chat');
+    expect(store.activeChatId.value).toBeNull();
+    expect(store.sendError.value).toMatch(/no longer available/i);
+  });
   it('404 on a user-opened chat resets to the greeting with a gentle note', async () => {
     vi.mocked(agentApi.getChat).mockRejectedValueOnce(
       Object.assign(new Error('Agent error 404'), { status: 404 }),
