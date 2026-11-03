@@ -50,6 +50,11 @@ describe('createSseParser', () => {
 });
 
 describe('toolLabel', () => {
+  it('labels the generic rossum_api_* tools', () => {
+    expect(toolLabel('rossum_api_write')).toBe('writing to the org');
+    expect(toolLabel('rossum_api_search')).toBe('searching the API');
+    expect(toolLabel('rossum_api_describe')).toBe('reading the API docs');
+  });
   it('maps known tools and falls back', () => {
     expect(toolLabel('list_datasets')).toBe('listing datasets');
     expect(toolLabel('data_storage_aggregate')).toBe('querying the collection');

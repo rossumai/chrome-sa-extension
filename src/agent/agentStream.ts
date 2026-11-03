@@ -41,6 +41,11 @@ const TOOL_LABELS = {
   load_tool: 'loading tools',
   run_grep: 'processing output',
   run_jq: 'processing output',
+  // svc/rossum-agent's generic Rossum API tools
+  rossum_api_search: 'searching the API',
+  rossum_api_describe: 'reading the API docs',
+  rossum_api_read: 'reading',
+  rossum_api_write: 'writing to the org',
 };
 
 // Human status label for the compact live status line.

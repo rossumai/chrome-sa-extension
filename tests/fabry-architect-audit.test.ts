@@ -34,6 +34,37 @@ describe('summarizeArgs', () => {
     );
   });
 });
+describe('generic rossum_api_* tools (svc/rossum-agent)', () => {
+  it('classifies the generic rossum_api_* tools', () => {
+    expect(isWriteTool('rossum_api_write')).toBe(true);
+    expect(isWriteTool('rossum_api_read')).toBe(false);
+    expect(isWriteTool('rossum_api_search')).toBe(false);
+    expect(isWriteTool('rossum_api_describe')).toBe(false);
+    expect(isWriteTool('rossum_api_frobnicate')).toBe(true); // fail-safe unchanged
+  });
+  it('summarizes a generic write as method, path and body name', () => {
+    expect(summarizeArgs({ method: 'POST', path: '/labels', body: { name: 'x' } })).toBe(
+      'POST /labels x',
+    );
+    expect(summarizeArgs({ method: 'DELETE', path: '/labels/25559' })).toBe('DELETE /labels/25559');
+  });
+  it('journals only the write in a new-service implement stream', () => {
+    const f = makeAuditFolder({ now: () => 7 });
+    const calls: [string, string, unknown][] = [
+      ['a', 'rossum_api_search', {}],
+      ['b', 'rossum_api_describe', { operationId: 'labels_create' }],
+      ['c', 'rossum_api_write', { method: 'POST', path: '/labels', body: { name: 'x' } }],
+    ];
+    for (const [id, name, input] of calls) {
+      f.feed({ type: 'tool-input-start', toolCallId: id, toolName: name });
+      f.feed({ type: 'tool-input-available', toolCallId: id, toolName: name, input });
+      f.feed({ type: 'tool-output-available', toolCallId: id, output: 'ok' });
+    }
+    expect(f.writes).toEqual([
+      { tool: 'rossum_api_write', argsSummary: 'POST /labels x', ok: true, at: 7 },
+    ]);
+  });
+});
 describe('makeAuditFolder', () => {
   it('records write tool calls (name + args + ok) and ignores reads', () => {
     const f = makeAuditFolder({ now: () => 7 });

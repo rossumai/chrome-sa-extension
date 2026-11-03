@@ -3,12 +3,13 @@
 // (agentStream.foldEvents drops tool input/output). No network/DOM.
 
 // Org-write classification. FAIL-SAFE by design: tool names may arrive bare
-// (create_hook) or namespaced (rossum_create_hook / data_storage_delete_many) —
+// (create_hook), namespaced (rossum_create_hook / data_storage_delete_many) or, on
+// svc/rossum-agent, generic (rossum_api_read / rossum_api_write, input {method, path, body}) —
 // strip a known namespace first; an UNRECOGNIZED tool is treated as a WRITE
 // (recorded to the audit journal) rather than waved through — an unaudited write
 // against a live org is worse than an over-eager audit entry. Agent-internal
 // utilities (sandbox/reasoning, never org mutations) are exempted explicitly.
-const NS_RE = /^(rossum_|data_storage_)/i;
+const NS_RE = /^(rossum_(api_)?|data_storage_)/i;
 const READ_RE =
   /^(get|list|search|find|aggregate|read|fetch|whoami|healthz|render|extract|validate|generate|describe|count)/i;
 const AGENT_INTERNAL = new Set([
@@ -39,6 +40,10 @@ export function isWriteTool(name: unknown): boolean {
 export function summarizeArgs(input: any): string {
   if (input == null) return '';
   if (typeof input !== 'object') return String(input).slice(0, 60);
+  if (typeof input.method === 'string' && typeof input.path === 'string') {
+    const body = summarizeArgs(input.body);
+    return `${input.method} ${input.path}${body ? ' ' + body : ''}`.slice(0, 80);
+  }
   const id =
     input.id ??
     input.queue_id ??
