@@ -61,7 +61,7 @@ export default function RunResult({ run }: { run: RunView }) {
         </div>
       )}
       {run.error && !run.running && (
-        <div class={`${styles.verdict} ${styles.fail}`} data-verdict>
+        <div class={`${styles.verdict} ${styles.fail}`} data-verdict data-help="verdict">
           <span class={styles.verdictIco}>⏸</span>
           <div>
             <b>Stopped with an error</b>
@@ -71,7 +71,7 @@ export default function RunResult({ run }: { run: RunView }) {
         </div>
       )}
       {o && v && (
-        <div class={`${styles.verdict} ${styles[o.verdict.tone]}`} data-verdict>
+        <div class={`${styles.verdict} ${styles[o.verdict.tone]}`} data-verdict data-help="verdict">
           <span class={styles.verdictIco}>{ICON[o.verdict.tone]}</span>
           <div>
             <b>{v.head}</b>
@@ -140,7 +140,7 @@ export default function RunResult({ run }: { run: RunView }) {
           ></span>
         ))}
       </div>
-      <ul class={styles.phaseList}>
+      <ul class={styles.phaseList} data-help="phases">
         {PHASES.map(([k, label, ro], i) => {
           const c = run.phases.counts[k];
           return (

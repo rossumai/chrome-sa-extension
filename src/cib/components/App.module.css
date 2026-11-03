@@ -185,6 +185,11 @@
   gap: 8px;
   align-items: center;
 }
+.footNote {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
 .g2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -852,4 +857,9 @@
   margin: 0;
   padding: 10px 12px 12px;
   border-top: 1px solid var(--border);
+}
+
+/* the Help button, at the right end of the connection bar */
+.helpAt {
+  margin-left: auto;
 }

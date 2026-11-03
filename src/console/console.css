@@ -55,6 +55,8 @@
   --diag-border: #ddd0fb;
   --diag-fg: #5b21b6;
   --inv-grad-b: #f6effd;
+  --help-pin: #db2777;
+  --help-pin-on: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -110,6 +112,8 @@
     --diag-border: #3a3060;
     --diag-fg: #b4a0f2;
     --inv-grad-b: #241d3a;
+    --help-pin: #f472b6;
+    --help-pin-on: var(--bg-card);
   }
 }
 

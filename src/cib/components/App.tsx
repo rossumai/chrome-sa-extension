@@ -6,7 +6,7 @@
 // One column of numbered steps (design: 2026-10-30-cib-deploy-ux-refinement-design.md). The layout
 // changed, the requests did not: every effect and engine call below is the one the form had before.
 import { h, Fragment } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { domain, token } from '../store.js';
 import { connectedOrg } from '../../console/store.js';
 import { makeClient } from '../engine.js';
@@ -25,11 +25,18 @@ import { CIB_REPO, latestRelease, loadRelease } from '../release.js';
 import { stopNote, trackPhase } from '../view.js';
 import type { LoginRoute, PhaseLog } from '../view.js';
 import Step from './Step.jsx';
-import OwnerCombobox, { ownerLabel } from './OwnerCombobox.jsx';
+import { ownerLabel } from './OwnerCombobox.jsx';
 import type { Owner } from './OwnerCombobox.jsx';
+import TargetStep from './TargetStep.jsx';
+import CredentialsStep from './CredentialsStep.jsx';
 import CoupaLoginStep from './CoupaLoginStep.jsx';
+import DeployStep from './DeployStep.jsx';
 import RunResult, { runTitle } from './RunResult.jsx';
 import type { RunView } from './RunResult.jsx';
+import HelpButton from '../../help/HelpButton.jsx';
+import HelpWindow from '../../help/HelpWindow.jsx';
+import { loadHelpRect } from '../../help/rect.js';
+import { CIB_HELP } from '../help.jsx';
 import styles from './App.module.css';
 
 const ADMIN_GROUPS = ['admin', 'organization_group_admin'];
@@ -104,6 +111,9 @@ export default function App({ connected }: { connected: boolean | null }) {
   const [clock, setClock] = useState('');
   const [showSecret, setShowSecret] = useState(false);
   const [runSeq, setRunSeq] = useState(0);
+  // help makes no request, so it works connected or not, and while a run is busy
+  const [helpOpen, setHelpOpen] = useState(false);
+  const closeHelp = useCallback(() => setHelpOpen(false), []);
   const resultRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const deployRef = useRef<HTMLButtonElement>(null);
@@ -179,6 +189,20 @@ export default function App({ connected }: { connected: boolean | null }) {
     };
   }, [connected, v.run, busy]);
 
+  useEffect(() => void loadHelpRect(), []);
+
+  const helpButton = (
+    <HelpButton class={styles.helpAt} open={helpOpen} onToggle={() => setHelpOpen((o) => !o)} />
+  );
+  const help = helpOpen && (
+    <HelpWindow
+      title="CIB deploy help"
+      placeholder="Search CIB help"
+      sections={CIB_HELP}
+      onClose={closeHelp}
+    />
+  );
+
   // a run that starts brings its result into view
   useEffect(() => {
     if (runSeq) resultRef.current?.scrollIntoView?.({ block: 'start' });
@@ -191,8 +215,10 @@ export default function App({ connected }: { connected: boolean | null }) {
           <div class="connection-bar">
             <span class="connection-dot error"></span>
             Not connected — open a Rossum page and click Rossum Console in the extension popup
+            {helpButton}
           </div>
         </main>
+        {help}
       </div>
     );
 
@@ -347,6 +373,7 @@ export default function App({ connected }: { connected: boolean | null }) {
           <span class={'connection-dot' + (busy ? ' busy' : '')}></span>
           CIB deploy · Connected to {host(domain.value)}
           {connectedOrg.value ? ` · ${connectedOrg.value}` : ''}
+          {helpButton}
         </div>
         <div class={styles.scroll}>
           <div class={styles.page}>
@@ -408,153 +435,31 @@ export default function App({ connected }: { connected: boolean | null }) {
               }}
             >
               <fieldset class={styles.fieldset} disabled={busy}>
-                <Step
-                  n={1}
+                <TargetStep
+                  release={release}
+                  resumeRelease={resumeRelease}
+                  runId={v.run}
+                  target={target}
+                  targetErrors={targetErrors}
+                  query={v.ownerQuery}
+                  owner={v.owner}
+                  label={v.ownerLabel}
+                  owners={owners}
                   state={s1 ? 'complete' : 'current'}
-                  title="Target and token owner"
-                  sub="The release, organization and region are read for you. Choose the admin the hooks run as."
-                >
-                  {targetErrors.map((e) => (
-                    <div class={styles.errorBox} data-target-error>
-                      <span>{e}</span>
-                    </div>
-                  ))}
-                  <dl class={styles.target}>
-                    <div>
-                      <dt>Release</dt>
-                      <dd class={styles.targetValue}>
-                        {shownRelease || '…'}
-                        {shownRelease && shownRelease === release && (
-                          <span class={styles.latest}>latest</span>
-                        )}
-                      </dd>
-                      <dd
-                        class={styles.hint}
-                        title={
-                          resumeRelease
-                            ? `Run ${v.run.trim()} was started with ${resumeRelease} and resumes with it`
-                            : undefined
-                        }
-                      >
-                        {resumeRelease ? 'From checkpoint' : 'Latest on GitHub'}
-                        {shownRelease && (
-                          <>
-                            {' · '}
-                            <a
-                              href={`https://github.com/${CIB_REPO}/releases/tag/${shownRelease}`}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              notes ↗
-                            </a>
-                          </>
-                        )}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Organization</dt>
-                      <dd class={styles.targetValue}>
-                        {target ? target.orgName : '…'}
-                        {target && <code>{target.orgId}</code>}
-                      </dd>
-                      <dd class={styles.hint}>From your session</dd>
-                    </div>
-                    <div>
-                      <dt>Region</dt>
-                      <dd class={styles.targetValue}>{target ? target.region : '…'}</dd>
-                      <dd class={styles.hint}>From the organization group</dd>
-                    </div>
-                  </dl>
-                  <OwnerCombobox
-                    query={v.ownerQuery}
-                    owner={v.owner}
-                    label={v.ownerLabel}
-                    owners={owners}
-                    orgId={target ? String(target.orgId) : ''}
-                    onQuery={(q) =>
-                      setV((o) => ({ ...o, ownerQuery: q, owner: '', ownerLabel: '' }))
-                    }
-                    onPick={(u) =>
-                      setV((o) => ({ ...o, owner: u.username, ownerLabel: ownerLabel(u) }))
-                    }
-                  />
-                </Step>
-                <Step
-                  n={2}
-                  state={s2 ? 'complete' : s1 ? 'current' : undefined}
-                  title="Coupa credentials"
-                  sub="The OAuth client the CIB hooks use to call Coupa."
-                  footer={
-                    <>
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <rect x="4" y="11" width="16" height="10" rx="2" />
-                        <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                      </svg>
-                      The secret stays in this page's memory. The deploy checkpoint stores only a
-                      placeholder.
-                    </>
+                  onQuery={(q) => setV((o) => ({ ...o, ownerQuery: q, owner: '', ownerLabel: '' }))}
+                  onPick={(u) =>
+                    setV((o) => ({ ...o, owner: u.username, ownerLabel: ownerLabel(u) }))
                   }
-                >
-                  <div class={styles.field}>
-                    <label class={styles.label} for="cib-coupa-url">
-                      Coupa URL
-                    </label>
-                    <input
-                      id="cib-coupa-url"
-                      class={`input ${styles.input}`}
-                      type="text"
-                      required
-                      placeholder="https://example.coupahost.com"
-                      value={v.coupaUrl}
-                      onInput={set('coupaUrl')}
-                    />
-                  </div>
-                  <div class={styles.g2}>
-                    <div class={styles.field}>
-                      <label class={styles.label} for="cib-coupa-id">
-                        Client ID
-                      </label>
-                      <input
-                        id="cib-coupa-id"
-                        class={`input ${styles.input}`}
-                        type="text"
-                        required
-                        value={v.coupaId}
-                        onInput={set('coupaId')}
-                      />
-                    </div>
-                    <div class={styles.field}>
-                      <label class={styles.label} for="cib-coupa-secret">
-                        Client secret
-                      </label>
-                      <div class={styles.inputWrap}>
-                        <input
-                          id="cib-coupa-secret"
-                          class={`input ${styles.input} ${styles.hasToggle}`}
-                          type={(showSecret ? 'text' : 'password') as 'text'}
-                          required
-                          autocomplete="off"
-                          value={v.coupaSecret}
-                          onInput={set('coupaSecret')}
-                        />
-                        <button
-                          type="button"
-                          class={styles.eye}
-                          onClick={() => setShowSecret((s) => !s)}
-                        >
-                          {showSecret ? 'Hide' : 'Show'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </Step>
+                />
+                <CredentialsStep
+                  coupaUrl={v.coupaUrl}
+                  coupaId={v.coupaId}
+                  coupaSecret={v.coupaSecret}
+                  onInput={set}
+                  showSecret={showSecret}
+                  onToggleSecret={() => setShowSecret((s) => !s)}
+                  state={s2 ? 'complete' : s1 ? 'current' : undefined}
+                />
                 <Step
                   n={3}
                   state="optional"
@@ -575,67 +480,17 @@ export default function App({ connected }: { connected: boolean | null }) {
                     onRemove={() => probeAction(false)}
                   />
                 </Step>
-                <Step
-                  n={4}
+                <DeployStep
+                  runId={v.run}
+                  allow={v.allow}
+                  onRunIdInput={set('run')}
+                  onAllowChange={set('allow')}
+                  ready={ready}
+                  busy={busy}
                   state={s1 && s2 && !mode ? 'current' : undefined}
-                  title="Deploy"
-                  sub={
-                    <>
-                      <b>Check and deploy</b> runs the checks first and writes nothing if one fails.{' '}
-                      <b>Check only</b> runs the checks and stops.
-                    </>
-                  }
-                >
-                  <details class={styles.resume} ref={resumeRef}>
-                    <summary>
-                      Resume and re-run · run ID <code>{v.run}</code>
-                    </summary>
-                    <div class={styles.g2}>
-                      <div class={styles.field}>
-                        <label class={styles.label} for="cib-run">
-                          Run ID
-                        </label>
-                        <input
-                          id="cib-run"
-                          class={`input ${styles.input}`}
-                          type="text"
-                          required
-                          value={v.run}
-                          onInput={set('run')}
-                          // a closed <details> hides it, and Chrome cannot point at a hidden field
-                          onInvalid={() => resumeRef.current && (resumeRef.current.open = true)}
-                        />
-                        <span class={styles.hint}>
-                          Deploy saves its progress under this ID. Deploy again with the same ID to
-                          resume; a resumed run skips the checks.
-                        </span>
-                      </div>
-                      <label class={styles.checkbox}>
-                        <input type="checkbox" checked={v.allow} onChange={set('allow')} />
-                        <span>
-                          Continue a half-built deploy
-                          <span class={styles.hint}>
-                            Adopt CIB objects already in the org by name, instead of stopping at
-                            them.
-                          </span>
-                        </span>
-                      </label>
-                    </div>
-                  </details>
-                  <div class={styles.actions}>
-                    <button class={`btn ${styles.btnLg}`} name="check" disabled={busy || !ready}>
-                      Check only
-                    </button>
-                    <button
-                      class={`btn btn-primary ${styles.btnLg} ${styles.deployBtn}`}
-                      name="deploy"
-                      ref={deployRef}
-                      disabled={busy || !ready}
-                    >
-                      Check and deploy
-                    </button>
-                  </div>
-                </Step>
+                  deployRef={deployRef}
+                  resumeRef={resumeRef}
+                />
               </fieldset>
             </form>
             {runView && (
@@ -653,6 +508,7 @@ export default function App({ connected }: { connected: boolean | null }) {
           </div>
         </div>
       </main>
+      {help}
     </div>
   );
 }

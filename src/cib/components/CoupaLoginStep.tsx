@@ -25,7 +25,7 @@ export default function CoupaLoginStep({
 }) {
   const panel = loginPanel(route, !!probe);
   const radio = (value: LoginRoute, title: any, text: string) => (
-    <label class={styles.route}>
+    <label class={styles.route} data-help={`route-${value}`}>
       <input
         type="radio"
         name="cib-route"

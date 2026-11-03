@@ -210,3 +210,66 @@ describe('CIB deploy page', () => {
     expect(root.querySelector<HTMLButtonElement>('button[name="deploy"]')!.disabled).toBe(true);
   });
 });
+
+describe('CIB deploy help', () => {
+  const helpButton = () =>
+    [...root.querySelectorAll<HTMLButtonElement>('button')].find(
+      (b) => b.textContent?.replace('?', '').trim() === 'Help',
+    );
+  const help = () => root.querySelector('[role="dialog"][aria-label="CIB deploy help"]');
+  const realRects = Element.prototype.getClientRects;
+  // jsdom has no layout: report a box, so the window counts as visible to its Escape handler
+  beforeEach(() => {
+    Element.prototype.getClientRects = () => [{}] as any;
+  });
+  afterEach(() => {
+    Element.prototype.getClientRects = realRects;
+  });
+  const escape = (target: EventTarget) =>
+    act(
+      () =>
+        void target.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        ),
+    );
+
+  it('the Help button opens the window, and a second click closes it', async () => {
+    expect(help()).toBeNull();
+    await act(async () => helpButton()!.click());
+    expect(help()!.textContent).toContain('CIB deploy help');
+    await act(async () => helpButton()!.click());
+    expect(help()).toBeNull();
+  });
+
+  it('is there when the page is not connected', async () => {
+    render(null, root);
+    await act(async () => void render(<App connected={false} />, root));
+    expect(root.textContent).toContain('Not connected');
+    await act(async () => helpButton()!.click());
+    expect(help()!.textContent).toContain('CIB deploy help');
+  });
+
+  it('stays usable while a deploy is in flight', async () => {
+    vi.mocked(deployCib).mockReturnValue(new Promise(() => {}));
+    await submit('deploy');
+    // the run is busy: the form's buttons are disabled, Help is not
+    expect(root.querySelector('fieldset')!.disabled).toBe(true);
+    expect(helpButton()!.disabled).toBe(false);
+    await act(async () => helpButton()!.click());
+    expect(help()!.textContent).toContain('CIB deploy help');
+  });
+
+  it('the first Escape in the owner field closes its list, the next closes the help', async () => {
+    await act(async () => helpButton()!.click());
+    const owner = root.querySelector<HTMLInputElement>('#cib-owner')!;
+    act(() => owner.focus());
+    expect(owner.getAttribute('aria-expanded')).toBe('true');
+    expect(root.querySelector('[role="listbox"]')).not.toBeNull();
+    escape(owner);
+    expect(owner.getAttribute('aria-expanded')).toBe('false');
+    expect(root.querySelector('[role="listbox"]')).toBeNull();
+    expect(help()).not.toBeNull();
+    escape(owner);
+    expect(help()).toBeNull();
+  });
+});

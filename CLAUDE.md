@@ -410,6 +410,15 @@ opened, because its form, log and a deploy in flight live in component state.
   run time with `import(chrome.runtime.getURL(…))`, which esbuild leaves alone in the iife
   bundle.
 
+**Help window** (`src/help/`) — A movable, resizable floating window showing in-app help for pages
+that opt in. The window itself (`HelpWindow`) is a shared component; help content is per-app.
+`HelpFigure` renders the real UI components frozen as figures with numbered pin callouts at the
+top-right corner of each target (set by `data-help` attributes on the live components). Figures
+scale to fit the window width. `tests/cib-help.test.tsx` asserts every callout target resolves; a
+missing `data-help` target renders no pin (only its note). The window's rectangle is remembered in
+`helpWindowRect` (default: 480px wide, docked right at y=48, h = vh − 48 − 12; min 360×320). Renaming
+a `data-help` attribute breaks the test, not the render.
+
 Auth: the popup (or the worker) runs `readAuthInfo` in the Rossum tab via
 `chrome.scripting.executeScript`, stages a single-use `consoleAuth_<uuid>` in
 `chrome.storage.local`, and opens `console/console.html?authId=…`. The Console reads and
@@ -562,7 +571,7 @@ Enforced by tests, not by convention. Do not weaken them.
   `mdhOverviewChartsScale`, `mdhResultsView`, `mdhStages*`, `mdhStatsMode`,
   `mdhShowHiddenCollections`, `mdhProvenanceFilter`, `fabrySidebarWidth`,
   `fabryArchDocView`, `fabryArchRailOpen`, `fabryArchRailWidth`, `fabryArchPdfOptions`,
-  `devtoolsLineWrap`, `builderPanelWide`.
+  `devtoolsLineWrap`, `builderPanelWide`, `helpWindowRect`.
 - **Per-tab navigation**, read session-first from `sessionStorage` with a `chrome.storage.local`
   seed (`src/console/tabState.ts`), all content-free — `consoleActiveApp`, `mdhActiveView`,
   `mdhSelectedCollection`, `mdhActivePanel`, `mdhOpsSearch`, `fabryActiveChat`, `fabryMode`,
@@ -783,6 +792,7 @@ older ones as history. Currently authoritative per area:
 - **Release automation** — `2026-06-12-chrome-web-store-auto-release-design.md`
 - **API calls and 429s** — `2026-10-13-api-call-reduction-design.md` (the Inspector request
   scope, Galaxy's abort on 429, the popup's background checks)
+- **In-app help** — `2026-11-03-app-help-drawer-design.md` (the floating help window: its last section, "Delta, 2026-11-03", replaces the drawer)
 
 ## Localpages divergence
 

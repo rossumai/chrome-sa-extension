@@ -64,11 +64,16 @@ export default function OwnerCombobox({
     } else if (e.key === 'Enter' && open && owners[active]) {
       e.preventDefault();
       pick(owners[active], input);
-    } else if (e.key === 'Escape') setOpen(false);
+    } else if (e.key === 'Escape' && open) {
+      // the first Escape closes the list and is used up here, so the help window (listening on
+      // document) stays open; with the list closed, Escape is left to it
+      e.preventDefault();
+      setOpen(false);
+    }
   };
 
   return (
-    <div class={styles.field}>
+    <div class={styles.field} data-help="owner">
       <label class={styles.label} for="cib-owner">
         Token owner
       </label>
