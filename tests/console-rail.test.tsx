@@ -174,13 +174,13 @@ describe('Rail — academy (experimental) gate', () => {
 });
 
 describe('Rail — CIB is public', () => {
-  it('shows CIB with its beta badge while the experimental gate is LOCKED, and switches on click', () => {
+  it('shows CIB with no badge while the experimental gate is LOCKED, and switches on click', () => {
     experimentalUnlocked.value = false;
     const btn = [...mount().querySelectorAll('.app-rail-item')].find(
       (b) => b.getAttribute('title') === 'CIB deploy (Coupa Integration Baseline)',
     )!;
     expect(btn).toBeTruthy();
-    expect(btn.querySelector('.app-rail-beta')!.textContent).toBe('beta');
+    expect(btn.querySelector('.app-rail-beta')).toBeNull();
     expect(btn.querySelector('.app-rail-exp')).toBeNull();
     (btn as HTMLElement).click();
     expect(activeApp.value).toBe('cib');

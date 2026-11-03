@@ -159,13 +159,7 @@ type RailApp = {
 const APPS: RailApp[] = [
   { id: 'mdh', label: 'Data', title: 'Dataset Management', icon: DATA_ICON },
   { id: 'audit', label: 'Audit', title: 'Audit Log Viewer', icon: AUDIT_ICON },
-  {
-    id: 'cib',
-    label: 'CIB',
-    title: 'CIB deploy (Coupa Integration Baseline)',
-    icon: CIB_ICON,
-    beta: true,
-  },
+  { id: 'cib', label: 'CIB', title: 'CIB deploy (Coupa Integration Baseline)', icon: CIB_ICON },
   { id: 'builder', label: 'Builder', title: 'Schema Builder', icon: HAMMER_ICON, beta: true },
   {
     id: 'inspector',
