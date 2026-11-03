@@ -176,3 +176,43 @@ describe('streamMessage images option', () => {
     expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ content: 'plain' });
   });
 });
+
+describe('base URL', () => {
+  it('derives the agent base from the connected domain', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ status: 'healthy' }) });
+    global.fetch = fetchMock;
+    await agentApi.probeAgent();
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://acme.rossum.app/svc/rossum-agent/api/v1/health',
+    );
+  });
+  it('pins X-Rossum-Api-Url to ${domain}/api/v1 (chats are scoped by this exact string)', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ chats: [], total: 0 }) });
+    global.fetch = fetchMock;
+    await agentApi.listChats();
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://acme.rossum.app/svc/rossum-agent/api/v1/chats?limit=50&offset=0',
+    );
+    expect(fetchMock.mock.calls[0][1].headers['X-Rossum-Api-Url']).toBe(
+      'https://acme.rossum.app/api/v1',
+    );
+  });
+});
+
+describe('listCommands auth', () => {
+  it('sends the auth headers (the service 401s without them)', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ commands: [{ name: '/usage' }] }) });
+    global.fetch = fetchMock;
+    expect(await agentApi.listCommands()).toEqual([{ name: '/usage' }]);
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
+      'X-Rossum-Token': 'tok123',
+      'X-Rossum-Api-Url': 'https://acme.rossum.app/api/v1',
+    });
+  });
+});

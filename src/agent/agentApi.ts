@@ -21,7 +21,10 @@ export type StreamOptions = {
   mcpMode?: 'read-write';
 };
 
-const AGENT_BASE = 'https://rossum-agent-api.tools.rossum.cloud/api/v1';
+// Set by init() from the connected domain. Chats are scoped by the exact X-Rossum-Api-Url
+// STRING (two spellings of one org see disjoint histories), and an unknown chat id answers
+// 200 with no messages rather than 404 (both measured live, 2026-11-03).
+let agentBase = '';
 const IDLE_TIMEOUT = 90_000; // abort a turn after this long with no stream activity
 
 let rossumToken = '';
@@ -30,6 +33,7 @@ let rossumApiUrl = '';
 export function init(domain: string, token: string): void {
   rossumToken = token || '';
   rossumApiUrl = domain ? `${domain}/api/v1` : '';
+  agentBase = domain ? `${domain}/svc/rossum-agent/api/v1` : '';
 }
 
 function authHeaders(extra?: Record<string, string>): Record<string, string> {
@@ -51,7 +55,7 @@ export async function probeAgent(): Promise<boolean> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 10_000);
   try {
-    const res = await fetch(`${AGENT_BASE}/health`, { method: 'GET', signal: ctrl.signal });
+    const res = await fetch(`${agentBase}/health`, { method: 'GET', signal: ctrl.signal });
     if (!res.ok) return false;
     const data = await res.json().catch(() => null);
     return data?.status === 'healthy';
@@ -64,12 +68,12 @@ export async function probeAgent(): Promise<boolean> {
 
 // POST /chats — new chat session. Chats are read-only by default; write-enablement
 // is a per-MESSAGE decision via streamMessage({ mcpMode: 'read-write' }) — the backend
-// reads mcp_mode from the MESSAGE body, not the create body (verified against
-// rossum-agent api/stream.py resolve_mcp_mode). The ONLY caller that enables writes is
+// reads mcp_mode from the MESSAGE body, not the create body (verified live against
+// svc/rossum-agent, 2026-11-03). The ONLY caller that enables writes is
 // the Architect implement loop (implementTaskOne in architect/actions.js). Do NOT add
 // write-enablement here.
 export async function createChat(): Promise<string> {
-  const res = await fetch(`${AGENT_BASE}/chats`, {
+  const res = await fetch(`${agentBase}/chats`, {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: '{}',
@@ -107,7 +111,7 @@ export async function streamMessage(
   resetIdle();
   let res: Response;
   try {
-    res = await fetch(`${AGENT_BASE}/chats/${chatId}/messages`, {
+    res = await fetch(`${agentBase}/chats/${chatId}/messages`, {
       method: 'POST',
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
@@ -144,7 +148,7 @@ export async function streamMessage(
 }
 
 async function getJson(path: string, init?: RequestInit): Promise<any> {
-  const res = await fetch(`${AGENT_BASE}${path}`, {
+  const res = await fetch(`${agentBase}${path}`, {
     ...init,
     headers: { ...authHeaders({ 'Content-Type': 'application/json' }), ...(init && init.headers) },
   });
@@ -165,11 +169,11 @@ export function getChat(chatId: string): Promise<any> {
   return getJson(`/chats/${chatId}`);
 }
 
-// GET /commands — unauthenticated per the spec; [] on any failure so the
+// GET /commands — needs the auth headers (401 without them); [] on any failure so the
 // composer's autocomplete simply hides instead of erroring.
 export async function listCommands(): Promise<any[]> {
   try {
-    const res = await fetch(`${AGENT_BASE}/commands`);
+    const res = await fetch(`${agentBase}/commands`, { headers: authHeaders() });
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data?.commands) ? data.commands : [];
@@ -180,7 +184,7 @@ export async function listCommands(): Promise<any[]> {
 
 // GET /chats/{id}/files/{filename} — needs auth headers; a plain <a href> would 401.
 export async function downloadChatFile(chatId: string, filename: string): Promise<Blob> {
-  const res = await fetch(`${AGENT_BASE}/chats/${chatId}/files/${encodeURIComponent(filename)}`, {
+  const res = await fetch(`${agentBase}/chats/${chatId}/files/${encodeURIComponent(filename)}`, {
     headers: authHeaders(),
   });
   if (!res.ok) throw agentError(res.status);
