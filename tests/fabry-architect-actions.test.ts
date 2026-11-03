@@ -50,10 +50,6 @@ function scriptReplies(map: any) {
   vi.mocked(agentApi.createChat).mockImplementation(async () => 'chat_' + n++);
   vi.mocked(agentApi.streamMessage).mockImplementation(
     async (chatId, content, { onEvent }: any) => {
-      if (content.startsWith('/persona')) {
-        onEvent({ type: 'finish' });
-        return;
-      }
       const key = Object.keys(map).find((k) => content.includes(k)) || '';
       onEvent({ type: 'text-delta', delta: map[key] || 'VERDICT: UNCERTAIN' });
       onEvent({ type: 'finish' });
@@ -184,7 +180,7 @@ describe('add/open/update/delete', () => {
     expect(d.text).toBe('');
     expect(d.id).not.toBe('x');
   });
-  it('refineTurn: first turn opens a cautious chat and applies the first instruction', async () => {
+  it('refineTurn: first turn opens a chat and applies the first instruction', async () => {
     scriptReplies({
       INSTRUCTION:
         '# Invoices queue is automated\n\nThe Invoices queue processes documents automatically.',
@@ -197,7 +193,7 @@ describe('add/open/update/delete', () => {
     expect(res.chatId).toBeTruthy();
     expect(res.proposal).toMatch(/Invoices queue/);
     const contents = vi.mocked(agentApi.streamMessage).mock.calls.map((c) => c[1]);
-    expect(contents[0]).toContain('/persona'); // primed cautious first
+    expect(contents[0]).not.toContain('/persona'); // no prime turn
     expect(contents.some((c) => /REQUIREMENT:/.test(c) && /tighten it/.test(c))).toBe(true); // setup + first instruction
   });
   it('refineTurn: a follow-up reuses the chat and sends just the instruction (no re-setup)', async () => {
@@ -218,10 +214,6 @@ describe('add/open/update/delete', () => {
     let n = 0;
     vi.mocked(agentApi.createChat).mockImplementation(async () => 'chat_' + n++);
     vi.mocked(agentApi.streamMessage).mockImplementation(async (id, content, { onEvent }: any) => {
-      if (content.startsWith('/persona')) {
-        onEvent({ type: 'finish' });
-        return;
-      }
       onEvent({ type: 'data-agent-question', data: { questions: [{ question: 'Which queue?' }] } });
       onEvent({ type: 'finish' });
     });
@@ -360,10 +352,6 @@ describe('runAll', () => {
     vi.mocked(agentApi.createChat).mockImplementation(async () => 'chat_' + n++);
     vi.mocked(agentApi.streamMessage).mockImplementation(
       async (chatId, content, { onEvent }: any) => {
-        if (content.startsWith('/persona')) {
-          onEvent({ type: 'finish' });
-          return;
-        }
         if (content.includes('ALPHA'))
           throw Object.assign(new Error('rate limited'), { status: 429 });
         onEvent({ type: 'text-delta', delta: 'VERDICT: PASS' });

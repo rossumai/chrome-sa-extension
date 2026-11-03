@@ -51,13 +51,12 @@ describe('buildSynthesisPrompt — bullet format', () => {
 });
 
 describe('runSynthesis', () => {
-  it('primes persona, streams text via onText, returns transcript', async () => {
+  it('sends the prompt first (no prime), streams text via onText, returns transcript', async () => {
     const prompts: any = [];
     const agentApi = {
       createChat: vi.fn(async () => 'chat1'),
       streamMessage: vi.fn(async (_id, content, { onEvent }) => {
         prompts.push(content);
-        if (content === '/persona cautious') return;
         onEvent({ type: 'reasoning-start' });
         onEvent({ type: 'reasoning-delta', delta: 'thinking about it' });
         onEvent({ type: 'text-delta', delta: 'Blocked [e:blocker:0]' });
@@ -73,7 +72,8 @@ describe('runSynthesis', () => {
       onPhase: (p) => phases.push(p),
       onText: (t) => texts.push(t),
     });
-    expect(prompts[0]).toBe('/persona cautious');
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]).not.toContain('/persona');
     expect(res.text).toBe('Blocked [e:blocker:0]');
     expect(res.reasoning).toContain('thinking');
     expect(texts[texts.length - 1]).toBe('Blocked [e:blocker:0]');
@@ -88,7 +88,6 @@ describe('continueSynthesis', () => {
       createChat: vi.fn(async () => 'chat9'),
       streamMessage: vi.fn(async (id, content, { onEvent }) => {
         prompts.push([id, content]);
-        if (content === '/persona cautious') return;
         onEvent({ type: 'text-delta', delta: 'answer [e:blocker:0]' });
         onEvent({ type: 'finish' });
       }),

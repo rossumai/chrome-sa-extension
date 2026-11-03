@@ -9,14 +9,12 @@ import {
   MAX_ROWS,
 } from '../src/mdh/agent/agentQuery.js';
 
-// Mock agent transport: `/persona cautious` primes (no output); every other turn
-// pops the next scripted final-answer text and streams it as a text-delta.
+// Mock agent transport: every turn pops the next scripted final-answer text and streams it as a text-delta.
 function makeAgentApi(replies: any) {
   const q = [...replies];
   return {
     createChat: vi.fn(async () => 'chat_x'),
     streamMessage: vi.fn(async (_id, content, { onEvent }) => {
-      if (content === '/persona cautious') return;
       if (/answersRequest/.test(content)) {
         // semantic-verify turn → auto-pass
         onEvent({ type: 'text-delta', delta: '{"answersRequest":true,"score":100}' });
@@ -42,7 +40,7 @@ function makeApi(results: any) {
 }
 
 describe('runAgentQuery', () => {
-  it('verifies a good pipeline (rows > 0), row-caps it, and primes the cautious persona', async () => {
+  it('verifies a good pipeline (rows > 0), row-caps it, and sends no prime turn', async () => {
     const agentApi = makeAgentApi(['```json\n[{"$match":{"a":1}}]\n```']);
     const api = makeApi([{ result: [{ a: 1 }, { a: 1 }] }]);
     const { pipelineText, note, transcript } = await runAgentQuery({
@@ -54,11 +52,7 @@ describe('runAgentQuery', () => {
     });
     expect(JSON.parse(pipelineText!)).toEqual([{ $match: { a: 1 } }, { $limit: MAX_ROWS }]); // capped
     expect(note).toEqual({ kind: 'verified', rowCount: 2 });
-    expect(agentApi.streamMessage).toHaveBeenCalledWith(
-      'chat_x',
-      '/persona cautious',
-      expect.anything(),
-    );
+    expect(vi.mocked(agentApi.streamMessage).mock.calls[0][1]).not.toContain('/persona');
     // the executed (verified) pipeline is the capped one
     expect(api.aggregate).toHaveBeenCalledWith(
       'c',
@@ -79,7 +73,6 @@ describe('runAgentQuery', () => {
     const agentApi = {
       createChat: vi.fn(async () => 'c'),
       streamMessage: vi.fn(async (_id, content, { onEvent }) => {
-        if (content === '/persona cautious') return;
         if (/answersRequest/.test(content)) {
           const verdict =
             verifyCall++ === 0
@@ -174,7 +167,6 @@ describe('runAgentQuery', () => {
     const agentApi = {
       createChat: vi.fn(async () => 'c'),
       streamMessage: vi.fn(async (_id, content, { onEvent }) => {
-        if (content === '/persona cautious') return;
         onEvent({ type: 'reasoning-delta', delta: 'The user wants open invoices.' });
         onEvent({ type: 'text-delta', delta: '```json\n[{"$match":{"status":"open"}}]\n```' });
         onEvent({ type: 'finish' });

@@ -115,7 +115,6 @@ function mockAgentApi(reply: any) {
   return {
     createChat: vi.fn(async () => 'chat_i'),
     streamMessage: vi.fn(async (_id, content, { onEvent }) => {
-      if (content === '/persona cautious') return;
       onEvent({ type: 'text-delta', delta: reply });
       onEvent({ type: 'finish' });
     }),
@@ -128,16 +127,12 @@ describe('runAttribution', () => {
     target: { rejectedAt: 't' },
     candidates: [],
   };
-  it('primes the cautious persona then returns the parsed verdict', async () => {
+  it('sends one turn and returns the parsed verdict', async () => {
     const agentApi = mockAgentApi(
       '{"culprit":{"kind":"hook","id":7,"name":"Rejector"},"confidence":"high","explanation":"x"}',
     );
     const { verdict } = await runAttribution({ agentApi, kind: 'reject', context: ctx });
-    expect(agentApi.streamMessage).toHaveBeenCalledWith(
-      'chat_i',
-      '/persona cautious',
-      expect.anything(),
-    );
+    expect(vi.mocked(agentApi.streamMessage).mock.calls.map((c) => c[1])).toHaveLength(1); // no prime turn
     expect(verdict.culprit).toEqual({ kind: 'hook', id: 7, name: 'Rejector' });
     expect(verdict.confidence).toBe('high');
   });
@@ -151,7 +146,6 @@ describe('runAttribution', () => {
     const agentApi = {
       createChat: vi.fn(async () => 'chat_i'),
       streamMessage: vi.fn(async (_id, content, { onEvent }) => {
-        if (content === '/persona cautious') return;
         onEvent({ type: 'reasoning-start' }); // → 'thinking' (same as initial → no dup)
         onEvent({ type: 'reasoning-delta', delta: 'h' }); // no status change → no phase
         onEvent({ type: 'tool-input-start', toolName: 'rossum_list_hook_logs' });
@@ -226,7 +220,6 @@ describe('runFieldBatchAttribution', () => {
     const agentApi = {
       createChat: vi.fn(async () => 'c1'),
       streamMessage: vi.fn(async (_id, content, { onEvent }) => {
-        if (content === '/persona cautious') return;
         onEvent({
           type: 'text-delta',
           delta:
@@ -240,11 +233,7 @@ describe('runFieldBatchAttribution', () => {
       items: [{ key: 'field:terms', schemaId: 'terms', value: '2/10' }],
       context: { annotation: {}, candidates: [], fields: {} },
     });
-    expect(agentApi.streamMessage).toHaveBeenCalledWith(
-      'c1',
-      '/persona cautious',
-      expect.anything(),
-    ); // read-only priming
+    expect(vi.mocked(agentApi.streamMessage).mock.calls).toHaveLength(1); // no prime turn
     expect(verdicts).toEqual([
       {
         schema_id: 'terms',

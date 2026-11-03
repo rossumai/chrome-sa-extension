@@ -1,10 +1,9 @@
 import { h } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import * as store from '../store.js';
 import { sendMessage, stopStreaming } from '../chat.js';
 import GerundLoader from '../../ui/GerundLoader.jsx';
 import CommandMenu from './CommandMenu.jsx';
-import { PERSONAS, personaLabel } from '../personas.js';
 import FabryMark from '../../ui/FabryMark.jsx';
 import Tip from '../../ui/Tip.jsx';
 
@@ -25,14 +24,6 @@ const IconSend = () => (
     <path d="M12 19V5M5 12l7-7 7 7" />
   </svg>
 );
-// Persona chip caret — deliberately mid-sized (see .fabry-persona-caret): big
-// enough to read as a menu affordance, not so big it dominates the chip.
-const IconCaret = () => (
-  <svg class="fabry-persona-caret" viewBox="0 0 24 24">
-    <path d="M6 9l6 6 6-6" />
-  </svg>
-);
-
 function fileToImage(file: any) {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -45,30 +36,9 @@ function fileToImage(file: any) {
 export default function Composer() {
   const [draft, setDraft] = useState('');
   const [images, setImages] = useState<any[]>([]);
-  const [personaOpen, setPersonaOpen] = useState(false);
-  const personaRef = useRef<HTMLSpanElement | null>(null);
   const streaming = store.streaming.value;
-  const isNewChat = !store.activeChatId.value;
   const showMenu =
     draft.startsWith('/') && !draft.includes('\n') && store.commands.value.length > 0;
-  const showPersona = isNewChat && !streaming; // persona is locked once a chat exists
-
-  // Close the persona dropdown on outside-click / Escape.
-  useEffect(() => {
-    if (!personaOpen) return undefined;
-    const onDoc = (e: any) => {
-      if (personaRef.current && !personaRef.current.contains(e.target)) setPersonaOpen(false);
-    };
-    const onKey = (e: any) => {
-      if (e.key === 'Escape') setPersonaOpen(false);
-    };
-    document.addEventListener('mousedown', onDoc);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [personaOpen]);
 
   async function addFiles(files: any) {
     const picked = [...files].filter((f) => IMG_TYPES.includes(f.type) && f.size <= MAX_BYTES);
@@ -191,49 +161,6 @@ export default function Composer() {
             </span>
           )}
           <span class="fabry-bar-spacer" />
-          {showPersona && (
-            <span class="fabry-persona-wrap" ref={personaRef}>
-              <button
-                type="button"
-                class="fabry-persona-chip"
-                title="Persona for the next chat"
-                aria-haspopup="menu"
-                aria-expanded={personaOpen}
-                onClick={() => setPersonaOpen((o) => !o)}
-              >
-                {personaLabel(store.personaChoice.value)}
-                <IconCaret />
-              </button>
-              {personaOpen && (
-                <div class="fabry-persona-menu" role="menu">
-                  {PERSONAS.map((p) => (
-                    <button
-                      type="button"
-                      key={p.value}
-                      role="menuitemradio"
-                      aria-checked={store.personaChoice.value === p.value}
-                      class={
-                        'fabry-persona-menu-item' +
-                        (store.personaChoice.value === p.value ? ' on' : '')
-                      }
-                      onClick={() => {
-                        store.personaChoice.value = p.value;
-                        setPersonaOpen(false);
-                      }}
-                    >
-                      <span class="fabry-persona-menu-label">
-                        {p.label}
-                        <span class="fabry-persona-check">
-                          {store.personaChoice.value === p.value ? '✓' : ''}
-                        </span>
-                      </span>
-                      <span class="fabry-persona-menu-hint">{p.hint}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </span>
-          )}
           {store.deepVerifyAllowed.value && (
             <Tip
               text={
@@ -275,7 +202,7 @@ export default function Composer() {
       </div>
       <div class="fabry-notice">
         Mr. Fabry works read-only here {'—'} it inspects this organization to answer you, but won't
-        change anything. The persona sets its working style.
+        change anything.
       </div>
     </div>
   );

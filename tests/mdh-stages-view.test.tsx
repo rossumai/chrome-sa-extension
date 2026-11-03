@@ -7,7 +7,6 @@ vi.mock('../src/mdh/api.js');
 vi.mock('../src/agent/agentApi.js', () => ({
   createChat: vi.fn(async () => 'chat-1'),
   streamMessage: vi.fn(async (chatId, content, { onEvent } = {}) => {
-    if (content === '/persona cautious') return;
     onEvent?.({ type: 'text-delta', delta: 'country holds DEU, not DE.' });
     onEvent?.({ type: 'finish' });
   }),
@@ -589,9 +588,8 @@ describe('the written pipeline reaches the prompt', () => {
       rawStages: [{ $match: { country: '{country}' } }],
       variables: [{ name: 'country', value: '', isSet: false, type: 'auto' }],
     });
-    await waitFor(() => vi.mocked(agentApi.streamMessage).mock.calls.length >= 2, 'prompt sent');
-    // call 0 is the persona priming turn; call 1 carries the diagnostic prompt.
-    const prompt = vi.mocked(agentApi.streamMessage).mock.calls[1][1];
+    await waitFor(() => vi.mocked(agentApi.streamMessage).mock.calls.length >= 1, 'prompt sent');
+    const prompt = vi.mocked(agentApi.streamMessage).mock.calls[0][1];
     expect(prompt).toContain('AS WRITTEN');
     expect(prompt).toContain('{country}');
     expect(prompt).toContain('{country} = NOT SET');

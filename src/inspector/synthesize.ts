@@ -51,7 +51,6 @@ export async function runSynthesis({
 }: { agentApi: any; evidence: any; annotation: any } & StreamCallbacks) {
   onPhase('thinking');
   const chatId = await agentApi.createChat();
-  await agentApi.streamMessage(chatId, '/persona cautious', { onEvent: () => {}, signal });
   const acc = newAcc();
   let lastStatus = 'thinking';
   let lastText = '';

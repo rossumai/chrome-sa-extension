@@ -1,8 +1,6 @@
 import { h } from 'preact';
 import * as store from '../store.js';
 import { chatTitle } from '../format.js';
-import { personaOf } from '../thread.js';
-import { personaLabel } from '../personas.js';
 import FabryMark from '../../ui/FabryMark.jsx';
 
 function kTokens(s: { total_input_tokens?: number; total_output_tokens?: number } | undefined) {
@@ -16,7 +14,6 @@ export default function ChatHeader() {
   const summary = store.chats.value.find((c) => c.chat_id === id);
   const firstUser = store.thread.value.find((t) => t.role === 'user' && !t.chip);
   const title = summary ? chatTitle(summary) : firstUser?.text || 'Conversation';
-  const persona = personaOf(store.thread.value);
   const tokens = kTokens(summary);
   return (
     <header class="fabry-hd">
@@ -26,14 +23,6 @@ export default function ChatHeader() {
       <span class="fabry-hd-title" title={title}>
         {title}
       </span>
-      {persona && (
-        <span
-          class="fabry-hd-persona"
-          title="Persona set in this session (the server does not keep persona turns in chat history)"
-        >
-          {personaLabel(persona)}
-        </span>
-      )}
       {tokens && <span class="fabry-hd-tokens">{tokens}</span>}
     </header>
   );

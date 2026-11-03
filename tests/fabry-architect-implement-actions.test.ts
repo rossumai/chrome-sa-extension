@@ -21,15 +21,11 @@ import { deliverable } from './support/architect.js';
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 // Scripted streamMessage: routes on prompt substrings so each turn kind (plan,
-// task-implement, task-check, persona-prime, roll-up) can be exercised and
+// task-implement, task-check, roll-up) can be exercised and
 // asserted independently. One task is planned, implemented (with an audited
 // write), passes its per-task check, then the deliverable roll-up also passes.
 function scriptStreamMessage() {
   return vi.fn().mockImplementation(async (id, content, { onEvent } = {}) => {
-    if (content.startsWith('/persona')) {
-      onEvent({ type: 'finish' });
-      return;
-    }
     if (content.includes('break the requirement into')) {
       // plan turn
       onEvent({
@@ -89,21 +85,16 @@ describe('reImplement (task-decomposition loop, audited)', () => {
     const taskCall = findCall(/implementing ONE task/);
     const taskCheckCall = findCall(/verifying whether ONE implementation task/);
     const rollupCall = findCall(/auditing a Rossum organization/);
-    const primeCall = vi
-      .mocked(agentApi.streamMessage)
-      .mock.calls.find((c) => c[1].startsWith('/persona'));
     expect(planCall).toBeTruthy();
     expect(taskCall).toBeTruthy();
     expect(taskCheckCall).toBeTruthy();
     expect(rollupCall).toBeTruthy();
-    expect(primeCall).toBeTruthy();
     // the ONLY write-enabled turn is the task-implement turn ...
     expect(taskCall![2]!.mcpMode).toBe('read-write');
-    // ... every other turn (plan, per-task check, persona prime, roll-up) is read-only.
+    // ... every other turn (plan, per-task check, roll-up) is read-only.
     expect(planCall![2]!.mcpMode).toBeUndefined();
     expect(taskCheckCall![2]!.mcpMode).toBeUndefined();
     expect(rollupCall![2]!.mcpMode).toBeUndefined();
-    expect(primeCall![2]!.mcpMode).toBeUndefined();
   });
 
   it('end-to-end: plan -> 1 task -> pass -> roll-up pass -> passing, tasks recorded', async () => {
@@ -160,10 +151,6 @@ describe('reImplement (task-decomposition loop, audited)', () => {
     vi.mocked(agentApi.streamMessage).mockReset();
     vi.mocked(agentApi.streamMessage).mockImplementation(
       (id, content, { signal, onEvent } = {}) => {
-        if (content.startsWith('/persona')) {
-          onEvent!({ type: 'finish' });
-          return Promise.resolve();
-        }
         if (content.includes('break the requirement into')) {
           onEvent!({ type: 'text-delta', delta: '[{"text":"t1","acceptance":"a"}]' });
           onEvent!({ type: 'finish' });
@@ -209,10 +196,6 @@ describe('reImplement (task-decomposition loop, audited)', () => {
     vi.mocked(agentApi.createChat).mockImplementation(async () => 'chat_' + n++);
     vi.mocked(agentApi.streamMessage).mockReset();
     vi.mocked(agentApi.streamMessage).mockImplementation((id, content, { onEvent } = {}) => {
-      if (content.startsWith('/persona')) {
-        onEvent!({ type: 'finish' });
-        return Promise.resolve();
-      }
       if (content.includes('break the requirement into')) {
         onEvent!({ type: 'text-delta', delta: '[{"text":"t1","acceptance":"a"}]' });
         onEvent!({ type: 'finish' });
@@ -242,7 +225,6 @@ describe('reImplement (task-decomposition loop, audited)', () => {
     // reRun sets only results[a].running (NOT store.running); Implement must still refuse
     // to start, else the stale check's late persist could clobber the implement roll-up.
     vi.mocked(agentApi.streamMessage).mockImplementation((id, content) => {
-      if (content.startsWith('/persona')) return Promise.resolve();
       return new Promise(() => {}); // the check turn hangs → reRun stays in-flight
     });
     reRun('a'); // not awaited — starts a read-only check
@@ -261,10 +243,6 @@ describe('reImplement (task-decomposition loop, audited)', () => {
   it('a transport-errored roll-up updates the banner but does NOT persist (preserves last-known-good)', async () => {
     // Everything passes up to the roll-up, which throws (e.g. 429/network).
     vi.mocked(agentApi.streamMessage).mockImplementation(async (id, content, { onEvent } = {}) => {
-      if (content.startsWith('/persona')) {
-        onEvent!({ type: 'finish' });
-        return;
-      }
       if (content.includes('break the requirement into')) {
         onEvent!({ type: 'text-delta', delta: '[{"text":"t","acceptance":"a"}]' });
         onEvent!({ type: 'finish' });

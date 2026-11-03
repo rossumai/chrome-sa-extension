@@ -120,11 +120,11 @@ describe('runAssist', () => {
     };
   }
 
-  it('opens a cautious read-only chat the first time and reuses it after', async () => {
+  it('opens a read-only chat the first time and reuses it after', async () => {
     const agent = fakeAgent('ok');
     const first = await runAssist({ agentApi: agent, chatId: null, content: 'P1' });
     expect(first).toEqual({ chatId: 'chat-1', text: 'ok' });
-    expect(agent.streamMessage.mock.calls.map((c) => c[1])).toEqual(['/persona cautious', 'P1']);
+    expect(agent.streamMessage.mock.calls.map((c) => c[1])).toEqual(['P1']);
     expect(agent.streamMessage.mock.calls.every((c) => !c[2]?.mcpMode)).toBe(true);
     await runAssist({ agentApi: agent, chatId: 'chat-1', content: 'P2' });
     expect(agent.createChat).toHaveBeenCalledTimes(1);

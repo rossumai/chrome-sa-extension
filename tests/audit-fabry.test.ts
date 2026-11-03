@@ -100,13 +100,12 @@ describe('buildRefreshPrompt', () => {
 });
 
 describe('runAuditQuery / continueAuditQuery', () => {
-  it('runAuditQuery primes persona, streams text, returns chatId', async () => {
+  it('runAuditQuery sends the prompt first (no prime), streams text, returns chatId', async () => {
     const prompts: any = [];
     const agentApi = {
       createChat: vi.fn(async () => 'chatA'),
       streamMessage: vi.fn(async (_id, content, { onEvent }) => {
         prompts.push(content);
-        if (content === '/persona cautious') return;
         onEvent({ type: 'reasoning-delta', delta: 'hmm' });
         onEvent({ type: 'tool-input-start', toolName: 'search' });
         onEvent({ type: 'text-delta', delta: 'Latest: 3 status changes.' });
@@ -122,7 +121,8 @@ describe('runAuditQuery / continueAuditQuery', () => {
       mode: 'autonomous',
       onText: (t) => texts.push(t),
     });
-    expect(prompts[0]).toBe('/persona cautious');
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]).not.toContain('/persona');
     expect(res.chatId).toBe('chatA');
     expect(res.text).toContain('Latest: 3 status changes.');
     expect(res.reasoning).toContain('hmm');

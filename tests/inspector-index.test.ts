@@ -9,7 +9,6 @@ vi.mock('../src/agent/agentApi.js', () => ({
   probeAgent: vi.fn(() => Promise.resolve(false)),
   createChat: vi.fn(async () => 'c1'),
   streamMessage: vi.fn(async (_id, content, { onEvent } = {}) => {
-    if (content === '/persona cautious') return;
     onEvent?.({ type: 'text-delta', delta: 'diagnosis text' });
     onEvent?.({ type: 'finish' });
   }),
@@ -167,12 +166,11 @@ describe('staged lifecycle', () => {
   it('a load superseded mid-synthesis never writes a stale "done" (abort guard)', async () => {
     store.aiAvailable.value = true;
     mockAllSources();
-    // Control the synthesis stream: persona returns; the diagnosis turn emits a partial
+    // Control the synthesis stream: the diagnosis turn emits a partial
     // then HANGS until released, so we can supersede the load while it is mid-stream.
     const saved = vi.mocked(agentApi.streamMessage).getMockImplementation();
     let release: any;
     vi.mocked(agentApi.streamMessage).mockImplementation(async (_id, content, { onEvent } = {}) => {
-      if (content === '/persona cautious') return;
       onEvent?.({ type: 'text-delta', delta: 'partial…' });
       await new Promise((r) => {
         release = r;

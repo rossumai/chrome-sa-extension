@@ -333,7 +333,7 @@ function refineReason(v: Verdict) {
 }
 
 // Core generate → verify (mechanical + semantic) → refine loop against an already
-// created + persona-primed chat. Appends turns to the shared `transcript` array.
+// created chat. Appends turns to the shared `transcript` array.
 // `onPhase` receives a stable key ('generate'|'run'|'verify'|'refine') as the loop
 // advances — the AgentBox footer phase tracker renders from these.
 // Returns { pipelineText, note }. note.kind ∈ verified|refined|empty|error|unrun|no-pipeline|declined|blocked.
@@ -460,7 +460,6 @@ export async function runAgentQuery({
 }: Omit<LoopArgs, 'chatId' | 'transcript' | 'onPhase'> & { onPhase?: (phase: string) => void }) {
   const transcript: Turn[] = [];
   const chatId = await agentApi.createChat();
-  await agentApi.streamMessage(chatId, '/persona cautious', { onEvent: () => {}, signal }); // prime read-only persona once
   const res = await runLoop({
     api,
     agentApi,

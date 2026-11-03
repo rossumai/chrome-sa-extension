@@ -8041,86 +8041,6 @@ tbody.uploads-row-failed tr {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
-/* persona chip → dropdown (replaces the old segmented control) */
-.fabry-persona-wrap {
-  position: relative;
-  flex: none;
-}
-.fabry-persona-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  height: 32px;
-  padding: 0 7px 0 10px;
-  border: 0;
-  border-radius: 9px;
-  background: none;
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-.fabry-persona-chip:hover {
-  background: var(--bg-hover);
-}
-/* the caret: mid-sized — clearly a menu affordance, not oversized */
-.fabry-persona-caret {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: var(--text-secondary);
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  display: block;
-}
-.fabry-persona-menu {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  right: 0;
-  min-width: 232px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  padding: 5px;
-  z-index: 20;
-}
-.fabry-persona-menu-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  text-align: left;
-  border: 0;
-  background: none;
-  border-radius: 7px;
-  padding: 7px 9px;
-  cursor: pointer;
-}
-.fabry-persona-menu-item:hover {
-  background: var(--bg-hover);
-}
-.fabry-persona-menu-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.fabry-persona-menu-item.on .fabry-persona-menu-label {
-  color: var(--accent);
-}
-.fabry-persona-check {
-  color: var(--accent);
-  font-size: 12px;
-}
-.fabry-persona-menu-hint {
-  font-size: 11px;
-  color: var(--text-secondary);
-  line-height: 1.35;
-}
 /* send (accent square, up-arrow) / stop (square) */
 .fabry-send {
   display: inline-flex;
@@ -8243,13 +8163,6 @@ tbody.uploads-row-failed tr {
   white-space: nowrap;
   min-width: 0;
 }
-.fabry-hd-persona {
-  font-size: 10px;
-  color: var(--accent);
-  border: 1px solid var(--info-border);
-  border-radius: 999px;
-  padding: 1px 8px;
-}
 .fabry-hd-tokens {
   margin-left: auto;
   font-size: 10px;
@@ -8299,7 +8212,6 @@ tbody.uploads-row-failed tr {
   font-weight: 700;
   letter-spacing: -0.01em;
 }
-/* .fabry-persona-hint retired — the persona hints now live in the dropdown menu. */
 /* Centered "welcome" empty state (new chat): the composer is the hero, centered
    under a greeting, with starter prompts as pills below. Replaces the old
    .fabry-greeting / .fabry-starters block. */

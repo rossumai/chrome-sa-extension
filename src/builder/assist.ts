@@ -1,6 +1,6 @@
 // src/builder/assist.ts
 // What Mr. Fabry's helpers in the Builder share: the schema's fields as prompt lines, finding
-// the JSON in a reply, and one READ-ONLY agent turn (no mcpMode, cautious persona) — the
+// the JSON in a reply, and one READ-ONLY agent turn (no mcpMode) — the
 // agent proposes, the user decides. Injected transport, like src/audit/fabry.ts.
 import { flatten, type Node } from './model.js';
 import { newAcc, foldEvents, replyText } from '../agent/agentStream.js';
@@ -64,7 +64,7 @@ export function parseReplyObject(
 }
 
 /**
- * One turn: a new cautious chat the first time, the same chat for follow-ups. Read-only.
+ * One turn: a new chat the first time, the same chat for follow-ups. Read-only.
  * A prompt over MAX_PROMPT is refused before anything is sent.
  */
 export async function runAssist({
@@ -84,10 +84,7 @@ export async function runAssist({
     );
   }
   let id = chatId;
-  if (!id) {
-    id = (await agentApi.createChat()) as string;
-    await agentApi.streamMessage(id, '/persona cautious', { onEvent: () => {}, signal });
-  }
+  if (!id) id = (await agentApi.createChat()) as string;
   const acc = newAcc();
   await agentApi.streamMessage(id, content, {
     signal,

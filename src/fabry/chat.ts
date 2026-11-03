@@ -147,18 +147,6 @@ export async function sendMessage(text: string, images: any[] = []) {
       chatId = await agentApi.createChat();
       if (id !== loadId) return false;
       store.activeChatId.value = chatId;
-      if (store.personaChoice.value === 'cautious') {
-        pushTurn({
-          ...BLANK_TURN,
-          role: 'user',
-          chip: true,
-          command: true,
-          text: '/persona cautious',
-        });
-        const prime = await streamTurn(chatId, '/persona cautious', { signal });
-        if (id !== loadId) return false;
-        pushTurn(accTurn(prime, false));
-      }
     }
     const deep = store.deepMode.value && store.deepVerifyAllowed.value;
     if (!deep) {
@@ -189,7 +177,7 @@ export async function sendMessage(text: string, images: any[] = []) {
           store.liveTurn.value = null;
           return { text: replyText(acc), verifiable: !acc.questions };
         },
-        // Fresh critic chat per verify pass, primed cautious; folds locally so
+        // Fresh critic chat per verify pass; folds locally so
         // the critic never hijacks the main liveTurn display.
         runCriticTurn: async (prompt) => {
           const criticId = await agentApi.createChat();
@@ -202,13 +190,6 @@ export async function sendMessage(text: string, images: any[] = []) {
             });
             return replyText(acc);
           };
-          try {
-            await fold('/persona cautious');
-          } catch (err: any) {
-            if (signal.aborted) return null;
-            throw err;
-          }
-          if (id !== loadId) return null;
           let text2;
           try {
             text2 = await fold(prompt);

@@ -22,7 +22,6 @@ export const streaming = signal(false);
 
 // Composer context.
 export const commands = signal<any[]>([]); // from GET /commands ([] = hide autocomplete)
-export const personaChoice = signal<'cautious' | 'default'>('cautious'); // applies to the NEXT new chat
 
 // Fabry sub-app mode: 'chat' (existing chat app) | 'architect' (SOW checks).
 // Per-tab navigation state (persisted via tabState in index.jsx), content-free.

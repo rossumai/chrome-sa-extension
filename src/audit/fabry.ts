@@ -165,7 +165,6 @@ export async function runAuditQuery({
 } & StreamCallbacks) {
   onPhase('thinking');
   const chatId = await agentApi.createChat();
-  await agentApi.streamMessage(chatId, '/persona cautious', { onEvent: () => {}, signal });
   const res = await streamTurn(
     agentApi,
     chatId,
@@ -188,7 +187,7 @@ export async function continueAuditQuery({
 }
 
 // Re-summarize the current view as a new turn in the existing chat (no
-// createChat, no persona re-prime — same shape as continueAuditQuery).
+// createChat — same shape as continueAuditQuery).
 export async function refreshAuditSummary({
   agentApi,
   chatId,

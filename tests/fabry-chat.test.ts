@@ -20,7 +20,7 @@ vi.mock('../src/agent/agentApi.js', () => ({
     created_at: 'x',
     files: [{ filename: 'out.csv', size: 3, timestamp: 't' }],
   }),
-  listCommands: vi.fn().mockResolvedValue([{ name: '/persona', description: 'd' }]),
+  listCommands: vi.fn().mockResolvedValue([{ name: '/usage', description: 'd' }]),
   downloadChatFile: vi.fn().mockResolvedValue(new Blob(['x'])),
   streamMessage: vi.fn(),
 }));
@@ -48,7 +48,6 @@ beforeEach(() => {
   store.resetChatView();
   store.chats.value = [];
   store.chatsTotal.value = null;
-  store.personaChoice.value = 'cautious';
   store.error.value = null;
   store.sendError.value = null;
   store.streaming.value = false;
@@ -87,26 +86,17 @@ describe('loadChats / openChat', () => {
 });
 
 describe('sendMessage', () => {
-  it('new chat: creates, primes cautious persona, streams, appends turns', async () => {
+  it('new chat: the first streamed message is the user text, with no prime turn', async () => {
     streamOk('answer');
     const ok = await sendMessage('question', []);
     expect(ok).toBe(true);
     expect(agentApi.createChat).toHaveBeenCalled();
-    expect(vi.mocked(agentApi.streamMessage).mock.calls[0][1]).toBe('/persona cautious');
-    expect(vi.mocked(agentApi.streamMessage).mock.calls[1][1]).toBe('question');
-    const roles = store.thread.value.map((t) => `${t.role}${t.chip ? ':chip' : ''}`);
-    expect(roles).toEqual(['user:chip', 'assistant', 'user', 'assistant']);
+    expect(vi.mocked(agentApi.streamMessage).mock.calls.map((c) => c[1])).toEqual(['question']);
+    expect(store.thread.value.map((t) => t.role)).toEqual(['user', 'assistant']);
     expect(store.thread.value.at(-1)!.text).toBe('answer');
     expect(store.streaming.value).toBe(false);
   });
-  it('default persona sends no priming turn', async () => {
-    store.personaChoice.value = 'default';
-    streamOk('a');
-    await sendMessage('q', []);
-    expect(vi.mocked(agentApi.streamMessage).mock.calls[0][1]).toBe('q');
-  });
   it('429 lands in sendError and returns false (draft preserved by composer)', async () => {
-    store.personaChoice.value = 'default';
     vi.mocked(agentApi.streamMessage).mockRejectedValue(
       Object.assign(new Error('Agent error 429'), { status: 429 }),
     );
@@ -115,7 +105,6 @@ describe('sendMessage', () => {
     expect(store.sendError.value).toMatch(/rate/i);
   });
   it('passes images through', async () => {
-    store.personaChoice.value = 'default';
     streamOk('a');
     await sendMessage('look', [{ media_type: 'image/png', data: 'AAA=' }]);
     expect(vi.mocked(agentApi.streamMessage).mock.calls[0][2]!.images).toEqual([
@@ -126,7 +115,6 @@ describe('sendMessage', () => {
 
 describe('stopStreaming', () => {
   it('keeps the partial fold as an interrupted turn', async () => {
-    store.personaChoice.value = 'default';
     vi.mocked(agentApi.streamMessage).mockImplementation(
       (id, content, { onEvent, signal }: any) =>
         new Promise((resolve, reject) => {
@@ -147,7 +135,6 @@ describe('stopStreaming', () => {
 
 describe('stale-guard', () => {
   it('a stale sendMessage never pollutes the thread after openChat switches chats mid-stream', async () => {
-    store.personaChoice.value = 'default'; // skip priming, one less turn to reason about
     let resolveStream: any;
     let streamStarted: any;
     const streamGate = new Promise((resolve) => {
@@ -200,7 +187,6 @@ describe('deep verify send path', () => {
   }
 
   beforeEach(() => {
-    store.personaChoice.value = 'default'; // skip main-chat priming for clarity
     store.deepVerifyAllowed.value = true;
     store.deepMode.value = true;
     store.activeChatId.value = 'chat_main';
@@ -210,10 +196,8 @@ describe('deep verify send path', () => {
     vi.mocked(agentApi.createChat).mockResolvedValue('chat_critic');
     queueStreams([
       'answer v1', // main
-      'ok', // critic priming ack (/persona cautious)
       'VERDICT: FAIL\n- wrong count', // critic verdict 1
       'answer v2', // main refine
-      'ok', // critic 2 priming ack
       'VERDICT: PASS', // critic verdict 2
     ]);
     const ok = await sendMessage('how many queues?', []);
@@ -328,7 +312,6 @@ describe('question turns', () => {
     });
   }
   beforeEach(() => {
-    store.personaChoice.value = 'default';
     store.activeChatId.value = 'chat_main';
   });
 

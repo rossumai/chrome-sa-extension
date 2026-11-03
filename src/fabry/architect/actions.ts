@@ -1,5 +1,5 @@
 // Impure glue for Architect (v2): binds the store to Data Storage (api.js) and
-// the agent transport. Run creates one fresh cautious read-only chat per
+// the agent transport. Run creates one fresh read-only chat per
 // deliverable, then persists the result onto its own doc. Mirrors chat.js.
 import * as agentApi from '../../agent/agentApi.js';
 import { newAcc, foldEvents, replyText } from '../../agent/agentStream.js';
@@ -391,7 +391,7 @@ function refineResult(id: string, acc: any) {
 }
 
 // One turn of the ITERATIVE "Refine wording" flow. First turn (no chatId) opens a
-// fresh cautious, read-only chat and applies the first instruction; later turns reuse
+// fresh read-only chat and applies the first instruction; later turns reuse
 // the chat so Fabry builds on its last proposal (chat memory). Returns
 // { chatId, proposal } OR { chatId, questions } (agent asked), or null if the caller
 // aborted. The caller (RefineDock) owns the AbortController; nothing is written here.
@@ -410,8 +410,6 @@ export async function refineTurn({
     let id = chatId;
     if (!id) {
       id = await agentApi.createChat();
-      if (signal?.aborted) return null;
-      await foldRefine(id, '/persona cautious', signal);
       if (signal?.aborted) return null;
       const acc = await foldRefine(
         id,
@@ -463,8 +461,6 @@ async function runOne(d: Deliverable, signal?: AbortSignal) {
     });
     return replyText(acc);
   };
-  await fold('/persona cautious');
-  if (signal?.aborted) return null;
   const text = await fold(check.buildCheckPrompt(d.text));
   if (signal?.aborted) return null;
   const { verdict, evidence } = check.parseCheckVerdict(text);
@@ -570,7 +566,7 @@ export function stopRun() {
 let implController: AbortController | null = null;
 let implRunId = 0;
 
-// READ-ONLY planning turn (DEFAULT persona — the model plans best autonomously; no writes).
+// READ-ONLY planning turn (no writes).
 async function planOne(d: Deliverable, signal?: AbortSignal) {
   const chatId = await agentApi.createChat();
   if (signal?.aborted) return null;
@@ -583,7 +579,7 @@ async function planOne(d: Deliverable, signal?: AbortSignal) {
   return plan.parsePlan(replyText(acc));
 }
 
-// WRITE task turn — the ONLY write call site (mcpMode:'read-write'), DEFAULT persona, NO priming.
+// WRITE task turn — the ONLY write call site (mcpMode:'read-write').
 async function implementTaskOne(
   d: Deliverable,
   task: any,
@@ -628,7 +624,7 @@ async function implementTaskOne(
   };
 }
 
-// READ-ONLY per-task check (fresh cautious chat).
+// READ-ONLY per-task check (fresh chat).
 async function checkTaskOne(d: Deliverable, task: any, signal?: AbortSignal) {
   const chatId = await agentApi.createChat();
   if (signal?.aborted) return null;
@@ -640,8 +636,6 @@ async function checkTaskOne(d: Deliverable, task: any, signal?: AbortSignal) {
     });
     return replyText(acc);
   };
-  await fold('/persona cautious');
-  if (signal?.aborted) return null;
   const text = await fold(plan.buildTaskCheckPrompt(task.text, task.acceptance));
   if (signal?.aborted) return null;
   return check.parseCheckVerdict(text);

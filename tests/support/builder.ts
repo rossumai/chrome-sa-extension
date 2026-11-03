@@ -79,13 +79,13 @@ export const ruleEditorState = (
   ...over,
 });
 
-/** Mr. Fabry answers every message with `text`; the persona preamble gets no answer. Needs
+/** Mr. Fabry answers every message with `text`. Needs
  *  `vi.mock('../src/agent/agentApi.js')` in the test file. */
 export const fabryReply = (text: string) =>
   vi
     .mocked(agentApi.streamMessage)
-    .mockImplementation(async (_id: string, content: string, opts: any) => {
-      if (content !== '/persona cautious') opts.onEvent({ type: 'text-delta', delta: text });
+    .mockImplementation(async (_id: string, _content: string, opts: any) => {
+      opts.onEvent({ type: 'text-delta', delta: text });
     });
 
 /** Like fabryReply, but the answer waits for the returned release(): a reply that arrives
@@ -94,8 +94,7 @@ export const heldFabryReply = (text: string) => {
   let release = () => {};
   const gate = new Promise<void>((r) => (release = r));
   vi.mocked(agentApi.streamMessage).mockImplementation(
-    async (_id: string, content: string, opts: any) => {
-      if (content === '/persona cautious') return;
+    async (_id: string, _content: string, opts: any) => {
       await gate;
       opts.onEvent({ type: 'text-delta', delta: text });
     },

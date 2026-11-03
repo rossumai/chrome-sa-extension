@@ -10,7 +10,7 @@ const GERUNDS = ['Refining', 'Consulting the org', 'Tightening the wording', 'Ch
 
 // Docked, inline "Refine wording" bar (Proposal A) pinned at the bottom of the
 // deliverable pane. The user drives the wording with instructions to Mr. Fabry using
-// the design-system AI input (FabryInput); each instruction goes to ONE cautious
+// the design-system AI input (FabryInput); each instruction goes to ONE
 // read-only chat. A turn returns EITHER the complete revised Markdown (shown as a
 // cumulative diff → Accept / Discard) OR clarifying questions (interactive elements),
 // which render inline via FabryQuestions and are answered in the SAME chat. More

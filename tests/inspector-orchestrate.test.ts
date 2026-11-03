@@ -62,7 +62,6 @@ function fakeAgent(
     }),
     streamMessage: vi.fn(async (_id, content, { onEvent }) => {
       calls.prompts.push(content);
-      if (content === '/persona cautious') return;
       onEvent({ type: 'text-delta', delta: reply });
       onEvent({ type: 'finish' });
     }),
@@ -197,7 +196,6 @@ describe('orchestrateAttributions', () => {
     const agentApi = {
       createChat: async () => 'c1',
       streamMessage: async (_id: any, content: any, { signal }: any = {}) => {
-        if (content === '/persona cautious') return;
         return new Promise((resolve, reject) => {
           const onAbort = () => {
             const e = new Error('aborted');
@@ -219,10 +217,8 @@ describe('orchestrateAttributions', () => {
   it('drops a success that resolves AFTER the abort (exercises the success-path stale-write guard)', async () => {
     const store = orchStore(msgAnn([{ type: 'error', content: 'M', detail: {} }]));
     const ctrl = new AbortController();
-    // Gate on the ATTRIBUTION stream actually starting — not the persona-priming call,
-    // which resolves immediately and happens first (gathering context + priming both
-    // run before the real prompt goes out; eagerly resolving on the wrong call would
-    // deadlock this test waiting for a "start" signal that already fired).
+    // Gate on the ATTRIBUTION stream actually starting (context gathering runs before
+    // the prompt goes out).
     let signalStreamStarted: any;
     const streamStarted = new Promise((res) => {
       signalStreamStarted = res;
@@ -234,7 +230,6 @@ describe('orchestrateAttributions', () => {
     const agentApi: any = {
       createChat: async () => 'c1',
       streamMessage: async (_id: any, content: any, { onEvent }: any = {}) => {
-        if (content === '/persona cautious') return;
         signalStreamStarted();
         await gate; // held open until the test explicitly releases it (after abort)
         onEvent({

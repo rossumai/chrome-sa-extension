@@ -241,10 +241,6 @@ export async function runExplainEmpty({
 }) {
   const chatId = await agentApi.createChat();
   if (signal?.aborted) return { chatId, text: '' };
-  // Same cautious priming the other read-only Fabry surfaces use. Defence in
-  // depth only — this turn asks a question and applies nothing.
-  await agentApi.streamMessage(chatId, '/persona cautious', { onEvent: () => {}, signal });
-  if (signal?.aborted) return { chatId, text: '' };
   const acc = newAcc();
   await agentApi.streamMessage(chatId, prompt, {
     signal,

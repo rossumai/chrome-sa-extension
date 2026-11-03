@@ -56,7 +56,7 @@ describe('Mr. Fabry in the rule editor', () => {
     fabryReply('```json\n' + JSON.stringify(proposal) + '\n```');
     const rev = store.assistRev.value;
     await askRuleAssistant('Error when the document id is missing');
-    const prompt = vi.mocked(agentApi.streamMessage).mock.calls[1][1];
+    const prompt = vi.mocked(agentApi.streamMessage).mock.calls[0][1];
     expect(prompt).toContain('Error when the document id is missing');
     expect(prompt).toContain('The rule starts from the field doc_id.');
     expect(store.ruleEditor.value!.draft.trigger_condition).toBe('is_empty(field.doc_id)');

@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeMessages, personaOf } from '../src/fabry/thread.js';
+import { normalizeMessages } from '../src/fabry/thread.js';
 
 describe('normalizeMessages', () => {
   it('maps string and content-part messages, marking slash turns as chips', () => {
     const turns = normalizeMessages([
-      { role: 'user', content: '/persona cautious' },
-      { role: 'assistant', content: 'Persona set.' },
+      { role: 'user', content: '/usage' },
+      { role: 'assistant', content: 'Usage: 0 turns.' },
       {
         role: 'user',
         content: [
@@ -19,7 +19,7 @@ describe('normalizeMessages', () => {
       role: 'user',
       chip: true,
       command: true,
-      text: '/persona cautious',
+      text: '/usage',
     });
     expect(turns[2]).toMatchObject({
       role: 'user',
@@ -35,8 +35,8 @@ describe('normalizeMessages', () => {
 
 describe('reviewer turns (deep verify)', () => {
   const msgs = [
-    { role: 'user', content: '/persona cautious' }, // 0 command chip (stripped server-side)
-    { role: 'assistant', content: 'Persona set.' }, // 1 command ack (stripped server-side)
+    { role: 'user', content: '/usage' }, // 0 command chip (stripped server-side)
+    { role: 'assistant', content: 'Usage: 0 turns.' }, // 1 command ack (stripped server-side)
     { role: 'user', content: 'question' }, // 2 → server idx 0
     { role: 'assistant', content: 'answer v1' }, // 3 → server idx 1
     { role: 'user', content: '[deep-verify reviewer] fix:' }, // 4 → server idx 2 (STORED by server)
@@ -46,16 +46,5 @@ describe('reviewer turns (deep verify)', () => {
     const t = normalizeMessages(msgs);
     expect(t[4]).toMatchObject({ chip: true, command: false });
     expect(t[0]).toMatchObject({ chip: true, command: true });
-  });
-});
-
-describe('personaOf', () => {
-  it('last /persona chip wins; null when none', () => {
-    const t = normalizeMessages([
-      { role: 'user', content: '/persona cautious' },
-      { role: 'user', content: '/persona default' },
-    ]);
-    expect(personaOf(t)).toBe('default');
-    expect(personaOf([])).toBe(null);
   });
 });

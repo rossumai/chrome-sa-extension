@@ -72,13 +72,3 @@ export function normalizeMessages(messages?: ServerMessage[] | null): Turn[] {
     };
   });
 }
-
-// Last /persona chip wins; deterministic, no guessing beyond history.
-export function personaOf(turns?: Turn[] | null): string | null {
-  let out: string | null = null;
-  for (const t of turns || []) {
-    const m = t.chip && t.text.match(/^\/persona\s+(\w+)/);
-    if (m) out = m[1];
-  }
-  return out;
-}

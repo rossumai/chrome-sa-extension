@@ -116,7 +116,6 @@ export async function runAttribution({
 }) {
   onPhase('thinking');
   const chatId = await agentApi.createChat();
-  await agentApi.streamMessage(chatId, '/persona cautious', { onEvent: () => {}, signal });
   const acc = newAcc();
   let lastStatus = 'thinking'; // matches the initial onPhase above, so a reasoning-start doesn't re-emit it
   await agentApi.streamMessage(chatId, buildAttributionPrompt({ kind, ...context }), {
@@ -202,7 +201,6 @@ export async function runFieldBatchAttribution({
 }) {
   onPhase('thinking');
   const chatId = await agentApi.createChat();
-  await agentApi.streamMessage(chatId, '/persona cautious', { onEvent: () => {}, signal });
   const acc = newAcc();
   let lastStatus = 'thinking';
   await agentApi.streamMessage(chatId, buildFieldBatchPrompt(items, context), {

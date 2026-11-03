@@ -34,7 +34,7 @@ beforeEach(() => {
       role: 'user',
       chip: true,
       command: false,
-      text: '/persona cautious',
+      text: '/usage',
       images: [],
       feedback: null,
       reasoning: '',
@@ -80,7 +80,7 @@ beforeEach(() => {
 describe('Thread', () => {
   it('renders chips, user turns, assistant markdown, reasoning and tool chips', () => {
     const root = mount();
-    expect(root.querySelector('.fabry-turn-chip')!.textContent).toContain('/persona cautious');
+    expect(root.querySelector('.fabry-turn-chip')!.textContent).toContain('/usage');
     expect(root.querySelectorAll('.fabry-turn-user').length).toBe(1); // chip is not a user bubble
     expect(
       root.querySelector('.fabry-turn-assistant .' + mdStyles.md + ' strong')!.textContent,
