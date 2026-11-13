@@ -7,11 +7,7 @@
 // animated={false} for a static mark. Colors + reduced-motion handling live in CSS.
 import { h } from 'preact';
 import styles from './FabryMark.module.css';
-
-// The canonical Fabry star: a filled four-point star at a "fuller" weight (inner
-// radius ~4.8) chosen to match the previous ✦ brand glyph — not the slimmer path the
-// old Rail SVG used. One constant drives every surface (chat, audit, inspector, rail).
-const STAR_PATH = 'M12 2.5L15.4 8.6L21.5 12L15.4 15.4L12 21.5L8.6 15.4L2.5 12L8.6 8.6Z';
+import { STAR_PATH } from './fabryStar.js';
 
 export default function FabryMark({
   size = '1em',

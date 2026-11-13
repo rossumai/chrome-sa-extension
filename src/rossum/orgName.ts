@@ -80,6 +80,8 @@ export function cachedOrg(raw: string | null, now: number): Org | null {
 // never the token itself — FNV-1a, enough to tell a tab's few tokens apart, synchronous.
 export const ORG_CACHE_PREFIX = 'rossum-sa-extension-org:';
 
+// src/popup/tab-readers.ts readOrgCache keeps a deliberate copy of this hash (it is
+// serialized into the page); change both together.
 export function orgCacheKey(token: string): string {
   let hash = 0x811c9dc5;
   for (let i = 0; i < token.length; i++) hash = Math.imul(hash ^ token.charCodeAt(i), 0x01000193);

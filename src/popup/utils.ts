@@ -69,11 +69,11 @@ export async function runInTab(
 // console reads consoleAuth_<uuid> on boot and consumes it; pending* pipeline
 // prefill fields ride along inside authData. Cleaned up by the console's
 // purgeStaleAuthEntries on subsequent boots.
-// Only `index` is read — the new tab opens beside the current one.
+// Only `index` and `windowId` are read — the new tab opens beside the source tab, in its window.
 // `tab` is the browser tab to open next to; the Console's Builder has none (it shows the
 // provenance card itself), and then the new tab opens wherever Chrome puts it.
 export function openConsoleTab(
-  tab: { index: number } | undefined,
+  tab: { index: number; windowId?: number } | undefined,
   authData: Record<string, unknown>,
   app: string,
 ): void {
@@ -84,6 +84,8 @@ export function openConsoleTab(
       chrome.tabs.create({
         url: chrome.runtime.getURL(`console/console.html?authId=${authId}`),
         ...(tab ? { index: tab.index + 1 } : {}),
+        // The source tab may sit in another window (the popup's tab list spans all of them).
+        ...(tab?.windowId != null ? { windowId: tab.windowId } : {}),
       });
     },
   );

@@ -5,11 +5,33 @@ import {
   readCurrentContext,
   readPageFlag,
   togglePageFlag,
+  readOrgCache,
 } from '../src/popup/tab-readers.js';
+import { orgCacheKey } from '../src/rossum/orgName.js';
 
 describe('popup tab-readers', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+
+  it("readOrgCache returns the entry for the tab's CURRENT token only", () => {
+    window.localStorage.setItem('secureToken', 'tok-new');
+    window.sessionStorage.setItem('other', 'x');
+    // An entry another token left behind (an org switch whose new load failed).
+    window.sessionStorage.setItem('rossum-sa-extension-org:00000000', '{"at":0}');
+    expect(readOrgCache('rossum-sa-extension-org:')).toBeNull();
+    window.sessionStorage.setItem(orgCacheKey('tok-new'), '{"at":1}');
+    expect(readOrgCache('rossum-sa-extension-org:')).toBe('{"at":1}');
+  });
+
+  it('readOrgCache returns null without a token', () => {
+    window.sessionStorage.setItem(orgCacheKey('tok'), '{"at":1}');
+    expect(readOrgCache('rossum-sa-extension-org:')).toBeNull();
+  });
+
+  it('readOrgCache returns null without an entry', () => {
+    expect(readOrgCache('rossum-sa-extension-org:')).toBeNull();
   });
 
   it('readAuthInfo returns secureToken and origin', () => {

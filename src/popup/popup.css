@@ -15,6 +15,9 @@
   --warning-bg: rgba(217, 119, 6, 0.08);
   --warning-border: rgba(217, 119, 6, 0.35);
   --toggle-off: #c8c8d4;
+  /* The Console rail's EXP badge pair (console.css --exp-*), for the popup's app list. */
+  --exp-bg: #7c3aed;
+  --exp-fg: #ffffff;
   --radius: 8px;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
@@ -38,6 +41,8 @@
     --warning-bg: rgba(240, 160, 75, 0.1);
     --warning-border: rgba(240, 160, 75, 0.4);
     --toggle-off: #444460;
+    --exp-bg: #a78bfa;
+    --exp-fg: #1e1233;
   }
 }
 
@@ -146,131 +151,351 @@ body.popup-wide .mdh-card {
   display: none !important;
 }
 
-.unsupported-site {
-  padding: 20px 14px;
-  text-align: center;
+/* ── Off-site views: an unrelated tab (OffSite.tsx) and the Console (ConsoleView.tsx) ──
+   Airy on purpose: a 14px gutter (the header's), 18px between sections, 8px between rows. */
+
+.offsite-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 14px 0;
+  font-size: 11.5px;
   color: var(--text-secondary);
 }
 
-.unsupported-site p {
-  font-size: 12px;
+.offsite-note svg {
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+.offsite-section {
+  margin: 18px 14px 0;
+}
+
+.offsite-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   margin: 0 0 10px;
-}
-
-.unsupported-lede {
-  margin: 0 0 12px !important;
-  padding: 8px 10px;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 600;
-  color: #92400e;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
-  border-radius: var(--radius);
-  text-align: left;
-}
-
-@media (prefers-color-scheme: dark) {
-  .unsupported-lede {
-    color: #fcd34d;
-    background: rgba(252, 211, 77, 0.08);
-    border-color: rgba(252, 211, 77, 0.25);
-  }
-}
-
-.unsupported-heading {
-  text-align: left;
-  color: var(--text-secondary);
-}
-
-.unsupported-footnote {
-  margin-top: 12px !important;
-  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--text-hint);
 }
 
-.supported-sites {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
+.offsite-label span {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-.supported-site {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  color: var(--text-secondary);
-}
-
-.rossum-tab-list {
+.offsite-list {
   list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
-.rossum-tab-row {
-  width: 100%;
+.offsite-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding-right: 10px;
   background: var(--bg-card);
-  border: 1px solid var(--border-card);
   border-radius: var(--radius);
-  color: var(--text-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.offsite-row:hover {
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.offsite-row.is-first {
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 0 4px var(--accent-glow);
+}
+
+.offsite-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0 10px 12px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
   font: inherit;
+  color: inherit;
   text-align: left;
   cursor: pointer;
 }
 
-.rossum-tab-row:hover {
-  background: var(--bg-hover);
-  border-color: var(--accent);
-}
-
-.rossum-tab-row:focus-visible {
+.offsite-row-main:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 
-.rossum-tab-favicon {
-  flex: 0 0 16px;
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  object-fit: contain;
+/* The recent-organizations rows have no separate actions: the whole row is the button. */
+.offsite-row-main:only-child {
+  padding-right: 0;
 }
 
-.rossum-tab-favicon-placeholder {
-  background: var(--border);
+.offsite-kbd {
+  flex: 0 0 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  font: 600 10px var(--font-mono);
+  color: var(--text-hint);
+  border: 1px solid var(--border);
+  border-radius: 4px;
 }
 
-.rossum-tab-text {
+.is-first .offsite-kbd {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.offsite-text {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  flex: 1;
+  gap: 1px;
 }
 
-.rossum-tab-title {
+.offsite-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offsite-id {
+  font: 400 11px var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.offsite-meta {
+  font: 10.5px var(--font-mono);
+  color: var(--text-hint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offsite-meta b {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.offsite-ago {
+  flex: 0 0 auto;
+  font: 10px var(--font-mono);
+  color: var(--text-hint);
+}
+
+.offsite-actions {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.offsite-act {
+  height: 24px;
+  min-width: 24px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font: 500 11px var(--font-sans);
+  cursor: pointer;
+}
+
+button.offsite-act:hover,
+.offsite-row-main:hover .offsite-act {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.offsite-act.offsite-icon {
+  padding: 0;
+}
+
+.offsite-act.copied {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.offsite-hint {
+  display: flex;
+  gap: 12px;
+  margin: 14px 14px 0;
+  font-size: 10.5px;
+  color: var(--text-hint);
+}
+
+.offsite-hint kbd {
+  padding: 0 4px;
+  font: 600 10px var(--font-mono);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+.offsite-foot {
+  margin: 18px 14px 4px;
+  font-size: 11px;
+  color: var(--text-hint);
+}
+
+.offsite-notice {
+  margin: 14px 14px 0;
+}
+
+.offsite {
+  padding-bottom: 6px;
+}
+
+/* The Console view: its organization, then its apps in the rail's order. */
+.console-org {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 4px 14px 0;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.console-org .offsite-title {
+  font-size: 13px;
+}
+
+.console-apps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.console-app {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
   font-size: 12px;
   color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
 }
 
-.rossum-tab-host {
-  font-family: var(--font-mono);
-  font-size: 10px;
+.console-app:hover {
+  background: var(--bg-hover);
+}
+
+.console-app:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.console-app.is-current {
+  background: var(--accent-glow);
+}
+
+.console-app-icon {
+  display: inline-flex;
+  color: var(--text-secondary);
+}
+
+.console-app-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.console-app.is-current .console-app-icon {
+  color: var(--accent);
+}
+
+.console-app-name {
+  font-weight: 600;
+}
+
+.console-app-desc {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
   color: var(--text-hint);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+/* The rail's badges: amber BETA, filled violet EXP (see .app-rail-exp in console.css). */
+.console-app-badge {
+  padding: 1px 4px;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  line-height: 1.3;
+  border-radius: 999px;
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.console-app-badge.is-exp {
+  background: var(--exp-bg);
+  color: var(--exp-fg);
+}
+
+.console-app-here {
+  font: 600 9px var(--font-mono);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* The organization's environment, in the colours of Rossum's own chip (as the header's). */
+.env-chip {
+  padding: 1px 6px;
+  font: 600 9.5px var(--font-sans);
+  border: 1px solid;
+  border-radius: 9px;
+}
+
+.env-chip-sandbox {
+  background: #d5edf2;
+  border-color: #70cce1;
+  color: #1d5e6e;
+}
+
+.env-chip-production {
+  background: #fde2e1;
+  border-color: #f44336;
+  color: #8c1d15;
 }
 
 /* ── accent bar ────────────────────────────────── */
@@ -1269,9 +1494,49 @@ body.popup-wide .mdh-card {
   user-select: none;
 }
 
+/* The unlock / hide notice (NoticeLine.tsx): the line under the header off-site, the
+   footer's left group on Rossum, NetSuite and Coupa. Never a third footer item. */
 .unlock-notice {
-  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 10.5px;
+  font-weight: 600;
   color: var(--text-secondary);
+}
+
+.unlock-notice-detail {
+  margin-left: auto;
+  font-weight: 400;
+  color: var(--text-hint);
+}
+
+.unlock-notice.notice-line {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--exp-bg);
+}
+
+.unlock-notice.notice-line .unlock-notice-detail {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.offsite > .notice-line {
+  margin: 4px 14px 0;
+}
+
+.offsite-section > .notice-line {
+  margin: 0 0 10px;
+}
+
+/* Just after unlocking: the two apps the clicks added. */
+.console-app.is-new {
+  background: color-mix(in srgb, var(--exp-bg) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--exp-bg);
 }
 
 .footer-link {
@@ -1327,10 +1592,6 @@ body.popup-wide .mdh-card {
 
   .toggle input:checked + .toggle-track::after {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  }
-
-  .supported-site {
-    background: var(--bg-card);
   }
 }
 

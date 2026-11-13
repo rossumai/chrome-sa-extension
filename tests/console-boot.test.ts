@@ -5,6 +5,8 @@ import {
   resolveBootAuth,
   computeStaleAuthRemovals,
   appAfterGateChange,
+  requestedApp,
+  SET_APP_EVENT,
 } from '../src/console/boot.js';
 
 describe('isValidApp', () => {
@@ -156,5 +158,22 @@ describe('gated apps (academy, rdc)', () => {
     expect(appAfterGateChange('academy', false)).toBe('mdh');
     for (const app of ['mdh', 'audit', 'galaxy', 'inspector', 'fabry', 'cib'] as const)
       expect(appAfterGateChange(app, false)).toBe(app);
+  });
+});
+
+describe('requestedApp (the popup asking a Console tab to switch app)', () => {
+  it('accepts a known public app', () => {
+    expect(requestedApp('builder', false)).toBe('builder');
+  });
+  it('refuses a gated app while locked, and accepts it unlocked', () => {
+    expect(requestedApp('rdc', false)).toBeNull();
+    expect(requestedApp('rdc', true)).toBe('rdc');
+  });
+  it('refuses anything else', () => {
+    expect(requestedApp('nope', true)).toBeNull();
+    expect(requestedApp(undefined, true)).toBeNull();
+  });
+  it('names the event the popup dispatches', () => {
+    expect(SET_APP_EVENT).toBe('sa-console-set-app');
   });
 });

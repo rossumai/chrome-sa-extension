@@ -6,18 +6,18 @@ import ReviewingLockBanner from './ReviewingLockBanner.jsx';
 import UsageStrip, { UsageFooterButton, stripVisible } from './UsageStrip.jsx';
 import { track } from '../../usage/track.js';
 import { writeConsent } from '../usageConsent.js';
-import {
-  openConsoleTab,
-  runInTab,
-  detectSite,
-  findRossumTabs,
-  activateTab,
-  isConsoleTab,
-} from '../utils.js';
+import { openConsoleTab, runInTab, detectSite, findRossumTabs, isConsoleTab } from '../utils.js';
 import { readAuthInfo, readPageFlag, togglePageFlag } from '../tab-readers.js';
 import { createUnlockCounter } from '../experimental.js';
+import { ExternalIcon, ExternalIconSmall, KeyIcon, CheckIcon } from './icons.jsx';
 import { openPanelForTab } from '../../sidepanel/panelScope.js';
 import { ORG_NAME_KEY, orgNameOn } from '../../rossum/orgName.js';
+import { VIEWED_KEY } from '../../inspector/viewed.js';
+import OffSite from './OffSite.jsx';
+import ConsoleView, { ConsoleHeaderActions } from './ConsoleView.jsx';
+import { UnlockNoticeText } from './NoticeLine.jsx';
+import { readConsoleTab } from '../consoleTab.js';
+import type { UnlockNotice } from '../offSite.js';
 
 const STORAGE_TOGGLES = [
   'schemaAnnotationsEnabled',
@@ -49,139 +49,6 @@ function combineUrlWithCustomPath(originalUrl: any, customPath: any) {
   return match[0] + normalizedPath;
 }
 
-function ExternalIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M7 17L17 7M17 7H7M17 7v10" />
-    </svg>
-  );
-}
-
-function ExternalIconSmall() {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M7 17L17 7M17 7H7M17 7v10" />
-    </svg>
-  );
-}
-
-function KeyIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.3"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <circle cx="7.5" cy="15.5" r="4.5" />
-      <path d="M10.7 12.3 21 2M16 7l3 3M18.5 4.5 21 7" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.8"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
-function hostFromUrl(url: any) {
-  try {
-    return new URL(url).host;
-  } catch {
-    return '';
-  }
-}
-
-export function UnsupportedSite({ tabs, isConsole }: { tabs?: any[] | null; isConsole?: boolean }) {
-  // tabs === null means we haven't queried yet — render the static fallback
-  // immediately rather than showing a loading flicker; the list will reveal
-  // when the query resolves.
-  const hasTabs = Array.isArray(tabs) && tabs.length > 0;
-
-  if (hasTabs) {
-    return (
-      <div class="unsupported-site">
-        <p class="unsupported-lede">
-          {isConsole
-            ? "You're on the Rossum Console."
-            : "This tab isn't supported by the extension."}
-        </p>
-        <p class="unsupported-heading">Switch to one of your open Rossum tabs:</p>
-        <ul class="rossum-tab-list">
-          {tabs.map((t) => (
-            <li>
-              <button class="rossum-tab-row" onClick={() => activateTab(t)} title={t.url}>
-                {t.favIconUrl ? (
-                  <img class="rossum-tab-favicon" src={t.favIconUrl} alt="" />
-                ) : (
-                  <span
-                    class="rossum-tab-favicon rossum-tab-favicon-placeholder"
-                    aria-hidden="true"
-                  />
-                )}
-                <span class="rossum-tab-text">
-                  <span class="rossum-tab-title">{t.title || hostFromUrl(t.url)}</span>
-                  <span class="rossum-tab-host">{hostFromUrl(t.url)}</span>
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        <p class="unsupported-footnote">Also works on NetSuite and Coupa.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div class="unsupported-site">
-      <p class="unsupported-lede">
-        {isConsole ? "You're on the Rossum Console." : "This tab isn't supported by the extension."}
-      </p>
-      <p>It works on:</p>
-      <div class="supported-sites">
-        <span class="supported-site">Rossum</span>
-        <span class="supported-site">NetSuite</span>
-        <span class="supported-site">Coupa</span>
-      </div>
-      <p class="unsupported-footnote">Open one of these sites to get started.</p>
-    </div>
-  );
-}
-
 export default function App({ tab }: { tab?: any }) {
   const site = detectSite(tab?.url || '');
   const isConsole = !site && isConsoleTab(tab?.url || '');
@@ -195,7 +62,7 @@ export default function App({ tab }: { tab?: any }) {
   const [authError, setAuthError] = useState<{ kind: string } | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
   const [rossumTabs, setRossumTabs] = useState<any>(null);
-  const [unlockNotice, setUnlockNotice] = useState<string | null>(null);
+  const [unlockNotice, setUnlockNotice] = useState<UnlockNotice | null>(null);
   const [unlockCounter] = useState(() => createUnlockCounter());
   // Read on its own, NOT via STORAGE_TOGGLES: that loop coerces with !!, which
   // would turn "never answered" into "declined" for every existing install.
@@ -228,9 +95,15 @@ export default function App({ tab }: { tab?: any }) {
     Promise.resolve(chrome.storage.local.set({ usageAsked: true })).catch(() => {});
   }, [askOnScreen, asked]);
 
+  // Off Rossum, NetSuite and Coupa only: the open Rossum tabs, and the recently viewed
+  // annotations' organizations for when none is open.
+  const [viewed, setViewed] = useState<unknown>(null);
   useEffect(() => {
     if (site) return;
     findRossumTabs().then(setRossumTabs);
+    Promise.resolve(chrome.storage.local.get([VIEWED_KEY]))
+      .then((vals) => setViewed(vals?.[VIEWED_KEY]))
+      .catch(() => {});
   }, [site]);
 
   useEffect(() => {
@@ -310,12 +183,15 @@ export default function App({ tab }: { tab?: any }) {
   const onVersionClick = async () => {
     if (!unlockCounter.click() || !storageValues) return;
     const next = !storageValues.experimentalUnlocked;
+    // Read before the write: the Console's own effect moves it off a gated app at once.
+    const consoleApp = isConsole ? readConsoleTab(tab.id)?.app : null;
+    const fellBack = !next && (consoleApp === 'academy' || consoleApp === 'rdc');
     setStorageValues((prev: any) => ({ ...prev, experimentalUnlocked: next }));
     // Written straight to storage, never via the worker — same cold-start
     // race as the usage-consent write above.
     await chrome.storage.local.set({ experimentalUnlocked: next });
     if (next) track('sa_popup_experimental_unlock');
-    setUnlockNotice(next ? 'Experimental features unlocked' : 'Experimental features hidden');
+    setUnlockNotice({ unlocked: next, fellBack });
     setTimeout(() => setUnlockNotice(null), 2500);
   };
 
@@ -436,6 +312,8 @@ export default function App({ tab }: { tab?: any }) {
               <ExternalIcon />
             </button>
           </div>
+        ) : isConsole ? (
+          <ConsoleHeaderActions tabId={tab.id} />
         ) : null}
       </header>
 
@@ -445,8 +323,22 @@ export default function App({ tab }: { tab?: any }) {
           it must reach people whose current tab isn't Rossum/NetSuite/Coupa. */}
       <UsageStrip consent={consent} reviewing={reviewingUsage} onAnswer={onUsageAnswer} />
 
-      {!site ? (
-        <UnsupportedSite tabs={rossumTabs} isConsole={isConsole} />
+      {isConsole ? (
+        <ConsoleView
+          tabId={tab.id}
+          unlocked={storageValues.experimentalUnlocked}
+          orgNameEnabled={storageValues.orgNameEnabled}
+          orgEnvEnabled={storageValues.orgEnvEnabled}
+          notice={unlockNotice}
+        />
+      ) : !site ? (
+        <OffSite
+          tabs={rossumTabs}
+          viewed={viewed}
+          orgNameEnabled={storageValues.orgNameEnabled}
+          orgEnvEnabled={storageValues.orgEnvEnabled}
+          notice={unlockNotice}
+        />
       ) : (
         <div id="mainContent">
           <div class="content-row">
@@ -599,16 +491,24 @@ export default function App({ tab }: { tab?: any }) {
         {/* Version hash with the usage-data control beside it, rather than a
             third item floating in the middle of the footer. */}
         <div class="footer-left">
-          <span class="version" onClick={onVersionClick}>
-            {version}
-          </span>
-          <UsageFooterButton
-            asked={asked}
-            consent={consent}
-            onToggle={() => setReviewingUsage((v) => !v)}
-          />
+          {/* On Rossum, NetSuite and Coupa the notice takes this group's place for 2.5 s —
+              never a third item in the row, which wrapped the footer at 380px. Off those
+              sites it takes the line under the header instead (NoticeLine). */}
+          {unlockNotice && site ? (
+            <UnlockNoticeText notice={unlockNotice} />
+          ) : (
+            <Fragment>
+              <span class="version" onClick={onVersionClick}>
+                {version}
+              </span>
+              <UsageFooterButton
+                asked={asked}
+                consent={consent}
+                onToggle={() => setReviewingUsage((v) => !v)}
+              />
+            </Fragment>
+          )}
         </div>
-        {unlockNotice ? <span class="unlock-notice">{unlockNotice}</span> : null}
         <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" class="footer-link">
           Support & feedback
           <ExternalIconSmall />

@@ -497,6 +497,15 @@ rest. A 24h TTL sweep purges entries that were never consumed.
   content-script orphaning across upgrades. On Rossum tabs it widens to show the MDH provenance
   card, and warns when the open annotation is held in `reviewing` by another user — one-click
   Unlock is `PATCH status:'to_review'`, the only non-holder-capable release.
+  Off Rossum, NetSuite and Coupa it shows `OffSite.tsx` — the open Rossum tabs, named by
+  the org-name feature's cache in each tab, with Console and token per row and Enter / 1–9
+  to switch (or, with none open, the recently visited organizations). On a Console tab it
+  shows `ConsoleView.tsx`: that tab's org and its apps in the rail's order (both read
+  `src/console/apps.tsx`, which must import no CSS — the popup bundle would emit a sheet
+  over the copied `popup.css`). It reaches the Console tab with
+  `chrome.extension.getViews({ type: 'tab', tabId })` and switches its app with the
+  `sa-console-set-app` event (`src/popup/consoleTab.ts`). The unlock notice takes the line
+  under the header off-site and the footer's left group on a site — never a footer item.
 - **Side panel** — hosts the *same* `MdhProvenancePanel` component as the popup; it exists
   because a Chrome popup closes on blur. Scoped to Rossum tabs by the worker.
 - **DevTools panel** — shows and PATCHes the API resource behind the current Rossum page. Auth
@@ -841,7 +850,8 @@ older ones as history. Currently authoritative per area:
   `2026-07-17-devtools-request-bar-curl-design.md`
 - **Modals (shared)** — `2026-09-07-modal-header-rhythm-design.md` (header metrics, `ModalField`,
   the label-contrast fix)
-- **Popup** — `2026-07-16-popup-unlock-reviewing-annotation-design.md`
+- **Popup** — `2026-07-16-popup-unlock-reviewing-annotation-design.md`,
+  `2026-11-13-popup-off-site-view-design.md` (the views off Rossum, NetSuite and Coupa)
 - **Configuration changelog** — `2026-09-29-config-changelog-in-context-design.md` (the
   DevTools version rail and diff for the open object; the pure core in `src/changelog/`)
 - **Galaxy** — `2026-06-04-galaxy-3d-org-birdview-design.md`

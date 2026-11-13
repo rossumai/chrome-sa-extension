@@ -24,6 +24,20 @@ export function readCurrentContext() {
   };
 }
 
+// The org-name feature's cached organization for this tab's CURRENT session: the entry
+// keyed by a hash of today's token (src/rossum/orgName.ts orgCacheKey). Another token's
+// entry is not this session's org — one survives an org switch whose new load failed.
+// Returns the raw entry; the popup parses it with cachedOrg. `prefix` is an argument, and
+// the hash a DELIBERATE COPY of orgCacheKey's FNV-1a, because this function is serialized
+// into the page and cannot import. If the key changes there, change it here too.
+export function readOrgCache(prefix: string): string | null {
+  const token = window.localStorage.getItem('secureToken');
+  if (!token) return null;
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < token.length; i++) hash = Math.imul(hash ^ token.charCodeAt(i), 0x01000193);
+  return window.sessionStorage.getItem(`${prefix}${(hash >>> 0).toString(16)}`);
+}
+
 export function readPageFlag(key: string): boolean {
   return window.localStorage.getItem(key) === 'true';
 }

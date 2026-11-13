@@ -8,6 +8,8 @@ import {
   resolveBootAuth,
   computeStaleAuthRemovals,
   appAfterGateChange,
+  requestedApp,
+  SET_APP_EVENT,
 } from './boot.js';
 import { resolveTabState, writeTabState } from './tabState.js';
 import { track } from '../usage/track.js';
@@ -146,6 +148,13 @@ async function boot() {
   // re-run on every app switch — just on gate changes.
   effect(() => {
     activeApp.value = appAfterGateChange(activeApp.peek(), experimentalUnlocked.value);
+  });
+
+  // The popup's Console view asks to switch app (see SET_APP_EVENT). Registered before the
+  // no-credentials return: the list works on a Console that is not connected too.
+  window.addEventListener(SET_APP_EVENT, (e) => {
+    const app = requestedApp((e as CustomEvent).detail, experimentalUnlocked.value);
+    if (app) activeApp.value = app;
   });
 
   purgeStaleAuthEntries().catch(() => {});

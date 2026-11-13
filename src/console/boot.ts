@@ -50,6 +50,15 @@ export function appAfterGateChange(activeApp: AppId, unlocked: boolean): AppId {
   return activeApp;
 }
 
+// The popup's Console view switches THIS tab's app by dispatching this event on the
+// Console's window (it reaches it through chrome.extension.getViews). The detail is the
+// app id, accepted by the same rule as a boot: a known app, gated ones only when unlocked.
+export const SET_APP_EVENT = 'sa-console-set-app';
+
+export function requestedApp(detail: unknown, unlocked: boolean): AppId | null {
+  return isValidApp(detail) && (!isGatedApp(detail) || unlocked) ? detail : null;
+}
+
 // Resolve token/domain from a single-use staging entry (initial open) or the
 // session fallback (same-tab reload). When an entry is present it is single-use
 // (consumeKey === true) and carries the initial app + DS pipeline prefill.

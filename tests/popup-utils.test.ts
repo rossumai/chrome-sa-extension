@@ -123,6 +123,15 @@ describe('openConsoleTab', () => {
     });
   });
 
+  it("opens in the source tab's window when it has one, which may not be the current one", () => {
+    openConsoleTab({ index: 4, windowId: 9 }, { token: 't', domain: 'd' }, 'mdh');
+    expect(tabsCreateMock).toHaveBeenCalledWith({
+      url: 'chrome-extension://abc/console/console.html?authId=uuid-1',
+      index: 5,
+      windowId: 9,
+    });
+  });
+
   it('passes through pendingCollection / pendingPipeline metadata', () => {
     openConsoleTab(
       { id: 1, index: 0 } as any,
