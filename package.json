@@ -56,6 +56,6 @@
     "three": "^0.186.1"
   },
   "optionalDependencies": {
-    "@mrtnzlml/rdc-wasm": "^0.15.0"
+    "@mrtnzlml/rdc-wasm": "^0.16.0"
   }
 }
