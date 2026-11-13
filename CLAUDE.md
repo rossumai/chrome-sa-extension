@@ -386,19 +386,75 @@ opened, because its form, log and a deploy in flight live in component state.
   `GET /organizations` lists (`currentOrg`), else the page says so and stops. The admin chooses
   one source org and gives a token for it (checked with one read, kept in component state only,
   never stored); rdc's sync engine, compiled to WebAssembly, then reads BOTH orgs into one
-  in-memory project, each with `sync({ noPush: true })` — the only option ever passed — and
-  shows rdc's log (ANSI colour rendered by `ansi.ts`) and the counts per kind. **rdc writes
-  nothing to either org.** A prompt rdc raises is shown with its choices; Cancel, or leaving the
-  page, answers `null`. The ONE thing the page stores is the chosen source (URL, org id, org name,
-  short name; never its token): a `kind: 'source'` document upserted into the connected org's
-  hidden `_SA_EXTENSION__rdc_deployments` collection (`sourceStore.ts`) and loaded on the next
-  visit; when Data Storage refuses, the page says so and keeps the source for the visit only.
-  The source token carries from the source form to step 1 in memory and is forgotten when the
-  deployment is left. The project is in memory only. Plan, Review, Write, Done, the org's own
-  values and the deployment history are **work in progress pending rdc** (`migrate` in wasm, a structured dry run, storage in the
-  org): they show the design's frames with a "Not available yet" note (`WIP` in `deploy.ts`),
-  every control that would act on data disabled, and no sample data. Design:
-  `2026-10-27-rdc-deployments-design.md`.
+  project with `sync({ noPush: true })` and shows rdc's log (ANSI colour rendered by `ansi.ts`)
+  and the counts per kind. **A read changes no configuration, but the page writes rdc's sync
+  state**: rdc does no storage I/O for it (owner, 2026-11-12); `keepStateInOrgs` (`deploy.ts`)
+  hands `project.useStateStore` the page's store (`stateStore.ts`), which keeps each env's
+  opaque snapshot in that env's OWN org — the source's in the source org with the typed token,
+  the target's in the target with the session — as one document
+  `{_id: 'chrome-sa-extension/rdc-deployments/<targetOrgId>/<env>', rev, snapshot: <base64>}` in
+  `_SA_EXTENSION__rdc_state`, so lockfiles and trees survive a refresh. Every Data Storage call of
+  this page goes through `dataStorageFor`, whose base is `dataStorageBaseOf` — rdc's
+  `derive_data_storage_base`: an `api.` host prefix is dropped, so a source at
+  `https://api.elis.rossum.ai` talks to `https://elis.rossum.ai/svc/data-storage/api`. Load is one `find` by
+  `_id`; save is one `insert_one` (first) or `replace_one` filtered on `{_id, rev: expectedRev}`
+  — a compare-and-swap, `false` when another run moved the rev. A failed or answerless write is
+  settled by reading back; anything else throws. Snapshots over the 16 MiB document limit are
+  refused by name and size; a document of the old blob format counts as absent, and its first
+  save replaces it and deletes its `<key>/<env>/blob/…` documents. Never log a snapshot. A build
+  without `useStateStore` stays in memory and says so, with Plan and Write disabled. Every target read moves rdc's
+  base, after which rdc no longer sees an edit made directly in the target, so the target is read
+  twice: a `dryRun` (loads the stored tree, writes nothing), then the pull; **the source read runs
+  at the same time** as that pair (`Promise.allSettled`): when one fails the other finishes (rdc
+  cannot abort a sync, and a finished read has saved its state) and the error names both
+  outcomes; prompts from the two queue and are answered one at a time, each labelled with its
+  org; leaving the step answers every queued prompt `null` and starts no further run. The mapping
+  is loaded before both and saved after both. The files that differ
+  are added to a `kind: 'directEdits'` document (paths only) that a finished Write empties. rdc holds a Web
+  Lock `rdc:<api_base>:<org_id>` per run; `runErrorFor` (`core.ts`) words its errors. A prompt rdc
+  raises is shown with its choices and the last log line; Cancel, or leaving the page, answers
+  `null`. The page also stores the chosen source (URL, org id, org name, short name; never its
+  token): a `kind: 'source'` document upserted into the connected org's hidden
+  `_SA_EXTENSION__rdc_deployments` collection (`sourceStore.ts`) and loaded on the next visit;
+  when Data Storage refuses, the page says so and keeps the source for the visit only. The source
+  token carries from the source form to step 1 in memory and is forgotten when the deployment is
+  left. A finished read's project is owned by `App.tsx` and freed when replaced or left.
+  **Plan** works on a scratch copy, `new rdc.Project(project.files())`, with no Data Storage
+  state (nothing is saved): `migrate(source, target, { mirror, carry })` for real there, then
+  `sync(target, { dryRun: true, interactive: false })`, whose `CycleOutcome.plan` is what Write
+  would send to the org — an earlier write's unpushed leftovers included, which migrate's own
+  result cannot show (its `ObjectChange` describes the target TREE). The read's project is not
+  touched until Write. **Review** lists `plan.items` by change (created, updated, deleted —
+  rdc asks before it deletes —, both changed, read back), `plan.recovered` and `plan.problems`,
+  with rdc's dry-run log in a `<details>`; it never parses log lines. It also warns, first,
+  about every direct edit whose object (rdc's `MigrateFile.kind`/`.slug`) the plan sends
+  (`plan.ts` `overwrittenEdits`): the deployment
+  overwrites them. **Hooks' token owner** (owner, 2026-11-13): rdc never carries `token_owner` across
+  envs, and its store-extension install (`POST /hooks/create`, rdc `build_install_body`) refuses
+  a hook without one, so when the plan creates a hook with `extension_source: "rossum_store"`
+  (`tokenOwner.ts` `storeHookCreates`) Review asks which target user owns the hooks' tokens
+  (`users.ts`, `GET /users` with the session) and keeps Write disabled until one is chosen. The
+  choice is written as `[hooks."*"] token_owner` into `envs/target/overlay.toml` before the
+  migrate — in Plan's scratch copy (`runPlan.ts`, which plans again on a change) and in Write
+  (`writeTokenOwner`) — so it is persisted with the target's state and pre-selected next time;
+  it then applies to every hook the deployment writes. There is **no per-object Keep** (owner, 2026-11-03), and Write never puts
+  target files back. **Write**, after the admin types the org's name, runs the migrate for real
+  on the read's project (which drops the page's plan), then `sync(target, {})` — the app's only
+  push, and **never with `allowDeletes`**, so rdc's delete gate asks first. Done lists
+  `CycleOutcome.skipped` with rdc's reasons; a direct-edit warning is cleared exactly for an
+  object the plan sent and `skipped` does not name (`remainingAfterWrite`; pruned files carry
+  the same identity). rdc leaves `.rdc/mapping.toml` to the host, so the page keeps one `kind: 'mapping'`
+  document **per source org** (filter `{kind, domain, orgId}`: a read of another source scaffolds
+  an empty mapping, which must not overwrite this one's rows); a mapping that cannot be loaded
+  or saved fails the read. The direct-edit list's load-merge-save runs under a Web Lock of the
+  page's own, so two tabs cannot drop each other's additions; between browsers there is no
+  compare-and-swap. `runs.ts` counts the page's runs in flight, so a lock refusal while an
+  abandoned read is still finishing says "this tab", not "another tab". Both methods are feature-detected
+  (`typeof … === 'function'`); without them the page says so and writes nothing. Still work in
+  progress (`WIP` in `deploy.ts`): picking single objects, line-by-line diffs, hook secrets
+  (none are sent), own values and the deployment history.
+  Design: `2026-10-27-rdc-deployments-design.md`, with `2026-11-03-rdc-data-storage-state-design.md`
+  for the state, the key and direct edits.
   **The wasm is an OPTIONAL dependency**, `@mrtnzlml/rdc-wasm` on GitHub Packages (`.npmrc`
   maps the `@mrtnzlml` scope there). That registry needs a token even to install a public
   package, so without one `npm ci` skips it and exits 0, and `build.js` builds without it (the
@@ -408,7 +464,9 @@ opened, because its form, log and a deploy in flight live in component state.
   have it locally, put a classic token with `read:packages` in `~/.npmrc` as
   `//npm.pkg.github.com/:_authToken=<token>` (never in the repo's `.npmrc`), then `npm
   install` and build. `build.js` copies `rdc_wasm.js` + `rdc_wasm_bg.wasm` to
-  `dist/console/rdc/`. **To bump**: `npm install @mrtnzlml/rdc-wasm@<version>` with the token,
+  `dist/console/rdc/`. **An unreleased rdc**: build it into the git-ignored `.rdc-wasm-local/`
+  (commands in the data-storage-state spec, §7) and run `RDC_WASM_DIR=.rdc-wasm-local/pkg npm run
+  build` (and `npm test`); never `npm link` or `npm install <path>`, which rewrite `package.json`. **To bump**: `npm install @mrtnzlml/rdc-wasm@<version>` with the token,
   and re-read the package's `rdc_wasm.d.ts` — `src/rdc/wasm.ts` keeps a hand-written subset of
   it, because tsc must pass without the package. For the same reason the glue is loaded at
   run time with `import(chrome.runtime.getURL(…))`, which esbuild leaves alone in the iife
@@ -589,7 +647,7 @@ Enforced by tests, not by convention. Do not weaken them.
 - The Builder persists only `builderPanelWide`; the schema it keeps for Undo after a delete is
   a signal, never storage.
 - Galaxy, CIB deploy and rdc persist nothing on the device (CIB keeps its credentials in component
-  state only; its checkpoint lives in the org). Chat content, and Architect deliverable text, versions and
+  state only; its checkpoint lives in the org; rdc's sync state lives in each org). Chat content, and Architect deliverable text, versions and
   transcripts, never touch storage — they live in the org's own Data Storage collection.
 - **Orphaned** keys, read and written by nothing, deliberately left in existing profiles:
   `trainingUnlocked`, `fabryArchSplitRatio`, `fabryArchConsoleHeight`, `fabrySidebarOpen`,

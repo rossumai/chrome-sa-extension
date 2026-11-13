@@ -1,11 +1,11 @@
 // rdc (experimental): deployments into the connected org. The connected org is the target; the
 // admin chooses one source org, gives a token for it, and rdc's sync engine (WebAssembly) reads
-// both into a project held in memory only, with `noPush: true`, so nothing is written to either
-// org. Plan, Review, Write, Done and the org's own values are shown as work in progress until
-// rdc can do them in the browser. Only the chosen source is kept, in this org's own Data Storage
-// (`sourceStore.ts`), never its token.
+// both into one project with `noPush: true`. rdc keeps each env's sync state in that env's own
+// org's Data Storage; no configuration is written by a read. The chosen source and the direct
+// edits seen in this org are kept in this org's own Data Storage (`sourceStore.ts`), never a
+// token. The page owns a finished read's project and frees it when the read is replaced or left.
 import { h } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { domain, token } from '../store.js';
 import { connectedOrg } from '../../console/store.js';
 import { hostOf, type Source, type StepId } from '../deploy.js';
@@ -18,7 +18,19 @@ import Overview from './Overview.jsx';
 import ChooseSource, { fetchOrgs as defaultFetchOrgs, type FetchOrgs } from './ChooseSource.jsx';
 import Connect from './Connect.jsx';
 import Read, { type ReadResult } from './Read.jsx';
-import { OwnValues, WipStep } from './WipSteps.jsx';
+import { OwnValues } from './WipSteps.jsx';
+import Plan from './Plan.jsx';
+import Review from './Review.jsx';
+import Write, { Done, type WriteResult } from './Write.jsx';
+import {
+  DEFAULT_PLAN,
+  overwrittenEdits,
+  tokenOwnerMissing,
+  type PlanChoice,
+  type Planned,
+} from '../plan.js';
+import { runPlan } from '../runPlan.js';
+import { fetchUsers as defaultFetchUsers, type FetchUsers } from '../users.js';
 import styles from './App.module.css';
 
 type Screen =
@@ -43,6 +55,8 @@ type Props = {
   fetchOrgs?: FetchOrgs;
   // Injectable for tests; production calls the connected org's Data Storage.
   dataStorage?: DataStorage;
+  // Injectable for tests; production lists the target org's users.
+  fetchUsers?: FetchUsers;
 };
 
 export default function App({
@@ -50,6 +64,7 @@ export default function App({
   loadRdc = defaultLoadRdc,
   fetchOrgs = defaultFetchOrgs,
   dataStorage,
+  fetchUsers = defaultFetchUsers,
 }: Props) {
   // undefined while loading, null when it failed to load (rdcError says why)
   const [rdc, setRdc] = useState<Rdc | null | undefined>(undefined);
@@ -67,7 +82,33 @@ export default function App({
   const ds = () => dataStorage ?? dataStorageFor(domain.value, token.value);
   const [sourceToken, setSourceToken] = useState('');
   // The last finished read, so Back from Plan shows it without syncing both orgs again.
-  const [readResult, setReadResult] = useState<ReadResult | null>(null);
+  const [readResult, setReadResultState] = useState<ReadResult | null>(null);
+  // A replaced read's project is freed: only the current read's project is kept. A kept read
+  // handed back by Read has no project of its own and keeps the current one.
+  const setReadResult = (r: ReadResult | null) => {
+    setReadResultState((old) => {
+      const next = r && !r.project && old?.project ? { ...r, project: old.project } : r;
+      if (old?.project && old.project !== next?.project) old.project.free();
+      return next;
+    });
+  };
+  // The plan and the write's result belong to the current read.
+  const [choice, setChoice] = useState<PlanChoice>(DEFAULT_PLAN);
+  const [planned, setPlanned] = useState<Planned | null>(null);
+  // The hooks' token owner: from the target's stored overlay, or chosen in Review.
+  const [tokenOwner, setTokenOwner] = useState<string | null>(null);
+  const [replanning, setReplanning] = useState(false);
+  const [replanError, setReplanError] = useState('');
+  const [written, setWritten] = useState<WriteResult | null>(null);
+  const resetPlan = () => {
+    setChoice(DEFAULT_PLAN);
+    setPlanned(null);
+    setTokenOwner(null);
+    setWritten(null);
+  };
+  const readRef = useRef<ReadResult | null>(null);
+  readRef.current = readResult;
+  useEffect(() => () => readRef.current?.project?.free(), []);
 
   useEffect(() => {
     loadRdc().then(setRdc, (e: any) => {
@@ -157,10 +198,13 @@ export default function App({
 
   const name = target.name;
   const toOverview = () => setScreen('overview');
+  // A scratch copy of the read's project, to plan on.
+  const copy = () => new rdc!.Project(readResult!.project!.files());
   // Leaving the deployment forgets the token and the read made with it.
   const leaveSource = () => {
     setSourceToken('');
     setReadResult(null);
+    resetPlan();
     toOverview();
   };
 
@@ -185,6 +229,7 @@ export default function App({
         onConnected={(t) => {
           setSourceToken(t);
           setReadResult(null);
+          resetPlan();
           setScreen('read');
         }}
       />
@@ -200,8 +245,14 @@ export default function App({
         domain={domain.value}
         token={token.value}
         organizations={targetOrgs}
-        kept={readResult}
+        dataStorage={ds()}
+        kept={readResult && { ...readResult, project: undefined }}
         onDone={(r) => {
+          // a fresh read (with its own project) makes the last plan stale
+          if (r.project) {
+            resetPlan();
+            setTokenOwner(r.tokenOwner);
+          }
           setReadResult(r);
           setScreen('plan');
         }}
@@ -209,24 +260,78 @@ export default function App({
         onCancel={leaveSource}
       />
     );
-  else if (source && (screen === 'plan' || screen === 'review' || screen === 'write'))
+  else if (source && readResult && screen === 'plan')
     page = (
-      <WipStep
-        step={screen}
+      <Plan
+        project={readResult.project ?? null}
+        copy={copy}
+        tokenOwner={tokenOwner}
+        persisted={readResult.persisted}
         sourceName={source.name}
         targetName={name}
-        onBack={() =>
-          setScreen(screen === 'plan' ? 'read' : screen === 'review' ? 'plan' : 'review')
-        }
-        // From Write, onNext leads to Done; its button stays disabled until writing works.
-        onNext={() =>
-          setScreen(screen === 'plan' ? 'review' : screen === 'review' ? 'write' : 'done')
-        }
+        choice={choice}
+        onChoice={(c) => {
+          setChoice(c);
+        }}
+        planned={planned}
+        onPlanned={setPlanned}
+        onBack={() => setScreen('read')}
+        onNext={() => setScreen('review')}
         onCancel={leaveSource}
       />
     );
-  else if (source && screen === 'done')
-    page = <WipStep step="done" sourceName={source.name} targetName={name} onBack={leaveSource} />;
+  else if (source && readResult && planned && screen === 'review')
+    page = (
+      <Review
+        planned={planned}
+        overwritten={overwrittenEdits(planned.result, planned.plan, readResult.directEdits)}
+        sourceName={source.name}
+        targetName={name}
+        tokenOwner={tokenOwner}
+        replanning={replanning}
+        replanError={replanError}
+        loadUsers={() => fetchUsers(domain.value, token.value)}
+        onTokenOwner={(url) => {
+          // the plan is made again with the owner, so Review shows what Write will send
+          setTokenOwner(url);
+          setReplanning(true);
+          setReplanError('');
+          runPlan(copy, choice, url, () => {})
+            .then(setPlanned, (e) => setReplanError(String((e as Error)?.message || e)))
+            .finally(() => setReplanning(false));
+        }}
+        onBack={() => setScreen('plan')}
+        onNext={() => setScreen('write')}
+        onCancel={leaveSource}
+      />
+    );
+  else if (source && readResult?.project && screen === 'write')
+    page = (
+      <Write
+        project={readResult.project}
+        source={source}
+        targetName={name}
+        choice={choice}
+        dataStorage={ds()}
+        directEdits={readResult.directEdits}
+        plan={planned?.plan ?? null}
+        tokenOwner={tokenOwner}
+        blocked={
+          planned && tokenOwnerMissing(planned, tokenOwner)
+            ? "Choose in Review who owns the hooks' tokens."
+            : ''
+        }
+        onWritten={(r) => {
+          setWritten(r);
+          setScreen('done');
+        }}
+        onTreeChanged={() => setPlanned(null)}
+        onBack={() => setScreen(planned ? 'review' : 'plan')}
+        onCancel={leaveSource}
+      />
+    );
+  else if (source && written && screen === 'done')
+    page = <Done result={written} targetName={name} onBack={leaveSource} />;
   else
     page = (
       <Overview

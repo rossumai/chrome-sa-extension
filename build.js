@@ -116,10 +116,12 @@ function hljsCombinedCss() {
 // The experimental rdc app's wasm, from the OPTIONAL dependency @mrtnzlml/rdc-wasm. It lives on
 // GitHub Packages, which needs a token even to install, so a clone without one (CI and the
 // Web Store release included) has no package and builds without it; the app then says so.
-const RDC_PKG = 'node_modules/@mrtnzlml/rdc-wasm';
+// RDC_WASM_DIR points at a local wasm-bindgen build instead (for example `.rdc-wasm-local/pkg`,
+// git-ignored), to try an unreleased rdc without touching package.json.
+const RDC_PKG = process.env.RDC_WASM_DIR || 'node_modules/@mrtnzlml/rdc-wasm';
 function copyRdcWasm() {
   if (!existsSync(`${RDC_PKG}/rdc_wasm_bg.wasm`)) {
-    console.log('rdc wasm: @mrtnzlml/rdc-wasm is not installed, building without the rdc app');
+    console.log(`rdc wasm: no rdc_wasm_bg.wasm in ${RDC_PKG}, building without the rdc app`);
     return;
   }
   mkdirSync('dist/console/rdc', { recursive: true });

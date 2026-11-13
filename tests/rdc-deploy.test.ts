@@ -50,14 +50,7 @@ describe('rdc deploy core', () => {
     expect(readableOrgs(null)).toEqual([]);
   });
   it('names what each work-in-progress feature waits for', () => {
-    expect(Object.keys(WIP).sort()).toEqual([
-      'history',
-      'ownValues',
-      'plan',
-      'review',
-      'secrets',
-      'write',
-    ]);
+    expect(Object.keys(WIP).sort()).toEqual(['history', 'ownValues', 'plan', 'review', 'secrets']);
     for (const s of Object.values(WIP)) expect(s).toMatch(/^Not available yet\./);
   });
 });

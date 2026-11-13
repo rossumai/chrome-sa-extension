@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { answerFor, apiBaseOf, envInputFor } from '../src/rdc/core.js';
+import type { Prompt } from '../src/rdc/wasm.js';
 import { TARGET_ENV } from '../src/rdc/deploy.js';
 
 const one = { results: [{ id: 42, name: 'Acme', organization_group: null }] };
@@ -44,7 +45,7 @@ describe('envInputFor', () => {
 });
 
 describe('answerFor', () => {
-  const prompt = {
+  const prompt: Prompt = {
     kind: 'conflict',
     question: 'Which side?',
     choices: [

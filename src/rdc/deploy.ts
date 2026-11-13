@@ -1,11 +1,45 @@
 // The rdc deployments page's pure core: the steps, the object kinds it counts, the source env it
 // hands rdc, and why each unfinished feature is unavailable. No DOM, no network, no wasm.
-import type { EnvInput } from './wasm.js';
+import type { EnvInput, RdcProject } from './wasm.js';
 import { apiBaseOf } from './core.js';
+import { HIDDEN_PREFIX } from '../mdh/hiddenCollections.js';
+import { dataStorageStateStore } from './stateStore.js';
+import type { DataStorage } from './sourceStore.js';
 
-// rdc env names; what the admin sees (the org's name) is separate.
+// rdc env names; what the admin sees (the org's name) is separate. They are part of the stored
+// sync state's identity (`<key>/<env>`), so renaming one orphans that env's state in every org.
 export const SOURCE_ENV = 'source';
 export const TARGET_ENV = 'target';
+
+// Where rdc keeps each env's sync state, in that env's own org; the prefix hides it in Dataset
+// Management.
+export const STATE_COLLECTION = `${HIDDEN_PREFIX}rdc_state`;
+
+// The state key: one deployment project per target org. The source's state is kept in the
+// source org under the same key, so a source feeding several targets keeps one state per target.
+export function stateKeyFor(targetOrgId: number): string {
+  if (!Number.isInteger(targetOrgId)) throw new Error(`Not an organization id: ${targetOrgId}`);
+  return `chrome-sa-extension/rdc-deployments/${targetOrgId}`;
+}
+
+// From the next run on, rdc keeps each env's sync state and tree in that env's own org, through
+// the page's store (`stateStore.ts`): the source's with the source token, the target's with the
+// session. false when this rdc build has no `useStateStore`; the project then stays in memory,
+// and nothing may be written.
+export function keepStateInOrgs(
+  project: RdcProject,
+  orgs: { source: DataStorage; target: DataStorage },
+  targetOrgId: number,
+): boolean {
+  if (typeof project.useStateStore !== 'function') return false;
+  project.useStateStore(
+    dataStorageStateStore(
+      { [SOURCE_ENV]: orgs.source, [TARGET_ENV]: orgs.target },
+      stateKeyFor(targetOrgId),
+    ),
+  );
+  return true;
+}
 
 export type Kind = 'queues' | 'schemas' | 'hooks' | 'rules' | 'labels';
 
@@ -84,18 +118,16 @@ export function readableOrgs(organizations: unknown): { id: number; name: string
   return out;
 }
 
-export type WipFeature = 'history' | 'secrets' | 'plan' | 'review' | 'write' | 'ownValues';
+export type WipFeature = 'history' | 'secrets' | 'plan' | 'review' | 'ownValues';
 
 // Why each unfinished feature is unavailable; shown instead of any invented data.
 export const WIP: Record<WipFeature, string> = {
   history: 'Not available yet. Deployments are not recorded until rdc can store them in this org.',
   secrets:
-    'Not available yet. Which hooks need a secret is known only after the plan, and rdc cannot plan in the browser yet.',
-  plan: 'Not available yet. Planning needs rdc migrate in the browser build, which is in progress.',
+    'Not available yet. Hook secrets are not sent from here: an existing hook keeps its secrets, and a new hook is created without them.',
+  plan: 'Not available yet. Picking single objects is in progress; a plan brings everything.',
   review:
-    "Not available yet. Reviewing needs rdc's list of changes and conflicts, which is in progress.",
-  write:
-    'Not available yet. Nothing can be written to this org from here; writing waits for the plan and the review.',
+    'Not available yet. Line-by-line changes are in progress; Review lists the objects that change.',
   ownValues:
     'Not available yet. Own values are stored with the project, which rdc cannot do in the browser yet.',
 };
