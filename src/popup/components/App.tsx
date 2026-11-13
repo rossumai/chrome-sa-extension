@@ -83,6 +83,41 @@ function ExternalIconSmall() {
   );
 }
 
+function KeyIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.3"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="7.5" cy="15.5" r="4.5" />
+      <path d="M10.7 12.3 21 2M16 7l3 3M18.5 4.5 21 7" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
 function hostFromUrl(url: any) {
   try {
     return new URL(url).host;
@@ -158,6 +193,7 @@ export default function App({ tab }: { tab?: any }) {
     devDebugEnabled: false,
   });
   const [authError, setAuthError] = useState<{ kind: string } | null>(null);
+  const [tokenCopied, setTokenCopied] = useState(false);
   const [rossumTabs, setRossumTabs] = useState<any>(null);
   const [unlockNotice, setUnlockNotice] = useState<string | null>(null);
   const [unlockCounter] = useState(() => createUnlockCounter());
@@ -319,6 +355,22 @@ export default function App({ tab }: { tab?: any }) {
     opener(tab, auth);
   };
 
+  // Rossum admins can copy a token from the backoffice; partners and other
+  // external users cannot, so the popup hands over the session's own token.
+  // It goes to the clipboard only: never rendered, stored or tracked.
+  const onCopyToken = () =>
+    fetchAuthAndOpen(async (_tab: any, auth: any) => {
+      try {
+        await navigator.clipboard.writeText(auth.token);
+      } catch {
+        setAuthError({ kind: 'clipboard' });
+        return;
+      }
+      track('sa_popup_copy_token');
+      setTokenCopied(true);
+      setTimeout(() => setTokenCopied(false), 1600);
+    });
+
   const onRossumConsole = () =>
     fetchAuthAndOpen((tab: any, auth: any) => openConsoleTab(tab, auth, 'mdh'));
 
@@ -361,6 +413,16 @@ export default function App({ tab }: { tab?: any }) {
         <span class="brand-name">Rossum SA</span>
         {site ? (
           <div class="header-actions">
+            <button
+              class={`token-btn${tokenCopied ? ' copied' : ''}${dimClass('rossum')}`}
+              onClick={onCopyToken}
+              aria-label="Copy API token"
+            >
+              {tokenCopied ? <CheckIcon /> : <KeyIcon />}
+              <span class="token-tip" role="status">
+                {tokenCopied ? 'Copied' : 'Copy API token'}
+              </span>
+            </button>
             <button
               class={`mdh-btn${dimClass('rossum')}`}
               onClick={onMasterDataHub}
@@ -518,6 +580,10 @@ export default function App({ tab }: { tab?: any }) {
                         Reload tab
                       </button>
                     </Fragment>
+                  ) : authError.kind === 'clipboard' ? (
+                    <span class="tool-notice-msg">
+                      Could not copy to the clipboard. Click the key again.
+                    </span>
                   ) : (
                     <span class="tool-notice-msg">Sign in to Rossum in this tab first.</span>
                   )}

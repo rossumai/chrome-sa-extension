@@ -100,6 +100,7 @@ once per document — the extension deliberately does not count repeatedly.
 | `sa_popup_open` | you opened the popup |
 | `sa_popup_experimental_unlock` | you unlocked the extension's experimental features |
 | `sa_popup_unlock_annotation` | you released an annotation another reviewer was holding |
+| `sa_popup_copy_token` | you copied your Rossum API token (the token itself is never sent) |
 
 **In the Console**
 

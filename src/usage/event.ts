@@ -33,6 +33,7 @@ export const EVENT_NAMES = [
   'sa_popup_open',
   'sa_popup_experimental_unlock',
   'sa_popup_unlock_annotation',
+  'sa_popup_copy_token',
   // Console shell
   'sa_console_open',
   'sa_console_app_mdh',

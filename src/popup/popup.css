@@ -407,6 +407,88 @@ body.popup-wide .mdh-card {
   opacity: 0.7;
 }
 
+/* ── Copy API token (header, icon only) ────────── */
+
+.token-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 7px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    color 0.15s,
+    opacity 0.2s;
+}
+
+.token-btn svg {
+  opacity: 0.65;
+}
+
+.token-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  box-shadow: 0 2px 6px rgba(66, 112, 219, 0.15);
+}
+
+.token-btn:hover svg,
+.token-btn.copied svg {
+  opacity: 1;
+}
+
+.token-btn.copied {
+  color: #1a7f4b;
+  border-color: rgba(26, 127, 75, 0.45);
+  background: rgba(26, 127, 75, 0.06);
+}
+
+.token-btn.dimmed {
+  opacity: 0.4;
+}
+
+.token-btn.dimmed:hover {
+  opacity: 0.7;
+}
+
+/* The tooltip, not a `title`: it also has to say "Copied" right after the click. */
+.token-tip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #1a1a24;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.token-btn:hover .token-tip,
+.token-btn:focus-visible .token-tip,
+.token-btn.copied .token-tip {
+  opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .token-btn.copied {
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.4);
+    background: rgba(74, 222, 128, 0.08);
+  }
+}
+
 /* ── cards ─────────────────────────────────────── */
 
 .card {
