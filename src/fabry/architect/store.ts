@@ -7,12 +7,19 @@ import { signal } from '@preact/signals';
 import { createArchitectAssetStore } from './assetApi.js';
 import type { Deliverable } from './collectionPlan.js';
 import type { CheckResult, ImplementState } from './api.js';
+import type { RunFilter } from './run.js';
 
 export const deliverables = signal<Deliverable[]>([]);
 export const activeId = signal<string | null>(null); // open deliverable id, or null
 export const loaded = signal(false);
 export const loadError = signal<string | null>(null);
 export const running = signal(false);
+// Run all's status filter (session-only); [] = all. See runTargets in run.ts.
+export const runFilter = signal<RunFilter[]>([]);
+export function toggleRunFilter(f: RunFilter | null) {
+  const cur = runFilter.value;
+  runFilter.value = f === null ? [] : cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f];
+}
 export const results = signal<Record<string, CheckResult>>({});
 export function setResult(id: string, result: CheckResult) {
   results.value = { ...results.value, [id]: result };

@@ -185,6 +185,7 @@ function mapDocs(docs: mdh.DsDocument[]): Omit<LoadedDeliverables, 'legacyCount'
     // Absent on every doc written before titleSource existed — '' there means
     // "unmarked", which displayTitle reads as AI-generated (see format.js).
     titleSource: typeof d.titleSource === 'string' ? d.titleSource : '',
+    skipCheck: d.skipCheck === true,
   }));
   const results: Record<string, CheckResult> = {};
   const implement: Record<string, ImplementState> = {};
@@ -284,6 +285,10 @@ export function saveResult(
     { _id: id },
     { $set: { lastVerdict: verdict, lastEvidence: evidence, lastChatId: chatId, ranAt } },
   );
+}
+// Additive key: an older build ignores it and simply checks the deliverable in Run all.
+export function saveSkipCheck(id: string, skipCheck: boolean): Promise<any> {
+  return mdh.updateOne(colFor(id), { _id: id }, { $set: { skipCheck } });
 }
 export function setOrder(id: string, order: number): Promise<any> {
   return mdh.updateOne(colFor(id), { _id: id }, { $set: { order } });

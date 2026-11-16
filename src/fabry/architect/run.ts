@@ -50,3 +50,28 @@ export async function runChecks(
   await Promise.all(workers);
   return results;
 }
+
+// Run all's status filter. An empty set means "all"; otherwise a deliverable runs when its
+// last verdict falls in ANY selected bucket. 'uncertain' has no bucket, so it runs only
+// under "all". Deliverables marked skipCheck never run from Run all, whatever the filter.
+export type RunFilter = 'new' | 'pass' | 'fail';
+export const RUN_FILTERS: RunFilter[] = ['new', 'pass', 'fail'];
+
+export function runBucket(r: { verdict?: string | null } | null | undefined): RunFilter | null {
+  if (!r || !r.verdict) return 'new';
+  if (r.verdict === 'pass' || r.verdict === 'fail') return r.verdict;
+  return null;
+}
+
+export function runTargets<T extends { id: string; skipCheck?: boolean }>(
+  ds: T[],
+  results: Record<string, { verdict?: string | null } | undefined>,
+  filter: RunFilter[],
+): T[] {
+  return ds.filter((d) => {
+    if (d.skipCheck) return false;
+    if (!filter.length) return true;
+    const b = runBucket(results[d.id]);
+    return b !== null && filter.includes(b);
+  });
+}

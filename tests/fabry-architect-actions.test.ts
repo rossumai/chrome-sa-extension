@@ -339,6 +339,24 @@ describe('runAll', () => {
       expect(Object.keys(opts).sort()).toEqual(['onEvent', 'signal']);
     }
   });
+  it('checks only what the filter selects, never a skipped deliverable', async () => {
+    store.deliverables.value = [
+      deliverable({ id: 'a', text: 'ALPHA', order: 1 }),
+      deliverable({ id: 'b', text: 'BETA', order: 2 }),
+      deliverable({ id: 'c', text: 'GAMMA', order: 3, skipCheck: true }),
+    ];
+    store.results.value = { b: { verdict: 'pass', evidence: '', chatId: null } };
+    store.runFilter.value = ['new'];
+    scriptReplies({ ALPHA: 'VERDICT: FAIL' });
+    const run = runAll();
+    // Only the selected deliverable spins.
+    expect(store.results.value.b.running).toBeFalsy();
+    expect(store.results.value.c).toBeUndefined();
+    await run;
+    store.runFilter.value = [];
+    expect(api.saveResult).toHaveBeenCalledTimes(1);
+    expect(api.saveResult).toHaveBeenCalledWith('a', expect.objectContaining({ verdict: 'fail' }));
+  });
   it('no-ops on an empty list', async () => {
     await runAll();
     expect(agentApi.createChat).not.toHaveBeenCalled();

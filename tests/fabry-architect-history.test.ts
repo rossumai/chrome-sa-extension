@@ -49,6 +49,7 @@ const seed = (text = 'v1', over = {}) => {
       titleSource: '',
       editedAt: 1000,
       createdAt: 500,
+      skipCheck: false,
       ...over,
     },
   ];
