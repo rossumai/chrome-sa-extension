@@ -863,3 +863,13 @@
 .helpAt {
   margin-left: auto;
 }
+
+/* step 4's upgrade section, under the deploy actions */
+.upgrade {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}

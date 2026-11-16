@@ -1,6 +1,6 @@
 // The receipt signing key. Isolated in its own module so exactly one file names
 // it — tests/training-key-boundary.test.js enforces that, and also enforces
-// that it only ever reaches dist/console/console.js (the Academy mints and
+// that it only ever reaches dist/console/app.js (the Academy mints and
 // validates; no other surface needs it).
 //
 // Extractable from the bundle BY DESIGN, exactly like src/usage/ga4Config.js.

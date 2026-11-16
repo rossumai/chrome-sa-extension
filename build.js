@@ -28,8 +28,8 @@ cpSync('src/popup/popup.html', 'dist/popup/popup.html');
 cpSync('src/popup/popup.css', 'dist/popup/popup.css');
 cpSync('src/console/console.html', 'dist/console/console.html');
 // The hand-written monolith is the LEGACY base stylesheet, copied as-is. esbuild
-// emits dist/console/console.css from imported CSS Modules (self-contained
-// design-system component styles), so the monolith is renamed to avoid the clash.
+// emits dist/console/app.css from imported CSS Modules (self-contained
+// design-system component styles); the monolith keeps its own name, console.base.css.
 // As components migrate their rules into CSS Modules, console.base.css shrinks and
 // is eventually retired. console.html links both (base first, then the modules).
 cpSync('src/console/console.css', 'dist/console/console.base.css');
@@ -47,14 +47,14 @@ const options = {
     'scripts/netsuite': 'src/netsuite/index.ts',
     'scripts/coupa': 'src/coupa/index.ts',
     'popup/popup': 'src/popup/popup.tsx',
-    'console/console': 'src/console/index.tsx',
+    'console/app': 'src/console/index.tsx',
     // The print page's own script (dist/console/print.html → doc-print.js). A real extension
     // page rather than a blob: URL, because a blob inherits the creator's CSP and could not
     // run an inline script — measured during the port.
     'console/doc-print': 'src/docs/printEntry.ts',
     // Lazy-loaded by the Fabry chat's MermaidBlock (script-injected on the
     // first mermaid fence): beautiful-mermaid ships one flat ~1.5MB module,
-    // so it gets its own bundle instead of weighing down console.js.
+    // so it gets its own bundle instead of weighing down app.js.
     'console/mermaid': 'src/fabry/mermaidEntry.ts',
     // Lazy-loaded by the Builder's Format button (src/builder/format.ts): Ruff's Python
     // formatter as WebAssembly, ~11MB, so it gets its own bundle; ruff.wasm is copied below.
@@ -67,7 +67,7 @@ const options = {
   bundle: true,
   // Full minification, INCLUDING identifier renaming — which also shortens CSS
   // Modules' local class names (e.g. Academy.module.css's `.heroBlobA`) into
-  // one/two-character globals emitted to dist/console/console.css. esbuild only
+  // one/two-character globals emitted to dist/console/app.css. esbuild only
   // guarantees those generated names are unique AMONG THEMSELVES, not against
   // bare hand-written classes in JSX (`<div class="k">`) or the legacy
   // console.css/popup.css. That is not hypothetical: a generated `.k` once
@@ -79,7 +79,7 @@ const options = {
   // tests/css-class-collision-boundary.test.js, which asserts against the BUILT
   // stylesheet rather than the source. Adding a bare `class="x"` to any JSX
   // fails that test. Turning identifier minification off is the other half of
-  // the fix and costs ~575KB on console.js; either half reaches zero collisions
+  // the fix and costs ~575KB on app.js; either half reaches zero collisions
   // alone, and this is the half that keeps the bundle small.
   minify: true,
   outdir: 'dist',

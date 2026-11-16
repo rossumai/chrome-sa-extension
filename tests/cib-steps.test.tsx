@@ -121,6 +121,11 @@ describe('DeployStep data-help hooks', () => {
             state="current"
             deployRef={deployRef}
             resumeRef={resumeRef}
+            installed=""
+            onInstalledInput={vi.fn()}
+            onCheckUpgrade={vi.fn()}
+            onUpgrade={vi.fn()}
+            canUpgrade={false}
           />,
           root,
         ),
@@ -128,6 +133,12 @@ describe('DeployStep data-help hooks', () => {
     expect(root.querySelectorAll('[data-help="check"]').length).toBe(1);
     expect(root.querySelectorAll('[data-help="deploy"]').length).toBe(1);
     expect(root.querySelectorAll('[data-help="resume"]').length).toBe(1);
+    expect(root.querySelectorAll('[data-help="upgrade"]').length).toBe(1);
+    // Upgrade waits for a Check upgrade that found something to write
+    expect(root.querySelector<HTMLButtonElement>('button[name="upgrade"]')!.disabled).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('button[name="upgrade-check"]')!.disabled).toBe(
+      false,
+    );
   });
 });
 

@@ -110,7 +110,7 @@ export const subst = (v: any, ctx: any): any => {
 };
 
 // list filters take the numeric id for a related object (engine=<url> -> 400), results carry the url
-async function adopt(c: Client, op: any, ctx: any) {
+export async function adopt(c: Client, op: any, ctx: any) {
   if (!op.match) return null;
   const match = subst(op.match, ctx);
   const q = new URLSearchParams(

@@ -6,6 +6,7 @@ import { act } from 'preact/test-utils';
 vi.mock('../src/cib/release.js', async (orig) => ({
   ...(await orig<typeof import('../src/cib/release.js')>()),
   latestRelease: vi.fn(async () => 'v2.1.0'),
+  deployableReleases: vi.fn(async () => ['v2.1.0', 'v2.0.1', 'v2.0.0']),
   loadRelease: vi.fn(async () => ({ plan: { ops: [] }, deployConfig: 'deploy/' })),
 }));
 vi.mock('../src/cib/engine.js', () => ({
@@ -36,7 +37,16 @@ vi.mock('../src/cib/cib.js', async (orig) => ({
   deployCib: vi.fn(),
 }));
 
+vi.mock('../src/cib/upgrade.js', async (orig) => ({
+  ...(await orig<typeof import('../src/cib/upgrade.js')>()),
+  findInstall: vi.fn(async () => null),
+  guessInstalled: vi.fn(),
+  installFromOrg: vi.fn(),
+  upgradeCib: vi.fn(),
+}));
+
 import App from '../src/cib/components/App.jsx';
+import { findInstall, guessInstalled, installFromOrg, upgradeCib } from '../src/cib/upgrade.js';
 import { checkpointRelease, deployCib, readTarget } from '../src/cib/cib.js';
 import { loadRelease } from '../src/cib/release.js';
 import { domain, token } from '../src/cib/store.js';
@@ -72,6 +82,10 @@ beforeEach(async () => {
   token.value = 't';
   (globalThis as any).chrome = { permissions: { request: vi.fn(async () => false) } };
   vi.mocked(deployCib).mockReset();
+  vi.mocked(upgradeCib).mockReset();
+  vi.mocked(guessInstalled).mockReset();
+  vi.mocked(installFromOrg).mockReset();
+  vi.mocked(findInstall).mockResolvedValue(null);
   vi.mocked(loadRelease).mockClear();
   vi.mocked(checkpointRelease).mockResolvedValue(null);
   Element.prototype.scrollIntoView = vi.fn();
@@ -271,5 +285,119 @@ describe('CIB deploy help', () => {
     expect(help()).not.toBeNull();
     escape(owner);
     expect(help()).toBeNull();
+  });
+
+  it('Check upgrade without an install record suggests the closest release, then compares against it', async () => {
+    const g = (tag: string, lacks: number) => ({ tag, found: 219, total: 219, lacks });
+    vi.mocked(guessInstalled).mockResolvedValueOnce([
+      g('v2.0.1', 22),
+      g('v2.0.0', 23),
+      g('v2.1.0', 61),
+    ]);
+    await act(async () => button('Check upgrade')!.click());
+    await flush();
+    expect(vi.mocked(guessInstalled).mock.calls[0][1].map((r) => r.tag)).toEqual([
+      'v2.1.0',
+      'v2.0.1',
+      'v2.0.0',
+    ]);
+    expect(root.querySelector('[data-verdict]')!.textContent).toContain('looks like CIB v2.0.1');
+    expect(root.querySelector<HTMLInputElement>('#cib-installed')!.value).toBe('v2.0.1');
+    expect(vi.mocked(upgradeCib)).not.toHaveBeenCalled();
+
+    // the second Check upgrade uses the filled tag; the Coupa values come from the org's schemas
+    const install = { release: 'v2.0.1', recorded: false, idmap: {}, ops: [] };
+    vi.mocked(installFromOrg).mockResolvedValueOnce({
+      install,
+      coupa: { baseUrl: 'https://x.coupahost.com/', clientId: 'CID' },
+      fromOrg: true,
+    });
+    vi.mocked(upgradeCib).mockResolvedValueOnce({
+      status: 'planned',
+      from: 'v2.0.1',
+      to: 'v2.1.0',
+      items: [],
+      blockers: [],
+      notes: [],
+    });
+    await act(async () => button('Check upgrade')!.click());
+    await flush();
+    expect(vi.mocked(installFromOrg).mock.calls[0][1].tag).toBe('v2.0.1');
+    const o = vi.mocked(upgradeCib).mock.calls[0][1];
+    expect([o.install, o.coupa.clientId]).toEqual([install, 'CID']);
+    expect(root.querySelector<HTMLInputElement>('#cib-coupa-id')!.value).toBe('CID');
+  });
+
+  it('a tie between releases suggests none', async () => {
+    const g = (tag: string) => ({ tag, found: 219, total: 219, lacks: 5 });
+    vi.mocked(guessInstalled).mockResolvedValueOnce([g('v2.0.1'), g('v2.0.0')]);
+    await act(async () => button('Check upgrade')!.click());
+    await flush();
+    expect(root.querySelector('[data-verdict]')!.textContent).toContain('v2.0.1, v2.0.0 tie');
+    expect(root.querySelector<HTMLInputElement>('#cib-installed')!.value).toBe('');
+  });
+
+  it('Check upgrade plans against the install record; Upgrade then writes under the release run ID', async () => {
+    const install = {
+      release: 'v2.0.0',
+      recorded: true,
+      idmap: {},
+      ops: [
+        {
+          type: 'schemas',
+          body: {
+            content: [
+              {
+                id: 's',
+                children: [
+                  { id: 'oauth_client_id', default_value: 'CID' },
+                  { id: 'coupa_api_base_url', default_value: 'https://x.coupahost.com/' },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    };
+    vi.mocked(findInstall).mockResolvedValue(install);
+    const item = { key: 'hooks:1', type: 'hooks', name: 'H (CIB)', action: 'update' as const };
+    vi.mocked(upgradeCib)
+      .mockResolvedValueOnce({
+        status: 'planned',
+        from: 'v2.0.0',
+        to: 'v2.1.0',
+        items: [
+          { ...item, fields: ['settings'], conflicts: ['config.x: release 1 -> 2'], removed: [] },
+        ],
+        blockers: [],
+        notes: [],
+      })
+      .mockResolvedValueOnce({
+        status: 'done',
+        from: 'v2.0.0',
+        to: 'v2.1.0',
+        items: [{ ...item, fields: ['settings'], conflicts: [], removed: [] }],
+        blockers: [],
+        notes: [],
+      });
+    expect(button('Upgrade')!.disabled).toBe(true);
+    await act(async () => button('Check upgrade')!.click());
+    await flush();
+    const o = vi.mocked(upgradeCib).mock.calls[0][1];
+    expect([o.apply, o.run, o.coupa.clientId, o.region]).toEqual([
+      false,
+      'cib-upgrade-v2.1.0',
+      'CID',
+      'prod-eu2',
+    ]);
+    expect(root.querySelector('[data-upgrade]')!.textContent).toContain('H (CIB)');
+    expect(root.querySelector('[data-verdict]')!.textContent).toContain('Upgrade plan');
+    // the Coupa values of the record fill step 2
+    expect(root.querySelector<HTMLInputElement>('#cib-coupa-id')!.value).toBe('CID');
+    await act(async () => button('Upgrade')!.click());
+    await flush();
+    expect(vi.mocked(upgradeCib).mock.calls[1][1].apply).toBe(true);
+    expect(root.querySelector('[data-verdict]')!.textContent).toContain('Upgraded to v2.1.0');
+    expect(button('Upgrade')!.disabled).toBe(true);
   });
 });

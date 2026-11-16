@@ -804,12 +804,17 @@ test('deployCib with coupaProbe: no internet access for functions, or Coupa not 
   assert.match(r2.blockers![0], /could not reach Coupa/);
 });
 
-test('a complete deploy deletes its checkpoint; with imports pending it stays and the same run ID re-runs only the imports', async () => {
+test('a complete deploy keeps its checkpoint as a record and refuses a re-run; with imports pending it stays and the same run ID re-runs only the imports', async () => {
   const plans = (f: FakeRossum) => f.ds.filter((d) => d.doc.kind === 'plan');
   let { f, c, m, opts } = await full();
   let r = await m.deployCib(c, opts);
-  assert.deepEqual([r.status, r.pendingImports, plans(f).length], ['done', [], 0]);
-  assert.ok(r.notes.some((n) => /checkpoint is deleted/.test(n)));
+  assert.deepEqual([r.status, r.pendingImports, plans(f).length], ['done', [], 1]);
+  assert.equal(plans(f)[0].doc.complete, true);
+  assert.ok(r.notes.some((n) => /record stays/.test(n)));
+  assert.equal(await m.checkpointRelease(c, opts.run), null);
+  const again0 = await m.deployCib(c, opts);
+  assert.equal(again0.status, 'blocked');
+  assert.match(again0.blockers![0], /is complete/);
 
   ({ f, c, m, opts } = await full((f: FakeRossum) => {
     f.onInvoke = () => undefined; // the imports start but no dataset fills
@@ -821,7 +826,7 @@ test('a complete deploy deletes its checkpoint; with imports pending it stays an
   const posts = f.calls.length;
   f.onInvoke = (h) => f.collections.add(h.settings.import_config.dataset_name);
   r = await m.deployCib(c, opts); // same run ID
-  assert.deepEqual([r.status, r.pendingImports, plans(f).length], ['done', [], 0]);
+  assert.deepEqual([r.status, r.pendingImports, plans(f).length], ['done', [], 1]);
   const again = f.calls.slice(posts).filter((x) => x.method === 'POST' && x.url.startsWith(f.api));
   assert.ok(again.every((x) => x.url.endsWith('/invoke'))); // no object created a second time
 });

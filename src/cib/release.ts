@@ -33,6 +33,14 @@ export async function latestRelease(f: typeof fetch = fetch): Promise<string> {
   return tag;
 }
 
+// every published release that can be deployed (v2 and later; v1.x has no deploy/), newest first
+export async function deployableReleases(f: typeof fetch = fetch): Promise<string[]> {
+  const all = JSON.parse(await get(f, api(`${CIB_REPO}/releases?per_page=100`)));
+  return all
+    .filter((r: any) => !r.draft && !r.prerelease && Number(/^v(\d+)\./.exec(r.tag_name)?.[1]) >= 2)
+    .map((r: any) => r.tag_name as string);
+}
+
 // the files of a prd2 org folder (paths relative to it) that make up the plan
 const WANTED = [
   /^engines\/[^/]+\/engine\.json$/,

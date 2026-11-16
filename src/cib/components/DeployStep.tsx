@@ -15,6 +15,11 @@ export default function DeployStep({
   state,
   deployRef,
   resumeRef,
+  installed,
+  onInstalledInput,
+  onCheckUpgrade,
+  onUpgrade,
+  canUpgrade,
 }: {
   runId: string;
   allow: boolean;
@@ -25,6 +30,12 @@ export default function DeployStep({
   state: 'complete' | 'current' | 'optional' | undefined;
   deployRef: RefObject<HTMLButtonElement | null>;
   resumeRef: RefObject<HTMLDetailsElement | null>;
+  installed: string;
+  onInstalledInput: (e: any) => void;
+  onCheckUpgrade: () => void;
+  onUpgrade: () => void;
+  // the last Check upgrade found something to write
+  canUpgrade: boolean;
 }) {
   return (
     <Step
@@ -91,6 +102,54 @@ export default function DeployStep({
         >
           Check and deploy
         </button>
+      </div>
+      <div class={styles.upgrade} data-help="upgrade">
+        <div class={styles.groupHead}>Upgrade an installation</div>
+        <span class={styles.hint}>
+          Applies the latest release to an organization that already has CIB, where the organization
+          still holds what the installed release set. A field the customer changed too is a
+          conflict: it is listed and left as it is. Nothing is deleted.
+        </span>
+        <div class={styles.field}>
+          <label class={styles.label} for="cib-installed">
+            Installed release <span class={styles.tag}>only without an install record</span>
+          </label>
+          <input
+            id="cib-installed"
+            class={`input ${styles.input}`}
+            type="text"
+            placeholder="v2.0.0"
+            value={installed}
+            onInput={onInstalledInput}
+          />
+          <span class={styles.hint}>
+            A deploy from this page records what it installed. For an organization deployed before,
+            or by the deploy tool, leave it empty: Check upgrade compares the organization with each
+            release and fills in the closest one, to confirm with a second Check upgrade. The Coupa
+            URL and client ID come from step 2, else from the organization's CIB schemas.
+          </span>
+        </div>
+        <div class={styles.actions}>
+          <button
+            type="button"
+            class={`btn ${styles.btnLg}`}
+            name="upgrade-check"
+            disabled={busy || !ready}
+            onClick={onCheckUpgrade}
+          >
+            Check upgrade
+          </button>
+          <button
+            type="button"
+            class={`btn btn-primary ${styles.btnLg}`}
+            name="upgrade"
+            disabled={busy || !ready || !canUpgrade}
+            onClick={onUpgrade}
+            title={canUpgrade ? undefined : 'Check upgrade first'}
+          >
+            Upgrade
+          </button>
+        </div>
       </div>
     </Step>
   );

@@ -34,7 +34,7 @@ describe('receipt key boundary', () => {
   });
 
   it('the console bundle really does ship it', () => {
-    const f = join(ROOT, 'dist', 'console', 'console.js');
+    const f = join(ROOT, 'dist', 'console', 'app.js');
     if (!existsSync(f)) throw new Error('run `npm run build` before this test — it inspects dist/');
     expect(readFileSync(f, 'utf8')).toContain(RECEIPT_KEY);
   });
@@ -44,7 +44,7 @@ describe('receipt key boundary', () => {
     if (!existsSync(dist))
       throw new Error('run `npm run build` before this test — it inspects dist/');
     const offenders = walk(dist)
-      .filter((p: any) => rel(p) !== 'dist/console/console.js')
+      .filter((p: any) => rel(p) !== 'dist/console/app.js')
       .filter((p: any) => readFileSync(p, 'utf8').includes(RECEIPT_KEY))
       .map(rel);
     expect(offenders).toEqual([]);

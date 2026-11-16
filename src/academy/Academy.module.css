@@ -1,5 +1,5 @@
 /* src/academy/Academy.module.css — component-owned; esbuild emits it into
-   dist/console/console.css. Colors come from the Console's shared tokens
+   dist/console/app.css. Colors come from the Console's shared tokens
    defined in src/console/console.css (--border, --accent, --bg-*,
    --text-*, --success-*) — NOT --surface/--surface-2/--fg-muted/--accent-bg,
    which are not defined anywhere in this codebase. */

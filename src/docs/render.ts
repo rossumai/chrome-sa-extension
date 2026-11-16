@@ -16,7 +16,7 @@ import anchor from 'markdown-it-anchor';
 // DELTA 1: upstream does `import { renderMermaidSVG } from 'beautiful-mermaid'`.
 // beautiful-mermaid is one flat ~1.5MB module that this extension already ships as
 // its OWN lazily-injected bundle (src/fabry/mermaidEntry.js → dist/console/mermaid.js),
-// so importing it here would drag 1.5MB into console.js. The renderer is injected
+// so importing it here would drag 1.5MB into app.js. The renderer is injected
 // instead; DocView awaits the existing loader before first paint, and the Node-side
 // equivalence test injects `renderMermaidSVG` directly (same package, same 1.1.3).
 // DELTA 2: upstream imports the whole of `highlight.js`; this is the curated set (D4).

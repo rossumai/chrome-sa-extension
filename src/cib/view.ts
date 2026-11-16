@@ -15,6 +15,19 @@ export const PHASES: [key: string, label: string, readOnly: boolean][] = [
   ['datasets', 'Wait for datasets', false],
 ];
 
+// an upgrade's phases (src/cib/upgrade.ts), in run order
+export const UPGRADE_PHASES: typeof PHASES = [
+  ['release', 'Read the release', true],
+  ['checks', 'Compare with the organization', true],
+  ['objects', 'Create new objects', false],
+  ['patches', 'Secrets and hooks', false],
+  ['updates', 'Update objects', false],
+  ['imports', 'Start Coupa imports', false],
+];
+
+export type RunMode = 'check' | 'deploy' | 'upgrade-check' | 'upgrade';
+export const phasesOf = (mode: RunMode) => (mode.startsWith('upgrade') ? UPGRADE_PHASES : PHASES);
+
 export type PhaseLog = {
   counts: Record<string, { done: number; total: number }>;
   current: string | null;
@@ -30,8 +43,12 @@ export type PhaseState = 'done' | 'now' | 'fail' | 'idle' | 'skip';
 // a phase that reported is done, except the current one, which takes the run's end state; a phase
 // that never reported waits while the run goes on, and did not run once it has ended (a check
 // stops after Checks; restore runs only after an earlier teardown)
-export const phaseStates = (log: PhaseLog, end: 'running' | 'ok' | 'fail'): PhaseState[] =>
-  PHASES.map(([k]) => {
+export const phaseStates = (
+  log: PhaseLog,
+  end: 'running' | 'ok' | 'fail',
+  phases = PHASES,
+): PhaseState[] =>
+  phases.map(([k]) => {
     if (!(k in log.counts)) return end === 'running' ? 'idle' : 'skip';
     if (k !== log.current || end === 'ok') return 'done';
     return end === 'running' ? 'now' : 'fail';
@@ -43,9 +60,15 @@ export const phasePercent = (c: { done: number; total: number } | undefined): nu
 
 // what a run that threw left behind: a check and the read-only phases write nothing, and a deploy
 // that got further keeps its progress in the run's checkpoint
-export const stopNote = (mode: 'check' | 'deploy', phase: string | null, run: string): string => {
+export const stopNote = (mode: RunMode, phase: string | null, run: string): string => {
   if (mode === 'check')
     return 'Check only writes nothing. Fix the cause, then press Check only again.';
+  if (mode === 'upgrade-check')
+    return 'Check upgrade writes nothing. Fix the cause, then press Check upgrade again.';
+  if (mode === 'upgrade')
+    return !phase || UPGRADE_PHASES.find(([k]) => k === phase)?.[2]
+      ? 'Nothing was written: the upgrade stopped before changing anything. Fix the cause, then check and upgrade again.'
+      : `Nothing is lost: checkpoint ${run} keeps what was done so far. Check upgrade, then Upgrade continues from there.`;
   if (!phase || PHASES.find(([k]) => k === phase)?.[2])
     return 'Nothing was written: the run stopped before creating anything. Fix the cause, then press Check and deploy again.';
   return `Nothing is lost: checkpoint ${run} keeps what was created so far. Resume deploy continues from there.`;

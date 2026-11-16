@@ -2,12 +2,13 @@
 // Step 5: what the last run did. Everything shown comes from the engine as it is (verdict(),
 // blockers, notes, progress); this component only arranges it.
 import { h, Fragment } from 'preact';
-import { PHASES, phasePercent, phaseStates, splitVerdict, stopNote } from '../view.js';
-import type { PhaseLog } from '../view.js';
+import { phasePercent, phasesOf, phaseStates, splitVerdict, stopNote } from '../view.js';
+import type { PhaseLog, RunMode } from '../view.js';
+import type { UpgradeItem } from '../upgrade.js';
 import styles from './App.module.css';
 
 export type RunView = {
-  mode: 'check' | 'deploy';
+  mode: RunMode;
   running: boolean;
   failed: boolean;
   // the message of the error a run threw
@@ -24,23 +25,87 @@ export type RunView = {
     notes: string[];
     details: string;
     stats?: { objects: number; started: number; invoked: number; pending: number };
+    // an upgrade's objects, in plan order
+    upgrade?: UpgradeItem[];
   } | null;
   log: string;
   // a Coupa check function is still in the org
   probeLeft: boolean;
 };
 
-export const runTitle = (run: RunView, version: string): string => {
-  if (run.running) return `${run.mode === 'deploy' ? 'Deploying' : 'Checking'} CIB ${version}`;
-  if (run.failed && !run.outcome) return run.mode === 'deploy' ? 'Deploy stopped' : 'Check stopped';
-  return run.mode === 'deploy' ? 'Deploy result' : 'Check result';
+const TITLES: Record<RunMode, [running: string, stopped: string, result: string]> = {
+  check: ['Checking', 'Check stopped', 'Check result'],
+  deploy: ['Deploying', 'Deploy stopped', 'Deploy result'],
+  'upgrade-check': ['Checking the upgrade to', 'Upgrade check stopped', 'Upgrade plan'],
+  upgrade: ['Upgrading to', 'Upgrade stopped', 'Upgrade result'],
 };
+
+export const runTitle = (run: RunView, version: string): string => {
+  const [running, stopped, result] = TITLES[run.mode];
+  if (run.running) return `${running} CIB ${version}`;
+  if (run.failed && !run.outcome) return stopped;
+  return result;
+};
+
+const ACTION: Record<UpgradeItem['action'], string> = {
+  update: 'update',
+  create: 'create',
+  same: 'no change',
+  removed: 'removed from the release',
+};
+
+// the objects an upgrade changes or reports; unchanged ones only as a count
+function UpgradeList({ items }: { items: UpgradeItem[] }) {
+  const shown = items.filter((i) => i.action !== 'same' || i.conflicts.length || i.removed.length);
+  const same = items.length - shown.length;
+  return (
+    <div class={styles.issues} data-upgrade>
+      <div class={styles.groupHead}>
+        Objects <span class={styles.count}>{shown.length}</span>
+        {same ? ` · ${same} unchanged` : ''}
+      </div>
+      {shown.map((i) => (
+        <div
+          class={`${styles.issue} ${i.conflicts.length ? styles.issueBlock : styles.issueNote}`}
+          data-item={i.action}
+        >
+          <span>{i.conflicts.length ? '!' : i.action === 'create' ? '+' : '~'}</span>
+          <span>
+            <b>{ACTION[i.action]}</b> {i.type} {i.name}
+            {!!i.fields.length && ` · ${i.fields.join(', ')}`}
+            {!!(i.conflicts.length + i.removed.length) && (
+              <details>
+                <summary>
+                  {i.conflicts.length} conflicts, kept as in the organization
+                  {i.removed.length ? ` · ${i.removed.length} parts removed from the release` : ''}
+                </summary>
+                <ul>
+                  {i.conflicts.map((x) => (
+                    <li>{x}</li>
+                  ))}
+                  {i.removed.map((x) => (
+                    <li>{x}: not in the release any more, kept</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const ICON = { ok: '✓', warn: '!', fail: '✕' };
 
 export default function RunResult({ run }: { run: RunView }) {
   const o = run.outcome;
-  const states = phaseStates(run.phases, run.running ? 'running' : run.failed ? 'fail' : 'ok');
+  const PHASES = phasesOf(run.mode);
+  const states = phaseStates(
+    run.phases,
+    run.running ? 'running' : run.failed ? 'fail' : 'ok',
+    PHASES,
+  );
   const v = o && splitVerdict(o.verdict.text);
   const notes = [
     ...(o?.notes ?? []),
@@ -103,6 +168,7 @@ export default function RunResult({ run }: { run: RunView }) {
           </div>
         </div>
       )}
+      {o?.upgrade && <UpgradeList items={o.upgrade} />}
       {!!o?.blockers?.length && (
         <div class={styles.issues}>
           <div class={styles.groupHead}>

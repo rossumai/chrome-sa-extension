@@ -6,7 +6,7 @@ import { join } from 'path';
 //
 // esbuild's identifier minifier renames CSS Modules' local class names (e.g.
 // Academy.module.css's `.heroBlobA`) down to short one/two-character globals
-// emitted into dist/console/console.css. esbuild only guarantees those
+// emitted into dist/console/app.css. esbuild only guarantees those
 // generated names are unique AMONG THEMSELVES — not against a bare,
 // hand-written class literal in JSX markup (`<div class="k">`), which is
 // styled instead via a descendant-scoped rule in the legacy
@@ -26,7 +26,7 @@ import { join } from 'path';
 // Scope is deliberately narrow to match the actual bug shape: only classes
 // used BARE (the entire `class="…"` attribute is a single short token, no
 // other classes, nothing dynamic) are checked, and only against selectors in
-// dist/console/console.css that are themselves a bare TOP-LEVEL class
+// dist/console/app.css that are themselves a bare TOP-LEVEL class
 // selector (no descendant/compound context) — that is exactly the shape a
 // leaked CSS-module global takes, and exactly what makes a short hand-written
 // class dangerous to leave unprefixed. A legitimate hand-written rule like
@@ -78,8 +78,8 @@ function topLevelSelectorClasses(css: any) {
 }
 
 describe('CSS class collision boundary', () => {
-  it('no class used bare in src/**/*.tsx also appears as a top-level selector in dist/console/console.css', () => {
-    const cssPath = join(ROOT, 'dist', 'console', 'console.css');
+  it('no class used bare in src/**/*.tsx also appears as a top-level selector in dist/console/app.css', () => {
+    const cssPath = join(ROOT, 'dist', 'console', 'app.css');
     if (!existsSync(cssPath)) {
       throw new Error('run `npm run build` before this test — it inspects dist/');
     }
