@@ -400,4 +400,43 @@ describe('CIB deploy help', () => {
     expect(root.querySelector('[data-verdict]')!.textContent).toContain('Upgraded to v2.1.0');
     expect(button('Upgrade')!.disabled).toBe(true);
   });
+
+  it('with an install record, a value typed in step 2 wins over the record', async () => {
+    const schema = {
+      type: 'schemas',
+      body: {
+        content: [
+          {
+            id: 's',
+            children: [
+              { id: 'oauth_client_id', default_value: 'CID' },
+              { id: 'coupa_api_base_url', default_value: 'https://x.coupahost.com/' },
+            ],
+          },
+        ],
+      },
+    };
+    vi.mocked(findInstall).mockResolvedValue({
+      release: 'v2.0.0',
+      recorded: true,
+      idmap: {},
+      ops: [schema],
+    });
+    vi.mocked(upgradeCib).mockResolvedValueOnce({
+      status: 'planned',
+      from: 'v2.0.0',
+      to: 'v2.1.0',
+      items: [],
+      blockers: [],
+      notes: [],
+    });
+    typeInto(root.querySelector<HTMLInputElement>('#cib-coupa-id')!, 'TYPED');
+    await act(async () => button('Check upgrade')!.click());
+    await flush();
+    const o = vi.mocked(upgradeCib).mock.calls[0][1];
+    expect([o.coupa.clientId, o.coupa.baseUrl]).toEqual(['TYPED', 'https://x.coupahost.com/']);
+    expect(root.querySelector('[data-log]')!.textContent).toContain(
+      'step 2 differs from the install record',
+    );
+  });
 });

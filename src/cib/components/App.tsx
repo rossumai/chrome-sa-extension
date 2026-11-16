@@ -380,7 +380,16 @@ export default function App({ connected }: { connected: boolean | null }) {
       let coupa: { baseUrl: string; clientId: string } = form;
       if (install) {
         line(`install record: CIB ${install.release}`);
-        coupa = coupaFromInstall(install.ops) || form;
+        // step 2 wins, as without a record; the record fills only what step 2 leaves empty
+        const rec = coupaFromInstall(install.ops);
+        coupa = {
+          baseUrl: form.baseUrl || rec?.baseUrl || '',
+          clientId: form.clientId || rec?.clientId || '',
+        };
+        if (rec && (coupa.baseUrl !== rec.baseUrl || coupa.clientId !== rec.clientId))
+          line(
+            `step 2 differs from the install record (${rec.baseUrl}, ${rec.clientId}); step 2 is used`,
+          );
       } else {
         const tag = v.installed.trim();
         if (!tag) {
