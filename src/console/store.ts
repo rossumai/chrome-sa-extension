@@ -9,7 +9,8 @@ export const activeApp = signal<AppId>('mdh');
 // version hash). Mirrored from chrome.storage.local at boot and live via
 // onChanged. It hides two apps today — the Academy and the rdc proof of concept —
 // and Mr. Fabry is public. The separate `trainingUnlocked` signal was folded into this one on
-// 2026-08-11; see src/training/gate.js for why the split stopped buying safety.
+// 2026-08-11; see docs/superpowers/specs/2026-08-11-fabry-public-single-gate-design.md for why
+// the split stopped buying safety.
 export const experimentalUnlocked = signal(false);
 
 // The connected organization's name and id, for the connection lines of Dataset Management

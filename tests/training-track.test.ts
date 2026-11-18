@@ -1,95 +1,63 @@
 import { describe, it, expect } from 'vitest';
-import { TRACK } from '../src/training/track.js';
-import { CHECKS } from '../src/training/steps.js';
-import { detectResource, ROUTES } from '../src/devtools/detect.js';
+import { TRACK, newRunCode, isRunCode, namesFor, fill, allTasks } from '../src/training/track.js';
+import { vendorsCsv } from '../src/training/vendors.js';
 
-const steps = TRACK.missions.flatMap((m) => m.steps);
-
-describe('curriculum integrity', () => {
-  it('has a stable id and an integer version', () => {
-    expect(TRACK.id).toBe('partner-foundations');
-    expect(Number.isInteger(TRACK.version)).toBe(true);
+describe('run codes', () => {
+  it('are a freight word and a two-digit number', () => {
+    expect(newRunCode(() => 0)).toBe('barge-10');
+    expect(newRunCode(() => 0.999)).toBe('winch-99');
+    for (let i = 0; i < 50; i++) expect(isRunCode(newRunCode())).toBe(true);
   });
 
-  it('gives every mission and step a unique id', () => {
-    const missionIds = TRACK.missions.map((m) => m.id);
-    expect(new Set(missionIds).size).toBe(missionIds.length);
-    const stepIds = steps.map((s) => s.id);
-    expect(new Set(stepIds).size).toBe(stepIds.length);
+  it('reject anything newRunCode could not have made', () => {
+    expect(isRunCode('barge-17')).toBe(true);
+    expect(isRunCode('jnovak')).toBe(false);
+    expect(isRunCode(undefined)).toBe(false);
+  });
+});
+
+describe('namesFor / fill', () => {
+  it('builds the three object names from the run code, in Acme’s convention', () => {
+    expect(namesFor('barge-17')).toEqual({
+      queue: 'AF · AP Invoices · barge-17',
+      dataset: 'af_vendor_master_barge_17',
+      rule: 'AF · PO required · barge-17',
+    });
   });
 
-  it('prefixes every step id with its mission id', () => {
-    for (const m of TRACK.missions) {
-      for (const s of m.steps) expect(s.id.startsWith(`${m.id}.`)).toBe(true);
-    }
-  });
-
-  it('uses only known step kinds', () => {
-    for (const s of steps) expect(['visit', 'api', 'self']).toContain(s.kind);
-  });
-
-  it('points every api step at a check that exists', () => {
-    for (const s of steps.filter((x) => x.kind === 'api')) {
-      expect(Object.keys(CHECKS)).toContain(s.check);
-    }
-  });
-
-  it('points every visit step at a type detectResource can actually return', () => {
-    const known = new Set([
-      ...ROUTES.map((r) => r.type),
-      'organization',
-      'label',
-      'inbox',
-      'schema',
-    ]);
-    for (const s of steps.filter((x) => x.kind === 'visit')) {
-      expect(known).toContain(s.target!.type);
-    }
-  });
-
-  it('gives every step a one-line plain hint and markdown teaching text', () => {
-    for (const s of steps) {
-      expect(typeof s.hint).toBe('string');
-      expect(s.hint.length).toBeGreaterThan(0);
-      expect(s.hint).not.toContain('\n'); // the card renders one line
-      expect(s.hint).not.toContain('<'); // textContent only, never markup
-      expect(typeof s.teach).toBe('string');
-      expect(s.teach!.length).toBeGreaterThan(0);
-    }
-  });
-
-  it('anchors only by data-cy and/or href — never by a CSS class or id selector', () => {
-    const allowed = new Set(['cy', 'hrefIncludes']);
-    for (const s of steps.filter((x) => x.anchor)) {
-      const keys = Object.keys(s.anchor!);
-      expect(keys.length).toBeGreaterThan(0);
-      for (const k of keys) expect(allowed).toContain(k);
-      if ('cy' in s.anchor!) expect(typeof s.anchor.cy).toBe('string');
-      if ('hrefIncludes' in s.anchor!) expect(typeof s.anchor.hrefIncludes).toBe('string');
-    }
-  });
-
-  it('checks visit steps against what detectResource can actually return: detail:true must name a type ROUTES captures with an id; detail:false must name a type resolvable without one', () => {
-    // Every ROUTES row's regex captures an id (see src/devtools/detect.js) — so
-    // any type listed there is safe for a step that claims `detail: true`.
-    const detailCapable = new Set(ROUTES.map((r) => r.type));
-    // Types detectResource can resolve WITHOUT an id, per src/devtools/detect.js:
-    //   hook, user, label — the read-only collection-list branches (e.g.
-    //     /extensions/my-extensions, /settings/users, /settings/labels)
-    //   organization       — /documents?level=all (`via: 'org'`)
-    //   schema             — the queue "Fields" tab (`via: 'queue'`, unresolved
-    //     until the queue.schema fetch)
-    //   inbox              — the queue "Emails" tab (`via: 'queue-inbox'`)
-    const idLessCapable = new Set(['hook', 'user', 'label', 'organization', 'schema', 'inbox']);
-    for (const s of steps.filter((x) => x.kind === 'visit')) {
-      if (s.target!.detail === true) expect(detailCapable).toContain(s.target!.type);
-      else if (s.target!.detail === false) expect(idLessCapable).toContain(s.target!.type);
-    }
-  });
-
-  it('detects the documented dashboard route the first step relies on', () => {
-    expect(detectResource({ pathname: '/documents', search: '?level=all' })!.type).toBe(
-      'organization',
+  it('replaces {queue}, {dataset} and {rule}, and nothing else', () => {
+    expect(fill('{queue} / {dataset} / {rule} / {x}', namesFor('tug-42'))).toBe(
+      'AF · AP Invoices · tug-42 / af_vendor_master_tug_42 / AF · PO required · tug-42 / {x}',
     );
+  });
+});
+
+describe('TRACK', () => {
+  it('is six missions, each opening with a client message and holding tasks', () => {
+    expect(TRACK.missions).toHaveLength(6);
+    for (const m of TRACK.missions) {
+      expect(m.letter.length).toBeGreaterThan(0);
+      expect(m.tasks.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('gives every task a unique id, a reason, a place and what it reads', () => {
+    const ids = allTasks(TRACK).map(({ task }) => task.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const { task } of allTasks(TRACK)) {
+      expect(task.why.length).toBeGreaterThan(10);
+      expect(task.where.length).toBeGreaterThan(3);
+      expect(task.needs.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('vendorsCsv', () => {
+  it('is a header and 40 rows, and holds the vendor the go-live task names', () => {
+    const lines = vendorsCsv().trim().split('\n');
+    expect(lines[0]).toBe('id,name,vat_id,country');
+    expect(lines).toHaveLength(41);
+    expect(lines).toContain('V001,Nordic Pallet AB,SE556677889901,SE');
+    expect(new Set(lines.slice(1).map((l) => l.split(',').at(-2))).size).toBe(40);
   });
 });

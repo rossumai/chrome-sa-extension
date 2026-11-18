@@ -10,13 +10,11 @@ export type { Progress, Track };
 /** One org's record. `startedAt` is a creation stamp, not recency — see pruneOrgs. */
 export type ProgressByOrigin = Record<string, Progress>;
 
-// The gate is the extension's single hidden-features key. It was
-// `trainingUnlocked` until 2026-08-11; any value left under that name in an
-// installed profile is orphaned and read by nothing. No migration is needed —
-// the only build that ever wrote `trainingUnlocked` wrote `experimentalUnlocked`
-// in the same call, so no profile can hold one without the other.
-export const UNLOCK_KEY = 'experimentalUnlocked';
-export const PROGRESS_KEY = 'trainingProgress';
+// `academyProgress` since the client-project redesign (2026-11-13). The old
+// track's `trainingProgress` is orphaned — read and written by nothing, left in
+// place — because its shape and curriculum are gone; nobody had used it.
+export const PROGRESS_KEY = 'academyProgress';
+
 export const MAX_ORGS = 3;
 
 // `max` bounds the EVICTABLE records; the active origin and any record holding

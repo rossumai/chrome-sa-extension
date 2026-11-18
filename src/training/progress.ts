@@ -1,161 +1,130 @@
 // PURE. No chrome APIs, no DOM, no network. Owns the shape of a trainee's
-// progress for ONE org, plus the reward math and the linear unlock rule.
-// Step states: 'passed' (verified), 'self' (attested), 'skipped' (no credit).
-
-import type { Track, TrackStep } from './track.js';
-
-/** 'passed' = verified, 'self' = attested, 'skipped' = no credit. */
-export type StepState = 'passed' | 'self' | 'skipped';
-
-export type StepRecord = { state: StepState; at: number };
-
-export type MissionProgress = {
-  startedAt: number;
-  /** The mission-start snapshot every `api` check measures its delta against. */
-  baseline: Record<string, unknown> | null;
-  steps: Record<string, StepRecord>;
-};
+// progress for ONE org and the unlock rule.
+//
+// A task is complete when its LATEST check passes, and only then (owner,
+// 2026-11-16): work undone in the org — a deleted queue — makes its task, and its
+// mission, incomplete again, and the missions after it wait. There is no separate
+// "passed once" state.
+import { allTasks, isRunCode, type Mission, type Track } from './track.js';
+import { taskOk, type Assertion, type Build } from './checks.js';
+export type TaskResult = { at: number; assertions: Assertion[] };
 
 export type Progress = {
   trackId: string;
   trackVersion: number;
   startedAt: number;
-  missions: Record<string, MissionProgress>;
-  receipt?: Record<string, unknown> | null;
+  /** This run's code (newRunCode); every object name of the run is built from it. */
+  run: string;
+  results: Record<string, TaskResult>;
+  build: Build;
+  receipt?: { text: string; issuedAt: number } | null;
 };
 
-export const STEP_XP: Record<TrackStep['kind'], number> = { visit: 10, api: 25, self: 10 };
-export const MISSION_BONUS = 50;
-// Level N spans LEVELS[N-1] .. LEVELS[N]. Data, not logic — tune freely.
-export const LEVELS = [0, 100, 220, 350, 480];
+/** 'ok' when the latest check passed; 'open' otherwise. */
+export type TaskState = 'ok' | 'open';
 
-export function emptyProgress(track: Track, at: number): Progress {
-  return { trackId: track.id, trackVersion: track.version, startedAt: at, missions: {} };
-}
-
-function missionOf(track: Track, missionId: string) {
-  return track.missions.find((m) => m.id === missionId) || null;
-}
-
-export function stepState(
-  progress: Progress | null | undefined,
-  missionId: string,
-  stepId: string,
-): StepState | null {
-  return progress?.missions?.[missionId]?.steps?.[stepId]?.state ?? null;
-}
-
-export function startMission(
-  progress: Progress,
-  missionId: string,
-  baseline: MissionProgress['baseline'],
-  at: number,
-): Progress {
-  const existing = progress.missions[missionId];
-  if (existing && existing.baseline != null) return progress; // captured exactly once
+export function emptyProgress(track: Track, run: string, at: number): Progress {
   return {
-    ...progress,
-    missions: {
-      ...progress.missions,
-      [missionId]: {
-        startedAt: existing?.startedAt ?? at,
-        baseline,
-        steps: existing?.steps || {},
-      },
-    },
+    trackId: track.id,
+    trackVersion: track.version,
+    startedAt: at,
+    run,
+    results: {},
+    build: {},
   };
 }
 
-export function markStep(
+/** Folds one check run in. Returns the ids of tasks that are complete now and were not. */
+export function recordResults(
+  progress: Progress,
+  results: Record<string, Assertion[]>,
+  build: Build,
+  at: number,
+): { progress: Progress; newlyPassed: string[] } {
+  const nextResults = { ...progress.results };
+  const newlyPassed: string[] = [];
+  for (const [id, assertions] of Object.entries(results)) {
+    if (taskOk(assertions) && !taskOk(progress.results[id]?.assertions)) newlyPassed.push(id);
+    nextResults[id] = { at, assertions };
+  }
+  return {
+    progress: { ...progress, results: nextResults, build: { ...progress.build, ...build } },
+    newlyPassed,
+  };
+}
+
+export function taskState(progress: Progress, taskId: string): TaskState {
+  return taskOk(progress.results[taskId]?.assertions) ? 'ok' : 'open';
+}
+
+const complete = (progress: Progress, mission: Mission) =>
+  mission.tasks.every((t) => taskState(progress, t.id) === 'ok');
+
+export function missionStatus(
+  track: Track,
   progress: Progress,
   missionId: string,
-  stepId: string,
-  state: StepState | null,
-  at: number,
-): Progress {
-  const mission = progress.missions[missionId] || { startedAt: at, baseline: null, steps: {} };
-  const prev = mission.steps[stepId]?.state ?? null;
-  // Monotonic: only an explicit null (re-verification) may clear a pass.
-  if (prev === 'passed' && state !== null) return progress;
-  const steps = { ...mission.steps };
-  if (state === null) delete steps[stepId];
-  else steps[stepId] = { state, at };
-  return { ...progress, missions: { ...progress.missions, [missionId]: { ...mission, steps } } };
-}
-
-export function isMissionComplete(track: Track, progress: Progress, missionId: string): boolean {
-  const m = missionOf(track, missionId);
-  if (!m) return false;
-  return m.steps.every((s) => {
-    const st = stepState(progress, missionId, s.id);
-    return st === 'passed' || st === 'self';
-  });
-}
-
-export function missionStatus(track: Track, progress: Progress, missionId: string): string {
-  if (isMissionComplete(track, progress, missionId)) return 'done';
+): 'done' | 'active' | 'locked' {
   const idx = track.missions.findIndex((m) => m.id === missionId);
   if (idx < 0) return 'locked';
-  const allPriorDone = track.missions
-    .slice(0, idx)
-    .every((m) => isMissionComplete(track, progress, m.id));
-  return allPriorDone ? 'active' : 'locked';
+  if (complete(progress, track.missions[idx])) return 'done';
+  return track.missions.slice(0, idx).every((m) => complete(progress, m)) ? 'active' : 'locked';
 }
 
-export function xpFor(track: Track, progress: Progress): number {
-  let xp = 0;
-  for (const m of track.missions) {
-    for (const s of m.steps) {
-      const st = stepState(progress, m.id, s.id);
-      if (st === 'passed' || st === 'self') xp += STEP_XP[s.kind] ?? 0;
-    }
-    if (isMissionComplete(track, progress, m.id)) xp += MISSION_BONUS;
-  }
-  return xp;
+/** The first mission not yet complete; the last one once the whole track is. */
+export function currentMission(track: Track, progress: Progress): Mission | null {
+  return (
+    track.missions.find((m) => !complete(progress, m)) ||
+    track.missions[track.missions.length - 1] ||
+    null
+  );
 }
 
-export function levelFor(xp: number): number {
-  let level = 1;
-  for (let i = 1; i < LEVELS.length; i++) if (xp >= LEVELS[i]) level = i + 1;
-  return level;
+/**
+ * The missions opened so far: the complete ones and the current one. Checks re-read all
+ * of them, so undoing earlier work makes its mission incomplete again at once.
+ */
+export function reachedMissions(track: Track, progress: Progress): Mission[] {
+  const current = currentMission(track, progress);
+  const end = current ? track.missions.indexOf(current) : -1;
+  return track.missions.slice(0, end + 1);
 }
 
-export function badges(track: Track, progress: Progress): string[] {
-  return track.missions.filter((m) => isMissionComplete(track, progress, m.id)).map((m) => m.id);
+/** The task to work on: the first incomplete task of the current mission. */
+export function currentTask(track: Track, progress: Progress) {
+  const mission = currentMission(track, progress);
+  if (!mission) return null;
+  const index = mission.tasks.findIndex((t) => taskState(progress, t.id) !== 'ok');
+  if (index < 0) return null;
+  return { mission, task: mission.tasks[index], index };
 }
 
-// The mission the trainee is actually ON: the first one not yet complete (the
-// unlock rule is linear, so that is also the only 'active' one), falling back
-// to the last mission when the whole track is done. Reopening the Academy on
-// mission 1 after finishing four of them is not a neutral default — it hides
-// the work and the next step at the same time.
-export function firstActiveMission(track: Track, progress: Progress): string | null {
-  const m = track.missions.find((x) => !isMissionComplete(track, progress, x.id));
-  return (m || track.missions[track.missions.length - 1])?.id ?? null;
-}
-
+/** Every task passes NOW — the receipt's condition. */
 export function isTrackComplete(track: Track, progress: Progress): boolean {
-  return track.missions.every((m) => isMissionComplete(track, progress, m.id));
+  return allTasks(track).every(({ task }) => taskState(progress, task.id) === 'ok');
 }
 
-// Reconcile stored progress against a newer shipped curriculum: keep step ids
-// that still exist, drop the rest, and mark any receipt as issued against an
-// older track rather than silently revalidating it.
-export function migrate(
-  track: Track,
-  progress: Progress | null | undefined,
-): Progress | null | undefined {
-  if (!progress) return progress;
-  if (progress.trackVersion === track.version && progress.trackId === track.id) return progress;
-  const missions: Record<string, MissionProgress> = {};
-  for (const m of track.missions) {
-    const stored = progress.missions?.[m.id];
-    if (!stored) continue;
-    const known: Record<string, StepRecord> = {};
-    for (const s of m.steps) if (stored.steps?.[s.id]) known[s.id] = stored.steps[s.id];
-    missions[m.id] = { ...stored, steps: known };
-  }
-  const next = { ...progress, trackId: track.id, trackVersion: track.version, missions };
-  if (next.receipt) next.receipt = { ...next.receipt, stale: true };
-  return next;
+export function checkedCount(track: Track, progress: Progress): { done: number; total: number } {
+  const tasks = allTasks(track);
+  return {
+    done: tasks.filter(({ task }) => taskState(progress, task.id) === 'ok').length,
+    total: tasks.length,
+  };
+}
+
+// Reconcile stored progress against the shipped track: drop task ids that no
+// longer exist, and mark a receipt issued against another version stale.
+export function migrate(track: Track, progress: Progress | null | undefined): Progress | null {
+  // A record without a run code predates run codes and cannot be checked.
+  if (!progress || progress.trackId !== track.id || !isRunCode(progress.run)) return null;
+  if (progress.trackVersion === track.version) return progress;
+  const known = new Set(allTasks(track).map(({ task }) => task.id));
+  const keep = <T>(rec: Record<string, T>) =>
+    Object.fromEntries(Object.entries(rec || {}).filter(([k]) => known.has(k)));
+  return {
+    ...progress,
+    trackVersion: track.version,
+    results: keep(progress.results),
+    receipt: null,
+  };
 }

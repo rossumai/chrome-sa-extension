@@ -1,20 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   PROGRESS_KEY,
-  UNLOCK_KEY,
   MAX_ORGS,
   pruneOrgs,
   readProgress,
   writeProgress,
   clearProgress,
 } from '../src/training/storage.js';
-import { isUnlocked, onUnlockChange } from '../src/training/gate.js';
-import { track, mission, step } from './support/training.js';
+import { track, mission, task } from './support/training.js';
 
 const TRACK = track({
   id: 't',
   version: 2,
-  missions: [mission({ id: 'm1', steps: [step({ id: 'm1.s1', kind: 'visit' })] })],
+  missions: [mission({ id: 'm1', tasks: [task({ id: 'm1.s1' })] })],
 });
 let state: any;
 let listeners: any;
@@ -136,7 +134,9 @@ describe('readProgress / writeProgress', () => {
       trackId: 't',
       trackVersion: 2,
       startedAt: 0,
-      missions: {},
+      run: 'tug-42',
+      results: {},
+      build: {},
     });
     const got = await readProgress('https://x.rossum.app', TRACK);
     expect(got!.trackId).toBe('t');
@@ -148,12 +148,23 @@ describe('readProgress / writeProgress', () => {
       'https://x.rossum.app': {
         trackId: 't',
         trackVersion: 1,
-        missions: { m1: { steps: { GONE: { state: 'passed' } } } },
+        run: 'tug-42',
+        results: {
+          GONE: { at: 1, assertions: [{ id: 'a', label: 'a', state: 'ok' }] },
+          'm1.s1': { at: 1, assertions: [{ id: 'a', label: 'a', state: 'ok' }] },
+        },
+        build: {},
       },
     };
     const got = (await readProgress('https://x.rossum.app', TRACK))!;
     expect(got.trackVersion).toBe(2);
-    expect(got.missions.m1.steps.GONE).toBeUndefined();
+    expect(got.results.GONE).toBeUndefined();
+    expect(got.results['m1.s1']).toBeTruthy();
+  });
+
+  it('reads another track as no progress at all', async () => {
+    state[PROGRESS_KEY] = { 'https://x.rossum.app': { trackId: 'other', trackVersion: 2 } };
+    expect(await readProgress('https://x.rossum.app', TRACK)).toBeNull();
   });
 
   it('keeps other orgs untouched on write', async () => {
@@ -162,7 +173,9 @@ describe('readProgress / writeProgress', () => {
       trackId: 't',
       trackVersion: 1,
       startedAt: 2,
-      missions: {},
+      run: 'tug-43',
+      results: {},
+      build: {},
     });
     expect(Object.keys(state[PROGRESS_KEY]).sort()).toEqual([
       'https://a.rossum.app',
@@ -174,38 +187,5 @@ describe('readProgress / writeProgress', () => {
     state[PROGRESS_KEY] = { a: { startedAt: 1 }, b: { startedAt: 2 } };
     await clearProgress('a');
     expect(Object.keys(state[PROGRESS_KEY])).toEqual(['b']);
-  });
-});
-
-describe('gate', () => {
-  it('is locked by default', async () => {
-    expect(await isUnlocked()).toBe(false);
-  });
-
-  it('is unlocked when the key is true', async () => {
-    state[UNLOCK_KEY] = true;
-    expect(await isUnlocked()).toBe(true);
-  });
-
-  it('notifies on change and unsubscribes cleanly', async () => {
-    const seen: any = [];
-    const off = onUnlockChange((v) => seen.push(v));
-    listeners.forEach((l: any) => l({ [UNLOCK_KEY]: { newValue: true } }, 'local'));
-    listeners.forEach((l: any) => l({ somethingElse: { newValue: 1 } }, 'local'));
-    listeners.forEach((l: any) => l({ [UNLOCK_KEY]: { newValue: true } }, 'sync'));
-    expect(seen).toEqual([true]);
-    off();
-    expect(listeners).toHaveLength(0);
-  });
-});
-
-describe('the unlock gate key', () => {
-  // Load-bearing, and the single point the 2026-08-11 consolidation turns on:
-  // the content script's quest card gates on this constant, the popup writes
-  // the key by name, and the Console rail reads its own signal off the same
-  // key. If any of the three names a different key, the Academy unlocks on one
-  // surface and stays hidden on the others.
-  it('is experimentalUnlocked — the one hidden-features gate', () => {
-    expect(UNLOCK_KEY).toBe('experimentalUnlocked');
   });
 });

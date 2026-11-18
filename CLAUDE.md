@@ -285,6 +285,15 @@ strategies: JSON from `#initial_full_react_data` (React pages), and DOM attribut
 `IGNORE_S_CLASSES` filtering (Rails pages).
 
 Reloading the extension does NOT re-inject content scripts into open tabs — reload the tab.
+And **a rebuild alone updates only the extension PAGES**: Chrome reads the Console, popup and
+other pages of an unpacked extension from disk on every load, but keeps the content scripts and
+the worker it loaded until the extension is reloaded at `chrome://extensions` (measured
+2026-11-16 — a new tab after a rebuild still got the old content script). A page and a content
+script can then be different builds, and an old content script draws data the new page wrote (an
+Academy coach, since removed, showed "Acme AP · undefined" that way). After a rebuild, reload
+the extension AND the tabs. **Injected UI must remove its nodes by reference, never by id**:
+an orphaned script and its successor share a tab and the ids, so removal by id lets each delete
+the other's elements (measured 2026-11-16: a tether vanished until a refresh).
 
 ### Console apps (`src/console/`)
 
@@ -379,7 +388,25 @@ opened, because its form, log and a deploy in flight live in component state.
   document in the org's `_SA_EXTENSION__cib_deploy_runs` collection (the Coupa secret only as a placeholder),
   so a re-run with the same run id resumes, and it is deleted once a deploy is complete. The
   optional Coupa check function is a hook the user deploys and tears down by hand.
-- **Academy** (`src/academy/`) — the onboarding training track; behind `experimentalUnlocked`.
+- **Academy** (`src/academy/`) — the onboarding training, behind `experimentalUnlocked`: ONE
+  fictional client project (Acme Freight AP) in six missions, built by the trainee in their own
+  org. Every task is checked by finding the run's own objects by exact name (`?name=` is exact
+  on queues and rules) and reading their shape, and a failed check says what to fix. The pure
+  core is `src/training/` (`track.ts` curriculum, `checks.ts` assertions, `load.ts` reads,
+  `progress.ts`). **The Academy page is the whole of it** (owner, 2026-11-18): the coach card on
+  Rossum pages, its tether and the page-world save signal were removed, so checks run when the
+  page opens, on window focus and on Check now — nothing in a Rossum tab. Every run gets a code (`barge-17`), and the
+  names follow a fake Acme convention built from it — `AF · AP Invoices · barge-17`,
+  `af_vendor_master_barge_17`, `AF · PO required · barge-17` — so a new run leaves an old run's
+  objects out of every check. Start over asks whether to delete the run's objects or keep them.
+  Progress (with the run code) lives in THIS browser only; "Continue an earlier run" takes a
+  run code and re-derives progress from the org. Checks re-read every mission up to the current
+  one, so undone work (a deleted queue — Rossum keeps it 24 h as `deletion_requested`, still
+  answering `?name=`, and the check treats it as gone) makes its mission incomplete again. The Academy's Open Rossum always opens Documents
+  (owner, 2026-11-16) — Rossum has no `/queues` page — so the trainee learns the way. A task is complete exactly while its latest
+  check passes — no remembered passes, no "changed" state (owner, 2026-11-16) — and a mission
+  opens once every earlier one is complete. Spec:
+  `2026-11-13-academy-client-project-design.md`.
 - **rdc** (`src/rdc/`) — the **deployments UI**, behind `experimentalUnlocked` like the Academy
   (`gated` in `Rail.tsx`; `boot.ts` keeps the gated set, so a locked boot or re-lock falls back
   to Dataset Management). The connected org is the target: the one organization
@@ -526,10 +553,15 @@ Enforced by tests, not by convention. Do not weaken them.
   `src/agent/agentApi.ts` may name it. There is **no server-side write-lock** — the backend
   honours whatever the client sends, so the boundary is entirely client-side. Guarded by
   `tests/fabry-write-boundary.test.ts` plus a `dist/` grep.
-- **Training never mutates** — no request the onboarding track makes can change the org. That is
-  not the same as "only GETs": mission 5 POSTs to `/svc/data-storage/api/v1/collections/list`
-  because that service takes queries as JSON bodies. It is a list query. Do not "fix" it into a
-  GET — it would 404. Audit by looking for mutating endpoints, not for non-GET verbs.
+- **Training never mutates** — no request the Academy makes can change the org,
+  with ONE exception: Start over › "Delete them and start a new run" (owner, 2026-11-16), in
+  `src/academy/cleanup.ts`, on a confirmed click, deleting only the current run's own objects
+  found by exact name (never a hook another queue uses, never a schema another queue uses, never
+  the workspace). "Read-only" is not the same as "only GETs": the dataset checks POST to Data
+  Storage's `collections/list` and `data/aggregate`, because that service takes queries as JSON
+  bodies — do not "fix" them into GETs (they would 404). Guarded by
+  `tests/training-write-boundary.test.ts`, which looks for mutating endpoints and verbs, not for
+  non-GET requests.
 - **Usage data** — the worker is the only sender, gated on `usageConsent === true`. Events are
   name-only by construction (no caller can supply a field), so the leak guard is structural.
   Adding an event means adding it to `EVENT_NAMES` **and** to `PRIVACY.md` in backticks; a test
@@ -649,7 +681,7 @@ Enforced by tests, not by convention. Do not weaken them.
   `fabryArchitectActive`.
 - **Other** — `mdhLastPipeline::<scope>::<collection>` (per org and per collection),
   `auditActiveSource`, `auditFiltersBySource`, `rossumViewedAnnotations` (cap 12),
-  `trainingProgress` (per org origin, cap 3).
+  `academyProgress` (per org origin, cap 3).
 - **Usage** — `usageConsent` (`true`/`false`/**absent**, where absent means never answered),
   `usageClientId` (minted lazily by the worker on the first event, deleted on revoke),
   `usageAsked`; plus `usageSessionId` in `chrome.storage.session`.
@@ -659,7 +691,7 @@ Enforced by tests, not by convention. Do not weaken them.
   state only; its checkpoint lives in the org; rdc's sync state lives in each org). Chat content, and Architect deliverable text, versions and
   transcripts, never touch storage — they live in the org's own Data Storage collection.
 - **Orphaned** keys, read and written by nothing, deliberately left in existing profiles:
-  `trainingUnlocked`, `fabryArchSplitRatio`, `fabryArchConsoleHeight`, `fabrySidebarOpen`,
+  `trainingUnlocked`, `trainingProgress`, `fabryArchSplitRatio`, `fabryArchConsoleHeight`, `fabrySidebarOpen`,
   `usageSnapshotDay`, `inspectAnnotationEnabled`, `rawObjectEditorEnabled`,
   `fabryDeepVerifyEnabled`, `fabryArchitectImplementEnabled`, `annotateForMeEnabled`,
   `inspectorRecents`, `consoleInspectorAnn`.
@@ -832,7 +864,9 @@ older ones as history. Currently authoritative per area:
 - **Fabry Chat** — `2026-07-10-fabry-chat-console-design.md`,
   `2026-07-11-fabry-deep-verify-design.md`, `2026-07-13-fabry-agent-questions-design.md`,
   `2026-08-11-fabry-public-single-gate-design.md`
-- **Onboarding training** — `2026-08-07-partner-onboarding-training-design.md` + `-verification.md`
+- **Onboarding training (Academy)** — `2026-11-13-academy-client-project-design.md` (curriculum,
+  checks, UI; §17 removed the coach on Rossum pages), a delta on `2026-08-07-partner-onboarding-training-design.md` (gate, storage
+  cap, signed receipt)
 - **Inspector** — `2026-07-03-inspector-overhaul-design.md`
 - **MDH** — `2026-09-24-mdh-provenance-lookup-fields-design.md` (the Matching provenance card:
   lookup fields read from their saved result, one list in schema order),

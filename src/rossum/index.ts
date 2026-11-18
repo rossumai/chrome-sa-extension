@@ -12,7 +12,6 @@ import {
 } from './features/closable-tooltips.js';
 import { init as initDatasetMgmtSuggest } from './features/dataset-mgmt-suggest.js';
 import { init as initTrackViewed } from './features/track-viewed.js';
-import { init as initTrainingQuest } from './features/training-quest.js';
 import { init as initOrgName, handleNode as handleOrgName } from './features/org-name.js';
 import {
   init as initDevModeChip,
@@ -23,7 +22,6 @@ import { orgNameOn } from './orgName.js';
 initClosableTooltips();
 initDatasetMgmtSuggest();
 initTrackViewed();
-initTrainingQuest(); // self-gates on experimentalUnlocked; no popup toggle
 
 const SETTINGS_KEYS = [
   'schemaAnnotationsEnabled',

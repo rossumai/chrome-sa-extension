@@ -1,550 +1,1051 @@
 /* src/academy/Academy.module.css — component-owned; esbuild emits it into
-   dist/console/console.css. Colors come from the Console's shared tokens
-   defined in src/console/console.css (--border, --accent, --bg-*,
-   --text-*, --success-*) — NOT --surface/--surface-2/--fg-muted/--accent-bg,
-   which are not defined anywhere in this codebase. */
+   dist/console/console.css. Colours come from the Console's shared tokens in
+   src/console/console.css, so dark mode follows them. The client's teal is the
+   one fixed colour: it is Acme's, and it carries white text in both modes. */
 .root {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-columns: 268px minmax(0, 1fr);
   height: 100%;
   overflow: hidden;
 }
-.list {
-  border-right: 1px solid var(--border);
-  background: var(--bg-sidebar);
-  padding: 14px 10px;
-  overflow-y: auto;
-}
-.listTitle {
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin: 0 0 10px;
-}
-.mission {
+
+/* ---- the engagement spine ---- */
+.spine {
   display: flex;
-  gap: 9px;
-  align-items: center;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: 0;
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  color: inherit;
-}
-.mission:hover:not(:disabled) {
-  background: var(--bg-hover);
-}
-.mission:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.missionActive {
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 18px;
   background: var(--bg-card);
+  border-right: 1px solid var(--border);
 }
-.mission b {
-  display: block;
-  font-size: 13px;
+.client {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
 }
-.mission i {
-  font-style: normal;
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-.ring {
+.clientLogo {
   flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #0f5d63;
+  color: #fff;
   font-weight: 700;
+  font-size: 15px;
+}
+.clientName {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.clientSub {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.missions {
+  position: relative;
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+.missions::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 0;
+  bottom: 16px;
+  width: 2px;
+  background: var(--border);
+}
+.missionBtn {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 2px -8px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.missionBtn:hover {
   background: var(--bg-hover);
 }
-.ring[data-status='done'] {
+.missionBtn[aria-current='true'] {
+  background: var(--info-bg);
+}
+.dot {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.missionBtn[data-status='done'] .dot {
+  border-color: var(--success);
+  background: var(--success);
+  color: #fff;
+}
+.missionBtn[data-status='active'] .dot {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.missionTitle {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+.missionBtn[data-status='locked'] .missionTitle {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.missionSub {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.spineFoot {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.meter {
+  height: 6px;
+  margin: 2px 0 6px;
+  border-radius: 3px;
+  background: var(--bg-hover);
+  overflow: hidden;
+}
+.meterFill {
+  display: block;
+  height: 100%;
+  background: var(--success);
+}
+.spineLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 10px;
+}
+.textBtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.textBtn:hover {
+  text-decoration: underline;
+}
+
+/* ---- the mission ---- */
+.main {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 22px 28px 32px;
+  background: var(--bg-base);
+}
+.mhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 16px;
+}
+.mtitle {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.msub {
+  margin: 2px 0 0;
+  color: var(--text-secondary);
+}
+.mactions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.status {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.statusWarn {
+  color: var(--warning-fg);
+}
+.names {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--warning-border);
+  border-left: 4px solid var(--warning);
+  border-radius: 8px;
+  background: var(--warning-bg);
+}
+.namesRule {
+  margin: 0;
+  max-width: 80ch;
+  color: var(--warning-fg);
+}
+.namesRule b {
+  color: var(--text-primary);
+}
+.namesWhy {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.namesChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.runCode {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+.chip code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.chipInline {
+  padding: 0 1px 0 6px;
+  margin: 0 1px;
+  vertical-align: baseline;
+  font-weight: 400;
+}
+.chipInline code {
+  font-size: 0.88em;
+}
+.chip[data-copy='copied'] {
+  border-color: var(--success-border);
+}
+.chipCopy:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.chip[data-copy='copied'] .chipCopy {
+  color: var(--success);
+}
+.chip[data-copy='failed'] .chipCopy {
+  color: var(--danger);
+}
+.chipCopy {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(540px, 1.05fr);
+  gap: 20px;
+  margin-top: 18px;
+  align-items: start;
+}
+@media (max-width: 1240px) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* the client's voice */
+.letter {
+  position: relative;
+  padding: 16px 20px 16px 22px;
+  border: 1px solid color-mix(in srgb, #0f5d63 22%, var(--border));
+  border-left: 4px solid #0f5d63;
+  border-radius: 10px;
+  background: color-mix(in srgb, #0f5d63 7%, var(--bg-card));
+}
+.from {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+}
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #d7ece9;
+  color: #0f5d63;
+  font-size: 12px;
+  font-weight: 700;
+}
+.fromName {
+  display: block;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.fromRole {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.briefTag {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #0f5d63;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+.quote {
+  margin: 12px 0 0;
+  max-width: 62ch;
+  font:
+    15px/1.62 Charter,
+    'Iowan Old Style',
+    'Bitstream Charter',
+    Georgia,
+    serif;
+  color: var(--text-primary);
+}
+.quote p {
+  margin: 0 0 10px;
+}
+.attach {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-sidebar);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* tasks */
+.tasksSection {
+  margin-top: 26px;
+}
+.tasksHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.tasksTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+.tasksCount {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.task {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+}
+.taskCurrent {
+  border-color: var(--info-border);
+  box-shadow: 0 0 0 3px var(--info-bg);
+}
+.taskStep {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.taskCurrent .taskStep {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.task[data-state='ok'] .taskStep {
+  border-color: var(--success);
+  background: var(--success);
+  color: #fff;
+}
+.taskBody {
+  min-width: 0;
+}
+.taskHead {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  min-height: 26px;
+}
+.taskTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.taskTitle code,
+.why code,
+.assertLabel code,
+.fix code,
+.where code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+.state {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.stateOk {
+  color: var(--success);
+}
+.stateFix {
+  color: var(--warning);
+}
+.stateWait {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.why {
+  margin: 6px 0 0;
+  max-width: 66ch;
+  color: var(--text-primary);
+  opacity: 0.85;
+}
+.where {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.doneWhen {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.doneWhenLabel {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.asserts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.assert {
+  position: relative;
+  padding-left: 24px;
+}
+.mark {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+}
+.assert[data-state='ok'] .mark {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.assert[data-state='no'] .mark {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.assert[data-state='pending'] {
+  color: var(--text-secondary);
+}
+.assert[data-state='pending'] .mark {
+  border: 1.5px solid var(--border);
+}
+.fix {
+  margin: 4px 0 2px 24px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  font-size: 12.5px;
+}
+.lockNote {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-sidebar);
+  color: var(--text-secondary);
+}
+
+/* ---- the build board ---- */
+.build {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  /* Stays in view while the tasks scroll (owner, 2026-11-16). .main is the scroller,
+     and .cols aligns its columns to the top, so the card sticks at the column's top. */
+  position: sticky;
+  top: 0;
+}
+/* One column (see .cols): a sticky board would cover the tasks it sits above. Placed
+   after .build on purpose — the same specificity earlier in the file would lose. */
+@media (max-width: 1240px) {
+  .build {
+    position: static;
+  }
+}
+.buildHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 16px 10px;
+}
+.buildTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.buildSub {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.board {
+  position: relative;
+  width: 520px;
+  height: 472px;
+  margin: 0 auto;
+}
+.boardWrap {
+  border-top: 1px solid var(--border);
+  background-color: var(--bg-sidebar);
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.wire {
+  fill: none;
+  stroke-width: 1.5;
+}
+.wire[data-state='built'] {
+  stroke: var(--success);
+  opacity: 0.55;
+}
+.wire[data-state='partial'] {
+  stroke: var(--accent);
+}
+.wire[data-state='ghost'] {
+  stroke: var(--border);
+  stroke-dasharray: 4 4;
+}
+.node {
+  position: absolute;
+  width: 176px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  font-size: 12px;
+}
+.node[data-state='built'] {
+  border-color: var(--success-border);
+}
+.node[data-state='built']::after {
+  content: '✓';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--success);
+  color: #fff;
+  font-size: 10px;
+}
+.node[data-state='partial'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--info-bg);
+}
+.node[data-state='ghost'] {
+  border-style: dashed;
+  color: var(--text-secondary);
+}
+.nodeKind {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.nodeName {
+  display: block;
+  margin: 1px 0 3px;
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.node[data-state='ghost'] .nodeName {
+  font-weight: 500;
+}
+.nodeId {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.nodeFields {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.fieldOn {
+  color: var(--success-fg);
+}
+.fieldOff {
+  color: var(--text-secondary);
+}
+.flag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  font-size: 11px;
+}
+.flagOk {
   background: var(--success-bg);
   color: var(--success-fg);
 }
-.main {
-  overflow-y: auto;
-  padding: 16px 20px;
-  background: var(--bg-card);
-}
-.detail {
-  display: block;
-}
-.hud {
+.legend {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-.hud button {
-  margin-left: auto;
-}
-.detailTitle {
-  margin: 0 0 4px;
-  font-size: 20px;
-}
-.blurb {
-  margin: 0 0 14px;
+  gap: 16px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
   color: var(--text-secondary);
+  font-size: 12px;
 }
-.step {
-  display: flex;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  margin-bottom: 8px;
+.legendItem::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border: 1.5px solid var(--border);
+  border-radius: 3px;
+  vertical-align: -1px;
 }
-.step[data-state='passed'],
-.step[data-state='self'] {
-  background: var(--success-bg);
+.legendBuilt::before {
   border-color: var(--success-border);
 }
-.tick {
-  flex: none;
+.legendPartial::before {
+  border-color: var(--accent);
 }
-.stepBody {
-  flex: 1;
-  min-width: 0;
+.legendGhost::before {
+  border-style: dashed;
 }
-.chip {
-  flex: none;
-  align-self: flex-start;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  border-radius: 4px;
-  padding: 2px 6px;
-  background: var(--bg-hover);
-  color: var(--text-secondary);
-}
-.attest,
-.primary,
-.ghost {
-  border-radius: 7px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 6px 12px;
-}
-.primary {
-  background: var(--accent);
-  color: #fff;
-  border: 0;
-}
-.primary:hover {
-  background: var(--accent-hover);
-}
-.ghost {
-  background: none;
+
+/* ---- handover ---- */
+.sheet {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px 34px;
   border: 1px solid var(--border);
-  color: inherit;
+  border-radius: 12px;
+  background: var(--bg-card);
 }
-.attest {
-  background: none;
-  border: 1px solid var(--border);
-  color: inherit;
-  margin-top: 6px;
-}
-/* Entry ("start the track") screen — direct app-root child; flex column so
-   the centered hero and the quieter trainer section below both fit, with
-   page-level scroll if the content (hero + trainer) runs taller than the
-   viewport. Shared by the !connected empty-state branch too.
-   Deliberately UNPADDED: this used to carry `padding: 24px 20px`, but that
-   padding sat between `.entry` and `.hero`, so the hero's absolutely-positioned
-   `.heroBg` (inset: 0, resolved against `.hero`'s own padding box) stopped
-   24/20px short of the app edges — measured live as a visible plain-background
-   border around the atmosphere. The inset moved onto `.hero` itself (below) so
-   `.heroBg` reaches the true edges; children that actually need the old
-   horizontal inset (the error strip, `.trainerWrap`) now carry their own,
-   since they can no longer borrow it from here. */
-.entry {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-/* Only used within `.entry` (the not-connected and no-progress branches) —
-   `.main`'s own `<ErrorStrip />` keeps `.main`'s padding and skips this, so
-   the inset is never applied twice. Reproduces `.entry`'s old padding
-   (24 top, 20 sides) directly on the strip; margin-bottom is left to
-   `.errorStrip` itself so the two never fight over the same property. */
-.entryError {
-  margin-top: 24px;
-  margin-left: 20px;
-  margin-right: 20px;
-}
-/* Wider than the shared 380px empty-state-card, used only by the !connected
-   branch's empty-state — composed onto (not replacing) empty-state-card, so
-   it still inherits the card's centered column/gap/text-align. */
-.entryCard {
-  max-width: 440px;
-}
-
-/* ---- "Aurora" landing hero (no-progress branch) ------------------------
-   Two columns (~352px pitch/CTA + ~344px mission-preview card) centered in
-   the app area, over a slow-drifting blurred-color background. Owner-picked
-   from browser mockups; see docs/superpowers/specs/2026-08-07-partner-
-   onboarding-training-design.md.
-   The `padding: 24px 20px` below is `.entry`'s old padding, relocated here on
-   purpose: an absolutely-positioned `inset: 0` child (`.heroBg`) resolves
-   against its containing block's PADDING box, not its content box, so with
-   the padding living on `.hero` itself, `.heroBg` still spans `.hero`'s full
-   box (edge-to-edge with the app area) while `.heroInner` — an in-flow,
-   `position: relative` child, unaffected by that padding-box rule — gets
-   pushed in by it exactly as far as `.entry`'s padding used to push the
-   whole `.hero` box in. Net effect: the atmosphere now bleeds to the edges;
-   `.heroInner`'s on-screen position is unchanged (verified by measuring both
-   before and after in the running extension). */
-.hero {
-  position: relative;
-  overflow: hidden;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 20px;
-}
-.heroBg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.heroBlobA,
-.heroBlobB {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(46px);
-}
-.heroBlobA {
-  top: -90px;
-  right: -70px;
-  width: 320px;
-  height: 320px;
-  background: color-mix(in srgb, var(--accent) 26%, transparent);
-  animation: heroDriftA 17s ease-in-out infinite alternate;
-}
-.heroBlobB {
-  bottom: -100px;
-  left: -80px;
-  width: 300px;
-  height: 300px;
-  background: color-mix(in srgb, var(--success) 20%, transparent);
-  animation: heroDriftB 21s ease-in-out infinite alternate;
-}
-.heroGrain {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(
-    color-mix(in srgb, var(--text-secondary) 26%, transparent) 0.5px,
-    transparent 0.5px
-  );
-  background-size: 4px 4px;
-  opacity: 0.5;
-}
-@keyframes heroDriftA {
-  from {
-    transform: translate(0, 0);
-  }
-  to {
-    transform: translate(-26px, 22px);
-  }
-}
-@keyframes heroDriftB {
-  from {
-    transform: translate(0, 0);
-  }
-  to {
-    transform: translate(24px, -18px);
-  }
-}
-
-.heroInner {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 352px 344px;
-  gap: 56px;
-  align-items: center;
-  max-width: 100%;
-}
-
-.heroLeft {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-}
-/* Fixed, non-repeating markup (not a `.map()`) — nth-child stagger is fine
-   here; the dynamic mission rows below use a `--i` custom property instead,
-   per the design brief. */
-.heroLeft > * {
-  animation: heroFadeUp 500ms cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
-}
-.heroLeft > *:nth-child(1) {
-  animation-delay: 0ms;
-}
-.heroLeft > *:nth-child(2) {
-  animation-delay: 60ms;
-}
-.heroLeft > *:nth-child(3) {
-  animation-delay: 120ms;
-}
-.heroLeft > *:nth-child(4) {
-  animation-delay: 180ms;
-}
-.heroLeft > *:nth-child(5) {
-  animation-delay: 240ms;
-}
-.heroLeft > *:nth-child(6) {
-  animation-delay: 300ms;
-}
-@keyframes heroFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(9px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.eyebrow {
-  margin: 0 0 14px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--accent);
-}
-.heroTitle {
-  margin: 0 0 12px;
-  font-size: 28px;
-  line-height: 1.14;
-  font-weight: 600;
-  letter-spacing: -0.6px;
-  color: var(--text-primary);
-}
-.lede {
-  margin: 0 0 12px;
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--text-primary);
-}
-.heroBody {
-  margin: 0 0 22px;
-  font-size: 13px;
-  line-height: 1.62;
-  color: var(--text-secondary);
-}
-.heroCta {
-  margin: 0 0 22px;
-}
-.heroFooter {
-  width: 100%;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.heroFooterText {
+.sheetTitle {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.sheetSub {
+  margin: 4px 0 0;
   color: var(--text-secondary);
+  font-size: 14px;
 }
-.trainerToggle {
-  align-self: flex-start;
-  background: none;
-  border: 0;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  font-size: 12px;
-  color: var(--accent);
-  text-decoration: underline;
-  cursor: pointer;
+.reply {
+  max-width: 64ch;
+  margin: 22px 0 0;
+  padding: 2px 0 2px 16px;
+  border-left: 3px solid #0f5d63;
+  font:
+    15px/1.62 Charter,
+    'Iowan Old Style',
+    'Bitstream Charter',
+    Georgia,
+    serif;
 }
-.trainerToggle:hover {
-  color: var(--accent-hover);
-}
-
-.heroCard {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 20px 20px 10px;
-  border-radius: 14px;
-  backdrop-filter: blur(9px);
-  background: var(--glass-bg, var(--bg-card));
-  border: 1px solid var(--glass-border, var(--border));
-  box-shadow: var(--glass-shadow, var(--shadow));
-}
-.heroCardHeading {
-  margin: 0 0 10px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-secondary);
-}
-.heroMissions {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.heroMissionRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 9px 8px;
-  margin-bottom: 2px;
-  border-radius: 8px;
-  transition:
-    background 180ms ease,
-    transform 180ms ease;
-  animation: heroFadeUp 500ms cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
-  animation-delay: calc(360ms + (var(--i) * 60ms));
-}
-.heroMissionRow:hover {
-  background: var(--bg-hover);
-  transform: translateX(3px);
-}
-.heroMissionNode {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-card));
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
-}
-.heroMissionText {
-  min-width: 0;
-}
-.heroMissionText b {
+.replyBy {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.heroMissionText p {
-  margin: 2px 0 0;
-  font-size: 11.5px;
-  line-height: 1.4;
+  margin-top: 6px;
   color: var(--text-secondary);
+  font: 12px var(--font-sans);
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .heroBlobA,
-  .heroBlobB,
-  .heroLeft > *,
-  .heroMissionRow {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Trainer panel, revealed below the hero by "Check a colleague's receipt" —
-   content width matches the hero's two-column span (352 + 56 gap + 344 =
-   752). Used to get its horizontal inset for free from `.entry`'s padding;
-   now that `.entry` is unpadded (see above), it carries its own 20px
-   horizontal padding so a narrow window doesn't run it flush to the edges.
-   box-sizing: border-box + max-width: 792 (752 + 2*20) keeps a WIDE window's
-   content width at exactly 752 — still matching `.heroInner` above it —
-   while `width: 100%` still shrinks the whole thing (padding included) to
-   fit a narrower one. */
-.trainerWrap {
-  box-sizing: border-box;
-  max-width: 792px;
+.inv {
   width: 100%;
-  margin: 24px auto 0;
-  padding: 0 20px;
+  margin-top: 24px;
+  border-collapse: collapse;
+  font-size: 13px;
 }
-.receipt,
-.trainer {
-  margin-top: 22px;
-  padding: 14px 16px;
+.inv th {
+  padding: 0 10px 8px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+}
+.inv td {
+  padding: 9px 10px 9px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.inv code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.cellOk {
+  color: var(--success);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cellNo {
+  color: var(--warning);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.codeRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px 24px;
+  align-items: center;
+  margin-top: 26px;
+  padding: 18px 20px;
   border: 1px solid var(--border);
   border-radius: 10px;
+  background: var(--bg-sidebar);
 }
-.receiptBlock {
-  background: var(--bg-code);
-  border-radius: 8px;
+.codeLabel {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.code {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  letter-spacing: 0.06em;
+}
+.fine {
+  margin: 6px 0 0;
+  max-width: 60ch;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.receiptText {
+  grid-column: 1 / -1;
+  margin: 0;
   padding: 12px;
   overflow-x: auto;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-code);
+  font-family: var(--font-mono);
   font-size: 12px;
+}
+.warnNote {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--warning-fg);
+}
+
+/* ---- trainer check ---- */
+.trainer {
+  max-width: 900px;
+  margin: 20px auto 0;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+}
+.trainerTitle {
+  margin: 0 0 4px;
+  font-size: 14px;
 }
 .textarea {
   width: 100%;
-  box-sizing: border-box;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  margin: 8px 0;
   padding: 8px;
-  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
   background: var(--bg-input);
-  color: inherit;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.okNote {
+  color: var(--success-fg);
+}
+
+/* ---- landing and states ---- */
+.landing {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 40px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 56px 40px 40px;
+}
+@media (max-width: 1000px) {
+  .landing {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.landingTitle {
+  margin: 18px 0 0;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+.landingLede {
+  max-width: 56ch;
+  margin: 10px 0 0;
+  font:
+    17px/1.6 Charter,
+    'Iowan Old Style',
+    'Bitstream Charter',
+    Georgia,
+    serif;
+}
+.landingBody {
+  max-width: 60ch;
+  margin: 14px 0 0;
+  color: var(--text-secondary);
+}
+.landingActions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 24px;
+}
+.landingList {
+  margin: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  list-style: none;
+}
+.landingItem {
+  display: flex;
+  gap: 12px;
+  padding: 9px 0;
+}
+.landingItem + .landingItem {
+  border-top: 1px solid var(--border);
+}
+.landingItemTitle {
+  display: block;
+  font-weight: 600;
+}
+.entry {
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg-base);
 }
 .errorStrip {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 14px;
-  padding: 9px 12px;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 14px;
+  padding: 8px 12px;
   border: 1px solid var(--danger-border);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--danger-bg);
   color: var(--danger-fg);
-  font-size: 12px;
-  line-height: 1.45;
-  text-align: left;
-}
-.errorStrip span {
-  flex: 1;
-  min-width: 0;
 }
 .errorDismiss {
-  flex: none;
-  background: none;
   border: 0;
+  background: none;
   color: inherit;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 15px;
-  line-height: 1;
-  padding: 0 2px;
 }
-.fine {
-  font-size: 11px;
+
+/* ---- start over ---- */
+.startList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.startList li {
+  padding: 4px 0;
+}
+.startList code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.startKind {
   color: var(--text-secondary);
-  line-height: 1.5;
 }
-.ok {
+.startId {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.startFail {
+  color: var(--danger-fg);
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---- stopping and continuing ---- */
+.runLine {
+  margin-top: 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.pauseNote {
+  margin: 8px 0 0;
+}
+.pauseNote code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-primary);
+}
+.continueRun {
+  margin-top: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.continueLabel {
+  display: block;
+  font-weight: 600;
+}
+.continueHint {
+  margin: 4px 0 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.continueRow {
+  display: flex;
+  gap: 8px;
+}
+.continueInput {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+/* ---- mission complete ---- */
+.doneNote {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--success-border);
+  border-left: 4px solid var(--success);
+  border-radius: 8px;
+  background: var(--success-bg);
+}
+.doneTick {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--success);
+  color: #fff;
+  font-size: 12px;
+}
+.doneText {
+  flex: 1;
+  margin: 0;
   color: var(--success-fg);
-  font-weight: 600;
 }
-.warn {
-  color: var(--warning-fg);
-  font-weight: 600;
+.doneText b {
+  color: var(--text-primary);
 }

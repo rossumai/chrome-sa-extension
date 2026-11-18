@@ -2,26 +2,20 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import * as store from '../store.js';
 import { TRACK } from '../../training/track.js';
-import { xpFor, levelFor, badges, isTrackComplete } from '../../training/progress.js';
-import MissionList from './MissionList.jsx';
-import MissionDetail from './MissionDetail.jsx';
-import ReceiptPanel from './ReceiptPanel.jsx';
+import { currentMission, currentTask, isTrackComplete } from '../../training/progress.js';
+import Spine, { HANDOVER } from './Spine.jsx';
+import MissionView from './MissionView.jsx';
+import Handover from './Handover.jsx';
 import TrainerPanel from './TrainerPanel.jsx';
+import Modal from '../../ui/Modal.jsx';
 import css from '../Academy.module.css';
 
-// store.error is set by startTrack/attestStep/initAcademy. Until this existed
-// it was written and read NOWHERE: a failed write made "I've done this" simply
-// do nothing, with no way for the trainee to tell that from a slow save.
-// `inset`: the two `.entry`-branch call sites (not-connected, no-progress hero)
-// pass this — `.entry` carries no padding of its own (see Academy.module.css),
-// so the strip needs its own horizontal/top inset there. The with-progress
-// `.main` call site omits it and keeps relying on `.main`'s own padding, which
-// is unaffected by this change.
-function ErrorStrip({ inset }: { inset?: boolean } = {}) {
+// store.error is set by start, restart and init; a failed write must say so.
+function ErrorStrip() {
   const message = store.error.value;
   if (!message) return null;
   return (
-    <div class={inset ? `${css.errorStrip} ${css.entryError}` : css.errorStrip} role="alert">
+    <div class={css.errorStrip} role="alert">
       <span>{message}</span>
       <button
         type="button"
@@ -37,142 +31,145 @@ function ErrorStrip({ inset }: { inset?: boolean } = {}) {
   );
 }
 
+// For another computer, or a browser whose storage was cleared: progress lives in
+// this browser, the run's objects in the org, so the code is all it takes.
+function ContinueRun() {
+  const [code, setCode] = useState('');
+  return (
+    <form
+      class={css.continueRun}
+      onSubmit={(e) => {
+        e.preventDefault();
+        store.continueRun(code);
+      }}
+    >
+      <label class={css.continueLabel} for="academy-run-code">
+        Continue an earlier run
+      </label>
+      <p class={css.continueHint}>
+        On another computer, or after clearing this browser? Enter the run{'’'}s code, and the
+        Academy finds what you built and picks up where you left off.
+      </p>
+      <div class={css.continueRow}>
+        <input
+          id="academy-run-code"
+          class={css.continueInput}
+          placeholder="barge-17"
+          value={code}
+          onInput={(e) => setCode(e.currentTarget.value)}
+        />
+        <button type="submit" class="btn" disabled={!code.trim()}>
+          Continue
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function Landing() {
+  return (
+    <div class={css.entry}>
+      <div class={css.landing}>
+        <div>
+          <div class={css.client}>
+            <div class={css.clientLogo}>{TRACK.client.initials}</div>
+            <div>
+              <b class={css.clientName}>{TRACK.client.name}</b>
+              <span class={css.clientSub}>A fictional client, and your first project</span>
+            </div>
+          </div>
+          <h1 class={css.landingTitle}>{TRACK.title}</h1>
+          <p class={css.landingLede}>
+            Acme Freight wants its supplier invoices to reach the ERP with the right vendor, and
+            without anyone typing them. You build it, in your own organization.
+          </p>
+          <p class={css.landingBody}>
+            Six missions take you from an empty queue to one invoice confirmed end to end. Each run
+            gets its own code, and everything you build carries it in Acme{'’'}s naming convention,
+            so the Academy knows what belongs to this run. The Academy only reads your organization,
+            unless you start over and ask it to delete a run.
+          </p>
+          <ErrorStrip />
+          <div class={css.landingActions}>
+            <button type="button" class="btn btn-primary" onClick={() => store.startTrack()}>
+              Start the project
+            </button>
+            <button
+              type="button"
+              class={css.textBtn}
+              onClick={() => {
+                store.showTrainer.value = !store.showTrainer.value;
+              }}
+            >
+              Check a colleague{'’'}s summary
+            </button>
+          </div>
+        </div>
+        <div>
+          <ol class={css.landingList}>
+            {TRACK.missions.map((m, i) => (
+              <li key={m.id} class={css.landingItem}>
+                <span class={css.dot}>{i + 1}</span>
+                <span>
+                  <span class={css.landingItemTitle}>{m.title}</span>
+                  <span class={css.missionSub}>
+                    {m.summary}. About {m.minutes} minutes.
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <ContinueRun />
+        </div>
+      </div>
+      {store.showTrainer.value && <TrainerPanel />}
+    </div>
+  );
+}
+
 export default function AcademyApp({ connected }: { connected: boolean | null }) {
-  // Declared unconditionally, before either early return, so hook order never
-  // depends on `connected`/`progress` — both of which can change across
-  // re-renders of the same mounted instance.
-  const [showTrainer, setShowTrainer] = useState(false);
   const progress = store.progress.value;
-  // The not-connected branch renders the strip too — initAcademy's "open the
-  // Academy from the popup" message is set on exactly this path, so leaving it
-  // out is what made that message unreachable. Uses the shared app-root/empty-state
-  // convention (console.css) like the no-progress branch, NOT css.root.
   if (!connected) {
     return (
       <div class="app-root">
         <div class={css.entry}>
-          <ErrorStrip inset />
           <div class="empty-state">
-            <div class={`empty-state-card ${css.entryCard}`}>
+            <div class="empty-state-card">
               <div class="empty-state-title">Not connected</div>
-              <p class="empty-state-body">The Academy tracks your progress in your Rossum org.</p>
+              <p class="empty-state-body">
+                {store.error.value ||
+                  'Open the Console from the extension popup on a Rossum tab to start the Academy.'}
+              </p>
             </div>
           </div>
         </div>
       </div>
     );
   }
+  if (!progress) return <Landing />;
 
-  if (!progress) {
-    // "Aurora" landing hero — owner-approved design, browser-mockup review.
-    // Two columns: the pitch + CTA on the left, a preview of every mission's
-    // payoff on the right, over a slow-drifting blurred-color background.
-    // TrainerPanel is reachable but not shown by default — a trainer
-    // validating a colleague's receipt is a secondary path off this screen,
-    // not the hero.
-    return (
-      <div class="app-root">
-        <div class={css.entry}>
-          <ErrorStrip inset />
-          <div class={css.hero}>
-            <div class={css.heroBg} aria-hidden="true">
-              <span class={css.heroBlobA} />
-              <span class={css.heroBlobB} />
-              <span class={css.heroGrain} />
-            </div>
-            <div class={css.heroInner}>
-              <div class={css.heroLeft}>
-                <p class={css.eyebrow}>Hands-on onboarding {'·'} 5 missions</p>
-                <h1 class={css.heroTitle}>{TRACK.title}</h1>
-                <p class={css.lede}>
-                  Learn Rossum by building in it {'—'} not by reading about it.
-                </p>
-                <p class={css.heroBody}>
-                  Five short missions take you from your first document through to working
-                  automation: schema fields, extensions, business rules and master-data matching.
-                  You do the real work in a real organization, so what you learn here transfers
-                  straight to a customer project.
-                </p>
-                <button
-                  type="button"
-                  class={`btn btn-primary ${css.heroCta}`}
-                  onClick={() => store.startTrack()}
-                >
-                  Start the track
-                </button>
-                <div class={css.heroFooter}>
-                  <p class={css.heroFooterText}>
-                    Work at your own pace {'—'} pick up where you left off any time.
-                  </p>
-                  <button
-                    type="button"
-                    class={css.trainerToggle}
-                    aria-expanded={showTrainer}
-                    onClick={() => setShowTrainer((v) => !v)}
-                  >
-                    Check a colleague{'’'}s receipt
-                  </button>
-                </div>
-              </div>
-              <aside class={css.heroCard}>
-                <h2 class={css.heroCardHeading}>What you will be able to do</h2>
-                <ul class={css.heroMissions}>
-                  {TRACK.missions.map((m, i) => (
-                    <li key={m.id} class={css.heroMissionRow} style={{ '--i': i }}>
-                      <span class={css.heroMissionNode}>{i + 1}</span>
-                      <div class={css.heroMissionText}>
-                        <b>{m.title}</b>
-                        <p>{m.blurb}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </aside>
-            </div>
-          </div>
-          {showTrainer && (
-            <div class={css.trainerWrap}>
-              <TrainerPanel />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  const mission =
-    TRACK.missions.find((m) => m.id === store.activeMissionId.value) || TRACK.missions[0];
-  const xp = xpFor(TRACK, progress);
-  // `|| store.mintNote.value`: a failed mint REVOKES the step it failed on, so
-  // the track stops being complete in the same breath — unmounting the panel
-  // and taking the explanation with it, right as the trainee clicks the last
-  // button of the whole track.
-  const showReceipt = isTrackComplete(TRACK, progress) || !!store.mintNote.value;
+  const selected = store.selectedMission.value;
+  const complete = isTrackComplete(TRACK, progress);
+  // Follow the task to work on: an earlier mission when its work was undone since.
+  const shown =
+    selected ||
+    (complete
+      ? HANDOVER
+      : (currentTask(TRACK, progress)?.mission ?? currentMission(TRACK, progress)!).id);
+  const mission = TRACK.missions.find((m) => m.id === shown);
   return (
     <div class={css.root}>
-      <MissionList
-        track={TRACK}
-        progress={progress}
-        activeId={mission.id}
-        onSelect={store.setActiveMission}
-      />
+      <Spine progress={progress} shown={shown} />
       <main class={css.main}>
         <ErrorStrip />
-        <header class={css.hud}>
-          <b>
-            Level {levelFor(xp)} {'·'} {xp} XP
-          </b>
-          <span>
-            {'★'} {badges(TRACK, progress).length}/{TRACK.missions.length}
-          </span>
-          <button type="button" class={css.ghost} onClick={() => store.restartTrack()}>
-            Restart track
-          </button>
-        </header>
-        <MissionDetail mission={mission} progress={progress} onAttest={store.attestStep} />
-        {showReceipt && <ReceiptPanel />}
-        <TrainerPanel />
+        {mission ? (
+          <MissionView mission={mission} progress={progress} />
+        ) : (
+          <Handover progress={progress} />
+        )}
+        {store.showTrainer.value && <TrainerPanel />}
       </main>
+      <Modal />
     </div>
   );
 }

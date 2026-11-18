@@ -1,280 +1,263 @@
 // src/training/track.ts
-// DATA ONLY — no logic lives here, and no data lives in steps.js. Editing the
-// syllabus must never require touching evaluation.
+// DATA plus the two naming helpers. The curriculum is ONE fictional client
+// project — Acme Freight's accounts payable — told across six missions. Every
+// task is CHECKED (src/training/checks.ts); there are no self-attested steps.
 //
-// step.kind:
-//   'visit' → target: { type, detail? } matched via detectResource()
-//   'api'   → check: a CHECKS id in steps.js, passing on a delta vs the
-//             mission-start baseline
-//   'self'  → the trainee attests; printed on the receipt as self-attested
-// step.hint   → ONE plain-text line, rendered with textContent in the card
-// step.teach  → markdown, rendered in the Academy
-// step.anchor → { cy?, hrefIncludes? } only — either or both. `cy` matches a
-//               `data-cy` attribute (Rossum's durable hook for non-link
-//               controls); `hrefIncludes` matches a real `a[href]` substring.
-//               Both are verified contracts; CSS classes are not, and are
-//               never matched on. No anchor ⇒ no tether, never a blocked step.
+// Checks find the trainee's OWN objects by exact name (spec 2026-11-13 §4), so
+// other people working in the same org can neither tick nor un-tick a task.
+// `{queue}`, `{dataset}` and `{rule}` in copy are replaced with those names.
 //
-// EVERY `cy` value below was READ OFF THE LIVE SCREEN it belongs to (2026-08-14,
-// elis) — never inferred from a sibling. That distinction is load-bearing: the
-// values do NOT follow one scheme. Queue-settings tabs are
-// `queue-settings-header-tab-<name>` but the Automation-section tabs are
-// `tab-automation.<camelCase>` (a dot, escaped by `cssEscape` — live-checked,
-// not assumed); the Extensions list uses `extensions-*` while Field Manager
-// uses `fm-*`. Guessing the next one from the last one WILL produce a selector
-// that silently never resolves, which reads as "the tether is broken" rather
-// than as a typo. Re-harvest, don't extrapolate.
-//
-// The anchor points at the control that PERFORMS the step, not at a wayfinding
-// hop — the hint line already names the destination — except where the step IS
-// the navigation (m1.s1, m3.s1), where they are the same control.
 
-/** How a step is verified. `self` is the only kind the Academy may mark. */
-export type StepKind = 'visit' | 'api' | 'self';
+/** What a task's check has to read. The loader fetches only these. */
+export type Need = 'queue' | 'schema' | 'hooks' | 'rule' | 'dataset' | 'annotations';
 
-/** Where the tether points. `cy` matches a data-cy attribute, `hrefIncludes` a real a[href]. */
-export type StepAnchor = { cy?: string; hrefIncludes?: string };
-
-export type TrackStep = {
+export type Task = {
   id: string;
-  kind: StepKind;
-  /** ONE plain-text line, rendered with textContent in the quest card. */
-  hint: string;
-  /** Markdown, rendered in the Academy. */
-  teach?: string;
-  /** `visit` steps: matched via detectResource(). */
-  /** `detail: true` means "any detail page of this type"; a string matches that one. */
-  target?: { type: string; detail?: string | boolean };
-  /** `api` steps: a CHECKS id in steps.js. */
-  check?: string;
-  anchor?: StepAnchor;
+  /** One line. May name `{queue}`, `{dataset}` or `{rule}`, and mark code with backticks. */
+  title: string;
+  /** Why the client needs it — one or two sentences. */
+  why: string;
+  /** A breadcrumb in Rossum (or the Console) leading to the control. */
+  where: string;
+  needs: Need[];
 };
 
-export type Mission = { id: string; title: string; blurb: string; steps: TrackStep[] };
+export type Mission = {
+  id: string;
+  title: string;
+  /** One line for the mission list. */
+  summary: string;
+  minutes: number;
+  /** The client's message that opens the mission, one paragraph per entry. */
+  letter: string[];
+  tasks: Task[];
+};
 
-export type Track = { id: string; version: number; title: string; missions: Mission[] };
+export type Track = {
+  id: string;
+  version: number;
+  title: string;
+  client: { name: string; initials: string; contact: string; role: string };
+  missions: Mission[];
+};
+
+// Every run of the project gets its own code, and every object the trainee
+// builds carries it, in Acme Freight's (fictional) IT naming convention: `AF`,
+// the system, the run. The code is what tells the Academy which objects belong
+// to THIS run — so starting over with a new code leaves an earlier run's objects
+// out of every check, whether or not they were deleted.
+const RUN_WORDS = [
+  'barge',
+  'crane',
+  'dock',
+  'ferry',
+  'forklift',
+  'harbor',
+  'keel',
+  'lantern',
+  'pallet',
+  'pier',
+  'quay',
+  'reefer',
+  'rudder',
+  'tanker',
+  'tug',
+  'winch',
+];
+
+/** A fresh run code, for example `barge-17`. */
+export function newRunCode(random: () => number = Math.random): string {
+  const word = RUN_WORDS[Math.floor(random() * RUN_WORDS.length) % RUN_WORDS.length];
+  return `${word}-${10 + (Math.floor(random() * 90) % 90)}`;
+}
+
+/** True for a code newRunCode could have made — the only shape the names accept. */
+export const isRunCode = (code: unknown): code is string =>
+  typeof code === 'string' && /^[a-z]+-\d{2}$/.test(code);
+
+export type Names = { queue: string; dataset: string; rule: string };
+
+export function namesFor(run: string): Names {
+  return {
+    queue: `AF · AP Invoices · ${run}`,
+    // Dataset names take no spaces or dots, so the convention's separator is `_` there.
+    dataset: `af_vendor_master_${run.replace(/-/g, '_')}`,
+    rule: `AF · PO required · ${run}`,
+  };
+}
+
+/** Replaces `{queue}`, `{dataset}` and `{rule}` with the trainee's own names. */
+export function fill(text: string, names: Names): string {
+  return text.replace(/\{(queue|dataset|rule)\}/g, (_m, k: keyof Names) => names[k]);
+}
 
 export const TRACK: Track = {
-  id: 'partner-foundations',
+  id: 'acme-ap',
   version: 1,
-  title: 'Partner foundations',
+  title: 'Acme Freight goes live',
+  client: {
+    name: 'Acme Freight',
+    initials: 'AF',
+    contact: 'Dana Kowalski',
+    role: 'AP lead at Acme Freight',
+  },
   missions: [
     {
-      id: 'm1',
-      title: 'Orientation',
-      blurb: 'Navigate documents, queues and annotations with confidence',
-      steps: [
+      id: 'kickoff',
+      title: 'Kickoff',
+      summary: 'A queue for Acme invoices',
+      minutes: 5,
+      letter: [
+        'We receive about 1,200 supplier invoices a month by email, and three people type them into our ERP by hand.',
+        'Let us start small: one queue for our AP invoices, so you have somewhere to build.',
+      ],
+      tasks: [
         {
-          id: 'm1.s1',
-          kind: 'visit',
-          target: { type: 'organization' },
-          anchor: { cy: 'all-documents-sidebar', hrefIncludes: '/documents' },
-          hint: 'Open the all-documents dashboard.',
-          teach:
-            'The dashboard is every document in the organization, across all queues. Start here when you have no idea where a document ended up.',
-        },
-        // `sidebar-queue` first: the href fallback matches the queue's SETTINGS
-        // gear (`/queues/<id>/settings/basic`, the only `/queues/` link on the
-        // dashboard), which is a different destination than the step asks for.
-        {
-          id: 'm1.s2',
-          kind: 'visit',
-          target: { type: 'queue', detail: true },
-          anchor: { cy: 'sidebar-queue', hrefIncludes: '/queues/' },
-          hint: 'Open any queue.',
-          teach:
-            'A **queue** is where documents land and where almost all configuration hangs: the schema, the extensions that run, the automation settings.',
-        },
-        // `file-name`, not `document-row`: the row is a horizontally scrollable
-        // element ~4263px wide, so a tether to it can only point at whatever
-        // its clipped middle happens to be — a column boundary. The file name
-        // is the thing a trainee actually clicks, and it is a small rect.
-        {
-          id: 'm1.s3',
-          kind: 'visit',
-          target: { type: 'annotation', detail: true },
-          anchor: { cy: 'file-name' },
-          hint: 'Open any document from that queue.',
-          teach:
-            'The document you opened is an **annotation** — the extracted data plus its position on the page. The id in the URL is the annotation id, not the document id.',
-        },
-        {
-          id: 'm1.s4',
-          kind: 'self',
-          anchor: { cy: 'annotation-sidebar-datapoint' },
-          hint: "Find a field's schema_id using the extension's overlay.",
-          teach:
-            "Turn on **Schema ID overlays** in this extension's popup, then look at a field on the annotation screen. Every field has a `schema_id` — the name you use everywhere in configuration.",
+          id: 'kickoff.queue',
+          title: 'Create the queue `{queue}`',
+          why: 'A queue is where documents arrive, and where every setting for them lives: the schema, extensions, rules and automation. Pick the Invoice template and the Generic engine: the AI fields this project uses come from it.',
+          where: 'Documents › + at the bottom of the sidebar › Add queue (any workspace)',
+          needs: ['queue'],
         },
       ],
     },
     {
-      id: 'm2',
-      title: 'Queues & schema',
-      blurb: 'Shape what a queue captures, and know where every field lives',
-      steps: [
-        // detail:false is load-bearing — the queue Fields tab resolves to a
-        // schema descriptor with NO id, while Field Manager's detail route
-        // carries one. Without it this step would also tick on m2.s3's page.
+      id: 'fields',
+      title: 'Capture what Acme needs',
+      summary: 'Three fields on the schema',
+      minutes: 15,
+      letter: [
+        'Our ERP needs three things on every invoice that a generic template does not give us: the PO number, the supplier VAT number, and the vendor id from our vendor master.',
+      ],
+      tasks: [
         {
-          id: 'm2.s1',
-          kind: 'visit',
-          target: { type: 'schema', detail: false },
-          anchor: { cy: 'queue-settings-header-tab-fields' },
-          hint: "Open a queue's Fields tab.",
-          teach:
-            "The **Fields** tab edits that queue's schema: sections, fields, and their `schema_id`s.",
+          id: 'fields.extract',
+          title: 'Give the PO and VAT fields Acme’s IDs: `po_number` and `vendor_vat_id`',
+          why: "The Invoice template already reads both: the PO number as `order_id` (Order Number) and the supplier's VAT number as `sender_vat_id`. Acme's ERP expects `po_number` and `vendor_vat_id`, so change the ID of those two existing fields, and don't add new ones: a renamed field keeps reading the same value from the invoice.",
+          where: 'Documents › {queue} › gear button › Fields',
+          needs: ['queue', 'schema'],
         },
         {
-          id: 'm2.s2',
-          kind: 'api',
-          check: 'schemaFieldAdded',
-          anchor: { cy: 'add-field-button' },
-          hint: 'Add a field to that schema.',
-          teach:
-            'Add any field. We confirm it by reading the schema and comparing the field **count** against a snapshot taken when this mission started — so a schema that already had the field does not count.',
-        },
-        // Field Manager renders 1481 elements but only four distinct data-cy
-        // values, none per-field — so the anchor is the link INTO it, and the
-        // step goes unanchored once you are already there.
-        {
-          id: 'm2.s3',
-          kind: 'visit',
-          target: { type: 'schema', detail: true },
-          anchor: { hrefIncludes: '/settings/field-manager' },
-          hint: 'Open the same field in Field Manager.',
-          teach:
-            'Field Manager is the org-wide view of fields, as opposed to the per-queue Fields tab.',
-        },
-        {
-          id: 'm2.s4',
-          kind: 'self',
-          hint: 'Find a formula field and read its formula.',
-          teach:
-            'A **formula field** computes its value from other fields. Formulas are the first tool to reach for before writing an extension.',
+          id: 'fields.match',
+          title: 'Add `vendor_match` as a list field',
+          why: 'The matching extension writes the vendor it finds into a list field (type enum): the label is the vendor name, the value the vendor id from the master.',
+          where: 'Documents › {queue} › gear button › Fields',
+          needs: ['queue', 'schema'],
         },
       ],
     },
     {
-      id: 'm3',
-      title: 'Extensions',
-      blurb: 'Attach an extension and read back exactly what it changed',
-      steps: [
+      id: 'vendors',
+      title: 'Load the vendor master',
+      summary: '40 vendors in a dataset',
+      minutes: 10,
+      letter: [
+        'Attached is our vendor export: 40 vendors with their VAT numbers. It is the same list our ERP checks every invoice against.',
+      ],
+      tasks: [
         {
-          id: 'm3.s1',
-          kind: 'visit',
-          target: { type: 'hook', detail: false },
-          anchor: { cy: 'extensions-navtab', hrefIncludes: '/extensions/my-extensions' },
-          hint: 'Open the Extensions list.',
-          teach:
-            'Every extension in the organization, whether it is a serverless function or a webhook.',
+          id: 'vendors.dataset',
+          title: 'Create the dataset `{dataset}`',
+          why: 'Master data lives in datasets. Create it by importing `acme-vendors.csv`, attached above, under exactly this name.',
+          where: 'Console › Dataset Management › Import, or Rossum › Master Data Hub',
+          needs: ['dataset'],
         },
         {
-          id: 'm3.s2',
-          kind: 'visit',
-          target: { type: 'hook', detail: true },
-          anchor: { cy: 'extensions-table-row' },
-          hint: 'Open any extension and read its trigger events.',
-          teach:
-            'The **events** decide when the extension runs — on upload, on validation, on export. Getting the event wrong is the most common reason an extension "does nothing".',
-        },
-        {
-          id: 'm3.s3',
-          kind: 'api',
-          check: 'hookAttachedToQueue',
-          anchor: { cy: 'queue-multi-select' },
-          hint: 'Attach an extension to a queue.',
-          teach:
-            'An extension only runs on the queues it is attached to. We confirm a **new** extension-to-queue link appeared since this mission started.',
-        },
-        {
-          id: 'm3.s4',
-          kind: 'self',
-          anchor: { cy: 'extensions-activities-button' },
-          hint: "Find that extension's execution log.",
-          teach:
-            'The log shows each run and its output. Log access depends on your role, so this step is yours to confirm.',
-        },
-        {
-          id: 'm3.s5',
-          kind: 'visit',
-          target: { type: 'queue', detail: true },
-          anchor: { hrefIncludes: '/queues/' },
-          hint: 'Go back to the queue you attached it to.',
-          teach: 'Close the loop: the queue is where you verify the extension is listed.',
+          id: 'vendors.records',
+          title: 'Import all 40 vendors',
+          why: 'Matching can only find a vendor that is in the dataset.',
+          where: 'Console › Dataset Management › {dataset}',
+          needs: ['dataset'],
         },
       ],
     },
     {
-      id: 'm4',
-      title: 'Automation & rules',
-      blurb: 'Tune a confidence threshold and write a rule that fires',
-      steps: [
+      id: 'matching',
+      title: 'Match every invoice to a vendor',
+      summary: 'Find the vendor by VAT number',
+      minutes: 20,
+      letter: [
+        'Our ERP rejects any invoice whose vendor is not in the vendor master. That is where most of our rework comes from.',
+        'Vendor names on invoices are never written the same way twice. The VAT number is. Can Rossum find the vendor before the invoice reaches us?',
+      ],
+      tasks: [
         {
-          id: 'm4.s1',
-          kind: 'visit',
-          target: { type: 'engine', detail: true },
-          anchor: { cy: 'tab-automation.aiEngines' },
-          hint: 'Open an AI engine.',
-          teach:
-            'The **engine** does the extraction. A queue is bound to either a generic or a dedicated engine.',
+          id: 'matching.hook',
+          title: 'Add the Master Data Hub extension to your queue',
+          why: 'The Master Data Hub extension looks each invoice up in a dataset while it is being reviewed. It runs as its token owner, so pick an admin of this organization there.',
+          where: 'Extensions › Rossum Store › Master Data Hub',
+          needs: ['queue', 'hooks'],
         },
         {
-          id: 'm4.s2',
-          kind: 'api',
-          check: 'ruleCreated',
-          anchor: { cy: 'add-rule-button' },
-          hint: 'Create a rule.',
-          teach:
-            'A **rule** fires on a condition and takes actions — raising a message, blocking automation. We confirm a rule id exists that did not when this mission started.',
+          id: 'matching.vat',
+          title: 'Match on the VAT number first',
+          why: 'Matching by name fails on "Nordic Pallet AB" versus "NORDIC PALLET A.B.". An exact match on the VAT number does not, so make it the first query.',
+          where: 'Extensions › your Master Data Hub extension › Configuration',
+          needs: ['queue', 'hooks'],
         },
         {
-          id: 'm4.s3',
-          kind: 'api',
-          check: 'thresholdChanged',
-          anchor: { cy: 'automation-level-confident' },
-          hint: "Change a queue's score threshold.",
-          teach:
-            'The **score threshold** decides how confident extraction must be before a field passes without review. We confirm the value moved on a queue that already existed.',
-        },
-        {
-          id: 'm4.s4',
-          kind: 'self',
-          anchor: { cy: 'confirm-annotation-btn' },
-          hint: 'Confirm a document.',
-          teach:
-            'Confirming pushes the annotation to the next stage. Whether you can depends on your role and on there being a document to confirm.',
+          id: 'matching.map',
+          title: 'Write the vendor into `vendor_match`',
+          why: "Acme's export needs the vendor id from the master, not the name printed on the invoice.",
+          where: 'Extensions › your Master Data Hub extension › Configuration › Mapping',
+          needs: ['queue', 'hooks'],
         },
       ],
     },
     {
-      id: 'm5',
-      title: 'Master data',
-      blurb: 'Match extracted values against your own reference data',
-      steps: [
+      id: 'rules',
+      title: 'Stop bad invoices early',
+      summary: 'A rule for missing PO numbers',
+      minutes: 10,
+      letter: [
+        'Invoices without a PO number bounce back from our ERP every single time. Please stop them before they leave Rossum.',
+      ],
+      tasks: [
         {
-          id: 'm5.s1',
-          kind: 'self',
-          hint: "Open Dataset Management from this extension's popup.",
-          teach:
-            'Dataset Management browses **Data Storage** collections — the master data an implementation matches against.',
+          id: 'rules.create',
+          title: 'Create the rule `{rule}` on your queue',
+          why: 'A rule checks every document in its queues while it is being reviewed, and acts when its condition is true. Rossum saves a rule only once it has a condition, so this and the next task usually pass together.',
+          where: 'Documents › {queue} › gear button › Rules › Add rule',
+          needs: ['queue', 'rule'],
         },
         {
-          id: 'm5.s2',
-          kind: 'api',
-          check: 'collectionAdded',
-          hint: 'Create a collection.',
-          teach:
-            'We confirm the collection **count** grew. Collection names are never recorded — only how many there are.',
+          id: 'rules.block',
+          title: 'Show an error when `po_number` is empty',
+          why: 'An error message blocks confirmation and automation, so the invoice cannot leave Rossum without a PO number. A warning would let it through.',
+          where: 'Documents › {queue} › gear button › Rules › {rule}',
+          needs: ['queue', 'rule'],
+        },
+      ],
+    },
+    {
+      id: 'golive',
+      title: 'Go live with one invoice',
+      summary: 'Confirm a real document',
+      minutes: 10,
+      letter: [
+        'Let us try it on a real one. Send any invoice through your queue, and confirm it once it shows the right vendor.',
+      ],
+      tasks: [
+        {
+          id: 'golive.upload',
+          title: 'Upload an invoice to your queue',
+          why: 'Any invoice works. Uploading, emailing it to the queue inbox and the API all land in the same place.',
+          where: 'Documents › {queue} › Upload',
+          needs: ['queue', 'annotations'],
         },
         {
-          id: 'm5.s3',
-          kind: 'self',
-          hint: 'Run a query against your collection.',
-          teach:
-            'Queries are MongoDB aggregation pipelines. This is exactly how a matching extension looks data up at runtime.',
+          id: 'golive.confirm',
+          title: 'Confirm it with a vendor matched',
+          why: 'If the vendor is not in the master, type `SE556677889901` (Nordic Pallet AB) into `vendor_vat_id`: the extension matches it again as soon as the value changes.',
+          where: 'Documents › {queue} › your invoice › Confirm',
+          needs: ['queue', 'annotations'],
         },
       ],
     },
   ],
 };
+
+/** Every task, in order, with its mission. */
+export function allTasks(track: Track): Array<{ mission: Mission; task: Task }> {
+  return track.missions.flatMap((mission) => mission.tasks.map((task) => ({ mission, task })));
+}

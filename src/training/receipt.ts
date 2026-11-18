@@ -19,9 +19,11 @@ export type ReceiptFields = {
   host: string;
   userId: number | string;
   username: string;
-  /** The mission ids that passed — joined with commas in the canonical string. */
-  missionsPassed: string[];
-  selfCount: number;
+  /** The ids of what the trainee built, as the org knows them. */
+  queueId: number;
+  hookId: number;
+  ruleId: number;
+  annotationId: number;
   dateUtc: string;
 };
 
@@ -34,13 +36,12 @@ export type SignFn = (message: string) => Promise<Uint8Array>;
 
 export function canonicalString(f: ReceiptFields): string {
   return [
-    'RSAT1',
+    'RSAT2',
     `${f.trackId}@${f.trackVersion}`,
     f.host,
     String(f.userId),
     String(f.username ?? ''),
-    f.missionsPassed.join(','),
-    String(f.selfCount),
+    `q${f.queueId},h${f.hookId},r${f.ruleId},a${f.annotationId}`,
     f.dateUtc,
   ].join('|');
 }
@@ -48,21 +49,25 @@ export function canonicalString(f: ReceiptFields): string {
 export function formatCode(bytes: Uint8Array): string {
   let out = '';
   for (let i = 0; i < CODE_CHARS; i++) out += ALPHABET[bytes[i] % 32];
-  return `RSA1-${out.slice(0, 4)}-${out.slice(4, 8)}-${out.slice(8, 12)}`;
+  return `RSA2-${out.slice(0, 4)}-${out.slice(4, 8)}-${out.slice(8, 12)}`;
 }
 
 export async function mintCode(fields: ReceiptFields, sign: SignFn): Promise<string> {
   return formatCode(await sign(canonicalString(fields)));
 }
 
+export const RECEIPT_HEADER = 'ROSSUM ACADEMY — COMPLETION SUMMARY';
+
 export function renderReceipt(f: ReceiptFields, code: string): string {
   return [
-    'ROSSUM PARTNER ONBOARDING — COMPLETION RECEIPT',
+    RECEIPT_HEADER,
     `track          | ${f.trackId}@${f.trackVersion}`,
     `org            | ${f.host}`,
     `user           | ${f.username} (id ${f.userId})`,
-    `missions       | ${f.missionsPassed.join(',')}`,
-    `self-attested  | ${f.selfCount}`,
+    `queue          | ${f.queueId}`,
+    `hook           | ${f.hookId}`,
+    `rule           | ${f.ruleId}`,
+    `invoice        | ${f.annotationId}`,
     `issued         | ${f.dateUtc}`,
     `code           | ${code}`,
   ].join('\n');
@@ -75,22 +80,23 @@ const LINE = (label: string) => new RegExp(`^${label}[ \\t]*\\|[ \\t]*(.+)$`, 'm
 
 export function parseReceipt(text: unknown): ParsedReceipt | null {
   const t = String(text || '').trim();
-  if (!t.startsWith('ROSSUM PARTNER ONBOARDING')) return null;
+  if (!t.startsWith(RECEIPT_HEADER)) return null;
   const grab = (label: string) => {
     const m = LINE(label).exec(t);
     return m ? m[1].trim() : null;
   };
-  const track = grab('track');
-  const user = grab('user');
-  const code = grab('code');
-  if (!track || !user || !code) return null;
-  const trackM = /^(.+)@(\d+)$/.exec(track);
-  const userM = /^(.*)\s+\(id\s+(\d+)\)$/.exec(user);
-  const missions = grab('missions');
-  const self = grab('self-attested');
-  const issued = grab('issued');
+  const num = (label: string) => {
+    const v = grab(label);
+    return v && /^\d+$/.test(v) ? Number(v) : null;
+  };
+  const trackM = /^(.+)@(\d+)$/.exec(grab('track') || '');
+  const userM = /^(.*)\s+\(id\s+(\d+)\)$/.exec(grab('user') || '');
   const host = grab('org');
-  if (!trackM || !userM || missions == null || self == null || !issued || !host) return null;
+  const issued = grab('issued');
+  const code = grab('code');
+  const ids = [num('queue'), num('hook'), num('rule'), num('invoice')];
+  if (!trackM || !userM || !host || !issued || !code || ids.some((n) => n == null)) return null;
+  const [queueId, hookId, ruleId, annotationId] = ids as number[];
   return {
     fields: {
       trackId: trackM[1],
@@ -98,8 +104,10 @@ export function parseReceipt(text: unknown): ParsedReceipt | null {
       host,
       userId: Number(userM[2]),
       username: userM[1],
-      missionsPassed: missions.split(',').filter(Boolean),
-      selfCount: Number(self),
+      queueId,
+      hookId,
+      ruleId,
+      annotationId,
       dateUtc: issued,
     },
     code,
