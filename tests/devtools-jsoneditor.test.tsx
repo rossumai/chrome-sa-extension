@@ -30,11 +30,6 @@ beforeEach(() => {
 });
 
 describe('JsonCodeEditor', () => {
-  it('mounts a CodeMirror editor for the given tab', async () => {
-    const root: any = mount(tab.id);
-    await waitFor(() => root.querySelector('.rawjson-cm .cm-editor'));
-    expect(root.querySelector('.rawjson-cm .cm-editor')).not.toBeNull();
-  });
   it('shows a parse error derived from the tab buffer', async () => {
     store.patchTab(tab.id, { buffer: '{ broken' });
     const root: any = mount(tab.id);

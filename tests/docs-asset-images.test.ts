@@ -39,16 +39,6 @@ describe('renderDocument marks relative image references for later sync', () => 
     expect(img.getAttribute('data-asset-ref')).toBe(null);
   });
 
-  it('marks every relative image reference the same way, with no knowledge of any store', () => {
-    const text = '![shot](assets/diagram.png)';
-    const first = renderDocument({ id: 'c', text });
-    clearRenderCache();
-    const second = renderDocument({ id: 'c', text });
-    expect(first.body!.querySelector('img')!.outerHTML).toBe(
-      second.body!.querySelector('img')!.outerHTML,
-    );
-  });
-
   it('a document with no images renders exactly as before', () => {
     const { body } = renderDocument({ id: 'd', text: '# Just text\n\nNo pictures here.\n' });
     expect(body!.querySelector('img')).toBe(null);

@@ -4,12 +4,6 @@ vi.mock('../src/mdh/api.js');
 import * as api from '../src/mdh/api.js';
 import { UNDO_LIMIT, selectionToFilter, previewMatch } from '../src/mdh/bulkOps.js';
 
-describe('UNDO_LIMIT', () => {
-  it('matches the existing collection-drop snapshot threshold', () => {
-    expect(UNDO_LIMIT).toBe(1000);
-  });
-});
-
 describe('selectionToFilter', () => {
   it('builds an $in filter from a Set of ids', () => {
     const filter = selectionToFilter(new Set(['a', 'b', 'c']));

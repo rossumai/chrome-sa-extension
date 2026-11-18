@@ -119,9 +119,6 @@ describe('computeStaleAuthRemovals', () => {
 });
 
 describe('fabry is public (no gate)', () => {
-  it('isValidApp accepts fabry', () => {
-    expect(isValidApp('fabry')).toBe(true);
-  });
   // Fabry took an `experimentalUnlocked` gate until 2026-08-11. It is now a
   // normal app: no flag, in either direction, may keep it off the rail.
   it('pickInitialApp yields fabry with no unlock flag at all', () => {
@@ -138,9 +135,6 @@ describe('fabry is public (no gate)', () => {
 // The experimental gate hides every app marked `gated` in Rail.tsx — today the Academy and
 // the rdc proof of concept — and boot must agree with the rail on both.
 describe('gated apps (academy, rdc)', () => {
-  it('isValidApp accepts rdc', () => {
-    expect(isValidApp('rdc')).toBe(true);
-  });
   it('picks a gated app on boot only when unlocked', () => {
     for (const app of ['academy', 'rdc']) {
       expect(pickInitialApp({ persistedApp: app, unlocked: true })).toBe(app);

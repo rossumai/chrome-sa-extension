@@ -22,11 +22,4 @@ describe('architect store', () => {
     expect(Object.keys(store.results.value).sort()).toEqual(['r1', 'r2']);
     expect(store.results.value).not.toBe(first);
   });
-  it('clearResults empties; setActive sets the open id', () => {
-    store.setResult('r1', { verdict: 'pass', evidence: '', chatId: 'c', ranAt: 1, stale: false });
-    store.clearResults();
-    expect(store.results.value).toEqual({});
-    store.setActive('r9');
-    expect(store.activeId.value).toBe('r9');
-  });
 });

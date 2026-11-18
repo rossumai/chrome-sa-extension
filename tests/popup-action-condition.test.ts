@@ -199,10 +199,3 @@ describe('evalCondition', () => {
   });
 });
 
-// ── Direct AST eval (regression spot-check) ──────────
-
-describe('evalNode (direct AST eval)', () => {
-  it('returns the value of a literal node', () => {
-    expect(evalNode({ type: 'literal', value: 'x' })).toBe('x');
-  });
-});

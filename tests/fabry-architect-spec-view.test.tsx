@@ -153,20 +153,6 @@ describe('SpecView', () => {
     }); // a row click: the section itself
     expect(animateScrollTop).toHaveBeenCalledTimes(2);
   });
-
-  it('renders every deliverable in edit mode as an editable field, with the same headers', () => {
-    store.docView.value = 'edit';
-    const root = mount();
-    expect(root.querySelectorAll('.cm-mock').length).toBe(2);
-    expect(root.querySelectorAll('.fabry-spec-sec-hd').length).toBe(2);
-    // an editor holds its text as a value, not as child text
-    expect(
-      [...root.querySelectorAll('.cm-mock')].map((t) => (t as HTMLInputElement).value).join(' '),
-    ).toMatch(/alpha/);
-    expect(
-      [...root.querySelectorAll('.cm-mock')].map((t) => (t as HTMLInputElement).value).join(' '),
-    ).toMatch(/beta/);
-  });
 });
 
 describe('the document bar owns Download PDF', () => {

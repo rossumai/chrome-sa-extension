@@ -96,12 +96,6 @@ describe('ImportWizard — source toggle + detection', () => {
     expect(root.querySelector('.file-input-area')).toBeTruthy();
   });
 
-  it('detects a selected JSON file and reaches decide', async () => {
-    const root = mount(<ImportWizard onSuccess={() => {}} />);
-    pick(root, file('[{"_id":"1","a":1}]', 'd.json'));
-    await waitFor(() => root.querySelector('[data-testid="import-go"]'));
-  });
-
   it('detects a selected CSV file and lands directly on Decide with parsing options shown', async () => {
     const root = mount(<ImportWizard onSuccess={() => {}} />);
     pick(root, file('a,b\n1,2\n', 'rows.csv'));

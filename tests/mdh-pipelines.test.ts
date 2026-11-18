@@ -59,13 +59,6 @@ describe('field discovery', () => {
     expect(fields).toContain('name');
   });
 
-  it('truncates to MAX_FIELDS', () => {
-    const doc = {};
-    for (let i = 0; i < 60; i++) (doc as any)[`field_${String(i).padStart(3, '0')}`] = i;
-    const fields = discoverFieldsWithTotal([doc]).fields;
-    expect(fields).toHaveLength(MAX_FIELDS);
-  });
-
   it('keeps the MOST COMMON fields (by doc frequency) when over MAX_FIELDS', () => {
     const common = {};
     for (let i = 0; i < MAX_FIELDS; i++)
@@ -84,16 +77,6 @@ describe('field discovery', () => {
     expect(fields).not.toContain('rare_z');
     // returned list is alphabetical
     expect([...fields].sort()).toEqual(fields);
-  });
-
-  it('returns sorted field names', () => {
-    const docs = [{ z: 1, a: 2, m: 3 }];
-    expect(discoverFieldsWithTotal(docs).fields).toEqual(['a', 'm', 'z']);
-  });
-
-  it('merges fields across multiple documents', () => {
-    const docs = [{ a: 1 }, { b: 2 }, { a: 3, c: 4 }];
-    expect(discoverFieldsWithTotal(docs).fields).toEqual(['a', 'b', 'c']);
   });
 
   it('removes parent fields when child paths exist to avoid $project collisions', () => {

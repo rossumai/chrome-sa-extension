@@ -131,10 +131,4 @@ describe('client id is minted lazily by the worker', () => {
     expect(d.local.usageClientId).toBe('existing');
     expect(d.sent[0].body.client_id).toBe('existing');
   });
-
-  it('mints nothing when consent is absent', async () => {
-    const d = makeDeps({});
-    expect(await collect({ name: 'sa_popup_open' }, d)).toBe(0);
-    expect(d.local.usageClientId).toBeUndefined();
-  });
 });

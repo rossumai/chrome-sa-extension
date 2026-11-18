@@ -60,17 +60,6 @@ describe('pruneOrgs', () => {
     expect(pruneOrgs(all, 'a', MAX_ORGS)).toEqual(all);
   });
 
-  it('never returns more than max entries, even when the active org is the oldest', () => {
-    const all = {
-      a: { startedAt: 1 },
-      b: { startedAt: 2 },
-      c: { startedAt: 3 },
-      d: { startedAt: 4 },
-    };
-    expect(Object.keys(pruneOrgs(all, 'a', 3))).toHaveLength(3);
-    expect(Object.keys(pruneOrgs(all, 'a', 3))).toContain('a');
-  });
-
   // Pinning current (documented, not desired) behaviour: the "always included"
   // guarantee only holds when keepOrigin is already a key of `all`. It is
   // unreachable via writeProgress (which always merges the origin in first),

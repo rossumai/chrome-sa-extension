@@ -45,20 +45,4 @@ describe('FlashOnChange', () => {
     expect(root.textContent).toBe('99');
     expect(root.querySelector('.flash-value')).not.toBeNull();
   });
-
-  it('keeps flashing on every subsequent change', async () => {
-    const root = document.createElement('div');
-    document.body.appendChild(root);
-    render(<FlashOnChange value="a" />, root);
-    await flush();
-    await flush();
-    render(<FlashOnChange value="b" />, root);
-    await flush();
-    await flush();
-    render(<FlashOnChange value="c" />, root);
-    await flush();
-    await flush();
-    expect(root.querySelector('.flash-value')).not.toBeNull();
-    expect(root.textContent).toBe('c');
-  });
 });

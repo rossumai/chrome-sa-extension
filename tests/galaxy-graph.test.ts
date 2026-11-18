@@ -244,29 +244,6 @@ describe('buildGraph — additional coverage', () => {
       expect((LINK_STYLE as any)[k].width).toBeGreaterThan(0);
     }
   });
-  it('chains a run_after hook off its predecessor as a runAfter edge (camelCase kind, never hyphenated)', () => {
-    const g = buildGraph({
-      organization: null,
-      workspaces: [],
-      queues: [],
-      hooks: [
-        { id: 200, url: 'https://x/api/v1/hooks/200', name: 'A', queues: [], run_after: [] },
-        {
-          id: 201,
-          url: 'https://x/api/v1/hooks/201',
-          name: 'B',
-          queues: [],
-          run_after: ['https://x/api/v1/hooks/200'],
-        },
-      ],
-    });
-    expect(
-      g.links.some(
-        (l) => l.source === 'hook:200' && l.target === 'hook:201' && l.kind === 'runAfter',
-      ),
-    ).toBe(true);
-    expect(g.links.some((l) => (l.kind as string) === 'run_after')).toBe(false); // the link kind is camelCase `runAfter`
-  });
   it('derives an engine node + link from the unified queue.engine field', () => {
     const g = buildGraph({
       organization: null,

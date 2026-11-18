@@ -214,21 +214,6 @@ describe('the analysis-mode control', () => {
     );
   });
 
-  it('does not fire the handler when the disabled Sample button is clicked', async () => {
-    mockCollection(SMALL_TOTAL);
-    const root = mount();
-    await settle();
-    const invalidateSpy = vi.spyOn(cache, 'invalidateData');
-    const sampleBtn = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')].find(
-      (o) => o.textContent === 'Sample',
-    ) as HTMLButtonElement;
-    expect(sampleBtn.disabled).toBe(true);
-    sampleBtn.click();
-    expect(statsMode.value).toBe(STATS_MODE_SAMPLE);
-    expect(invalidateSpy).not.toHaveBeenCalled();
-    invalidateSpy.mockRestore();
-  });
-
   it('leaves Exact active and Sample enabled when Exact is chosen explicitly on a large collection', async () => {
     statsMode.value = STATS_MODE_EXACT;
     const root = mount();

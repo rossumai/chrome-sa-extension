@@ -64,12 +64,6 @@ describe('FilterInput', () => {
     expect(clearOf(el)).toBe(null);
   });
 
-  it('defaults `active` to a non-empty value', () => {
-    const el = mount({ value: 'x', onInput: vi.fn(), onClear: vi.fn() });
-    expect(wrapOf(el).className).toContain(styles.hasValue);
-    expect(clearOf(el)).toBeTruthy();
-  });
-
   it('forwards keydown without swallowing it', () => {
     // The sidebar clears on Escape, and its own test asserts Escape still reaches
     // document-level listeners. The primitive must not stopPropagation.

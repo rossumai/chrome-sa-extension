@@ -302,15 +302,6 @@ describe('ImportConfirm', () => {
     );
   });
 
-  it('no longer shows the over-rejection note, because it no longer over-rejects', () => {
-    const shape = deriveShape([
-      { sku: 'A1', price: 10 },
-      { sku: 'B2', price: 20, note: 'x' },
-    ]);
-    const root = mount(<ImportConfirm {...base} mode="insert" shape={shape} />);
-    expect(root.textContent).not.toMatch(/over-reject/i);
-  });
-
   it('reports a whitespace-only column difference explicitly and visibly', () => {
     const shape = deriveShape([{ sku: 'A1', price: 10 }]);
     const root = mount(

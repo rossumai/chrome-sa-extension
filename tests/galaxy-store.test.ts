@@ -28,15 +28,6 @@ describe('galaxy store', () => {
       };
     });
 
-    it('defaults to all five types visible', () => {
-      const vis = store.visibleTypes.value;
-      expect(vis.organization).toBe(true);
-      expect(vis.workspace).toBe(true);
-      expect(vis.queue).toBe(true);
-      expect(vis.hook).toBe(true);
-      expect(vis.engine).toBe(true);
-    });
-
     it('toggleType flips one type to false without mutating others', () => {
       store.toggleType('queue');
       const vis = store.visibleTypes.value;

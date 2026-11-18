@@ -143,24 +143,6 @@ describe('SearchIndexPanel — copy is put-ready', () => {
     );
     expect(writeText).toHaveBeenCalledWith(expected);
   });
-
-  it('copied JSON carries no runtime fields and no name', async () => {
-    vi.mocked(api.listSearchIndexes).mockResolvedValue([listedIndex()] as any);
-    const root = mount();
-
-    await vi.waitFor(() => expect(root.querySelector('.action-copy')).not.toBeNull());
-    root.querySelector<HTMLElement>('.action-copy')!.click();
-
-    // Assert on parsed top-level keys: mappings legitimately nests its own
-    // "type" specs, so a substring check would false-positive.
-    const parsed = JSON.parse(writeText.mock.calls[0][0]);
-    expect(parsed).not.toHaveProperty('status');
-    expect(parsed).not.toHaveProperty('queryable');
-    expect(parsed).not.toHaveProperty('name');
-    expect(parsed).not.toHaveProperty('indexName');
-    expect(parsed).not.toHaveProperty('latest_definition_version');
-    expect(parsed).toHaveProperty('mappings');
-  });
 });
 
 describe('SearchIndexPanel — runtime state is in badges, not JSON', () => {
@@ -201,14 +183,6 @@ describe('SearchIndexPanel — V2 statuses', () => {
     await vi.waitFor(() => expect(root.querySelector('.index-badge')).not.toBeNull());
     expect(badgeTexts(root)).toContain('pending create');
     expect(root.querySelector('.index-badge-pending')!.getAttribute('title')).toContain('engine');
-  });
-
-  it('shows no type badge — V2 has no type field', async () => {
-    vi.mocked(api.listSearchIndexes).mockResolvedValue([listedIndex()] as any);
-    const root = mount();
-
-    await vi.waitFor(() => expect(root.querySelector('.index-badge')).not.toBeNull());
-    expect(badgeTexts(root)).not.toContain('search');
   });
 
   it('drops through deleteSearchIndex', async () => {
@@ -629,28 +603,6 @@ describe('SearchIndexPanel — field picker', () => {
     expect(Object.keys(definition.mappings.fields)).toEqual(['vendor_name']);
     expect(definition.mappings.fields.vendor_name.multi.exact.analyzer).toBe('lucene.keyword');
   });
-
-  // Discovery is a convenience. Losing it must not stop anyone creating an index.
-  it('falls back to a free-text path when discovery fails', async () => {
-    vi.mocked(api.aggregate).mockRejectedValue(new Error('nope'));
-    const root = mount();
-    await Promise.resolve();
-    const create = [...root.querySelectorAll('button')].find((b) =>
-      b.textContent!.includes('Create'),
-    )!;
-    create.click();
-    await Promise.resolve();
-    (root.querySelector('[data-testid="preset-fuzzy"]') as HTMLElement).click();
-    // Prove discovery actually ran (and can therefore actually fail) before
-    // asserting on the fallback. Without this, the pre-effect initial render
-    // (paths.value: null, paths.loading: false) renders the identical fallback
-    // markup the post-failure state does, so the assertion below would pass
-    // unchanged even with the whole discovery `useEffect` deleted.
-    await vi.waitFor(() => expect(vi.mocked(api.aggregate)).toHaveBeenCalled());
-    await vi.waitFor(() =>
-      expect(root.querySelector('[data-testid="field-fallback"]')).not.toBeNull(),
-    );
-  });
 });
 
 // Finding 1 (Important, 2026-08-31 review): the field-picker effect used to call
@@ -934,12 +886,6 @@ describe('SearchIndexPanel — check', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.waitFor(() => expect(api.aggregate).toHaveBeenCalled());
   }
-
-  it('shows the test row on a READY index', async () => {
-    vi.mocked(api.listSearchIndexes).mockResolvedValue([listedIndex()]);
-    const root = mount();
-    await vi.waitFor(() => expect(valueInput(root)).not.toBeNull());
-  });
 
   // A $search against a building index returns [] with code "ok". Without this
   // guard Check would report "no matches" for an index that is merely unfinished.

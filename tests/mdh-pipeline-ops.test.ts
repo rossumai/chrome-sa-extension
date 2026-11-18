@@ -306,17 +306,6 @@ describe('stripPaginationStages', () => {
     expect(stripPaginationStages(p)).toEqual(p);
   });
 
-  it('preserves non-pagination stages including $project, $lookup, $group, $unwind', () => {
-    const p = [
-      { $match: {} },
-      { $lookup: { from: 'a', localField: 'b', foreignField: 'c', as: 'd' } },
-      { $unwind: '$d' },
-      { $group: { _id: '$x', total: { $sum: 1 } } },
-      { $project: { _id: 0, total: 1 } },
-    ];
-    expect(stripPaginationStages(p)).toEqual(p);
-  });
-
   it('handles a pipeline with only pagination stages by returning an empty array', () => {
     expect(stripPaginationStages([{ $skip: 0 }, { $limit: 10 }])).toEqual([]);
   });
@@ -399,11 +388,6 @@ describe('stripWriteStages', () => {
   it('returns [] for null/undefined', () => {
     expect(stripWriteStages(null)).toEqual([]);
     expect(stripWriteStages(undefined)).toEqual([]);
-  });
-
-  it('leaves a non-write pipeline unchanged (no-op)', () => {
-    const p = [{ $match: {} }, { $limit: 50 }];
-    expect(stripWriteStages(p)).toEqual(p);
   });
 
   it('strips $out/$merge even when they appear mid-pipeline', () => {

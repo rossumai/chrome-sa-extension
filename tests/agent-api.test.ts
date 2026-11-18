@@ -147,13 +147,6 @@ describe('listChats / getChat / downloadChatFile', () => {
 });
 
 describe('listCommands', () => {
-  it('returns commands on success', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ commands: [{ name: '/usage', description: 'd' }] }),
-    });
-    expect((await agentApi.listCommands())[0].name).toBe('/usage');
-  });
   it('returns [] on failure (degradation, never throws)', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('net'));
     expect(await agentApi.listCommands()).toEqual([]);

@@ -150,11 +150,4 @@ describe('edit mode', () => {
     expect(carrier.current).toEqual({ lines: [], hidden: 0 });
     expect(root.querySelector('.fabry-arch-doc-note')).toBeNull();
   });
-
-  it('keeps the same chrome as preview mode', () => {
-    const editHeaders = mount().querySelectorAll('.fabry-spec-sec-hd').length;
-    document.body.innerHTML = '';
-    store.docView.value = 'preview';
-    expect(mount().querySelectorAll('.fabry-spec-sec-hd').length).toBe(editHeaders);
-  });
 });

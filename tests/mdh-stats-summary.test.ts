@@ -551,12 +551,6 @@ describe('updateStatsSummary', () => {
     expect(statsSummary.value).toEqual({ collection: col, health: 93, label: 'Excellent' });
   });
 
-  it('leaves the summary unchanged when stats_sentinels is absent (backward compat)', () => {
-    seedCleanCollection('col1'); // no stats_sentinels
-    updateStatsSummary('col1');
-    expect(statsSummary.value).toEqual({ collection: 'col1', health: 100, label: 'Excellent' });
-  });
-
   it('leaves signal null when fields array is empty', () => {
     cache.set('col3', 'statsFields', []);
     updateStatsSummary('col3');

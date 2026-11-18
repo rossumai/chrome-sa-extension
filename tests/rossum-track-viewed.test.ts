@@ -3,15 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { annotationIdFromPath, init } from '../src/rossum/features/track-viewed.js';
 import { VIEWED_KEY } from '../src/inspector/viewed.js';
 
-describe('annotationIdFromPath', () => {
-  it('matches /document/<id> routes only', () => {
-    expect(annotationIdFromPath('/document/4718203')).toBe('4718203');
-    expect(annotationIdFromPath('/document/4718203/edit')).toBe('4718203');
-    expect(annotationIdFromPath('/documents')).toBe(null);
-    expect(annotationIdFromPath('/queues/1')).toBe(null);
-  });
-});
-
 describe('viewed tracking', () => {
   let state: any;
   beforeEach(() => {

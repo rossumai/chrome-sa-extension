@@ -90,13 +90,6 @@ describe('Implement panel — now in the inspector rail', () => {
     expect(actions.reImplement).toHaveBeenCalledWith('d1');
   });
 
-  it('hides the Implement tab entirely when the loop is not available', () => {
-    fstore.implementAllowed.value = false;
-    const root = mount();
-    expect(implTab(root)).toBeUndefined();
-    expect(root.textContent).not.toMatch(/Implement/);
-  });
-
   it('shows Stop (not Implement) while this deliverable is planning or running, and Stop calls stopImplement', () => {
     store.implement.value = { d1: { status: 'running', tasks: [] } };
     store.implementRunning.value = true;

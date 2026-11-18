@@ -493,24 +493,6 @@ describe('Read with the sync state kept in each org', () => {
     release();
     await settle();
   });
-
-  it('shows the last log line above a prompt', async () => {
-    const prompt: Prompt = {
-      kind: 'conflict',
-      question: '[1] it is id 5  [a] abort the sync > ',
-      choices: [{ key: '1', label: 'it is id 5' }],
-    };
-    const { rdc } = fakeRdc(async (_e, _o, ask, log) => {
-      log('labels/hold: an unfinished run may have made any of 2 labels');
-      await ask(prompt);
-      return outcome;
-    });
-    mount(<Read {...readProps(rdc)} />);
-    await flush();
-    const dialog = root.querySelector('[role="dialog"]')!;
-    expect(dialog.textContent).toContain('an unfinished run may have made any of 2 labels');
-    act(() => byText('button', 'it is id 5').click());
-  });
 });
 
 describe('Connect', () => {

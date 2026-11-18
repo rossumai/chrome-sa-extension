@@ -93,12 +93,6 @@ describe('customPreset', () => {
     expect(customPreset()).toEqual({ keys: { field: 1 }, options: {} });
   });
 
-  // Verified live 2026-09-01 that {indexName, keys} alone is accepted; the empty
-  // options object is kept only for parity with what shipped.
-  it('keeps an empty options object for parity rather than omitting it', () => {
-    expect(customPreset().options).toEqual({});
-  });
-
   it('hands back a fresh object each time', () => {
     const a = customPreset();
     a.keys.field = 99;
@@ -134,11 +128,5 @@ describe('fieldRowLabel', () => {
     expect(fieldRowLabel('cascade')).toBe('Fields, in query order');
     expect(fieldRowLabel('unique')).toBe('Fields, in query order');
     expect(fieldRowLabel(null)).toBe('Fields, in query order');
-  });
-
-  it('never labels a single-field preset with a plural', () => {
-    for (const p of ['lookup', 'expiring'] as const) {
-      expect(fieldRowLabel(p)).not.toMatch(/Fields/);
-    }
   });
 });

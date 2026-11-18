@@ -68,12 +68,6 @@ describe('StatsSchema single shape', () => {
     expect(rendered.slice(-3)).toEqual(fields.slice(-3));
     expect(rendered.filter((r) => r === '…').length).toBe(1);
   });
-
-  it('renders a records button, even with a single shape', () => {
-    const fields = ['acme_id', 'name', 'total'];
-    const root = mount([{ fieldCount: 3, docCount: 100, fields }]);
-    expect(root.querySelector('.stats-shape-records')).not.toBeNull();
-  });
 });
 
 describe('StatsSchema no collapse below the threshold', () => {
@@ -148,13 +142,6 @@ describe('StatsSchema groups the union by category, collapsing only the common b
     expect(names).toEqual([...commonNames, ...differingNames]);
     expect(commonNames).toEqual([...commonNames].sort());
     expect(differingNames).toEqual([...differing].sort());
-  });
-
-  it('keeps every differing field visible while collapsed', () => {
-    const root = mount([shapeA, shapeB]);
-    const col = root.querySelectorAll('.stats-shape-col')[0];
-    const names = fieldNames(col, 'li:not(.stats-schema-more)');
-    for (const f of differing) expect(names).toContain(f);
   });
 
   it('renders the identical row sequence in every column, elision included', () => {

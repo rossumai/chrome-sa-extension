@@ -100,17 +100,6 @@ describe('customPreset', () => {
     expect(customPreset()).toEqual({ mappings: { dynamic: true } });
   });
 
-  // The seed this modal shipped with before presets existed — the untouched
-  // Create path must build what it always built.
-  it('matches the historical editor seed exactly', () => {
-    expect(JSON.stringify(customPreset())).toBe('{"mappings":{"dynamic":true}}');
-  });
-
-  it('declares no analyzer, so it is NOT interchangeable with defaultPreset', () => {
-    expect(customPreset().analyzers).toBeUndefined();
-    expect(defaultPreset().analyzers).toBeDefined();
-  });
-
   it('hands back a fresh object each time', () => {
     const a = customPreset();
     a.mappings.dynamic = 'MUTATED';

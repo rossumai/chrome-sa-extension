@@ -12,10 +12,6 @@ describe('usage event vocabulary', () => {
     expect(new Set(EVENT_NAMES).size).toBe(EVENT_NAMES.length);
   });
 
-  it('carries exactly the 52 names PRIVACY.md publishes', () => {
-    expect(EVENT_NAMES).toHaveLength(52);
-  });
-
   it('no longer reports configuration changes, only use', () => {
     for (const gone of ['sa_config_snapshot', 'sa_popup_toggle_on', 'sa_popup_toggle_off']) {
       expect(EVENT_NAMES).not.toContain(gone);

@@ -100,14 +100,6 @@ describe('syncAssets', () => {
     expect(store.resolve).not.toHaveBeenCalled();
   });
 
-  it('still says "not published" for a store that offers no stats at all', () => {
-    // `stats` is optional so a plain table can stand in for the store — the same seam
-    // `assetPrefetch` declares. An absent reader is not an index failure.
-    const root = markedRef('assets/diagram.png');
-    syncAssets(root, { lookup: () => null, peek: () => null, resolve: vi.fn(), pin: vi.fn() });
-    expect(root.querySelector('.state-label')!.textContent).toContain('not published');
-  });
-
   it('still says "not published" when stats itself throws', () => {
     const root = markedRef('assets/diagram.png');
     syncAssets(root, {

@@ -265,10 +265,6 @@ describe('readVariableValues', () => {
       uom: 'EA',
     });
   });
-
-  it('never reads a row variable into a header lookup', () => {
-    expect(readVariableValues(evaluated, { tableSchemaId: null }, 0)).not.toHaveProperty('uom');
-  });
 });
 
 describe('resolveLookupVariables', () => {

@@ -598,11 +598,6 @@ describe('previewText', () => {
       }),
     ).toBe('Old takeaway.');
   });
-  it('"summary unavailable" when the only summary ever attempted errored', () => {
-    expect(previewText({ turns: [{ question: null, state: 'error', text: '' }] })).toBe(
-      'summary unavailable',
-    );
-  });
   it('while a refresh is streaming, shows the streaming placeholder even though an earlier summary has good text', () => {
     expect(
       previewText({

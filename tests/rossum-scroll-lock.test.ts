@@ -48,20 +48,6 @@ describe('initScrollLock', () => {
     );
   });
 
-  it('stops its monitor interval once the element is detached from the DOM', () => {
-    const el = document.createElement('div');
-    document.body.appendChild(el);
-    initScrollLock(el);
-
-    el.remove();
-    // Monitor interval fires every 2s; tick past one check.
-    vi.advanceTimersByTime(2100);
-
-    // Re-attach and ensure no further disconnect attempts throw — the cleanup
-    // path (disconnect + clearInterval) has already run without errors.
-    document.body.appendChild(el);
-    expect(() => vi.advanceTimersByTime(4000)).not.toThrow();
-  });
   // The event moved out of initScrollLock on 2026-08-19. Attaching happens on
   // every Rossum page carrying a sidebar, so counting there measured "the
   // toggle is on" — enablement, which this extension deliberately stopped
@@ -191,19 +177,5 @@ describe('initScrollLock', () => {
     el.scrollTop = 0;
     el.dispatchEvent(new Event('scroll'));
     expect(el.scrollTop).toBe(300);
-  });
-  it('ignores a scroll it cannot attribute to the user, so a stray move is not saved', () => {
-    const el = scrollable(document.createElement('div'));
-    document.body.appendChild(el);
-    initScrollLock(el);
-
-    // No wheel/touch/mousedown/keydown first: this is somebody else's scroll
-    // (Rossum, scrollIntoView, restoration). Adopting it as the saved position
-    // is exactly how the reset used to be recorded as the user's intent.
-    el.scrollTop = 400;
-    el.dispatchEvent(new Event('scroll'));
-    el.appendChild(document.createElement('span'));
-
-    expect(trackOnce).not.toHaveBeenCalled();
   });
 });

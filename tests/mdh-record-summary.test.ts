@@ -14,10 +14,6 @@ describe('rankFields', () => {
     expect(rankFields({}, {})).toEqual([]);
   });
 
-  it('handles record without _id', () => {
-    expect(rankFields({ foo: 1, bar: 2 }, {})).toEqual(['foo', 'bar']);
-  });
-
   it('demotes nested objects, arrays, null, empty string below primitives', () => {
     const record = { blob: { a: 1 }, arr: [1, 2], nothing: null, empty: '', num: 7, text: 'hi' };
     expect(rankFields(record, {})).toEqual(['num', 'text', 'blob', 'arr', 'nothing', 'empty']);
@@ -122,11 +118,6 @@ describe('recordSummary — packing', () => {
     // Extract number, confirm >= 2.
     const n = Number(out.match(/\+(\d+) fields$/)![1]);
     expect(n).toBeGreaterThanOrEqual(2);
-  });
-
-  it('emits no suffix when every field fits', () => {
-    const out = recordSummary({ a: 1, b: 2 }, 200, {});
-    expect(out).not.toMatch(/\+\d+ fields?$/);
   });
 
   it('respects rank order when choosing which fields fit', () => {

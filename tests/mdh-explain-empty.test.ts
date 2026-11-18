@@ -248,8 +248,4 @@ describe('explainSignature includes the written form', () => {
     const asVariable = explainSignature('vendors', run, 0, [{ $match: { country: '{country}' } }]);
     expect(asLiteral).not.toBe(asVariable);
   });
-
-  it('is stable when the raw form is absent', () => {
-    expect(explainSignature('vendors', run, 0)).toBe(explainSignature('vendors', run, 0));
-  });
 });

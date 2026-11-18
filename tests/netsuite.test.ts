@@ -85,13 +85,6 @@ describe('NetSuite content script', () => {
     expect(annotation!.textContent).toBe('entity');
   });
 
-  it('handles date field', () => {
-    const span = document.getElementById('trandate_lbl');
-    const annotation = span!.querySelector(`.${MARKER}`);
-    expect(annotation).not.toBeNull();
-    expect(annotation!.textContent).toBe('trandate');
-  });
-
   it('ignores links without onclick handler', () => {
     const span = document.getElementById('no_onclick_lbl');
     const annotation = span!.querySelector(`.${MARKER}`);

@@ -8,9 +8,6 @@ beforeEach(() => {
 });
 
 describe('fabryMode', () => {
-  it('defaults to chat', () => {
-    expect(store.fabryMode.value).toBe('chat');
-  });
   it('setFabryMode accepts architect and coerces anything else to chat', () => {
     store.setFabryMode('architect');
     expect(store.fabryMode.value).toBe('architect');

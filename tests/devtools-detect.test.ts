@@ -44,14 +44,6 @@ describe('detectResource', () => {
       label: 'Rule',
     });
   });
-  it('detects a queue settings page (no rule) as a queue', () => {
-    expect(detectResource({ pathname: '/queues/5/settings/basic' })).toEqual({
-      type: 'queue',
-      id: '5',
-      apiPath: '/api/v1/queues/5',
-      label: 'Queue',
-    });
-  });
   it('detects a schema (field-manager detail) page', () => {
     expect(detectResource({ pathname: '/settings/field-manager/detail/42' })).toEqual({
       type: 'schema',
@@ -93,14 +85,6 @@ describe('detectResource', () => {
       queueId: '5',
       queueApiPath: '/api/v1/queues/5',
       label: 'Inbox',
-    });
-  });
-  it('a plain /queues/5/settings/basic is still the queue, not emails', () => {
-    expect(detectResource({ pathname: '/queues/5/settings/basic' })).toEqual({
-      type: 'queue',
-      id: '5',
-      apiPath: '/api/v1/queues/5',
-      label: 'Queue',
     });
   });
   it('resolves a queue fields page to a schema-via-queue descriptor (before the queue route)', () => {
@@ -173,21 +157,6 @@ describe('detectResource', () => {
       apiPath: '/api/v1/labels',
       label: 'Labels',
       readOnly: true,
-    });
-  });
-
-  it('list routes do not shadow the per-id detail routes', () => {
-    expect(detectResource({ pathname: '/extensions/my-extensions/5' })).toEqual({
-      type: 'hook',
-      id: '5',
-      apiPath: '/api/v1/hooks/5',
-      label: 'Hook',
-    });
-    expect(detectResource({ pathname: '/settings/users/9' })).toEqual({
-      type: 'user',
-      id: '9',
-      apiPath: '/api/v1/users/9',
-      label: 'User',
     });
   });
 

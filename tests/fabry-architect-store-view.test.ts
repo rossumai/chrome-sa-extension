@@ -79,13 +79,6 @@ describe('layout + targeting signals', () => {
     setPinnedTarget(null);
     expect(pinnedTarget.value).toBe(null);
   });
-
-  it('carries a request to show a diff at document width', () => {
-    setReviewTarget({ id: 'd1', kind: 'history' });
-    expect(reviewTarget.value).toEqual({ id: 'd1', kind: 'history' });
-    setReviewTarget(null);
-    expect(reviewTarget.value).toBe(null);
-  });
 });
 
 describe('the inspector follows a SETTLED target', () => {

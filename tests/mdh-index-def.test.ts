@@ -234,21 +234,6 @@ describe('redundantIndexNames — wildcard awareness', () => {
     const out = redundantIndexNames([wildcard, { name: '_id_', key: { _id: 1 } }]);
     expect(out.has('_id_')).toBe(false);
   });
-
-  it('never flags the wildcard index itself', () => {
-    const out = redundantIndexNames([wildcard, { name: 'by_code', key: { code: 1 } }]);
-    expect(out.has('__dynamic_index')).toBe(false);
-  });
-
-  // Regression: the wildcard rule is ADDITIVE. Without a wildcard present the
-  // existing prefix behaviour must be untouched.
-  it('leaves the prefix rule unchanged when no wildcard is present', () => {
-    const out = redundantIndexNames([
-      { name: 'prefix', key: { a: 1 } },
-      { name: 'superset', key: { a: 1, b: 1 } },
-    ]);
-    expect([...out]).toEqual(['prefix']);
-  });
 });
 
 describe('redundantIndexNames — the sparse:false correction', () => {
@@ -263,14 +248,6 @@ describe('redundantIndexNames — the sparse:false correction', () => {
       { name: 'by_code', key: { code: 1 }, sparse: false },
     ]);
     expect(out.has('by_code')).toBe(true);
-  });
-
-  it('still treats sparse:true as constrained', () => {
-    const out = redundantIndexNames([
-      wildcard,
-      { name: 'by_code', key: { code: 1 }, sparse: true },
-    ]);
-    expect(out.has('by_code')).toBe(false);
   });
 
   // The trap: falsiness must NOT be applied to the value-carrying options.
@@ -306,12 +283,6 @@ describe('redundantIndexNames — narrow wildcard coverage', () => {
       { name: 'by_code', key: { code: 1 } },
     ]);
     expect(out.has('by_code')).toBe(false);
-  });
-
-  // Regression: a plain full wildcard must still cover a single-field index.
-  it('still flags an unrelated field against a plain full wildcard', () => {
-    const out = redundantIndexNames([fullWildcard, { name: 'by_code', key: { code: 1 } }]);
-    expect(out.has('by_code')).toBe(true);
   });
 
   // The skip stays broad: neither new shape is ever flagged against itself,

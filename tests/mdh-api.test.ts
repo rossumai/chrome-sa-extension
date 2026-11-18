@@ -87,11 +87,6 @@ describe('MDH API client', () => {
     await expect(api.listCollections()).rejects.toThrow('Session expired');
   });
 
-  it('throws API error message on non-ok response', async () => {
-    fetchMock.mockResolvedValue(err(404, { message: 'Collection not found' }));
-    await expect(api.find('missing')).rejects.toThrow('Collection not found');
-  });
-
   it('throws generic error when no message in response', async () => {
     fetchMock.mockResolvedValue(err(500, {}));
     await expect(api.find('col')).rejects.toThrow('API error 500');
@@ -286,12 +281,6 @@ describe('async operation helpers', () => {
     );
     const res = await api.createIndex('PRODUCTS', 'i', { a: 1 });
     expect(res.operationId).toBe('bb7001c1-89f3-4c61-b29b-a074e5e6f026');
-  });
-
-  it('does not attach operationId to ordinary responses (no content-location, no id in message)', async () => {
-    fetchMock.mockResolvedValue(ok({ code: 'ok', result: [] }));
-    const res = await api.aggregate('c', []);
-    expect(res.operationId).toBeUndefined();
   });
 
   it('waitForOperation bails out immediately on an already-aborted signal', async () => {

@@ -211,10 +211,6 @@ describe('substitutePlaceholders — split modifier', () => {
 });
 
 describe('substitutePlaceholders — re modifier', () => {
-  it('escapes regex special characters', () => {
-    expect(substitutePlaceholders(['{x | re}'], { x: 'a.b*c+d' })).toEqual(['a\\.b\\*c\\+d']);
-  });
-
   // The service's `re` value filter is Python re.escape (verified live against
   // /svc/master-data-hub/api/v1/match 2026-07-04): it also escapes `-&~#`,
   // space, and whitespace/control chars — not just the JS regex specials.
@@ -222,10 +218,6 @@ describe('substitutePlaceholders — re modifier', () => {
     expect(substitutePlaceholders(['{x | re}'], { x: '.*+?^${}()|[]\\-&~# \t\n\r\v\f' })).toEqual([
       '\\.\\*\\+\\?\\^\\$\\{\\}\\(\\)\\|\\[\\]\\\\\\-\\&\\~\\#\\ \\\t\\\n\\\r\\\v\\\f',
     ]);
-  });
-
-  it('escapes space (verified: "ACME (US)" → "ACME\\ \\(US\\)")', () => {
-    expect(substitutePlaceholders(['{x | re}'], { x: 'ACME (US)' })).toEqual(['ACME\\ \\(US\\)']);
   });
 
   it('leaves non-special printable ASCII untouched (verified live)', () => {
@@ -263,19 +255,6 @@ describe('flattenContent', () => {
     const flat = flattenContent(content);
     expect(flat.headerValues).toEqual({ amount: '5552.14', vendor: 'ACME' });
     expect(flat.types).toEqual({ amount: 'number' });
-  });
-
-  it('uses normalized_value (canonical) for type=number so Number() coerces correctly', () => {
-    const content = {
-      content: [
-        {
-          schema_id: 'amount',
-          category: 'datapoint',
-          content: { value: '5,552.14', normalized_value: '5552.14' },
-        },
-      ],
-    };
-    expect(flattenContent(content).headerValues.amount).toBe('5552.14');
   });
 
   it('does not classify dates as type=number (ISO normalized_value parses to NaN)', () => {

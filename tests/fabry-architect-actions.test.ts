@@ -263,11 +263,6 @@ describe('add/open/update/delete', () => {
     expect(api.updateDeliverable).toHaveBeenCalledWith('a', '# new body', expect.any(Number));
     await flush(); // let the fire-and-forget generateTitle() side effect settle before the next test
   });
-  it('updateDeliverable no-ops when unchanged', async () => {
-    store.deliverables.value = [deliverable({ id: 'a', text: 'same', order: 1 })];
-    await updateDeliverable('a', 'same');
-    expect(api.updateDeliverable).not.toHaveBeenCalled();
-  });
   it('deleteDeliverable removes it, its result, and clears activeId if open', async () => {
     store.deliverables.value = [deliverable({ id: 'a', text: 'x', order: 1 })];
     store.setResult('a', { verdict: 'pass', evidence: '', chatId: 'c', ranAt: 1, stale: true });

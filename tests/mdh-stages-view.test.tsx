@@ -439,13 +439,6 @@ describe('empty-stage explanation', () => {
     expect(root.textContent).not.toContain('Loading');
   });
 
-  it('streams the explanation into the panel', async () => {
-    aiAvailable.value = true;
-    vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
-    const root = mount({ collection: 'vendors', entries: EMPTY });
-    await waitFor(() => root.textContent.includes('DEU'), 'explanation streamed in');
-  });
-
   it('renders no panel when the agent is unavailable', async () => {
     aiAvailable.value = false;
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });

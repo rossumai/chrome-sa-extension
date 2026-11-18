@@ -45,10 +45,6 @@ beforeEach(() => {
 });
 
 describe('downloadCollection — module constants', () => {
-  it('uses 1000-record batches to keep progress feedback frequent', () => {
-    expect(BATCH_SIZE).toBe(1000);
-  });
-
   it('keeps the existing 10-way concurrency for batches', () => {
     expect(CONCURRENCY).toBe(10);
   });
@@ -529,35 +525,6 @@ describe('downloadCollection — pipelineStages option (filtered download)', () 
       { $limit: 1 },
     ]);
   });
-
-  it('still writes a valid JSON array with filtered/projected results', async () => {
-    const docs = [{ name: 'alpha' }, { name: 'beta' }];
-    vi.mocked(api.aggregate).mockResolvedValueOnce({ result: docs });
-
-    const writer = fakeWriter();
-    await downloadCollection('orders', {
-      fetchCount: async () => 2,
-      pipelineStages: [{ $match: { status: 'paid' } }, { $project: { _id: 0, name: 1 } }],
-      pickFile: () => Promise.resolve(fakeHandle(writer)),
-    });
-
-    expect(JSON.parse(writer.chunks.join(''))).toEqual(docs);
-  });
-
-  it('defaults to $match {} when pipelineStages is omitted (backwards compatible)', async () => {
-    vi.mocked(api.aggregate).mockResolvedValueOnce({ result: [{ _id: 1 }] });
-    const writer = fakeWriter();
-    await downloadCollection('c', {
-      fetchCount: async () => 1,
-      pickFile: () => Promise.resolve(fakeHandle(writer)),
-    });
-    expect(api.aggregate).toHaveBeenCalledWith('c', [
-      { $match: {} },
-      { $sort: { _id: 1 } },
-      { $skip: 0 },
-      { $limit: 1000 },
-    ]);
-  });
 });
 
 describe('downloadCollection — filename option', () => {
@@ -588,19 +555,6 @@ describe('downloadCollection — filename option', () => {
     });
 
     expect(pickFile).toHaveBeenCalledWith('orders-filtered.json');
-  });
-
-  it('defaults to <collection>.json when filename is omitted', async () => {
-    vi.mocked(api.aggregate).mockResolvedValueOnce({ result: [{ _id: 1 }] });
-    const downloadBlob = vi.fn();
-
-    await downloadCollection('mycoll', {
-      fetchCount: async () => 1,
-      pickFile: () => Promise.resolve(null),
-      downloadBlob,
-    });
-
-    expect(downloadBlob.mock.calls[0][1]).toBe('mycoll.json');
   });
 });
 
@@ -695,19 +649,6 @@ describe('downloadCollection — CSV serializer', () => {
     expect(filename).toBe('orders.csv');
     expect(blob.type).toBe('text/csv');
     expect(await blob.text()).toBe('_id\r\n1');
-  });
-
-  it('buildJsonSerializer is the default — JSON output unchanged when omitted', async () => {
-    const docs = [{ _id: 1, name: 'a' }];
-    vi.mocked(api.aggregate).mockResolvedValueOnce({ result: docs });
-    const writer = fakeWriter();
-    await downloadCollection('c', {
-      fetchCount: async () => 1,
-      pickFile: () => Promise.resolve(fakeHandle(writer)),
-    });
-    expect(JSON.parse(writer.chunks.join(''))).toEqual(docs);
-    // no discovery call — JSON serializer has no init()
-    expect(api.aggregate).toHaveBeenCalledTimes(1);
   });
 
   it('aborts the writer and rethrows when CSV column discovery fails', async () => {

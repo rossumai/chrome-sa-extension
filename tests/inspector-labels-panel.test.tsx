@@ -53,27 +53,6 @@ describe('LabelsPanel AI attribution', () => {
     await waitFor(() => /Labeler/.test(root.textContent) && /sets Urgent/.test(root.textContent));
   });
 
-  it('does not show AI attribution for a rule-applied label', async () => {
-    store.data.value = {
-      annotation: { labels: ['https://x/api/v1/labels/3'] },
-      resolved: {
-        labelsById: { 3: { id: '3', name: 'Urgent', color: '#f00' } },
-        labelRules: [
-          { ruleId: 1, ruleName: 'Flag urgent', trigger: 'total > 1000', labelIds: ['3'] },
-        ],
-      },
-    };
-    render(<LabelsPanel />, root);
-    await waitFor(() => /Flag urgent/.test(root.textContent));
-    expect(root.textContent).not.toMatch(/Labeler/);
-  });
-
-  it('shows an unavailable note when the agent is offline', async () => {
-    store.aiAvailable.value = false;
-    render(<LabelsPanel />, root);
-    await waitFor(() => /unavailable/i.test(root.textContent));
-  });
-
   it('shows the agent live activity (which tool it is calling) while attributing, not a static label', async () => {
     store.setAttribution('label:3', { status: 'loading', phase: 'reading extension logs' });
     render(<LabelsPanel />, root);

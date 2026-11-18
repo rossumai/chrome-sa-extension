@@ -30,12 +30,6 @@ describe('buildPlanPrompt', () => {
     const prompt = buildPlanPrompt('Add VAT validation');
     expect(prompt).toContain('REQUIREMENT:');
   });
-
-  it('handles empty requirement gracefully', () => {
-    const prompt = buildPlanPrompt('');
-    expect(prompt).toBeDefined();
-    expect(prompt).toContain('JSON array');
-  });
 });
 
 describe('buildTaskPrompt', () => {

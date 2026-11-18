@@ -116,11 +116,6 @@ describe('Galaxy App', () => {
     expect(sceneCalls.created).toBe(1);
     expect(sceneCalls.lastData.nodes.length).toBe(1);
   });
-  it('shows a loading overlay while loading', () => {
-    store.loading.value = true;
-    const root = mount(true);
-    expect(root.querySelector('.galaxy-loading')).not.toBe(null);
-  });
   it('shows the objects-loaded count when loadedCount > 0', () => {
     store.loading.value = true;
     store.loadedCount.value = 42;

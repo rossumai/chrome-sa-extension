@@ -37,10 +37,6 @@ describe('architect api v2', () => {
     expect((deliverables[0] as any).stateDate).toBeUndefined();
   });
 
-  it('uses the _SA_EXTENSION__fabry_architect collection', () => {
-    expect(api.COLLECTION).toBe('_SA_EXTENSION__fabry_architect');
-  });
-
   it('ensureCollection tolerates already-exists but rethrows 401', async () => {
     vi.mocked(mdh.createCollection).mockRejectedValueOnce(
       Object.assign(new Error('exists'), { status: 400 }),

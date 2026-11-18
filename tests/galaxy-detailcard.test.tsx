@@ -139,24 +139,6 @@ describe('DetailCard', () => {
     store.selectedNodeId.value = 'queue:99';
     expect(mount().querySelector('.galaxy-detail-facts')).toBe(null);
   });
-  it('omits .galaxy-detail-facts when node has no detail property', () => {
-    store.graph.value = {
-      nodes: [
-        {
-          val: 1,
-          detail: [],
-          id: 'queue:99',
-          type: 'queue',
-          rawId: '99',
-          name: 'Legacy',
-          color: '#aaa',
-        },
-      ],
-      links: [],
-    };
-    store.selectedNodeId.value = 'queue:99';
-    expect(mount().querySelector('.galaxy-detail-facts')).toBe(null);
-  });
   it('produces a hook deep-link for a hook node', () => {
     store.selectedNodeId.value = 'hook:200';
     const link = mount().querySelector('a.galaxy-detail-link');

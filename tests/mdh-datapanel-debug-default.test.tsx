@@ -142,20 +142,4 @@ describe('DataPanel — Aggregate Pipeline Debug visibility', () => {
       'the default pipeline stages should be listed in the debug',
     ).toBeGreaterThan(0);
   });
-
-  it('the editor was seeded with the default pipeline (sanity: mock reflects a real no-op setValue)', async () => {
-    const root = document.createElement('div');
-    document.body.appendChild(root);
-    render(<DataPanel />, root);
-    await waitFor(() => root.querySelector('.pipeline-debug-input-row'), 'debug to render');
-
-    // The mock editor holds the default pipeline, and DataPanel's syncPipeline wrote
-    // the SAME text (a no-op). This is the precondition that made the debug vanish.
-    const parsed = JSON5.parse(mock.text);
-    expect(Array.isArray(parsed)).toBe(true);
-    expect(
-      parsed.some((s: any) => s && s.$match),
-      'default pipeline has a $match stage',
-    ).toBe(true);
-  });
 });

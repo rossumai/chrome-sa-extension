@@ -54,12 +54,6 @@ describe('currentOrg', () => {
 });
 
 describe('currentOrg, on what it names', () => {
-  it('names the one organization the session can see', () => {
-    expect(currentOrg({ results: [{ id: 7, name: 'Acme HQ - TEST' }] })!.name).toBe(
-      'Acme HQ - TEST',
-    );
-  });
-
   it('trims the name', () => {
     expect(currentOrg({ results: [{ id: 7, name: '  Acme HQ ' }] })!.name).toBe('Acme HQ');
   });

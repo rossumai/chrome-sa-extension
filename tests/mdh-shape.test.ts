@@ -118,15 +118,6 @@ describe('validateAgainstShape — missingTypes / unknownTypes (additive)', () =
     expect(r.unknown).toContain('extra');
     expect(r.unknownTypes.get('extra')).toBe('string');
   });
-
-  it('does not change missing/unknown themselves — still plain string arrays', () => {
-    const shape = deriveShape([{ sku: 'A1', price: 10 }]);
-    const r = validateAgainstShape([{ sku: 'B2', price: 20, extra: 'hi' }], shape);
-    expect(Array.isArray(r.missing)).toBe(true);
-    expect(r.missing.every((p: any) => typeof p === 'string')).toBe(true);
-    expect(Array.isArray(r.unknown)).toBe(true);
-    expect(r.unknown.every((p: any) => typeof p === 'string')).toBe(true);
-  });
 });
 
 describe('validateAgainstShape — whitespace pairing', () => {

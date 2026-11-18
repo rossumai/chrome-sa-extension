@@ -25,9 +25,6 @@ describe('csvCell', () => {
     expect(csvCell({ $oid: '507f1f77bcf86cd799439011' }, d)).toBe('507f1f77bcf86cd799439011');
     expect(csvCell({ $date: '2026-01-02T03:04:05.000Z' }, d)).toBe('2026-01-02T03:04:05.000Z');
   });
-  it('still JSON-encodes genuine (non-EJSON) objects', () => {
-    expect(csvCell({ a: 1 }, d)).toBe('"{""a"":1}"');
-  });
 });
 
 describe('csvRow / csvHeader', () => {

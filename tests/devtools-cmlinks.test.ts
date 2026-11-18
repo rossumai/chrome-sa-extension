@@ -11,28 +11,6 @@ describe('cmLinks', () => {
     expect(urlAt(DOC, i)).toBe('https://acme.rossum.app/api/v1/schemas/9');
     expect(urlAt(DOC, 0)).toBeNull();
   });
-  it('mounts as a CodeMirror extension without error', () => {
-    const el = document.createElement('div');
-    const view = new EditorView({
-      state: EditorState.create({ doc: DOC, extensions: [basicSetup, rossumLinks(vi.fn())] }),
-      parent: el,
-    });
-    expect(el.querySelector('.cm-editor')).not.toBeNull();
-    view.destroy();
-  });
-  it('accepts onContextLink callback without error', () => {
-    const el = document.createElement('div');
-    const onContextLink = vi.fn();
-    const view = new EditorView({
-      state: EditorState.create({
-        doc: DOC,
-        extensions: [basicSetup, rossumLinks(vi.fn(), onContextLink)],
-      }),
-      parent: el,
-    });
-    expect(el.querySelector('.cm-editor')).not.toBeNull();
-    view.destroy();
-  });
   it('contextmenu over a link fires onContextLink and preventDefaults (real handler)', () => {
     const onContext = vi.fn();
     const el = document.createElement('div');

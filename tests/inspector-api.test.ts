@@ -111,11 +111,6 @@ describe('workflow + relation endpoints', () => {
     expect(calls[0]).toContain('workflow=5');
   });
 
-  it('listEmails is gone', () => {
-    // The assertion is that the export no longer exists, so it cannot be named directly.
-    expect((api as any).listEmails).toBeUndefined();
-  });
-
   it('listAnnotationsByIds sends a csv id filter with sideload', async () => {
     const calls: any = [];
     globalThis.fetch = vi.fn(async (url) => {

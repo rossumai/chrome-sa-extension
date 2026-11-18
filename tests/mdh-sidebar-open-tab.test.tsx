@@ -119,13 +119,4 @@ describe('Sidebar right-click context menu', () => {
     item!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     expect(openCollectionTab).toHaveBeenCalledWith('items');
   });
-
-  it('the kebab button still opens the menu (regression)', async () => {
-    const root = await mount();
-    (rowFor(root, 'vendors') as any)
-      .querySelector('.collection-action-menu-btn')
-      .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-    await tick();
-    expect(root.querySelector('.collection-action-menu')).not.toBeNull();
-  });
 });

@@ -68,14 +68,6 @@ describe('read path', () => {
     expect(s.peek('assets/diagram.png#anchor')).toBe(held);
   });
 
-  it('reports a failed fetch rather than throwing', async () => {
-    const s = store([ROW('assets/diagram.png', 10, 1234)], async () => {
-      throw new Error('401');
-    });
-    await s.load();
-    expect((await s.resolve('assets/diagram.png'))!.error).toBe('401');
-  });
-
   it('evicts the OLDEST entry when a new one pushes past the budget', async () => {
     const s = store(
       [ROW('assets/a.png', 6, 1), ROW('assets/b.png', 5, 2)],

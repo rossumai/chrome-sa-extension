@@ -18,12 +18,6 @@ describe('stableKey', () => {
     expect(stableKey(true)).not.toBe(stableKey('true'));
   });
 
-  it('produces the same key for EJSON $oid regardless of declaration order', () => {
-    const a = { $oid: 'abc' };
-    const b = { $oid: 'abc' };
-    expect(stableKey(a)).toBe(stableKey(b));
-  });
-
   it('produces the same key for multi-key objects regardless of order', () => {
     const a = { $date: '2026-01-01', $type: 'ts' };
     const b = { $type: 'ts', $date: '2026-01-01' };
@@ -203,12 +197,6 @@ describe('runChunkedInsert', () => {
     expect(result.cancelled).toBe(true);
     expect(api.insertMany).toHaveBeenCalledTimes(2);
     expect(result.inserted).toBe(4); // first two batches landed before abort
-  });
-});
-
-describe('shared chunk size with downloader', () => {
-  it('reuses BATCH_SIZE from downloadCollection so up and down round-trip with matching batches', () => {
-    expect(BATCH_SIZE).toBe(1000);
   });
 });
 

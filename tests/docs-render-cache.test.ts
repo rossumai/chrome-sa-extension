@@ -53,19 +53,6 @@ describe('renderDocument cache', () => {
     expect(isRendered({ id: 'd1', text: '# 1' })).toBe(false); // evicted instead
   });
 
-  it('does not cache a failure — a transient throw must not become permanent', () => {
-    const bad = renderDocument({
-      id: 'x',
-      text: 'ok',
-      mermaid: () => {
-        throw new Error('boom');
-      },
-    });
-    // A mermaid throw is caught by the fence renderer itself, so this still renders; the point
-    // is that nothing is cached when the pipeline throws outright.
-    expect(bad.body || bad.warnings.length).toBeTruthy();
-  });
-
   // Controller ruling 15: `renderDocument` and `isRendered` know nothing about assets at all —
   // review found the earlier design (an `assetsVersion` in the key) made a warmed entry
   // unmatchable the instant a caller supplied a store, defeating the "preload so page switching

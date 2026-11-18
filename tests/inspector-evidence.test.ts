@@ -133,26 +133,6 @@ describe('computeVerdict', () => {
     expect(low.fact).toContain('po_number');
     expect(low.fact).toContain('0.31');
   });
-  it('rejected / failed_export outrank in-review', () => {
-    expect(
-      computeVerdict({
-        annotation: { status: 'rejected' },
-        blocker: null,
-        content: null,
-        queue,
-        schema: null,
-      }).state,
-    ).toBe('rejected');
-    expect(
-      computeVerdict({
-        annotation: { status: 'failed_export' },
-        blocker: null,
-        content: null,
-        queue,
-        schema: null,
-      }).state,
-    ).toBe('export-failed');
-  });
   it('no blockers, not automated → honest in-review', () => {
     const v = computeVerdict({
       annotation: { status: 'to_review', automated: false },

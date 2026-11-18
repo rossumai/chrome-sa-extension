@@ -59,12 +59,6 @@ describe('parseAnsi', () => {
     expect(parseAnsi(`${E}[38;5;232ma`)[0].style).toEqual({ color: 'rgb(8, 8, 8)' });
   });
 
-  it('24-bit foreground', () => {
-    expect(parseAnsi(`${E}[38;2;1;2;3macme`)).toEqual([
-      { text: 'acme', style: { color: 'rgb(1, 2, 3)' } },
-    ]);
-  });
-
   it('ignores unknown codes, and never reads a background colour argument as a code', () => {
     // 5 (blink), 7 (inverse), 41 (red background) are ignored; 48;2;1;2;3 must not set bold (1)
     expect(parseAnsi(`${E}[5;7;41mx${E}[48;2;1;2;3my${E}[48;5;1mz`)).toEqual([

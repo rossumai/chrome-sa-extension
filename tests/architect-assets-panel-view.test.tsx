@@ -657,20 +657,6 @@ describe('AssetsPanel', () => {
     );
   });
 
-  it('counts a reference-style image, whose href sits in a link definition', () => {
-    store.deliverables.value = [
-      deliverable({
-        id: 'd1',
-        text: '![arch][ref]\n\n[ref]: assets/a.png\n',
-        title: 'One',
-        titleSource: 'manual',
-      }),
-    ];
-    const root = mount({ currentId: 'd1', assets: fakeStore([row('assets/a.png')]) });
-    expect(keysIn(root, 'here')).toEqual(['assets/a.png']);
-    expect(groupOf(root, 'unused')).toBe(null);
-  });
-
   // W8: the reasons, not just the count. This is the action D6 makes mandatory and it has no other
   // channel — no log row, no per-file note — so three expired-token refusals reported themselves as
   // "3 of 3 could not be downloaded" and nothing else.

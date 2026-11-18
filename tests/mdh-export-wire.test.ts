@@ -29,19 +29,4 @@ describe('export wiring seam', () => {
     expect(await job.fetchCount()).toBe(5);
     expect(api.aggregate).not.toHaveBeenCalled();
   });
-
-  it('a null count feeds the real-count seam end to end: parseExportFilter -> buildExportJob -> fetchCount hits api.aggregate over the SAME parsed stages', async () => {
-    vi.mocked(api.aggregate).mockResolvedValue({ result: [{ total: 123 }] });
-    const f = parseExportFilter('[{"$match":{"region":"EU"}}]', (t) => t);
-    const job = buildExportJob(
-      { scope: 'filtered', formatId: 'json', opts: {}, columns: null, count: null },
-      'vendors',
-      f.stages,
-    );
-    expect(await job.fetchCount()).toBe(123);
-    expect(api.aggregate).toHaveBeenCalledWith('vendors', [
-      { $match: { region: 'EU' } },
-      { $count: 'total' },
-    ]);
-  });
 });

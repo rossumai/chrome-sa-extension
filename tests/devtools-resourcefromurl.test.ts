@@ -93,11 +93,6 @@ describe('resourceFromApiUrl', () => {
       resourceFromApiUrl('https://acme.rossum.app/api/v1/annotations/1/content/2?x=1')!.label,
     ).toBe('Content 2');
   });
-  it('a no-sub URL is unchanged (editable, no readOnly)', () => {
-    const r = resourceFromApiUrl('https://acme.rossum.app/api/v1/schemas/9');
-    expect(r).toEqual({ type: 'schema', id: '9', apiPath: '/api/v1/schemas/9', label: 'Schema' });
-    expect(r!.readOnly).toBeUndefined();
-  });
   it('still tolerates a trailing slash on a no-sub URL', () => {
     expect(resourceFromApiUrl('https://acme.rossum.app/api/v1/hooks/3/')!.id).toBe('3');
     expect(resourceFromApiUrl('https://acme.rossum.app/api/v1/hooks/3/')!.apiPath).toBe(

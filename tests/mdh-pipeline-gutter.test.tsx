@@ -27,14 +27,6 @@ const waitForCM = (fn: any) => vi.waitFor(fn, { timeout: 5000, interval: 20 });
 // rendered in the DOM. The per-line correctness is covered by stageLineRanges unit
 // tests in mdh-pipeline-comments.test.js.
 
-describe('stageToggleGutter module', () => {
-  it('returns a non-empty extension array', () => {
-    const exts = stageToggleGutter(() => {});
-    expect(Array.isArray(exts)).toBe(true);
-    expect(exts.length).toBeGreaterThan(0);
-  });
-});
-
 describe('JsonEditor aggregate gutter', () => {
   it('renders one stage-toggle checkbox per top-level stage (checked = enabled)', async () => {
     const root = mount();

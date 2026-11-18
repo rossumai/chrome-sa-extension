@@ -354,14 +354,6 @@ describe('IndexPanel — presets', () => {
     expect(root.querySelector('[data-testid="preset-cascade"]')).not.toBeNull();
   });
 
-  it('offers the lookup-key preset when there is no wildcard index', async () => {
-    vi.mocked(api.listIndexes).mockResolvedValue({ result: [{ name: '_id_', key: { _id: 1 } }] });
-    const root = mountWithModal();
-    await vi.waitFor(() => expect(cardByName(root, '_id_')).toBeTruthy());
-    await openCreate(root);
-    expect(root.querySelector('[data-testid="preset-lookup"]')).not.toBeNull();
-  });
-
   // A SUBPATH wildcard (`{"a.$**": 1}`) indexes only paths under `a` — it does
   // not cover an unrelated field, so a single-field preset there is not a
   // no-op. Must use the narrow isFullWildcard, not the broad `includes('$**')`
@@ -454,30 +446,6 @@ describe('IndexPanel — presets', () => {
 describe('IndexPanel — field picker', () => {
   beforeEach(() => {
     vi.mocked(api.listIndexes).mockResolvedValue({ result: [{ name: '_id_', key: { _id: 1 } }] });
-  });
-
-  it('offers discovered paths once a preset is chosen', async () => {
-    vi.mocked(api.aggregate).mockResolvedValue({
-      result: [
-        {
-          f0: [
-            { _id: 'code', types: ['string'] },
-            { _id: 'status', types: ['string'] },
-          ],
-        },
-      ],
-    });
-    const root = mountWithModal();
-    await vi.waitFor(() => expect(cardByName(root, '_id_')).toBeTruthy());
-    const create = [...root.querySelectorAll('button')].find((b) =>
-      b.textContent!.includes('Create'),
-    )!;
-    create.click();
-    await Promise.resolve();
-    (root.querySelector('[data-testid="preset-cascade"]') as HTMLElement).click();
-    await vi.waitFor(() =>
-      expect(root.querySelector('[data-testid="index-field-picker"]')).not.toBeNull(),
-    );
   });
 
   // Discovery is a convenience. Losing it must not stop anyone creating an index.

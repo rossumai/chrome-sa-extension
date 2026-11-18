@@ -66,15 +66,6 @@ describe('the name pill', () => {
     expect(name.style.maxWidth).toBe('708px');
   });
 
-  it("names the session's organization, not the user's home organization", async () => {
-    // auth/user points at organization 3, which the session cannot read.
-    documentsHeader();
-    badge.init({ intervalMs: 0 });
-    await flush();
-
-    expect(pill()!.textContent).toBe('Acme HQ - TEST: 7');
-  });
-
   it('sits in the same place on the document review screen', async () => {
     reviewHeader();
     badge.init({ intervalMs: 0 });

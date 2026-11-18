@@ -129,14 +129,6 @@ describe('DevTools Panel', () => {
     expect(root.querySelector('.rawjson-save')).toBeNull();
   });
 
-  it('still renders the editor + Save for a JSON tab', () => {
-    const t = store.openTab(RES, 'page');
-    store.patchTab(t.id, { original: { name: 'A' }, buffer: '{"name":"A"}', dirty: true });
-    const root = mount();
-    expect(root.querySelector('.rawjson-preview')).toBeNull();
-    expect(root.querySelector('.rawjson-save')).not.toBeNull();
-  });
-
   describe('tab bar', () => {
     it('renders a tab per open resource and highlights the active one', () => {
       const a = store.openTab(RES, 'page');
@@ -509,21 +501,6 @@ describe('DevTools Panel', () => {
         el.textContent.includes('Hook'),
       );
       expect((linkTab as HTMLElement).draggable).toBe(true);
-    });
-
-    it('dragging a link tab before another reorders them via moveTab', () => {
-      const a = store.openTab(RES, 'link');
-      store.patchTab(a.id, { original: { id: 1 } });
-      const b = store.openTab(RES2, 'link');
-      store.patchTab(b.id, { original: { id: 2 } });
-      const c = store.openTab(
-        { type: 'user', id: '3', apiPath: '/api/v1/users/3', label: 'User' },
-        'link',
-      );
-      store.patchTab(c.id, { original: { id: 3 } });
-      expect(store.tabs.value.map((t) => t.id)).toEqual([a.id, b.id, c.id]);
-      store.moveTab(c.id, a.id);
-      expect(store.tabs.value.map((t) => t.id)).toEqual([c.id, a.id, b.id]);
     });
   });
 

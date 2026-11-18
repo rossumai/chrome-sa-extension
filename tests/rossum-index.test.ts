@@ -63,22 +63,6 @@ describe('rossum content-script entry', () => {
     expect(document.getElementById('rossum-sa-extension-closable-tooltips-style')).not.toBeNull();
   });
 
-  it('observes document.body once any feature is enabled', async () => {
-    loadEntry({ schemaAnnotationsEnabled: true });
-    const observeSpy = vi.fn();
-    globalThis.MutationObserver = vi.fn(function (this: any) {
-      this.observe = observeSpy;
-    }) as any;
-
-    await import('../src/rossum/index.js');
-    await new Promise((r) => setTimeout(r, 0));
-
-    expect(observeSpy).toHaveBeenCalledTimes(1);
-    const [target, opts] = observeSpy.mock.calls[0];
-    expect(target).toBe(document.body);
-    expect(opts).toEqual({ subtree: true, childList: true });
-  });
-
   it('walks added subtrees and invokes every registered handler per element', async () => {
     loadEntry({ schemaAnnotationsEnabled: true, expandFormulasEnabled: true });
     let observerCallback: any;

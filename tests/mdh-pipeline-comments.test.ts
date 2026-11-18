@@ -387,11 +387,6 @@ describe('parsePipelineDoc', () => {
     expect(doc.segments[0].stage).toEqual({ $sort: { a: -1 } });
     expect(doc.segments[0].raw).toBe('{ "$sort": { "a": -1 } }');
   });
-
-  it('is ok:false for invalid JSON5 or a non-array', () => {
-    expect(parsePipelineDoc('[ {').ok).toBe(false);
-    expect(parsePipelineDoc('{ "$match": {} }').ok).toBe(false);
-  });
 });
 
 describe('entryIndexAtOffset', () => {

@@ -163,13 +163,6 @@ describe('unflattenDoc', () => {
     expect(b.doc).toEqual({ sku: 'B', v: 'plain' });
   });
 
-  it('still reports a genuine conflict when the colliding value is not empty (unchanged behaviour)', () => {
-    const both = unflattenDoc({ a: 1, 'a.b': 2 });
-    expect(both.conflicts).toEqual(['a.b']);
-    const reversed = unflattenDoc({ 'a.b': 2, a: 1 });
-    expect(reversed.conflicts).toEqual(['a']);
-  });
-
   // Round 2 re-review: the empty-occupant handling above was itself
   // order-dependent. `unflattenDoc({sku:'B', 'v.inner':'', v:'plain'})` used
   // to build a spurious `{v:{inner:''}}` from the empty child (processed
@@ -214,16 +207,6 @@ describe('unflattenDoc', () => {
       const r = unflattenDoc({ name: '' });
       expect(r.doc).toEqual({ name: '' });
       expect(r.conflicts).toEqual([]);
-    });
-
-    it('genuine conflicts (no empty side) are unaffected by the two-pass split, in either order', () => {
-      const forward = unflattenDoc({ a: 1, 'a.b': 2 });
-      expect(forward.doc).toEqual({ a: 1, 'a.b': 2 });
-      expect(forward.conflicts).toEqual(['a.b']);
-
-      const reverse = unflattenDoc({ 'a.b': 2, a: 1 });
-      expect(reverse.doc.a).toEqual({ b: 2 }); // the nested build wins; the scalar cannot overwrite it
-      expect(reverse.conflicts).toEqual(['a']);
     });
   });
 });

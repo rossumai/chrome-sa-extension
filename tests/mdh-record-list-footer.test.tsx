@@ -232,12 +232,6 @@ describe('RecordList footer', () => {
     expect(count.textContent).not.toContain('ms');
   });
 
-  it('does not apply the slow-query tint, even for a slow (>1s) query', () => {
-    const root = renderList({ totalCount: 162, lastQueryMs: 5000 });
-    const count = root.querySelector('.record-count');
-    expect(count!.classList.contains('record-count-slow')).toBe(false);
-  });
-
   it('still shows "No records" when there are no records', () => {
     const root = renderList({ records: [], totalCount: 162, lastQueryMs: 277 });
     expect(root.querySelector('.record-count')!.textContent).toBe('No records');

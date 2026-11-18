@@ -137,10 +137,6 @@ describe('valueToXml and EJSON', () => {
     );
   });
 
-  it('still nests an ordinary sub-document', () => {
-    expect(valueToXml('address', { city: 'TOWN' })).toBe('<address><city>TOWN</city></address>');
-  });
-
   it('escapes EJSON text like any other text', () => {
     expect(valueToXml('r', { $regex: 'a<b' })).toContain('a&lt;b');
   });

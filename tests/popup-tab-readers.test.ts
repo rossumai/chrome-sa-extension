@@ -30,10 +30,6 @@ describe('popup tab-readers', () => {
     expect(readOrgCache('rossum-sa-extension-org:')).toBeNull();
   });
 
-  it('readOrgCache returns null without an entry', () => {
-    expect(readOrgCache('rossum-sa-extension-org:')).toBeNull();
-  });
-
   it('readAuthInfo returns secureToken and origin', () => {
     window.localStorage.setItem('secureToken', 'xyz');
     const info = readAuthInfo();

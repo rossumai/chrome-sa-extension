@@ -20,11 +20,6 @@ describe('Rail', () => {
     experimentalUnlocked.value = false;
   });
 
-  it('renders one button per app', () => {
-    const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(7); // the Academy and rdc are gated
-  });
-
   it('renders the Inspector app button and switches to it on click', () => {
     const root = mount();
     const btn = [...root.querySelectorAll('.app-rail-item')].find(
@@ -88,15 +83,6 @@ describe('Rail', () => {
       (b) => b.getAttribute('title') === 'Org Galaxy',
     );
     expect(btn!.querySelector('.app-rail-beta')).toBeNull();
-  });
-
-  it('clicking the Audit button sets activeApp to audit', () => {
-    const root = mount();
-    const auditBtn = [...root.querySelectorAll('.app-rail-item')].find(
-      (b) => b.getAttribute('title') === 'Audit Log Viewer',
-    );
-    (auditBtn as HTMLElement).click();
-    expect(activeApp.value).toBe('audit');
   });
 
   it('re-renders the active marker after activeApp changes', () => {

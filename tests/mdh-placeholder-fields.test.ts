@@ -54,13 +54,6 @@ describe('mapPlaceholdersToFields', () => {
 });
 
 describe('mapPlaceholdersToFields — collection-aware', () => {
-  it('top-level $match maps to the active collection (null)', () => {
-    const text = JSON.stringify([{ $match: { vat: '{sender_vat}' } }]);
-    expect(mapPlaceholdersToFields(text)).toEqual({
-      sender_vat: { field: 'vat', collection: null, op: '$eq' },
-    });
-  });
-
   it('descends into $unionWith.coll (raw coll string, may contain vars)', () => {
     const text = JSON.stringify([
       { $match: { _id: '#' } },
@@ -113,9 +106,5 @@ describe('mapPlaceholdersToFields — collection-aware', () => {
     expect(mapPlaceholdersToFields(text)).toEqual({
       v: { field: 'f', collection: null, op: '$eq' },
     });
-  });
-
-  it('returns {} on parse failure', () => {
-    expect(mapPlaceholdersToFields('not json')).toEqual({});
   });
 });

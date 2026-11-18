@@ -143,16 +143,6 @@ describe('matchSections', () => {
     expect(result).toEqual([]);
   });
 
-  it('matches in title', () => {
-    const result = matchSections(sections, 'deploy');
-    expect(result).toEqual([sections[1]]);
-  });
-
-  it('matches in keywords', () => {
-    const result = matchSections(sections, 'resume');
-    expect(result).toEqual([sections[1]]);
-  });
-
   it('trims whitespace from query before matching', () => {
     const result = matchSections(sections, '  step  ');
     expect(result).toEqual([sections[0]]);

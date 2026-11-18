@@ -137,12 +137,6 @@ describe('buildPrintDocument', () => {
     expect(on).toMatch(/verdict-fail/);
   });
 
-  it('a deliverable with no state prints no badge, and does not break the run', () => {
-    const { html } = build({ deliverables: [DELIVERABLES[2]], options: { contents: false } });
-    expect(html).toMatch(/Untouched/);
-    expect(html).not.toMatch(/state-label/);
-  });
-
   it('sanitizes each document, so a printed page cannot carry injected markup', () => {
     const { html } = build({
       deliverables: [

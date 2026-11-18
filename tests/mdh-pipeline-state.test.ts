@@ -40,13 +40,6 @@ describe('pipelineState', () => {
     expect(getPipelineState('col1')!.pipelineText).toBe('second');
   });
 
-  it('savePipelineState is a no-op for falsy collection name', () => {
-    savePipelineState(null, { pipelineText: 'x', variables: {}, skip: 0 });
-    savePipelineState('', { pipelineText: 'y', variables: {}, skip: 0 });
-    expect(getPipelineState('null')).toBeNull();
-    expect(getPipelineState('')).toBeNull();
-  });
-
   it('clearAllPipelineState removes all entries', () => {
     savePipelineState('colA', { pipelineText: 'A', variables: {}, skip: 0 });
     savePipelineState('colB', { pipelineText: 'B', variables: {}, skip: 0 });

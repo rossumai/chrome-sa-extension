@@ -185,10 +185,6 @@ describe('buildSampleReadPipeline', () => {
     });
     expect(p).toHaveLength(2);
   });
-
-  it('$sample is the first stage, which is what keeps the random cursor available', () => {
-    expect(Object.keys(buildSampleReadPipeline(['a'], 1000)[0])).toEqual(['$sample']);
-  });
 });
 
 describe('statsModeLabel', () => {

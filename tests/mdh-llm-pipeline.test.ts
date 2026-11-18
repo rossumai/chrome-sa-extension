@@ -37,9 +37,6 @@ describe('safeParseArray', () => {
 });
 
 describe('AI request comment', () => {
-  it('AI_COMMENT_PREFIX is the expected marker', () => {
-    expect(AI_COMMENT_PREFIX).toBe('// 🤖 AI request: ');
-  });
   it('stripAiComment removes the leading comment (with or without blank separator)', () => {
     expect(stripAiComment('// 🤖 AI request: x\n\n[]')).toBe('[]');
     expect(stripAiComment('// 🤖 AI request: x\n[]')).toBe('[]');

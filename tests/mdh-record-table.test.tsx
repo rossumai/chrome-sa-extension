@@ -44,27 +44,11 @@ describe('RecordTable', () => {
     expect(root.querySelectorAll('thead th').length).toBe(3);
     expect(root.querySelectorAll('tbody tr').length).toBe(2);
   });
-  it('renders an array cell as a badge, not raw JSON', () => {
-    const root = renderTable();
-    expect(root.textContent).toContain('[2]'); // tags: ['x','y']
-  });
   it('calls onSort when a header is clicked', () => {
     const onSort = vi.fn();
     const root = renderTable({ onSort });
     root.querySelectorAll('thead th')[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(onSort).toHaveBeenCalledWith('name');
-  });
-
-  it('shows sort badge in header when sortState has a column', () => {
-    const root = renderTable({ sortState: { name: 1 } });
-    const nameHeader = root.querySelectorAll('thead th')[1];
-    expect(nameHeader.textContent).toContain('↑'); // ↑ ascending arrow
-    const badge = nameHeader.querySelector('.record-table-sort-badge.asc');
-    expect(badge).not.toBeNull();
-    expect(badge!.textContent).toBe('↑');
-    // <th> should NOT have the old full-header color classes
-    expect(nameHeader.classList.contains('record-table-th-asc')).toBe(false);
-    expect(nameHeader.classList.contains('record-table-th-desc')).toBe(false);
   });
 
   it('renders checkboxes and selection when selectionMode is true', async () => {

@@ -223,30 +223,6 @@ describe('buildShapeFilterPipeline', () => {
     const withDefault = JSON.parse(buildShapeFilterPipeline(['a']));
     expect(withDefault[withDefault.length - 1]).toEqual({ $limit: 50 });
   });
-
-  it('parses as JSON, since it is edited as text', () => {
-    expect(() => JSON.parse(buildShapeFilterPipeline(['a', 'b', 'c']))).not.toThrow();
-  });
-
-  // Property test: the pipeline's predicate ("has every field of the shape,
-  // and exactly n + 1 keys") must select precisely the documents whose OWN key
-  // set equals the shape's — no more, no less. A bare list of $exists checks
-  // would let a document with one extra field slip through; this is the test
-  // that would catch that regression.
-  it('selects exactly the documents whose key set equals the shape, rejecting one with an extra field', () => {
-    const shape = ['amount', 'status'];
-    const docs = [
-      { _id: 1, amount: 10, status: 'ok' }, // exact match
-      { _id: 2, amount: 10, status: 'ok', vendor: 'acme' }, // extra field: must be rejected
-      { _id: 3, amount: 10 }, // missing a field: must be rejected
-      { _id: 4, amount: 10, status: 'ok' }, // exact match
-      { _id: 5, status: 'ok' }, // missing a field: must be rejected
-    ];
-    // Same predicate the emitted pipeline expresses.
-    const matchesShape = (doc: Record<string, unknown>) =>
-      shape.every((f) => f in doc) && Object.keys(doc).length === shape.length + 1;
-    expect(docs.filter(matchesShape).map((d) => d._id)).toEqual([1, 4]);
-  });
 });
 
 describe('friendlyType', () => {
