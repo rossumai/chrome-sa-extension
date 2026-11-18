@@ -87,6 +87,7 @@ describe('architect api v2', () => {
         titleSource: '',
         createdAt: null,
         editedAt: null,
+        skipCheck: false,
       },
       {
         id: 'b',
@@ -96,6 +97,7 @@ describe('architect api v2', () => {
         titleSource: '',
         createdAt: null,
         editedAt: null,
+        skipCheck: false,
       },
     ]);
     expect(results.a).toEqual({
@@ -106,6 +108,18 @@ describe('architect api v2', () => {
       stale: true,
     });
     expect(results.b).toBeUndefined(); // no lastVerdict → no result
+  });
+
+  it('loadDeliverables reads skipCheck, treating anything but true as false', async () => {
+    vi.mocked(mdh.find).mockResolvedValueOnce({
+      result: [
+        { _id: 'a', kind: 'requirement', text: '', order: 1, skipCheck: true },
+        { _id: 'b', kind: 'requirement', text: '', order: 2, skipCheck: 'yes' },
+        { _id: 'c', kind: 'requirement', text: '', order: 3 },
+      ],
+    });
+    const { deliverables } = await api.loadDeliverables();
+    expect(deliverables.map((d) => d.skipCheck)).toEqual([true, false, false]);
   });
 
   it('loadDeliverables maps a persisted title verbatim', async () => {
@@ -122,6 +136,7 @@ describe('architect api v2', () => {
         titleSource: '',
         createdAt: null,
         editedAt: null,
+        skipCheck: false,
       },
     ]);
   });

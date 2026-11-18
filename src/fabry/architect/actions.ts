@@ -5,7 +5,7 @@ import * as agentApi from '../../agent/agentApi.js';
 import { newAcc, foldEvents, replyText } from '../../agent/agentStream.js';
 import * as api from './api.js';
 import * as check from './check.js';
-import { runChecks } from './run.js';
+import { runChecks, runTargets } from './run.js';
 import * as store from './store.js';
 import { track } from '../../usage/track.js';
 import { EXAMPLE_DELIVERABLE } from './example.js';
@@ -183,6 +183,18 @@ async function setTitle(id: string, newTitle: unknown, source: 'manual' | 'ai') 
     await api.saveTitle(id, clean, source);
   } catch (err) {
     store.loadError.value = (err as any)?.message || 'Could not save title.';
+  }
+}
+
+// Include or leave out a deliverable from Run all. Optimistic, like setTitle.
+export async function setSkipCheck(id: string, skipCheck: boolean) {
+  store.deliverables.value = store.deliverables.value.map((d) =>
+    d.id === id ? { ...d, skipCheck } : d,
+  );
+  try {
+    await api.saveSkipCheck(id, skipCheck);
+  } catch (err) {
+    store.loadError.value = (err as any)?.message || 'Could not save the Run all setting.';
   }
 }
 
@@ -491,11 +503,12 @@ export async function runAll() {
   // verdict clobber the post-implementation one. Keep them mutually exclusive.
   if (store.implementRunning.value) return;
   if (Object.values(store.results.value).some((r) => r && r.running)) return;
+  // Only what the status filter selects, minus deliverables left out of Run all.
+  const ds = runTargets(store.deliverables.value, store.results.value, store.runFilter.value);
+  if (!ds.length) return;
   // Tracked only once every guard has passed — above them, a refused click was
   // reported as a check that ran.
   track('sa_fabry_architect_check');
-  const ds = store.deliverables.value;
-  if (!ds.length) return;
   runId += 1;
   const id = runId;
   controller = new AbortController();

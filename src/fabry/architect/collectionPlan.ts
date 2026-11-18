@@ -26,6 +26,8 @@ export type Deliverable = {
   titleSource: string;
   createdAt: number | null;
   editedAt: number | null;
+  /** Left out of Run all (still runnable one by one). Absent on older docs → false. */
+  skipCheck: boolean;
 };
 
 export type CollectionAction = 'none' | 'create' | 'rename' | 'merge';

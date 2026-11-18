@@ -8467,6 +8467,56 @@ tbody.uploads-row-failed tr {
   opacity: 0.5;
   cursor: default;
 }
+.fabry-arch-filter {
+  display: flex;
+  gap: 4px;
+}
+.fabry-arch-filter-chip {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 3px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.fabry-arch-filter-chip:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+.fabry-arch-filter-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.fabry-arch-filter-chip.pass[aria-pressed='true'] {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+.fabry-arch-filter-chip.fail[aria-pressed='true'] {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+.fabry-arch-filter-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.fabry-arch-item.skipped .fabry-arch-item-title {
+  color: var(--text-secondary);
+}
+.fabry-arch-skip {
+  flex: none;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+}
 .fabry-arch-summary {
   font-size: 11.5px;
   color: var(--text-secondary);

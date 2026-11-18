@@ -12,7 +12,9 @@ import {
   deleteDeliverable,
   reImplement,
   renameDeliverable,
+  setSkipCheck,
 } from '../actions.js';
+import { runTargets, RUN_FILTERS, type RunFilter } from '../run.js';
 import { displayTitle } from '../format.js';
 import { outlineWithoutTitle } from '../../../docs/outline.js';
 import { confirmModal, promptModal } from '../../../ui/Modal.jsx';
@@ -75,6 +77,43 @@ function dotClass(r: any) {
   if (r.verdict === 'fail') return 'fail' + (r.stale ? ' stale' : '');
   if (r.verdict === 'uncertain') return 'uncertain' + (r.stale ? ' stale' : '');
   return 'none';
+}
+
+const FILTER_LABEL: Record<RunFilter, { label: string; title: string }> = {
+  new: { label: 'New', title: 'Never checked' },
+  pass: { label: 'Green', title: 'Last check: met' },
+  fail: { label: 'Red', title: 'Last check: not met' },
+};
+
+// Which deliverables Run all checks. "All" is the empty selection; the others combine.
+function RunFilterBar({ disabled }: { disabled: boolean }) {
+  const sel = store.runFilter.value;
+  return (
+    <div class="fabry-arch-filter" role="group" aria-label="Run all checks">
+      <button
+        type="button"
+        class="fabry-arch-filter-chip"
+        aria-pressed={sel.length === 0}
+        disabled={disabled}
+        onClick={() => store.toggleRunFilter(null)}
+      >
+        All
+      </button>
+      {RUN_FILTERS.map((f) => (
+        <button
+          type="button"
+          key={f}
+          class={'fabry-arch-filter-chip ' + f}
+          aria-pressed={sel.includes(f)}
+          title={FILTER_LABEL[f].title}
+          disabled={disabled}
+          onClick={() => store.toggleRunFilter(f)}
+        >
+          {FILTER_LABEL[f].label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 // Live results summary for the footer (B2). Counts are scoped to deliverables
@@ -146,6 +185,8 @@ export default function ArchitectSidebar() {
   const running = store.running.value;
   const implementAllowed = fstore.implementAllowed.value;
   const implementRunning = store.implementRunning.value;
+  const targets = runTargets(ds, results, store.runFilter.value);
+  const runsEverything = targets.length === ds.length;
 
   // Drag-and-drop reordering.
   const [dragId, setDragId] = useState<string | null>(null);
@@ -228,6 +269,7 @@ export default function ArchitectSidebar() {
                   : '') +
                 (dragId === d.id ? ' dragging' : '') +
                 (menuId === d.id ? ' menuopen' : '') +
+                (d.skipCheck ? ' skipped' : '') +
                 (overId === d.id && dragId && dragId !== d.id
                   ? dragIndex >= 0 && dragIndex < i
                     ? ' dragover-after'
@@ -265,6 +307,11 @@ export default function ArchitectSidebar() {
             >
               <span class={'fabry-arch-dot ' + dotClass(results[d.id])} />
               <span class="fabry-arch-item-title">{displayTitle(d)}</span>
+              {d.skipCheck && (
+                <span class="fabry-arch-skip" title="Left out of Run all">
+                  {'skip'}
+                </span>
+              )}
               <button
                 type="button"
                 class="fabry-arch-kebab"
@@ -292,6 +339,17 @@ export default function ArchitectSidebar() {
                     }}
                   >
                     {'Re-run ▷'}
+                  </button>
+                  <button
+                    type="button"
+                    class="fabry-arch-menu-item"
+                    disabled={running}
+                    onClick={() => {
+                      closeMenu();
+                      setSkipCheck(d.id, !d.skipCheck);
+                    }}
+                  >
+                    {d.skipCheck ? 'Include in Run all' : 'Leave out of Run all'}
                   </button>
                   {implementAllowed && (
                     <button
@@ -341,13 +399,18 @@ export default function ArchitectSidebar() {
         ))}
       </div>
       <div class="fabry-arch-foot">
+        {ds.length > 0 && <RunFilterBar disabled={running} />}
         <button
           type="button"
           class="fabry-arch-runall"
-          disabled={implementRunning || (!running && ds.length === 0)}
+          disabled={implementRunning || (!running && targets.length === 0)}
           onClick={() => (running ? stopRun() : runAll())}
         >
-          {running ? 'Stop' : 'Run all ▷'}
+          {running
+            ? 'Stop'
+            : runsEverything
+              ? 'Run all ▷'
+              : `Run ${targets.length} of ${ds.length} ▷`}
         </button>
         <Summary ds={ds} results={results} running={running} />
         <button type="button" class="fabry-arch-new" onClick={() => addDeliverable()}>

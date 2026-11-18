@@ -17,6 +17,7 @@ export function deliverable(partial: Partial<Deliverable> & { id: string }): Del
     titleSource: '',
     createdAt: null,
     editedAt: null,
+    skipCheck: false,
     ...partial,
   };
 }
