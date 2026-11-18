@@ -46,7 +46,7 @@ export async function readTarget(c: Client): Promise<Target> {
 // is published; null when there is no checkpoint, or one written before the tag was stored.
 export async function checkpointRelease(c: Client, run: string): Promise<string | null> {
   const [st] = await c.ds('find', { query: { kind: 'plan', run } });
-  return typeof st?.release === 'string' ? st.release : null;
+  return !st?.complete && typeof st?.release === 'string' ? st.release : null;
 }
 
 // the hooks build URLs by concatenation (f"{url}oauth2/token"), so: a scheme and exactly one trailing slash
@@ -659,6 +659,15 @@ export async function deployCib(
   const p = configurePlan(plan, { coupa, region, hooksCsv });
   const notes: string[] = [];
   const [resumed] = await c.ds('find', { query: { kind: 'plan', run } });
+  // a complete run's checkpoint stays as the record of what was installed; it is never re-run
+  if (resumed?.complete)
+    return {
+      status: 'blocked',
+      blockers: [
+        `run ${run} is complete (CIB ${resumed.release ?? 'release unknown'}); its record stays in Data Storage. Use a new run ID`,
+      ],
+      notes,
+    };
   if (!resumed) {
     onProgress({
       phase: 'checks',
@@ -721,15 +730,19 @@ export async function deployCib(
     ...waitOpts,
     onProgress,
   });
-  // The checkpoint is only for a resume. With every dataset filled the run is complete, so it goes;
-  // with imports still pending it stays: Deploy with the same run ID then re-runs only the imports.
+  // With imports still pending the run can be resumed: Deploy with the same run ID re-runs only the
+  // imports. With every dataset filled it is complete; its checkpoint stays, marked, as the record
+  // of what was installed (which objects, from which release).
   if (pendingImports.length)
     notes.push(
       `the checkpoint of run ${run} stays in Data Storage: press Check and deploy with the same run ID to re-run the imports`,
     );
   else {
-    await c.ds('delete_one', { filter: { kind: 'plan', run } });
-    notes.push(`run ${run} is complete; its checkpoint is deleted from Data Storage`);
+    await c.ds('update_one', {
+      filter: { kind: 'plan', run },
+      update: { $set: { complete: true, completed: Date.now() / 1000 } },
+    });
+    notes.push(`run ${run} is complete; its record stays in Data Storage`);
   }
   return { status: 'done', idmap, memorisation, invoked, pendingImports, notes };
 }

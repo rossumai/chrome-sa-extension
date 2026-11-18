@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { domain, token } from '../store.js';
 import { connectedOrg } from '../../console/store.js';
 import { makeClient } from '../engine.js';
-import type { Progress } from '../engine.js';
+import type { Client, Progress } from '../engine.js';
 import {
   checkpointRelease,
   deployCib,
@@ -21,9 +21,17 @@ import {
   verdict,
 } from '../cib.js';
 import type { Target } from '../cib.js';
-import { CIB_REPO, latestRelease, loadRelease } from '../release.js';
+import {
+  coupaFromInstall,
+  findInstall,
+  installFromOrg,
+  guessInstalled,
+  upgradeCib,
+  upgradeVerdict,
+} from '../upgrade.js';
+import { CIB_REPO, deployableReleases, latestRelease, loadRelease } from '../release.js';
 import { stopNote, trackPhase } from '../view.js';
-import type { LoginRoute, PhaseLog } from '../view.js';
+import type { LoginRoute, PhaseLog, RunMode } from '../view.js';
 import Step from './Step.jsx';
 import { ownerLabel } from './OwnerCombobox.jsx';
 import type { Owner } from './OwnerCombobox.jsx';
@@ -52,6 +60,7 @@ const PHASES: Record<string, string> = {
   imports: 'Starting the Coupa imports',
   restore: 'Full first import (old MDH watermark)',
   datasets: 'Waiting for the datasets',
+  updates: 'Updating objects',
 };
 const NO_PHASES: PhaseLog = { counts: {}, current: null };
 
@@ -77,6 +86,7 @@ export default function App({ connected }: { connected: boolean | null }) {
     coupaSecret: '',
     run: `cib-${new Date().toISOString().slice(0, 10)}`,
     allow: false,
+    installed: '',
   });
   // what step 1 shows and the run uses: read, never chosen (design: 2026-11-02-cib-deploy-auto-target-design.md)
   const [release, setRelease] = useState('');
@@ -99,7 +109,9 @@ export default function App({ connected }: { connected: boolean | null }) {
   const [prog, setProg] = useState<Progress | null>(null);
   const [phases, setPhases] = useState<PhaseLog>(NO_PHASES);
   const [status, setStatus] = useState('Idle');
-  const [mode, setMode] = useState<'check' | 'deploy' | null>(null);
+  const [mode, setMode] = useState<RunMode | null>(null);
+  // the last Check upgrade found something an Upgrade would write
+  const [canUpgrade, setCanUpgrade] = useState(false);
   const [outcome, setOutcome] = useState<RunView['outcome']>(null);
   const [runFailed, setRunFailed] = useState(false);
   const [error, setError] = useState('');
@@ -251,19 +263,21 @@ export default function App({ connected }: { connected: boolean | null }) {
     }
   };
 
-  const run = async (checkOnly: boolean) => {
-    // first, while the click still counts as a user gesture
-    const coupaOk =
-      !probe && (await chrome.permissions.request({ origins: COUPA_ORIGINS }).catch(() => false));
+  // what every run shares: the page state, the clock and the error handling
+  const runWith = async (
+    m: RunMode,
+    work: (c: Client, progress: (p: Progress) => void) => Promise<void>,
+  ) => {
     setBusy(true);
     setOutcome(null);
     setError('');
     setCanResume(false);
+    setCanUpgrade(false);
     setRunError('');
     setRunFailed(false);
     setProg(null);
     setPhases(NO_PHASES);
-    setMode(checkOnly ? 'check' : 'deploy');
+    setMode(m);
     setRunSeq((n) => n + 1);
     setStatus('Starting');
     const t0 = (tLast.current = Date.now());
@@ -271,20 +285,37 @@ export default function App({ connected }: { connected: boolean | null }) {
       const s = (t: number) => Math.round((Date.now() - t) / 1000);
       setClock(`elapsed ${s(t0)} s · last activity ${s(tLast.current)} s ago`);
     }, 1000);
+    const progress = (p: Progress) => {
+      tLast.current = Date.now();
+      setProg(p);
+      setPhases((l) => trackPhase(l, p));
+      setStatus(`${PHASES[p.phase] ?? p.phase}: ${p.done} / ${p.total}`);
+    };
     try {
-      const c = makeClient(domain.value, token.value);
+      await work(makeClient(domain.value, token.value), progress);
+    } catch (err: any) {
+      line(`error: ${err.message}`);
+      setRunError(err.message);
+      setCanResume(m === 'deploy');
+      setRunFailed(true);
+      setStatus('Stopped with an error');
+    } finally {
+      clearInterval(tick);
+      setBusy(false);
+    }
+  };
+
+  const run = (checkOnly: boolean) =>
+    runWith(checkOnly ? 'check' : 'deploy', async (c, progress) => {
+      // first, while the click still counts as a user gesture
+      const coupaOk =
+        !probe && (await chrome.permissions.request({ origins: COUPA_ORIGINS }).catch(() => false));
       // a run with a checkpoint keeps the release it started with, whatever is latest now
       const tag = (await checkpointRelease(c, v.run.trim())) ?? release;
       setRunRelease(tag);
       if (tag !== release)
         line(`run ${v.run.trim()} was started with CIB ${tag}; it continues with it`);
       line(`${checkOnly ? 'check' : 'deploy'} CIB ${tag} into organization ${target!.orgId}`);
-      const progress = (p: Progress) => {
-        tLast.current = Date.now();
-        setProg(p);
-        setPhases((l) => trackPhase(l, p));
-        setStatus(`${PHASES[p.phase] ?? p.phase}: ${p.done} / ${p.total}`);
-      };
       const { deployConfig, ...rel } = await loadRelease(tag, { onProgress: progress });
       line(
         `read ${tag} from github.com/${CIB_REPO}: ${rel.plan.ops.length} objects; deploy settings from ${deployConfig}`,
@@ -335,17 +366,113 @@ export default function App({ connected }: { connected: boolean | null }) {
         findCoupaProbes(makeClient(domain.value, token.value)).then(([h]) =>
           setProbe(h?.url ?? null),
         );
-    } catch (err: any) {
-      line(`error: ${err.message}`);
-      setRunError(err.message);
-      setCanResume(!checkOnly);
-      setRunFailed(true);
-      setStatus('Stopped with an error');
-    } finally {
-      clearInterval(tick);
-      setBusy(false);
-    }
-  };
+    });
+
+  // Check upgrade (apply false) and Upgrade: always to the latest release, design
+  // 2026-11-16-cib-upgrade-design.md. The run ID is the target release's, so a stopped
+  // upgrade resumes on the next Upgrade without anyone typing it.
+  const upgrade = (apply: boolean) =>
+    runWith(apply ? 'upgrade' : 'upgrade-check', async (c, progress) => {
+      setRunRelease(release);
+      let install = await findInstall(c);
+      const form = { baseUrl: v.coupaUrl.trim(), clientId: v.coupaId.trim() };
+      const where = { region: target!.region, orgId: target!.orgId, coupa: form };
+      let coupa: { baseUrl: string; clientId: string } = form;
+      if (install) {
+        line(`install record: CIB ${install.release}`);
+        // step 2 wins, as without a record; the record fills only what step 2 leaves empty
+        const rec = coupaFromInstall(install.ops);
+        coupa = {
+          baseUrl: form.baseUrl || rec?.baseUrl || '',
+          clientId: form.clientId || rec?.clientId || '',
+        };
+        if (rec && (coupa.baseUrl !== rec.baseUrl || coupa.clientId !== rec.clientId))
+          line(
+            `step 2 differs from the install record (${rec.baseUrl}, ${rec.clientId}); step 2 is used`,
+          );
+      } else {
+        const tag = v.installed.trim();
+        if (!tag) {
+          // no record and no tag: compare the org with every release, suggest the closest one
+          const tags = await deployableReleases();
+          line(`no install record: comparing the organization with ${tags.join(', ')}`);
+          const rels = [];
+          for (const t of tags)
+            rels.push({ tag: t, ...(await loadRelease(t, { onProgress: progress })) });
+          const g = await guessInstalled(c, rels, where, progress);
+          for (const x of g)
+            line(
+              `${x.tag}: ${x.found} of ${x.total} objects found by name, ${x.lacks} differences`,
+            );
+          const best = g[0] && g[0].lacks < (g[1]?.lacks ?? Infinity) ? g[0] : null;
+          if (best) setV((o) => ({ ...o, installed: best.tag }));
+          setOutcome({
+            status: 'suggested',
+            verdict: {
+              tone: 'warn',
+              text: best
+                ? `No install record: the organization looks like CIB ${best.tag}. It is filled in as the installed release; press Check upgrade again to compare against it, or type another release.`
+                : `No install record, and no release is closest (${g
+                    .filter((x) => x.lacks === g[0]?.lacks)
+                    .map((x) => x.tag)
+                    .join(', ')} tie). Type the installed release in step 4.`,
+            },
+            notes: g.map(
+              (x) =>
+                `${x.tag}: ${x.found} of ${x.total} objects found by name, ${x.lacks} differences`,
+            ),
+            details: JSON.stringify(g, null, 1),
+          });
+          setStatus('Finished: suggested');
+          return;
+        }
+        line(`no install record: reading CIB ${tag} as the installed release`);
+        const old = await loadRelease(tag, { onProgress: progress });
+        const b = await installFromOrg(c, { tag, ...old }, where);
+        install = b.install;
+        coupa = b.coupa;
+        line(
+          `found ${Object.keys(install.idmap).length} of its ${install.ops.length} objects by name` +
+            (b.fromOrg ? '; the Coupa URL and client ID read from its schemas' : ''),
+        );
+      }
+      if (coupa !== form)
+        setV((o) => ({
+          ...o,
+          coupaUrl: o.coupaUrl || coupa.baseUrl,
+          coupaId: o.coupaId || coupa.clientId,
+        }));
+      const { deployConfig, ...rel } = await loadRelease(release, { onProgress: progress });
+      line(`read ${release} from github.com/${CIB_REPO}; deploy settings from ${deployConfig}`);
+      const r = await upgradeCib(c, {
+        install,
+        plan: rel.plan,
+        hooksCsv: rel.hooksCsv,
+        region: target!.region,
+        orgId: target!.orgId,
+        coupa: { ...coupa, clientSecret: v.coupaSecret },
+        tokenOwnerUsername: v.owner || undefined,
+        run: `cib-upgrade-${release}`,
+        apply,
+        onEvent: line,
+        onProgress: progress,
+      });
+      const vd = upgradeVerdict(r);
+      setOutcome({
+        status: r.status,
+        verdict: vd,
+        blockers: r.blockers,
+        notes: r.notes,
+        details: JSON.stringify({ from: r.from, to: r.to, invoked: r.invoked }, null, 1),
+        upgrade: r.items,
+      });
+      setCanUpgrade(
+        r.status === 'planned' &&
+          r.items.some((i) => i.action === 'update' || i.action === 'create'),
+      );
+      setRunFailed(vd.tone === 'fail');
+      setStatus(`Finished: ${r.status}`);
+    });
 
   const shownRelease = resumeRelease ?? release;
   const ready = !!(shownRelease && target);
@@ -356,7 +483,7 @@ export default function App({ connected }: { connected: boolean | null }) {
     running: busy && !!mode,
     failed: runFailed,
     error: runError || undefined,
-    runId: v.run.trim(),
+    runId: mode?.startsWith('upgrade') ? `cib-upgrade-${release}` : v.run.trim(),
     status,
     clock,
     detail: prog?.detail,
@@ -490,6 +617,11 @@ export default function App({ connected }: { connected: boolean | null }) {
                   state={s1 && s2 && !mode ? 'current' : undefined}
                   deployRef={deployRef}
                   resumeRef={resumeRef}
+                  installed={v.installed}
+                  onInstalledInput={set('installed')}
+                  onCheckUpgrade={() => upgrade(false)}
+                  onUpgrade={() => upgrade(true)}
+                  canUpgrade={canUpgrade}
                 />
               </fieldset>
             </form>

@@ -292,7 +292,7 @@ export const CIB_HELP: HelpSection[] = [
     chip: 'Step 4',
     title: 'Step 4 · Deploy',
     keywords:
-      'check only check and deploy blockers nothing written run id checkpoint resume re-run skips checks continue half-built adopt by name',
+      'check only check and deploy blockers nothing written run id checkpoint resume re-run skips checks continue half-built adopt by name upgrade check upgrade installed release install record conflict three-way merge newer version',
     body: (
       <HelpFigure
         callouts={[
@@ -324,6 +324,25 @@ export const CIB_HELP: HelpSection[] = [
               </>
             ),
           },
+          {
+            target: 'upgrade',
+            note: (
+              <>
+                <b>Upgrade an installation</b> — brings an organization that already has CIB to the
+                latest release. <i>Check upgrade</i> writes nothing: it compares the installed
+                release, the latest one and the organization, and lists per object what changes. A
+                change is applied only where the organization still holds the installed value; a
+                field the customer changed too is a conflict and is left as it is. New objects are
+                created, objects gone from the release are only listed. <i>Upgrade</i> writes the
+                plan, under the run ID <code>cib-upgrade-&lt;release&gt;</code>, so a stopped
+                upgrade continues on the next click. The installed release comes from the record a
+                deploy keeps. Without one, leave <i>Installed release</i> empty: Check upgrade
+                compares the organization with each release and fills in the closest one; check
+                again to use it. The Coupa URL and client ID then come from step 2, else from the
+                organization's CIB schemas.
+              </>
+            ),
+          },
         ]}
       >
         <DeployStep
@@ -336,6 +355,11 @@ export const CIB_HELP: HelpSection[] = [
           state="current"
           deployRef={createRef()}
           resumeRef={createRef()}
+          installed=""
+          onInstalledInput={noop}
+          onCheckUpgrade={noop}
+          onUpgrade={noop}
+          canUpgrade={false}
         />
       </HelpFigure>
     ),
@@ -387,7 +411,11 @@ export const CIB_HELP: HelpSection[] = [
             <RunResult run={RUN} />
           </Step>
         </HelpFigure>
-        <p>When every dataset is present, the run is complete and deletes its checkpoint.</p>
+        <p>
+          When every dataset is present, the run is complete. Its checkpoint stays in the collection{' '}
+          <code>_SA_EXTENSION__cib_deploy_runs</code> as the record of what was installed, from
+          which release; the same run ID cannot run again.
+        </p>
       </>
     ),
   },

@@ -60,7 +60,7 @@ Prettier owns `src/` and `tests/`, and only `*.ts` / `*.tsx` / `*.css` there. Co
 - **The delimiter only reaches the browser for the five COPIED sheets.** `build.js` copies
   `console.css` (the monolith), `theme.css`, `print.css`, `panel.css` and `popup.css` verbatim, so
   their formatting ships. Every `*.module.css` goes through esbuild, which reprints quotes as
-  double (`content:"\2316"`, zero single quotes in the generated `dist/console/console.css`) —
+  double (`content:"\2316"`, zero single quotes in the generated `dist/console/app.css`) —
   so formatting a CSS Module cannot change what ships at all.
 - **First formatting of a file may need two passes.** Prettier 3.9.6 is not idempotent on
   `vi.fn().mockResolvedValue({…})`: pass one splits the member chain, pass two collapses it back
@@ -386,7 +386,16 @@ opened, because its form, log and a deploy in flight live in component state.
   the Builder, the DevTools panel's Save, the popup's Unlock and Dataset Management write too,
   each one object or one collection per user action. Progress is a checkpoint
   document in the org's `_SA_EXTENSION__cib_deploy_runs` collection (the Coupa secret only as a placeholder),
-  so a re-run with the same run id resumes, and it is deleted once a deploy is complete. The
+  so a re-run with the same run id resumes; a complete deploy keeps it, marked `complete`, as the
+  record of what was installed (and a run id with a complete record is refused). **Upgrade**
+  (`upgrade.ts`) brings an installed org to the latest release by a three-way merge of the
+  installed release (that record; without one, a tag the admin names or confirms from the page's
+  closest-release guess, with the Coupa values read from the org's schemas), the latest one and the
+  live org — lists of objects merge entry by entry on `id` or a `//` label: a
+  change is applied only where the org still holds the installed value, a field the customer
+  changed too is a conflict left alone, new objects are created, removed ones only listed. Check
+  upgrade writes nothing; Upgrade runs under `cib-upgrade-<tag>` and its run becomes the new
+  record. The
   optional Coupa check function is a hook the user deploys and tears down by hand.
 - **Academy** (`src/academy/`) — the onboarding training, behind `experimentalUnlocked`: ONE
   fictional client project (Acme Freight AP) in six missions, built by the trainee in their own
@@ -712,9 +721,10 @@ The Console ships **two** stylesheets, linked in that order by `console.html`:
   `.stats-schema-more button` in `console.css`). Dark mode overrides `:root` under
   `@media (prefers-color-scheme: dark)`. It shrinks as components move their rules into CSS
   Modules, and is eventually retired.
-- **`dist/console/console.css`** — emitted by esbuild from imported `*.module.css` CSS Modules
-  (self-contained component styles; the design-system direction). Do not confuse the names: in
-  `dist/`, `console.css` is the *generated* sheet, not the monolith.
+- **`dist/console/app.css`** — emitted by esbuild from imported `*.module.css` CSS Modules
+  (self-contained component styles; the design-system direction). The JS bundle and this sheet
+  are `app.*`, renamed from `console.*` because the name `console.js` set off a false-positive
+  security check; `console.html` kept its name.
 
 Also linked, all build artifacts rather than source: `github-markdown.css` (copied from the
 `github-markdown-css` package), `hljs-github.css` (light + dark concatenated by `build.js`) and
@@ -889,8 +899,10 @@ older ones as history. Currently authoritative per area:
 - **Configuration changelog** — `2026-09-29-config-changelog-in-context-design.md` (the
   DevTools version rail and diff for the open object; the pure core in `src/changelog/`)
 - **Galaxy** — `2026-06-04-galaxy-3d-org-birdview-design.md`
-- **CIB deploy** — `2026-11-02-cib-deploy-auto-target-design.md` (latest release, session
-  organization and region read, not chosen), a delta on `2026-10-24-cib-deploy-console-design.md`
+- **CIB deploy** — `2026-11-16-cib-upgrade-design.md` (the install record, Upgrade, the
+  `app.js` bundle rename), a delta on `2026-11-02-cib-deploy-auto-target-design.md` (latest
+  release, session organization and region read, not chosen), itself a delta on
+  `2026-10-24-cib-deploy-console-design.md`
 - **Builder** — `2026-10-27-builder-delta-design.md` (what was built beyond the first spec:
   rules, hooks, engines, Mr. Fabry, Revalidate, the immediate writes, the public beta), a delta
   on `2026-10-18-builder-schema-editor-design.md` (kept as the base record for the grid,
