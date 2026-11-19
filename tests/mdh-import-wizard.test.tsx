@@ -344,7 +344,7 @@ describe('ImportWizard — back navigation', () => {
       const b = [...root.querySelectorAll('[data-testid="import-mode"] button')].find(
         (btn) => btn.textContent.trim() === 'Replace',
       );
-      return b!.classList.contains('on') ? b : null;
+      return b!.classList.contains('is-on') ? b : null;
     });
 
     const back = await waitFor(() => root.querySelector('[data-testid="import-back"]'));
@@ -357,7 +357,7 @@ describe('ImportWizard — back navigation', () => {
     const restoredReplace = [...root.querySelectorAll('[data-testid="import-mode"] button')].find(
       (b) => b.textContent.trim() === 'Replace',
     )!;
-    expect(restoredReplace.classList.contains('on')).toBe(true);
+    expect(restoredReplace.classList.contains('is-on')).toBe(true);
     expect(restoredReplace.getAttribute('aria-pressed')).toBe('true');
   });
 

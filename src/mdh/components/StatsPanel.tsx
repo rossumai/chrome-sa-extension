@@ -393,7 +393,7 @@ export default function StatsPanel() {
               <button
                 key={m}
                 type="button"
-                class={`view-seg-opt${shownMode === m ? ' on' : ''}`}
+                class={`view-seg-opt${shownMode === m ? ' is-on' : ''}`}
                 aria-pressed={shownMode === m}
                 disabled={isDisabled}
                 title={

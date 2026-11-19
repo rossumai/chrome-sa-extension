@@ -67,7 +67,9 @@ export default function FabryQuestions({
                 <button
                   type="button"
                   key={k}
-                  class={'fabry-q-opt' + (answers[i].selected.includes(optLabel(opt)) ? ' on' : '')}
+                  class={
+                    'fabry-q-opt' + (answers[i].selected.includes(optLabel(opt)) ? ' is-on' : '')
+                  }
                   title={optDesc(opt)}
                   onClick={() => toggle(i, optLabel(opt), q.multi_select)}
                 >

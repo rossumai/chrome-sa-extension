@@ -172,7 +172,7 @@ export default function Composer() {
             >
               <button
                 type="button"
-                class={'fabry-deep-toggle' + (store.deepMode.value ? ' on' : '')}
+                class={'fabry-deep-toggle' + (store.deepMode.value ? ' is-on' : '')}
                 aria-label="Deep verify"
                 aria-pressed={store.deepMode.value}
                 onClick={() => {

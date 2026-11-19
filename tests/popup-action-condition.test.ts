@@ -198,4 +198,3 @@ describe('evalCondition', () => {
     expect(evalCondition(42).result).toBe(null);
   });
 });
-

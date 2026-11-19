@@ -60,7 +60,7 @@ export default function StatsFieldGrid({
           {SORTS.map(([k, label]) => (
             <button
               type="button"
-              class={`view-seg-opt${sort === k ? ' on' : ''}`}
+              class={`view-seg-opt${sort === k ? ' is-on' : ''}`}
               onClick={() => setSort(k)}
             >
               {label}

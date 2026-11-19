@@ -1790,6 +1790,6 @@ button.offsite-act:hover,
   background: var(--text-hint);
 }
 
-.footer-usage.on .footer-usage-dot {
+.footer-usage.is-on .footer-usage-dot {
   background: var(--accent);
 }

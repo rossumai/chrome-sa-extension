@@ -260,7 +260,7 @@ export default function StagesView({
               <button
                 key={n}
                 type="button"
-                class={'view-seg-opt' + (sampleSize === n ? ' on' : '')}
+                class={'view-seg-opt' + (sampleSize === n ? ' is-on' : '')}
                 aria-pressed={sampleSize === n}
                 onClick={() => {
                   stagesSampleSize.value = n;

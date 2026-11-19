@@ -39,7 +39,7 @@ export function Segmented({
         <button
           key={o.value}
           type="button"
-          class={`csv-seg-opt${o.value === value ? ' on' : ''}`}
+          class={`csv-seg-opt${o.value === value ? ' is-on' : ''}`}
           title={o.title}
           data-testid={o.testid}
           aria-pressed={o.value === value}
@@ -72,7 +72,7 @@ export function Toggle({
       aria-checked={checked}
       title={title}
       data-testid={testid}
-      class={`csv-switch${checked ? ' on' : ''}`}
+      class={`csv-switch${checked ? ' is-on' : ''}`}
       onClick={() => onChange(!checked)}
     >
       <span class="csv-switch-knob"></span>

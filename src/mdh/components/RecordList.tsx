@@ -482,7 +482,7 @@ function ViewSwitch({ view, changeView }: { view?: string; changeView: (v: strin
         <button
           key={o.value}
           type="button"
-          class={'view-seg-opt' + (view === o.value ? ' on' : '')}
+          class={'view-seg-opt' + (view === o.value ? ' is-on' : '')}
           aria-pressed={view === o.value}
           onClick={() => changeView(o.value)}
         >

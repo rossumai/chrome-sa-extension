@@ -326,7 +326,7 @@ export default function ArchitectSidebar() {
               </button>
               {menuId === d.id && (
                 <div
-                  class={'fabry-arch-menu' + (menuUp ? ' up' : '')}
+                  class={'fabry-arch-menu' + (menuUp ? ' is-up' : '')}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button

@@ -120,7 +120,7 @@ export function UsageFooterButton({
   return (
     <button
       type="button"
-      class={`footer-usage${on ? ' on' : ''}`}
+      class={`footer-usage${on ? ' is-on' : ''}`}
       data-testid="usage-footer-button"
       title={
         on

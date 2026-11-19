@@ -49,14 +49,14 @@ export default function Sidebar() {
       <div class="fabry-mode" role="tablist">
         <button
           type="button"
-          class={'fabry-mode-opt' + (!architect ? ' on' : '')}
+          class={'fabry-mode-opt' + (!architect ? ' is-on' : '')}
           onClick={() => store.setFabryMode('chat')}
         >
           Chat
         </button>
         <button
           type="button"
-          class={'fabry-mode-opt' + (architect ? ' on' : '')}
+          class={'fabry-mode-opt' + (architect ? ' is-on' : '')}
           onClick={() => store.setFabryMode('architect')}
         >
           Architect

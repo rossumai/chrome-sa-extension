@@ -103,7 +103,7 @@ export default function InspectorRail() {
         <div class="fabry-rail-follow">
           <button
             type="button"
-            class={'fabry-rail-pin' + (pinned ? ' on' : '')}
+            class={'fabry-rail-pin' + (pinned ? ' is-on' : '')}
             aria-pressed={pinned}
             title={
               pinned ? 'Unpin — follow what I scroll to' : 'Pin the inspector to this deliverable'

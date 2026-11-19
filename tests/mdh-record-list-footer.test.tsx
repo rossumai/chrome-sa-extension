@@ -114,7 +114,7 @@ describe('RecordList view switch', () => {
       cb({ mdhResultsView: 'json' }) as any as any) as any;
     const root = renderList();
     await act(() => {});
-    const active = root.querySelector('.view-seg-opt.on');
+    const active = root.querySelector('.view-seg-opt.is-on');
     expect(active).toBeTruthy();
     expect(active!.textContent.trim()).toBe('List');
     expect(root.querySelector('table.record-table')).toBeNull();
