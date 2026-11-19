@@ -1,7 +1,9 @@
-/* GLOBAL STYLESHEET, TEMPORARY: Console rules whose classes more than one area emits (buttons,
-   inputs, tabs, banners, shared states), split out of the former src/console/console.css.
-   Task 1.3 of the CSS Modules migration moves them into src/ui/ modules and hands rules used by
-   one area back to that area; this file is then deleted.
+/* GLOBAL STYLESHEET, TEMPORARY: the Console rules that more than one area needs and that no
+   CSS Module can hold, split out of the former src/console/console.css. The shared primitives
+   (buttons, inputs, tabs, banners, …) are CSS Modules under src/ui/ now. What is left is the
+   box-sizing reset, #app, the global `spin` keyframes (MDH and Fabry rules animate with it),
+   the Architect's `.docs-section` divider and its print block, which names classes of several
+   areas; each area's Phase 2 conversion takes its selectors out of that block.
 
    Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
    :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
