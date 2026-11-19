@@ -1509,16 +1509,6 @@
   color: var(--warning-fg);
 }
 
-.btn-warning {
-  background: var(--warning);
-  border-color: var(--warning);
-  color: #fff;
-}
-
-.btn-warning:hover {
-  opacity: 0.85;
-}
-
 .index-list {
   flex: 1;
   overflow-y: auto;
@@ -1628,19 +1618,6 @@
   max-height: none;
 }
 
-/* @order 23 */
-
-.btn-success {
-  background: var(--success);
-  border-color: var(--success);
-  color: #fff;
-}
-
-.btn-success:hover {
-  background: var(--success-hover);
-  border-color: var(--success-hover);
-}
-
 /* @order 25 */
 
 /* This extension's own collections: an expandable group pinned BELOW the customer's list
@@ -1724,10 +1701,6 @@
 }
 
 /* @order 27 */
-
-.btn-success:disabled:hover {
-  background: var(--success);
-}
 
 .file-input-area {
   border: 2px dashed var(--border);
@@ -4439,21 +4412,6 @@ tbody.uploads-row-failed tr {
   overflow: auto;
   white-space: pre-wrap;
   word-break: break-all;
-}
-
-/* Single-button dropdown (e.g. the Bulk menu). Mirrors .split-btn's
-   positioning for the menu but without stripping the button's right corners,
-   since there's no second button welded to the right. */
-.dropdown-btn {
-  display: inline-flex;
-  position: relative;
-}
-
-.dropdown-btn .toolbar-more-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
 }
 
 .bulk-confirm {

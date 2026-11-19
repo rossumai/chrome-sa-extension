@@ -13,6 +13,7 @@ import { pickAnnotation, clearAnnotation, revalidate, openValidationPanel } from
 import { annotationIdFromInput } from '../../rossum/annotationUrl.js';
 import SearchPicker from './SearchPicker.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // At the right end of the filter bar: one annotation (of the queue's newest, or any pasted
 // ID or URL) whose values show in the grid's Value column. One fixed-width field does both,
@@ -42,7 +43,7 @@ export default function AnnotationPicker() {
       {id != null && (
         <button
           type="button"
-          class="btn btn-sm"
+          class={`${ctl.btn} ${ctl.btnSm}`}
           data-action="revalidate"
           disabled={revalidating.value}
           title="Run validation on this document (formulas, hooks, rules) without changing a value"
@@ -54,7 +55,7 @@ export default function AnnotationPicker() {
       {id != null && (
         <button
           type="button"
-          class="icon-btn"
+          class={`${ctl.iconBtn} ${s.iconBtn}`}
           data-action="clear-annotation"
           title="Stop showing annotation values"
           onClick={clearAnnotation}
@@ -68,7 +69,7 @@ export default function AnnotationPicker() {
       {validation.value && rightPanel.value?.kind !== 'validation' && (
         <button
           type="button"
-          class="btn-link"
+          class={`${ctl.btnLink} ${s.btnLink}`}
           data-action="open-validation"
           onClick={() => openValidationPanel()}
         >

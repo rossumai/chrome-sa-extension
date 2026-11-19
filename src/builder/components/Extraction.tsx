@@ -6,6 +6,7 @@ import { isExtracted, engineStatus, isTabular, renamedFrom } from '../engine.js'
 import SearchPicker from './SearchPicker.jsx';
 import { Field } from './fields.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const STATE_TEXT = {
   seeded: 'Has a catalog seed.',
@@ -121,7 +122,7 @@ export default function Extraction({
           AI fields must be empty on a custom engine ({rir.join(', ')}).{' '}
           <button
             type="button"
-            class="btn-link"
+            class={`${ctl.btnLink} ${s.btnLink}`}
             data-action="clear-rir"
             onClick={() => editAttr(node.__key, ['rir_field_names'], [])}
           >
@@ -134,7 +135,7 @@ export default function Extraction({
           Disable prediction must be off on a custom engine.{' '}
           <button
             type="button"
-            class="btn-link"
+            class={`${ctl.btnLink} ${s.btnLink}`}
             data-action="enable-prediction"
             onClick={() => editAttr(node.__key, ['disable_prediction'], undefined)}
           >

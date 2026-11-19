@@ -1,3 +1,7 @@
+// The shared primitives' CSS Modules, imported FIRST so esbuild puts their rules at the top of
+// dist/console/app.css: they used to sit in the global sheet, ahead of every module, and every
+// other module's rule must still win a tie against them. Keep these the first imports.
+import '../ui/controls.module.css';
 import { h, render } from 'preact';
 import { effect } from '@preact/signals';
 import { activeApp, experimentalUnlocked, connectedOrg } from './store.js';

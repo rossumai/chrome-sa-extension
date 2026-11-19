@@ -6,6 +6,7 @@ import { phasePercent, phasesOf, phaseStates, splitVerdict, stopNote } from '../
 import type { PhaseLog, RunMode } from '../view.js';
 import type { UpgradeItem } from '../upgrade.js';
 import styles from './App.module.css';
+import ctl from '../../ui/controls.module.css';
 
 export type RunView = {
   mode: RunMode;
@@ -237,7 +238,7 @@ export default function RunResult({ run }: { run: RunView }) {
         <div class={styles.log} data-log>
           <div class={styles.logHead}>
             <span>Log · {lines === 1 ? '1 line' : `${lines} lines`}</span>
-            <button type="button" class="btn btn-sm" onClick={copy}>
+            <button type="button" class={`${ctl.btn} ${ctl.btnSm}`} onClick={copy}>
               Copy
             </button>
           </div>

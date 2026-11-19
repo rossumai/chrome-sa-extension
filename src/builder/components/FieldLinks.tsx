@@ -4,6 +4,7 @@ import { openRuleEditor, openCodeView } from '../index.jsx';
 import { fieldConfigs } from '../matching.js';
 import { openHookAtConfig } from './hookJump.js';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const RULE_ROLE = { condition: 'if', action: 'action', both: 'if + action' } as const;
 
@@ -19,7 +20,7 @@ export default function FieldLinks({ fieldId }: { fieldId: string }) {
         <span class={s.fieldLabel}>Rules ({rules.length})</span>
         <button
           type="button"
-          class="btn-link"
+          class={`${ctl.btnLink} ${s.btnLink}`}
           data-action="new-rule-for-field"
           onClick={() => openRuleEditor(null, fieldId)}
         >

@@ -9,6 +9,7 @@ import Handover from './Handover.jsx';
 import TrainerPanel from './TrainerPanel.jsx';
 import Modal from '../../ui/Modal.jsx';
 import css from '../Academy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // store.error is set by start, restart and init; a failed write must say so.
 function ErrorStrip() {
@@ -58,7 +59,7 @@ function ContinueRun() {
           value={code}
           onInput={(e) => setCode(e.currentTarget.value)}
         />
-        <button type="submit" class="btn" disabled={!code.trim()}>
+        <button type="submit" class={ctl.btn} disabled={!code.trim()}>
           Continue
         </button>
       </div>
@@ -91,7 +92,11 @@ function Landing() {
           </p>
           <ErrorStrip />
           <div class={css.landingActions}>
-            <button type="button" class="btn btn-primary" onClick={() => store.startTrack()}>
+            <button
+              type="button"
+              class={`${ctl.btn} ${ctl.btnPrimary}`}
+              onClick={() => store.startTrack()}
+            >
               Start the project
             </button>
             <button

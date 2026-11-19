@@ -54,7 +54,6 @@ const ALLOWLIST: Record<string, { sheet: string; permanent?: true }> = {
   asc: { sheet: 'src/mdh/legacy.css' },
   bad: { sheet: 'src/fabry/legacy.css' },
   body: { sheet: 'src/inspector/legacy.css' },
-  btn: { sheet: 'src/console/legacy/shared.css' },
   busy: { sheet: 'src/console/legacy/shared.css' },
   card: { sheet: 'src/popup/legacy.css' },
   copied: { sheet: 'src/docs/theme.css, src/popup/legacy.css', permanent: true },

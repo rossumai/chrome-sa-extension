@@ -4,6 +4,7 @@ import { h, Fragment } from 'preact';
 import type { RefObject } from 'preact';
 import Step from './Step.jsx';
 import styles from './App.module.css';
+import ctl from '../../ui/controls.module.css';
 
 export default function DeployStep({
   runId,
@@ -86,7 +87,7 @@ export default function DeployStep({
       </details>
       <div class={styles.actions}>
         <button
-          class={`btn ${styles.btnLg}`}
+          class={`${ctl.btn} ${styles.btnLg}`}
           name="check"
           disabled={busy || !ready}
           data-help="check"
@@ -94,7 +95,7 @@ export default function DeployStep({
           Check only
         </button>
         <button
-          class={`btn btn-primary ${styles.btnLg} ${styles.deployBtn}`}
+          class={`${ctl.btn} ${ctl.btnPrimary} ${styles.btnLg} ${styles.deployBtn}`}
           name="deploy"
           ref={deployRef}
           disabled={busy || !ready}
@@ -132,7 +133,7 @@ export default function DeployStep({
         <div class={styles.actions}>
           <button
             type="button"
-            class={`btn ${styles.btnLg}`}
+            class={`${ctl.btn} ${styles.btnLg}`}
             name="upgrade-check"
             disabled={busy || !ready}
             onClick={onCheckUpgrade}
@@ -141,7 +142,7 @@ export default function DeployStep({
           </button>
           <button
             type="button"
-            class={`btn btn-primary ${styles.btnLg}`}
+            class={`${ctl.btn} ${ctl.btnPrimary} ${styles.btnLg}`}
             name="upgrade"
             disabled={busy || !ready || !canUpgrade}
             onClick={onUpgrade}

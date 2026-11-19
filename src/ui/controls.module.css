@@ -1,0 +1,158 @@
+/* The Console's shared buttons: .btn and its variants, .iconBtn, .btnLink and .dropdownBtn.
+   Moved from the global console.css (src/console/legacy/shared.css, and .btnWarning /
+   .btnSuccess / .dropdownBtn from src/mdh/legacy.css) with every rule in its original relative
+   order — that order decides ties, so keep it.
+
+   src/console/index.tsx imports this module FIRST, so its rules lead dist/console/app.css and
+   every other module's rule still wins a tie against them, as it did while they lived in the
+   global sheet. Use it as `import ctl from '…/ui/controls.module.css'` → `ctl.btn`,
+   `ctl.btnPrimary`, …; a module that needs to style one of these in context composes it
+   (Builder.module.css's `.iconBtn`). */
+
+/* Declared BEFORE .btn, so .btn's background, border-colour and colour win over it and only
+   the hover dimming shows — as in the global sheet. Kept as found. */
+.btnWarning {
+  background: var(--warning);
+  border-color: var(--warning);
+  color: #fff;
+}
+
+.btnWarning:hover {
+  opacity: 0.85;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.btn:hover {
+  background: var(--bg-hover);
+}
+
+.btnSm {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.btnPrimary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btnSuccess {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.btnSuccess:hover {
+  background: var(--success-hover);
+  border-color: var(--success-hover);
+}
+
+.btnDanger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btnDanger:hover {
+  background: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+.btnSecondary {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition:
+    background 0.1s,
+    color 0.1s;
+}
+
+.iconBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.iconBtn[aria-pressed='true'] {
+  color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+  background: var(--bg-card);
+}
+
+.btnDanger:disabled:hover {
+  background: var(--danger);
+}
+
+.btnPrimary:disabled:hover {
+  background: var(--accent);
+}
+
+.btnSuccess:disabled:hover {
+  background: var(--success);
+}
+
+/* Single-button dropdown (e.g. the Bulk menu). Mirrors .split-btn's
+   positioning for the menu but without stripping the button's right corners,
+   since there's no second button welded to the right. */
+.dropdownBtn {
+  display: inline-flex;
+  position: relative;
+}
+
+.dropdownBtn :global(.toolbar-more-menu) {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+}
+
+.btnLink {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 6px;
+  text-decoration: underline;
+}

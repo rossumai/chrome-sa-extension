@@ -74,6 +74,7 @@ import mstyles from '../src/ui/Modal.module.css';
 import SearchIndexPanel from '../src/mdh/components/SearchIndexPanel.jsx';
 import { selectedCollection, activePanel, loading, error } from '../src/mdh/store.js';
 import { defaultPreset } from '../src/mdh/searchIndexPresets.js';
+import ctl from '../src/ui/controls.module.css';
 
 const writeText = vi.fn().mockResolvedValue(undefined);
 
@@ -330,7 +331,7 @@ describe('SearchIndexPanel — edit', () => {
     expect(nameInput.readOnly).toBe(true);
     expect(nameInput.className).toContain('input-locked');
 
-    root.querySelector<HTMLElement>('[role="dialog"] .btn-primary')!.click();
+    root.querySelector<HTMLElement>('[role="dialog"] .' + ctl.btnPrimary)!.click();
     await vi.waitFor(() =>
       expect(api.putSearchIndex).toHaveBeenCalledWith(
         'vendors',
@@ -347,7 +348,7 @@ describe('SearchIndexPanel — edit', () => {
     const root = mount();
 
     await vi.waitFor(() => expect(root.querySelector('.record-card-notice')).not.toBeNull());
-    expect(root.querySelector('.record-card-notice .btn')!.textContent).toContain(
+    expect(root.querySelector('.record-card-notice .' + ctl.btn)!.textContent).toContain(
       'Edit definition',
     );
   });

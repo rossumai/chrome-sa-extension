@@ -33,6 +33,7 @@ import Icon from './icons.jsx';
 import { canUndo, canRedo } from '../history.js';
 import { summaryText } from '../model.js';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // The queue's extraction engine; for a custom one, its settings and unused fields on hover and
 // a click opens the engine panel.
@@ -91,7 +92,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
     <div class={s.toolbar} data-toolbar="">
       <button
         type="button"
-        class={'icon-btn ' + s.navOpen}
+        class={`${ctl.iconBtn} ${s.iconBtn} ` + s.navOpen}
         data-action="open-nav"
         title="Queues and schemas"
         onClick={() => (navDrawer.value = true)}
@@ -130,7 +131,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       {text && <span class={s.staged}>{text}</span>}
       <button
         type="button"
-        class={'btn btn-sm ' + s.fabryBtn}
+        class={`${ctl.btn} ${ctl.btnSm} ` + s.fabryBtn}
         data-action="open-schema-fabry"
         title="Ask Mr. Fabry to change the schema"
         onClick={openSchemaFabry}
@@ -139,7 +140,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       </button>
       <button
         type="button"
-        class={'btn btn-sm ' + s.fabryBtn}
+        class={`${ctl.btn} ${ctl.btnSm} ` + s.fabryBtn}
         data-action="undo"
         disabled={!canUndo(history.value)}
         onClick={undoChange}
@@ -149,7 +150,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       </button>
       <button
         type="button"
-        class={'btn btn-sm ' + s.fabryBtn}
+        class={`${ctl.btn} ${ctl.btnSm} ` + s.fabryBtn}
         data-action="redo"
         disabled={!canRedo(history.value)}
         onClick={redoChange}
@@ -159,7 +160,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       </button>
       <button
         type="button"
-        class="btn btn-sm"
+        class={`${ctl.btn} ${ctl.btnSm}`}
         data-action="discard"
         disabled={!dirty.value}
         onClick={discard}
@@ -168,7 +169,7 @@ export default function Toolbar({ onSave }: { onSave: () => void }) {
       </button>
       <button
         type="button"
-        class="btn btn-sm btn-primary"
+        class={`${ctl.btn} ${ctl.btnSm} ${ctl.btnPrimary}`}
         data-action="save"
         disabled={!dirty.value || saving.value}
         onClick={onSave}

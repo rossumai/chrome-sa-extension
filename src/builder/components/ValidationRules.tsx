@@ -5,6 +5,7 @@ import { flatten } from '../model.js';
 import type { PlacedMessage } from '../validation.js';
 import Icon from './icons.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const ICON = { error: 'error', warning: 'warning', info: 'info' } as const;
 
@@ -56,7 +57,12 @@ export default function ValidationRules() {
           Validated · {onFields} message{onFields === 1 ? '' : 's'} on fields · {v.fired.size} rule
           {v.fired.size === 1 ? '' : 's'} fired
         </span>
-        <button type="button" class="btn-link" disabled={revalidating.value} onClick={revalidate}>
+        <button
+          type="button"
+          class={`${ctl.btnLink} ${s.btnLink}`}
+          disabled={revalidating.value}
+          onClick={revalidate}
+        >
           {revalidating.value ? 'Validating…' : '↻ Revalidate again'}
         </button>
       </div>
@@ -70,7 +76,11 @@ export default function ValidationRules() {
             data-fired={fired ? 'true' : 'false'}
           >
             <span class={fired ? s.firedDot : s.quietDot}>{fired ? '●' : '○'}</span>
-            <button type="button" class="btn-link" onClick={() => openRuleEditor(r.id)}>
+            <button
+              type="button"
+              class={`${ctl.btnLink} ${s.btnLink}`}
+              onClick={() => openRuleEditor(r.id)}
+            >
               {r.name} ({r.id})
             </button>
             {msgs

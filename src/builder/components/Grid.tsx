@@ -24,6 +24,7 @@ import { DocEval, MarkIcons } from './GridCells.jsx';
 import { columns, on, renderNode, addNewSection } from './GridRows.jsx';
 import { fitColumns, WIDTHS, LABEL_MIN } from './columnFit.js';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const HEAD: Record<string, ComponentChildren> = {
   id: 'ID',
@@ -238,7 +239,7 @@ export default function Grid() {
               <td colSpan={cols.length}>
                 <button
                   type="button"
-                  class="btn-link"
+                  class={`${ctl.btnLink} ${s.btnLink}`}
                   data-action="add-section"
                   onClick={addNewSection}
                 >

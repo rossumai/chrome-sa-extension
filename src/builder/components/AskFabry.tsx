@@ -5,6 +5,7 @@ import FabryMark from '../../ui/FabryMark.jsx';
 import GerundLoader from '../../ui/GerundLoader.jsx';
 import FabryMarkdown from '../../ui/fabry/FabryMarkdown.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const GERUNDS = ['Thinking', 'Reading the schema', 'Drafting', 'Checking'];
 
@@ -55,7 +56,7 @@ export default function AskFabry({
       <div class={s.codeBar}>
         <button
           type="button"
-          class="btn btn-sm"
+          class={`${ctl.btn} ${ctl.btnSm}`}
           data-action="ask-fabry"
           disabled={state.busy || !text.trim()}
           onClick={ask}

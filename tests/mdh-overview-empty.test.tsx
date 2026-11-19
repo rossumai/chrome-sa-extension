@@ -7,6 +7,7 @@ vi.mock('../src/mdh/components/Sidebar.jsx', () => ({ showCreateModal: vi.fn() }
 
 import OverviewPanel from '../src/mdh/components/OverviewPanel.jsx';
 import { collections, connected, loading, error } from '../src/mdh/store.js';
+import ctl from '../src/ui/controls.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -25,7 +26,7 @@ describe('OverviewPanel empty state', () => {
   it('reuses the shared no-collections empty state instead of bare text', () => {
     const root = mount();
     expect(root.textContent).toContain('No collections yet');
-    expect(root.querySelector('button.btn-success')).toBeTruthy();
+    expect(root.querySelector('button.' + ctl.btnSuccess)).toBeTruthy();
     // the old bare "No collections" .stats-empty div is gone
     expect(root.querySelector('.stats-empty')).toBeNull();
     // no stats table when empty
@@ -40,7 +41,7 @@ describe('OverviewPanel empty state', () => {
     const root = mount();
     expect(root.textContent).not.toContain('No collections yet');
     expect(root.textContent).not.toContain('No collections');
-    expect(root.querySelector('button.btn-success')).toBeNull();
+    expect(root.querySelector('button.' + ctl.btnSuccess)).toBeNull();
     expect(root.querySelector('.stats-empty')).toBeNull();
   });
 });

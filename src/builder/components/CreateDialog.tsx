@@ -4,6 +4,7 @@ import { openModal, closeModal, ModalBody, ModalField, ModalActions } from '../.
 import { schema, schemas, saving } from '../store.js';
 import { createWorkspace, createQueue, createUnlinkedSchema, type NewQueue } from '../index.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 export type CreateTarget =
   | { kind: 'workspace' }
@@ -108,12 +109,17 @@ export default function CreateDialog({ target }: { target: CreateTarget }) {
         )}
       </ModalBody>
       <ModalActions footer>
-        <button type="button" class="btn btn-secondary" onClick={closeModal} disabled={busy}>
+        <button
+          type="button"
+          class={`${ctl.btn} ${ctl.btnSecondary}`}
+          onClick={closeModal}
+          disabled={busy}
+        >
           Cancel
         </button>
         <button
           type="button"
-          class="btn btn-primary"
+          class={`${ctl.btn} ${ctl.btnPrimary}`}
           data-action="create"
           disabled={!name.trim() || busy || saving.value}
           onClick={submit}

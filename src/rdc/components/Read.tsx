@@ -35,6 +35,7 @@ import { AskPanel } from './Ask.jsx';
 import { LogLine } from './Log.jsx';
 import { explainRunError, tracked } from '../runs.js';
 import styles from './Deploy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 export type Counts = { source: Record<Kind, number>; target: Record<Kind, number> };
 
@@ -352,7 +353,7 @@ export default function Read({
             {error}
           </span>
           <button
-            class="btn btn-secondary"
+            class={`${ctl.btn} ${ctl.btnSecondary}`}
             disabled={busy}
             onClick={() => setAttempt((a) => a + 1)}
           >
@@ -407,20 +408,20 @@ export default function Read({
         />
       )}
       <div class={styles.foot}>
-        <button class="btn btn-secondary" onClick={onBack}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={onBack}>
           Back
         </button>
         <span class={styles.sp}></span>
-        <button class="btn btn-secondary" onClick={onCancel}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={onCancel}>
           Cancel
         </button>
         {counts && !busy && !noRdc && (
-          <button class="btn btn-secondary" onClick={() => setAttempt((a) => a + 1)}>
+          <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={() => setAttempt((a) => a + 1)}>
             Read again
           </button>
         )}
         <button
-          class="btn btn-primary"
+          class={`${ctl.btn} ${ctl.btnPrimary}`}
           disabled={!counts || !found || noRdc}
           title={noRdc ? noRdcText : undefined}
           onClick={() => {

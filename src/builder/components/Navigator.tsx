@@ -15,6 +15,7 @@ import { confirmQueueDelete, confirmSchemaDelete } from './DeleteDialogs.jsx';
 import { navDrawer } from './panels.js';
 import FilterInput from '../../ui/FilterInput.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 function DeleteBtn({
   onClick,
@@ -28,7 +29,7 @@ function DeleteBtn({
   return (
     <button
       type="button"
-      class={'icon-btn ' + s.rowDelete}
+      class={`${ctl.iconBtn} ${s.iconBtn} ` + s.rowDelete}
       data-action={action}
       {...data}
       title="Delete"
@@ -82,7 +83,7 @@ export default function Navigator() {
           {drawer && (
             <button
               type="button"
-              class="icon-btn"
+              class={`${ctl.iconBtn} ${s.iconBtn}`}
               data-action="close-nav"
               title="Close (Esc)"
               onClick={close}
@@ -96,7 +97,7 @@ export default function Navigator() {
             Queues
             <button
               type="button"
-              class="btn-link"
+              class={`${ctl.btnLink} ${s.btnLink}`}
               data-action="new-workspace"
               onClick={() => openCreateDialog({ kind: 'workspace' })}
             >
@@ -111,7 +112,7 @@ export default function Navigator() {
                 </span>
                 <button
                   type="button"
-                  class="btn-link"
+                  class={`${ctl.btnLink} ${s.btnLink}`}
                   data-action="new-queue"
                   data-workspace={ws.url}
                   onClick={() =>
@@ -171,7 +172,7 @@ export default function Navigator() {
               Schemas without a queue
               <button
                 type="button"
-                class="btn-link"
+                class={`${ctl.btnLink} ${s.btnLink}`}
                 data-action="new-schema"
                 onClick={() => openCreateDialog({ kind: 'schema' })}
               >

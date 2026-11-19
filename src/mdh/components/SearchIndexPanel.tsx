@@ -38,6 +38,7 @@ import { Segmented } from './ImportControls.jsx';
 import MatchKeyPicker from './MatchKeyPicker.jsx';
 import { discoverLeafPaths } from '../columnDiscovery.js';
 import styles from './SearchIndexBuilder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 export default function SearchIndexPanel() {
   const [indexes, setIndexes] = useState<any[]>([]);
@@ -301,12 +302,15 @@ export default function SearchIndexPanel() {
                   <div class={styles.presetConfirm}>
                     <span>Replace your edits with this preset?</span>
                     <button
-                      class="btn btn-sm btn-primary"
+                      class={`${ctl.btn} ${ctl.btnSm} ${ctl.btnPrimary}`}
                       onClick={() => writePreset(pendingPreset)}
                     >
                       Replace
                     </button>
-                    <button class="btn btn-sm" onClick={() => setPendingPreset(null)}>
+                    <button
+                      class={`${ctl.btn} ${ctl.btnSm}`}
+                      onClick={() => setPendingPreset(null)}
+                    >
                       Keep mine
                     </button>
                   </div>
@@ -348,10 +352,10 @@ export default function SearchIndexPanel() {
             <div ref={hintRef} class="input-hint"></div>
           </ModalBody>
           <ModalActions footer>
-            <button class="btn btn-secondary" onClick={closeModal}>
+            <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
               Cancel
             </button>
-            <button class="btn btn-primary" onClick={handleSubmit}>
+            <button class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={handleSubmit}>
               {isEdit ? 'Save & rebuild' : 'Create Search Index'}
             </button>
           </ModalActions>
@@ -397,11 +401,14 @@ export default function SearchIndexPanel() {
             {sync.text}
           </span>
         </span>
-        <button class="btn btn-success btn-sm" onClick={() => openIndexModal({ mode: 'create' })}>
+        <button
+          class={`${ctl.btn} ${ctl.btnSuccess} ${ctl.btnSm}`}
+          onClick={() => openIndexModal({ mode: 'create' })}
+        >
           + Create
         </button>
         <button
-          class="icon-btn"
+          class={ctl.iconBtn}
           title="Refresh"
           onClick={() => {
             cache.invalidate(selectedCollection.value as string, 'searchIndexes');
@@ -464,7 +471,7 @@ export default function SearchIndexPanel() {
                   The engine rejected v{ver ? ver.version : '?'}. The previous version is still
                   serving.
                 </span>
-                <button class="btn btn-sm" onClick={openEdit}>
+                <button class={`${ctl.btn} ${ctl.btnSm}`} onClick={openEdit}>
                   Edit definition
                 </button>
               </>

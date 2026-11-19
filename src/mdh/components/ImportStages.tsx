@@ -1,5 +1,6 @@
 import { h, Fragment } from 'preact';
 import { ModalMessage, ModalActions } from './Modal.jsx';
+import ctl from '../../ui/controls.module.css';
 
 // Shared progress / summary components used by ImportWizard.
 // StageConfirm / StageImporting / StageDone were retired when the per-format
@@ -69,7 +70,7 @@ export function ImportProgress({ progress, onCancel }: { progress: any; onCancel
         </div>
         {onCancel && (
           <ModalActions>
-            <button class="btn btn-secondary" onClick={onCancel}>
+            <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={onCancel}>
               Stop watching
             </button>
           </ModalActions>
@@ -97,7 +98,7 @@ export function ImportProgress({ progress, onCancel }: { progress: any; onCancel
       </div>
       {onCancel && (
         <ModalActions>
-          <button class="btn btn-secondary" onClick={onCancel}>
+          <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={onCancel}>
             Cancel
           </button>
         </ModalActions>
@@ -140,7 +141,7 @@ export function ImportSummary({
             </li>
           </ul>
           <ModalActions>
-            <button class="btn btn-primary" onClick={onClose}>
+            <button class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={onClose}>
               Close
             </button>
           </ModalActions>
@@ -168,7 +169,7 @@ export function ImportSummary({
           </li>
         </ul>
         <ModalActions>
-          <button class="btn btn-primary" onClick={onClose}>
+          <button class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={onClose}>
             Close
           </button>
         </ModalActions>
@@ -254,7 +255,7 @@ export function ImportSummary({
         )}
       </ul>
       <ModalActions>
-        <button class="btn btn-primary" onClick={onClose}>
+        <button class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={onClose}>
           Close
         </button>
       </ModalActions>

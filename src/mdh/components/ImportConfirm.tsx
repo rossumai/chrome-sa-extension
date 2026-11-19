@@ -10,6 +10,7 @@ import { ModalActions, ModalFieldLabel } from './Modal.jsx';
 import MatchKeyPicker from './MatchKeyPicker.jsx';
 import PlanSummary from './PlanSummary.jsx';
 import SpecialText from './SpecialText.jsx';
+import ctl from '../../ui/controls.module.css';
 
 const MODE_SEG = [
   { value: 'insert', label: 'Insert' },
@@ -180,7 +181,7 @@ export default function ImportConfirm({
     ? `checked against all ${shapeCount.toLocaleString()} existing records`
     : `checked against a ${shapeCount.toLocaleString()}-record random sample`;
 
-  const goClass = isReplace ? 'btn-danger' : 'btn-success';
+  const goClass = isReplace ? ctl.btnDanger : ctl.btnSuccess;
   const goLabel = isReplace
     ? `Replace with ${pluralDocs(docs.length)}`
     : isUpdate
@@ -455,7 +456,7 @@ export default function ImportConfirm({
       <ModalActions>
         {onBack && (
           <button
-            class="btn btn-secondary"
+            class={`${ctl.btn} ${ctl.btnSecondary}`}
             style="margin-right:auto"
             data-testid="import-back"
             onClick={onBack}
@@ -463,11 +464,11 @@ export default function ImportConfirm({
             {'←'} Back
           </button>
         )}
-        <button class="btn btn-secondary" onClick={onCancel}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={onCancel}>
           Cancel
         </button>
         <button
-          class={`btn ${goClass}`}
+          class={`${ctl.btn} ${goClass}`}
           data-testid="import-go"
           disabled={!canImport}
           onClick={onImport}

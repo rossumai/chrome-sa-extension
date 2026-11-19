@@ -13,6 +13,7 @@ import { save } from '../index.jsx';
 import type { SaveResult } from '../save.js';
 import { summaryText } from '../model.js';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // Opened in the shared modal (title "Save schema"); errors land on the rows and in the banner.
 export default function SaveDialog() {
@@ -56,12 +57,12 @@ export default function SaveDialog() {
           </p>
         </ModalBody>
         <ModalActions footer>
-          <button type="button" class="btn btn-secondary" onClick={closeModal}>
+          <button type="button" class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
             Cancel
           </button>
           <button
             type="button"
-            class="btn btn-primary"
+            class={`${ctl.btn} ${ctl.btnPrimary}`}
             disabled={saving.value}
             data-action="confirm-save"
             onClick={() => run(false)}
@@ -79,12 +80,12 @@ export default function SaveDialog() {
           <p class={s.warn}>{result.errors[0]?.message}</p>
         </ModalBody>
         <ModalActions footer>
-          <button type="button" class="btn btn-secondary" onClick={closeModal}>
+          <button type="button" class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
             Cancel
           </button>
           <button
             type="button"
-            class="btn btn-primary"
+            class={`${ctl.btn} ${ctl.btnPrimary}`}
             disabled={saving.value}
             onClick={() => run(true)}
           >
@@ -110,7 +111,7 @@ export default function SaveDialog() {
         )}
       </ModalBody>
       <ModalActions footer>
-        <button type="button" class="btn btn-primary" onClick={closeModal}>
+        <button type="button" class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={closeModal}>
           Close
         </button>
       </ModalActions>

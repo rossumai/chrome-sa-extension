@@ -8,6 +8,7 @@ import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { formatPython, ruffFormat, type PythonFormatter } from '../format.js';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 function prefersDark() {
   try {
@@ -160,7 +161,7 @@ export default function CodeEditor({
         {!readOnly && (
           <button
             type="button"
-            class="btn-link"
+            class={`${ctl.btnLink} ${s.btnLink}`}
             data-action={`format-${name}`}
             disabled={busy}
             onClick={format}
@@ -176,7 +177,7 @@ export default function CodeEditor({
         {onToggleExpand && (
           <button
             type="button"
-            class="btn-link"
+            class={`${ctl.btnLink} ${s.btnLink}`}
             data-action={`expand-${name}`}
             onClick={onToggleExpand}
           >

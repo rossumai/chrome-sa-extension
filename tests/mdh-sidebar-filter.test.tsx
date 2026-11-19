@@ -21,6 +21,7 @@ import * as store from '../src/mdh/store.js';
 import Sidebar from '../src/mdh/components/Sidebar.jsx';
 import { COLLECTION, LEGACY_COLLECTION } from '../src/fabry/architect/collectionNames.js';
 import fstyles from '../src/ui/FilterInput.module.css';
+import ctl from '../src/ui/controls.module.css';
 
 // A query that hits the extension's own collection and nothing the customer owns. Derived
 // rather than hardcoded, so a rename of COLLECTION cannot silently make it match 'vendors'
@@ -326,7 +327,7 @@ describe('Sidebar — filter the collection list by name', () => {
     await type(root, 'vend');
     expect(names(root)).toEqual(['vendors']);
 
-    const plus = [...root.querySelectorAll('.icon-btn')].find(
+    const plus = [...root.querySelectorAll('.' + ctl.iconBtn)].find(
       (b: any) => b.getAttribute('title') === 'New collection',
     )!;
     plus.dispatchEvent(new MouseEvent('click', { bubbles: true }));

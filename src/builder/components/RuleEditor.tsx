@@ -26,6 +26,7 @@ import PanelHead from './PanelHead.jsx';
 import DraftFooter from './DraftFooter.jsx';
 import { Field, splitList } from './fields.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 function setAction(i: number, next: any) {
   const ed = ruleEditor.value!;
@@ -87,7 +88,7 @@ function ActionEditor({ action, i }: { action: any; i: number }) {
         </label>
         <button
           type="button"
-          class="icon-btn"
+          class={`${ctl.iconBtn} ${s.iconBtn}`}
           title="Remove this action"
           onClick={() =>
             updateRuleDraft({ actions: ruleEditor.value!.draft.actions.filter((_, j) => j !== i) })
@@ -242,7 +243,7 @@ export default function RuleEditor() {
         ))}
         <button
           type="button"
-          class="btn-link"
+          class={`${ctl.btnLink} ${s.btnLink}`}
           onClick={() => updateRuleDraft({ actions: [...d.actions, newAction(d.actions)] })}
         >
           + Action

@@ -44,6 +44,7 @@ import type { JsonEditorHandle } from './JsonEditor.jsx';
 import MatchKeyPicker from './MatchKeyPicker.jsx';
 import { discoverLeafPaths } from '../columnDiscovery.js';
 import styles from './IndexBuilder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 function defaultTemplate() {
   // One definition of the minimal template, shared with the Custom tab.
@@ -324,12 +325,12 @@ export default function IndexPanel() {
               <div class={styles.presetConfirm}>
                 <span>Replace your edits with this preset?</span>
                 <button
-                  class="btn btn-sm btn-primary"
+                  class={`${ctl.btn} ${ctl.btnSm} ${ctl.btnPrimary}`}
                   onClick={() => writePreset(pendingPreset, fields)}
                 >
                   Replace
                 </button>
-                <button class="btn btn-sm" onClick={() => setPendingPreset(null)}>
+                <button class={`${ctl.btn} ${ctl.btnSm}`} onClick={() => setPendingPreset(null)}>
                   Keep mine
                 </button>
               </div>
@@ -369,10 +370,10 @@ export default function IndexPanel() {
             <div ref={hintRef} class="input-hint"></div>
           </ModalBody>
           <ModalActions footer>
-            <button class="btn btn-secondary" onClick={closeModal}>
+            <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
               Cancel
             </button>
-            <button class="btn btn-primary" onClick={handleCreate}>
+            <button class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={handleCreate}>
               Create Index
             </button>
           </ModalActions>
@@ -417,11 +418,14 @@ export default function IndexPanel() {
         <span style="flex:1;font-weight:500">
           Indexes{metaLabel ? <span class="panel-meta">{metaLabel}</span> : null}
         </span>
-        <button class="btn btn-success btn-sm" onClick={() => openCreateModal(hasWildcard)}>
+        <button
+          class={`${ctl.btn} ${ctl.btnSuccess} ${ctl.btnSm}`}
+          onClick={() => openCreateModal(hasWildcard)}
+        >
           + Create
         </button>
         <button
-          class="icon-btn"
+          class={ctl.iconBtn}
           title="Refresh"
           onClick={() => {
             cache.invalidate(selectedCollection.value as string, 'indexes');

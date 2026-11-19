@@ -9,6 +9,7 @@ vi.mock('../src/mdh/components/Sidebar.jsx', () => ({
 import CollectionEmptyState from '../src/mdh/components/CollectionEmptyState.jsx';
 import { collections, loading, error } from '../src/mdh/store.js';
 import { showCreateModal } from '../src/mdh/components/Sidebar.jsx';
+import ctl from '../src/ui/controls.module.css';
 
 function mount(props = { connected: true }) {
   const root = document.createElement('div');
@@ -28,7 +29,7 @@ describe('CollectionEmptyState', () => {
     const root = mount({ connected: true });
     expect(root.textContent).toContain('No collections yet');
     expect(root.textContent).toContain('Master Data Hub');
-    const btn = root.querySelector('button.btn-success');
+    const btn = root.querySelector('button.' + ctl.btnSuccess);
     expect(btn).toBeTruthy();
     expect(btn!.textContent).toContain('Create collection');
     expect(root.textContent).not.toContain('Select a collection');
@@ -57,7 +58,9 @@ describe('CollectionEmptyState', () => {
   });
 
   it('invokes the create flow when the button is clicked', () => {
-    const btn = mount({ connected: true }).querySelector<HTMLButtonElement>('button.btn-success');
+    const btn = mount({ connected: true }).querySelector<HTMLButtonElement>(
+      'button.' + ctl.btnSuccess,
+    );
     btn!.click();
     expect(showCreateModal).toHaveBeenCalledTimes(1);
   });

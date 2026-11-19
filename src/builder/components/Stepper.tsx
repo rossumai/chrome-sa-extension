@@ -1,4 +1,6 @@
 import { h, Fragment, type ComponentChildren } from 'preact';
+import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // ‹ n/N ›: steps through a table's rows. `children` follow the count ("of items"); `action`
 // names the buttons (prev-<action>, next-<action>).
@@ -24,7 +26,7 @@ export default function Stepper({
     <Fragment>
       <button
         type="button"
-        class="icon-btn"
+        class={`${ctl.iconBtn} ${s.iconBtn}`}
         data-action={action && `prev-${action}`}
         disabled={at === 0}
         onClick={go(-1)}
@@ -35,7 +37,7 @@ export default function Stepper({
       {children}
       <button
         type="button"
-        class="icon-btn"
+        class={`${ctl.iconBtn} ${s.iconBtn}`}
         data-action={action && `next-${action}`}
         disabled={at >= count - 1}
         onClick={go(1)}

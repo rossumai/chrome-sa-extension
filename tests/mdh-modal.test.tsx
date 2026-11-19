@@ -19,6 +19,7 @@ import Modal, {
 import mstyles from '../src/ui/Modal.module.css';
 import { modalContent } from '../src/mdh/store.js';
 import { ModalBody, ModalActions, ModalField } from '../src/ui/Modal.jsx';
+import ctl from '../src/ui/controls.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -241,12 +242,12 @@ describe('promptModal', () => {
     expect(submitBtn.textContent).toBe('Save');
   });
 
-  it('uses btn-primary by default and applies custom submitClass', () => {
+  it('uses the primary button by default and applies custom submitClass', () => {
     const root = mount();
-    promptModal('X', { submitClass: 'btn-danger' }, () => {});
+    promptModal('X', { submitClass: ctl.btnDanger }, () => {});
     rerender(root);
     const submit = root.querySelectorAll('.' + mstyles.actions + ' button')[1];
-    expect(submit.className).toContain('btn-danger');
+    expect(submit.className).toContain(ctl.btnDanger);
   });
 
   it('submit invokes the callback with the trimmed value', () => {

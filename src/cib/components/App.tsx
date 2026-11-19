@@ -46,6 +46,7 @@ import HelpWindow from '../../help/HelpWindow.jsx';
 import { loadHelpRect } from '../../help/rect.js';
 import { CIB_HELP } from '../help.jsx';
 import styles from './App.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const ADMIN_GROUPS = ['admin', 'organization_group_admin'];
 // asked for on the first Check/Deploy click (optional, so a store update adds no install-time prompt);
@@ -517,7 +518,7 @@ export default function App({ connected }: { connected: boolean | null }) {
                 {canResume && !busy && (
                   <button
                     type="button"
-                    class="btn btn-sm"
+                    class={`${ctl.btn} ${ctl.btnSm}`}
                     onClick={() =>
                       // through the form, so the same validation as Check and deploy applies
                       formRef.current?.requestSubmit(deployRef.current)

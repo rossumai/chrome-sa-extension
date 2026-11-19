@@ -4,6 +4,7 @@ import * as store from '../store.js';
 import { runRevalidate } from '../index.jsx';
 import { driftDiff } from '../driftDiff.js';
 import EvidenceSection from './EvidenceSection.jsx';
+import ctl from '../../ui/controls.module.css';
 
 // Opt-in config-drift check (spec §4.5): live validate vs the persisted messages.
 export default function DriftSection() {
@@ -40,7 +41,7 @@ export default function DriftSection() {
     >
       {!diff && (
         <Fragment>
-          <button class="btn btn-primary" disabled={running} onClick={run}>
+          <button class={`${ctl.btn} ${ctl.btnPrimary}`} disabled={running} onClick={run}>
             {running ? 'Re-evaluating…' : 'Re-evaluate against today’s config'}
           </button>
           <div class="inspector-note">

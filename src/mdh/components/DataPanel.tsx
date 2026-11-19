@@ -63,6 +63,7 @@ import ExportWizard from './ExportWizard.jsx';
 import { buildExportJob } from '../exportFormats.jsx';
 import JSON5 from 'json5';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
+import ctl from '../../ui/controls.module.css';
 export default function DataPanel() {
   const editorRef = useRef<JsonEditorHandle | null>(null);
   const pipeline = usePipeline();
@@ -754,7 +755,7 @@ export default function DataPanel() {
               and will not run automatically.
             </span>
             <button
-              class="btn btn-sm btn-warning"
+              class={`${ctl.btn} ${ctl.btnSm} ${ctl.btnWarning}`}
               onClick={() => runQuery({ explicitWrite: true })}
             >
               Run write pipeline{'…'}

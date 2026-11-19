@@ -19,6 +19,7 @@ import PanelHead from './PanelHead.jsx';
 import Icon from './icons.jsx';
 import { Field } from './fields.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const STATES = ['seeded', 'learning', 'new', 'rejected'] as const;
 
@@ -121,7 +122,7 @@ function Unused({ fields }: { fields: any[] }) {
                 <span class={s.dim}>{marked ? 'deleted on Save' : seedText(f)}</span>
                 <button
                   type="button"
-                  class="icon-btn"
+                  class={`${ctl.iconBtn} ${s.iconBtn}`}
                   data-action="delete-engine-field"
                   title={
                     marked

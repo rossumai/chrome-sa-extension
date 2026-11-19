@@ -27,6 +27,7 @@ import { UNDO_LIMIT } from '../bulkOps.js';
 import { openCollectionTab } from '../openCollectionTab.js';
 import { filterCollections, splitByMatch } from '../collectionFilter.js';
 import FilterInput from '../../ui/FilterInput.jsx';
+import ctl from '../../ui/controls.module.css';
 
 async function loadCollections() {
   try {
@@ -73,7 +74,7 @@ function showCreateModal(onSelected?: () => void) {
     {
       placeholder: 'Collection name...',
       submitLabel: 'Create',
-      submitClass: 'btn-success',
+      submitClass: ctl.btnSuccess,
     },
     async (name, hint) => {
       try {
@@ -299,10 +300,10 @@ function DropConfirmBody({ name }: { name: string }) {
         {hintMessage}
       </div>
       <ModalActions>
-        <button class="btn btn-secondary" onClick={closeModal}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
           Cancel
         </button>
-        <button class="btn btn-danger" onClick={doSubmit} disabled={submitDisabled}>
+        <button class={`${ctl.btn} ${ctl.btnDanger}`} onClick={doSubmit} disabled={submitDisabled}>
           Drop
         </button>
       </ModalActions>
@@ -455,14 +456,14 @@ export default function Sidebar() {
         </div>
         <div class="sidebar-header-actions">
           <button
-            class="icon-btn"
+            class={ctl.iconBtn}
             title="New collection"
             onClick={() => showCreateModal(clearFilter)}
           >
             +
           </button>
           <button
-            class="icon-btn"
+            class={ctl.iconBtn}
             title="Refresh"
             onClick={() => {
               cache.invalidateAll();

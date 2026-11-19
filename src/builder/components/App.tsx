@@ -40,6 +40,7 @@ import SaveDialog from './SaveDialog.jsx';
 import FilterBar from './FilterBar.jsx';
 import { navDrawer, panelOpen, panelWide, loadPanelWide } from './panels.js';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // The component for each right panel (store.RightPanel); with none, the field inspector.
 const PANELS: Record<RightPanel['kind'], ComponentType> = {
@@ -116,7 +117,7 @@ export default function App({ connected }: { connected: boolean | null }) {
           <div class={s.banner}>
             {error.value}
             {retryable.value && (
-              <button type="button" class="btn btn-sm" onClick={retry}>
+              <button type="button" class={`${ctl.btn} ${ctl.btnSm}`} onClick={retry}>
                 Retry
               </button>
             )}
@@ -125,7 +126,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         {deletedSchema.value && (
           <div class={s.notice} data-deleted-schema="">
             Schema {deletedSchema.value.name} deleted.
-            <button type="button" class="btn btn-sm" onClick={undoSchemaDelete}>
+            <button type="button" class={`${ctl.btn} ${ctl.btnSm}`} onClick={undoSchemaDelete}>
               Undo
             </button>
             <span class={s.dim}>The restored schema gets a new ID.</span>

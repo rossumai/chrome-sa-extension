@@ -15,6 +15,7 @@ import {
 import { pickHookConfig } from './hookJump.js';
 import Stepper from './Stepper.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const STATUS_TEXT: Record<string, string> = {
   pending: 'replaying…',
@@ -139,7 +140,7 @@ function ConfigRow({
             {extra.length ? ` (+ ${extra.join(', ')})` : ''}{' '}
             <button
               type="button"
-              class="btn-link"
+              class={`${ctl.btnLink} ${s.btnLink}`}
               title="Open this configuration in hook mode"
               onClick={() => {
                 openHookEditor(item.hook.id);

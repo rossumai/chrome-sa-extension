@@ -9,6 +9,7 @@ import {
   ModalFieldLabel,
 } from '../../../ui/Modal.jsx';
 import * as store from '../store.js';
+import ctl from '../../../ui/controls.module.css';
 
 // Asked every time: which scope. Remembered: what the document includes.
 //
@@ -88,12 +89,12 @@ function PdfForm({
       </label>
 
       <ModalActions>
-        <button type="button" class="btn btn-secondary" onClick={closeModal}>
+        <button type="button" class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
           {'Cancel'}
         </button>
         <button
           type="button"
-          class="btn btn-primary"
+          class={`${ctl.btn} ${ctl.btnPrimary}`}
           onClick={() => {
             store.setPdfOptions(opts); // remembered for next time
             closeModal();

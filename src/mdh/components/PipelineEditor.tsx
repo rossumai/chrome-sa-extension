@@ -7,6 +7,7 @@ import { LibraryPanel, saveQuery, unsaveQuery, isSaved } from './QueryHistory.js
 import { beautifyText } from '../pipelineComments.js';
 import AgentBox from './AgentBox.jsx';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
+import ctl from '../../ui/controls.module.css';
 
 export default function PipelineEditor({
   editorRef,
@@ -182,7 +183,7 @@ export default function PipelineEditor({
                 if (e.key === 'Escape') setShowSaveInput(false);
               }}
             />
-            <button class="btn btn-sm btn-primary" onClick={doSave}>
+            <button class={`${ctl.btn} ${ctl.btnSm} ${ctl.btnPrimary}`} onClick={doSave}>
               Save
             </button>
           </div>

@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { activeSource, filtersBySource, patchFilters } from '../store.js';
 import { SOURCES } from '../sources/index.js';
+import ctl from '../../ui/controls.module.css';
 
 function DebouncedInput({
   value,
@@ -104,7 +105,11 @@ export default function FiltersBar() {
         )}
 
         <div class="filters-actions">
-          <button class="btn btn-secondary" onClick={clearFilters} disabled={!hasActiveFilters}>
+          <button
+            class={`${ctl.btn} ${ctl.btnSecondary}`}
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+          >
             Reset filters
           </button>
         </div>

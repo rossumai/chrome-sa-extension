@@ -46,6 +46,7 @@ import {
 import { RulesCell, HooksCell, CodeHooksCell } from './PickCell.jsx';
 import { panelOpen, panelWide } from './panels.js';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // The grid's rows: one per schema node, the add links after a section's or a table's
 // fields, and which columns they have.
@@ -234,7 +235,7 @@ function Row({
           {locked ? null : node.__deleted ? (
             <button
               type="button"
-              class="btn-link"
+              class={`${ctl.btnLink} ${s.btnLink}`}
               data-action="restore"
               onClick={(e) => {
                 e.stopPropagation();
@@ -246,7 +247,7 @@ function Row({
           ) : !deleted && kind !== 'tuple' ? (
             <button
               type="button"
-              class="icon-btn"
+              class={`${ctl.iconBtn} ${s.iconBtn}`}
               data-action="delete"
               title="Delete"
               onClick={(e) => {
@@ -298,7 +299,7 @@ function AddRow({
   const link = (action: string, label: string, onClick: () => void) => (
     <button
       type="button"
-      class="btn-link"
+      class={`${ctl.btnLink} ${s.btnLink}`}
       data-action={action}
       data-parent={parentKey}
       onClick={onClick}

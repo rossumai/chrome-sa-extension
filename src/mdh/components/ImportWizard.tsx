@@ -21,6 +21,7 @@ import { deriveShape } from '../shape.js';
 import { restoreDocs, formatRestoreSummary } from '../restoreValues.js';
 import * as api from '../api.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
+import ctl from '../../ui/controls.module.css';
 
 const STAGE = { PICK: 'pick', DECIDE: 'decide', IMPORTING: 'importing', DONE: 'done' };
 const SHAPE_SAMPLE = 500;
@@ -429,11 +430,15 @@ export default function ImportWizard({
             </div>
           )}
           <ModalActions>
-            <button class="btn btn-secondary" onClick={closeModal}>
+            <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
               Cancel
             </button>
             {source === 'clipboard' && (
-              <button class="btn btn-primary" data-testid="clipboard-next" onClick={clipboardNext}>
+              <button
+                class={`${ctl.btn} ${ctl.btnPrimary}`}
+                data-testid="clipboard-next"
+                onClick={clipboardNext}
+              >
                 Next {'→'}
               </button>
             )}
@@ -463,14 +468,14 @@ export default function ImportWizard({
           {parsed.error || !importDocs.length ? (
             <ModalActions>
               <button
-                class="btn btn-secondary"
+                class={`${ctl.btn} ${ctl.btnSecondary}`}
                 style="margin-right:auto"
                 data-testid="import-back"
                 onClick={decideBack}
               >
                 {'←'} Back
               </button>
-              <button class="btn btn-secondary" onClick={closeModal}>
+              <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
                 Cancel
               </button>
             </ModalActions>

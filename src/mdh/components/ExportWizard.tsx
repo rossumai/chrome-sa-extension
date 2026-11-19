@@ -10,6 +10,7 @@ import { orderExportColumns } from '../recordColumns.js';
 import { flattenDoc } from '../flatten.js';
 import { displayValue } from '../displayValue.js';
 import * as api from '../api.js';
+import ctl from '../../ui/controls.module.css';
 
 // Scope labels carry the live record counts so the all-vs-filtered choice is
 // impossible to overlook — the numbers ARE the semantic difference.
@@ -330,10 +331,14 @@ export default function ExportWizard({
       </PlanSummary>
 
       <ModalActions>
-        <button class="btn btn-secondary" onClick={closeModal}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
           Cancel
         </button>
-        <button class="btn btn-primary" data-testid="export-download" onClick={download}>
+        <button
+          class={`${ctl.btn} ${ctl.btnPrimary}`}
+          data-testid="export-download"
+          onClick={download}
+        >
           {count.value !== null
             ? `Download ${count.value.toLocaleString()} record${count.value === 1 ? '' : 's'} \u00b7 ${fmt.label}`
             : `Download ${fmt.label}`}

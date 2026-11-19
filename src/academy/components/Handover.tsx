@@ -9,6 +9,7 @@ import { parseReceipt } from '../../training/receipt.js';
 import Rich from './Rich.jsx';
 import { useCopy } from './useCopy.js';
 import css from '../Academy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // Each failure gets its own wording: only a check that no longer passes asks the trainee
 // to change anything in the org.
@@ -134,7 +135,7 @@ export default function Handover({ progress }: { progress: Progress }) {
           </p>
         </div>
         {text ? (
-          <button type="button" class="btn btn-primary" onClick={() => copy(text)}>
+          <button type="button" class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={() => copy(text)}>
             <span aria-live="polite">
               {copied === 'copied'
                 ? '✓ Copied. Paste it to your trainer'
@@ -146,7 +147,7 @@ export default function Handover({ progress }: { progress: Progress }) {
         ) : (
           <button
             type="button"
-            class="btn btn-primary"
+            class={`${ctl.btn} ${ctl.btnPrimary}`}
             disabled={!complete || busy}
             onClick={issue}
           >

@@ -4,6 +4,7 @@ import { h, type ComponentChildren } from 'preact';
 import { hostOf, type Source } from '../deploy.js';
 import Wip from './Wip.jsx';
 import styles from './Deploy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 type Props = {
   source: Source | null;
@@ -50,7 +51,7 @@ export default function Overview({
               </div>
             )}
             {chooser || (
-              <button class="btn btn-primary" onClick={onChooseSource}>
+              <button class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={onChooseSource}>
                 Choose the org to deploy from
               </button>
             )}
@@ -76,7 +77,7 @@ export default function Overview({
                 </div>
               </div>
               <button
-                class="btn btn-primary"
+                class={`${ctl.btn} ${ctl.btnPrimary}`}
                 disabled={!!blocked}
                 title={blocked || undefined}
                 onClick={onDeploy}
@@ -121,7 +122,7 @@ export default function Overview({
             <div class={styles.panelHead}>
               <h2>What {targetName} keeps for itself</h2>
               <span class={styles.sp}></span>
-              <button class="btn btn-secondary" onClick={onEditOwn}>
+              <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={onEditOwn}>
                 Edit
               </button>
             </div>

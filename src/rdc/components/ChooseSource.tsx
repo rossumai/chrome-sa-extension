@@ -7,6 +7,7 @@ import { apiBaseOf } from '../core.js';
 import { readableOrgs, type Source } from '../deploy.js';
 import { isRateLimited, rateLimitError, rateLimitMessage } from '../../net/rateLimit.js';
 import styles from './Deploy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 export type FetchOrgs = (domain: string, token: string) => Promise<unknown>;
 
@@ -151,7 +152,7 @@ export default function ChooseSource({
         <small>Only to find the organization. It is not kept.</small>
       </div>
       <div>
-        <button class="btn btn-secondary" disabled={busy} onClick={find}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} disabled={busy} onClick={find}>
           Find organizations
         </button>
       </div>
@@ -178,11 +179,11 @@ export default function ChooseSource({
         </div>
       )}
       <div class={styles.formFoot}>
-        <button class="btn btn-secondary" onClick={onCancel}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={onCancel}>
           Cancel
         </button>
         <button
-          class="btn btn-primary"
+          class={`${ctl.btn} ${ctl.btnPrimary}`}
           disabled={!chosen || !shortName || !foundDomain}
           onClick={confirm}
         >

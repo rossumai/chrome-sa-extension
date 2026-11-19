@@ -11,6 +11,7 @@ import {
   ModalActions,
   ModalMessage,
 } from '../../../ui/Modal.jsx';
+import ctl from '../../../ui/controls.module.css';
 
 // `count` = how many deliverables this armed run will touch. Today it is always 1
 // (implement is per-deliverable — editor button + sidebar kebab; there is no
@@ -29,10 +30,10 @@ function ArmBody({ count = 1, onConfirm }: { count?: number; onConfirm: () => vo
         {`This runs Mr. Fabry as a WRITE-enabled agent against this LIVE organization: it plans ${scope} into tasks and autonomously creates/patches resources to satisfy them. Bounded to 5 attempts per task, 20 tasks, and 50 writes per run; it is instructed to preserve backward compatibility and never delete or lose customer data or documents; every write is recorded in the audit log, and you can Stop at any time. Continue?`}
       </ModalMessage>
       <ModalActions>
-        <button class="btn btn-secondary" onClick={closeModal}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
           Cancel
         </button>
-        <button class="btn btn-danger" onClick={arm}>
+        <button class={`${ctl.btn} ${ctl.btnDanger}`} onClick={arm}>
           {'Arm & run ▷'}
         </button>
       </ModalActions>

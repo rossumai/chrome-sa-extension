@@ -4,6 +4,7 @@ import { askSchemaFabry, closeSchemaFabry, fixWithFabry } from '../index.jsx';
 import AskFabry from './AskFabry.jsx';
 import PanelHead from './PanelHead.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // Mr. Fabry for the whole schema: the conversation, what each answer changed, what is still
 // wrong (with "Ask Mr. Fabry to fix"), and a filter down to the rows it touched.
@@ -59,7 +60,12 @@ export default function SchemaFabryPanel() {
         )}
       </div>
       {st.problems.length > 0 && !st.busy && (
-        <button type="button" class="btn btn-sm" data-action="fix-fabry" onClick={fixWithFabry}>
+        <button
+          type="button"
+          class={`${ctl.btn} ${ctl.btnSm}`}
+          data-action="fix-fabry"
+          onClick={fixWithFabry}
+        >
           Ask Mr. Fabry to fix {st.problems.length === 1 ? 'this' : `these ${st.problems.length}`}
         </button>
       )}

@@ -6,6 +6,7 @@ import { hookText, codeHidden, occurrences } from '../codeRefs.js';
 import CodeEditor, { type CodeEditorHandle } from './CodeEditor.jsx';
 import PanelHead from './PanelHead.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // A hook that mentions a field, read-only: its code or its settings, scrolled to each place
 // the field id appears (↑/↓ step through them). Editing other hooks is out of scope.
@@ -70,7 +71,7 @@ export default function HookCodeView() {
             {i + 1} of {hits.length}{' '}
             <button
               type="button"
-              class="icon-btn"
+              class={`${ctl.iconBtn} ${s.iconBtn}`}
               data-action="prev-match"
               title="Previous"
               onClick={() => setAt((i - 1 + hits.length) % hits.length)}
@@ -79,7 +80,7 @@ export default function HookCodeView() {
             </button>
             <button
               type="button"
-              class="icon-btn"
+              class={`${ctl.iconBtn} ${s.iconBtn}`}
               data-action="next-match"
               title="Next"
               onClick={() => setAt((i + 1) % hits.length)}

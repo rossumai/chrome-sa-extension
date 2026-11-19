@@ -8,6 +8,7 @@ import * as api from '../api.js';
 import { previewMatch, runBulkUpdate, selectionToFilter, UNDO_LIMIT } from '../bulkOps.js';
 import { stripEmptyOperators, trivialSetDiff } from '../updateExpr.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
+import ctl from '../../ui/controls.module.css';
 
 const PREVIEW_DEBOUNCE_MS = 400;
 
@@ -317,7 +318,7 @@ function Body({
         forceNameGate={isEmptyFilter}
         disabled={running || !!resultMsg || count === 0 || !updateValid}
         submitLabel={running ? 'Updating…' : 'Update'}
-        submitClass="btn-primary"
+        submitClass={ctl.btnPrimary}
         onSubmit={handleSubmit}
         onCancel={closeModal}
       />

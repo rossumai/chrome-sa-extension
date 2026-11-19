@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { h, render } from 'preact';
 import BulkConfirm from '../src/mdh/components/BulkConfirm.jsx';
+import ctl from '../src/ui/controls.module.css';
 
 function mount(props: any) {
   const root = document.createElement('div');
@@ -23,7 +24,7 @@ describe('BulkConfirm', () => {
       onSubmit,
       onCancel: () => {},
       submitLabel: 'Delete',
-      submitClass: 'btn-danger',
+      submitClass: ctl.btnDanger,
     });
     const submit = root.querySelector<HTMLButtonElement>('[data-testid="bulk-submit"]')!;
     expect(submit.disabled).toBe(false);
@@ -39,7 +40,7 @@ describe('BulkConfirm', () => {
       onSubmit,
       onCancel: () => {},
       submitLabel: 'Delete',
-      submitClass: 'btn-danger',
+      submitClass: ctl.btnDanger,
     });
     const submit = root.querySelector<HTMLButtonElement>('[data-testid="bulk-submit"]');
     const input = root.querySelector<HTMLInputElement>('[data-testid="bulk-confirm-input"]')!;
@@ -65,7 +66,7 @@ describe('BulkConfirm', () => {
       onSubmit: () => {},
       onCancel: () => {},
       submitLabel: 'X',
-      submitClass: 'btn-danger',
+      submitClass: ctl.btnDanger,
     });
     const input = root.querySelector<HTMLInputElement>('[data-testid="bulk-confirm-input"]')!;
     const get = () =>
@@ -91,7 +92,7 @@ describe('BulkConfirm', () => {
       onSubmit: () => {},
       onCancel: () => {},
       submitLabel: 'Delete',
-      submitClass: 'btn-danger',
+      submitClass: ctl.btnDanger,
     });
     const input = root.querySelector<HTMLInputElement>('[data-testid="bulk-confirm-input"]')!;
     const get = () =>
@@ -119,7 +120,7 @@ describe('BulkConfirm', () => {
       onSubmit: () => {},
       onCancel: () => {},
       submitLabel: 'Delete',
-      submitClass: 'btn-danger',
+      submitClass: ctl.btnDanger,
     });
     const submit = root.querySelector<HTMLButtonElement>('[data-testid="bulk-submit"]');
     const input = root.querySelector<HTMLInputElement>('[data-testid="bulk-confirm-input"]')!;
@@ -139,7 +140,7 @@ describe('BulkConfirm', () => {
       onSubmit: () => {},
       onCancel,
       submitLabel: 'X',
-      submitClass: 'btn-danger',
+      submitClass: ctl.btnDanger,
     });
     root.querySelector<HTMLElement>('[data-testid="bulk-cancel"]')!.click();
     expect(onCancel).toHaveBeenCalledOnce();
@@ -154,7 +155,7 @@ describe('BulkConfirm', () => {
       onSubmit,
       onCancel: () => {},
       submitLabel: 'X',
-      submitClass: 'btn-danger',
+      submitClass: ctl.btnDanger,
     });
     const submit = root.querySelector<HTMLButtonElement>('[data-testid="bulk-submit"]');
     expect(submit!.disabled).toBe(true);
@@ -167,7 +168,7 @@ describe('BulkConfirm', () => {
       onSubmit: () => {},
       onCancel: () => {},
       submitLabel: 'X',
-      submitClass: 'btn-danger',
+      submitClass: ctl.btnDanger,
     });
     expect(root.querySelector<HTMLButtonElement>('[data-testid="bulk-submit"]')!.disabled).toBe(
       true,

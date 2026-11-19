@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import JsonTree from '../components/JsonTree.jsx';
+import ctl from '../../ui/controls.module.css';
 
 const ACTIONS_BY_TYPE: Record<string, string[]> = {
   document: ['create'],
@@ -132,7 +133,10 @@ export function dash() {
 export function CopyBtn({ text, label }: { text: string; label?: string }) {
   if (!text) return null;
   return (
-    <button class="btn btn-sm" onClick={() => navigator.clipboard.writeText(String(text))}>
+    <button
+      class={`${ctl.btn} ${ctl.btnSm}`}
+      onClick={() => navigator.clipboard.writeText(String(text))}
+    >
       {label || 'Copy'}
     </button>
   );

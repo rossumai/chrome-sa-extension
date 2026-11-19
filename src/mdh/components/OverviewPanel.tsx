@@ -7,6 +7,7 @@ import { buildStoragePipeline, buildBatchStoragePipeline } from '../statsPipelin
 import FlashOnChange from './FlashOnChange.jsx';
 import OverviewCharts from './OverviewCharts.jsx';
 import CollectionEmptyState from './CollectionEmptyState.jsx';
+import ctl from '../../ui/controls.module.css';
 
 const BATCH_SIZE = 50;
 const BATCH_CONCURRENCY = 3;
@@ -318,7 +319,7 @@ export default function OverviewPanel() {
             {doneCount} / {totalCount}
           </span>
         )}
-        <button class="icon-btn" title="Refresh" onClick={refresh}>
+        <button class={ctl.iconBtn} title="Refresh" onClick={refresh}>
           {'\u21bb'}
         </button>
       </div>

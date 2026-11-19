@@ -24,6 +24,7 @@ import AnnotationPicker from './AnnotationPicker.jsx';
 import SearchPicker from './SearchPicker.jsx';
 import FilterInput from '../../ui/FilterInput.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // The bar above the grid: its filters — text (id or label), a rule, an MDH hook and one of
 // the hook's configurations — and, at the right end, the annotation whose values show.
@@ -65,7 +66,7 @@ export default function FilterBar() {
       {(warningKeys.value.size > 0 || onlyWarnings.value) && (
         <button
           type="button"
-          class={'btn btn-sm ' + s.warnFilter}
+          class={`${ctl.btn} ${ctl.btnSm} ` + s.warnFilter}
           data-action="only-warnings"
           aria-pressed={onlyWarnings.value ? 'true' : 'false'}
           title={
@@ -116,7 +117,7 @@ export default function FilterBar() {
           {editing && (
             <button
               type="button"
-              class="icon-btn"
+              class={`${ctl.iconBtn} ${s.iconBtn}`}
               data-action="clear-rule"
               title="Stop filtering by this rule"
               onClick={closeRuleEditor}
@@ -165,7 +166,7 @@ export default function FilterBar() {
               </select>
               <button
                 type="button"
-                class="icon-btn"
+                class={`${ctl.iconBtn} ${s.iconBtn}`}
                 data-action="clear-hook"
                 title="Stop filtering by this hook"
                 onClick={closeHookEditor}

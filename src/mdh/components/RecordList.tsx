@@ -22,6 +22,7 @@ import { RESERVED_PX, CHAR_WIDTH_PX, MIN_CHAR_BUDGET } from '../recordSummary.js
 import { ALT_KEY } from '../platform.js';
 import type { SortFilterControls } from '../hooks/usePipeline.js';
 import type { PaginationWindow } from '../pipelineOps.js';
+import ctl from '../../ui/controls.module.css';
 
 export default function RecordList({
   records,
@@ -275,7 +276,7 @@ export default function RecordList({
         <div class="selection-mismatch-banner">
           {selectedIds.value.size} selected record{selectedIds.value.size !== 1 ? 's' : ''} may no
           longer match the current view.
-          <button class="btn-link" onClick={onViewSelected}>
+          <button class={ctl.btnLink} onClick={onViewSelected}>
             View selected only
           </button>
         </div>
@@ -402,10 +403,10 @@ function DefaultToolbar({
           title={disabledTitle}
           aria-disabled={disabledAttr}
         >
-          <button class="btn btn-sm" onClick={onEnterSelectionMode}>
+          <button class={`${ctl.btn} ${ctl.btnSm}`} onClick={onEnterSelectionMode}>
             Select
           </button>
-          <button class="btn btn-sm" onClick={toggleExpandAll}>
+          <button class={`${ctl.btn} ${ctl.btnSm}`} onClick={toggleExpandAll}>
             {allExpanded ? 'Collapse All' : 'Expand All'}
           </button>
         </span>
@@ -451,7 +452,7 @@ function DefaultToolbar({
           </span>
         ) : (
           <button
-            class="btn btn-sm"
+            class={`${ctl.btn} ${ctl.btnSm}`}
             data-testid="export-open"
             title="Export collection"
             onClick={() => onRefresh('export')}
@@ -459,7 +460,10 @@ function DefaultToolbar({
             Export
           </button>
         )}
-        <button class="btn btn-sm btn-success" onClick={() => onRefresh('import')}>
+        <button
+          class={`${ctl.btn} ${ctl.btnSm} ${ctl.btnSuccess}`}
+          onClick={() => onRefresh('import')}
+        >
           Import
         </button>
       </div>
@@ -508,9 +512,9 @@ function BulkSplitButton({ onUpdate, onDelete }: { onUpdate: () => void; onDelet
   }, [open]);
 
   return (
-    <div ref={rootRef} class="dropdown-btn">
+    <div ref={rootRef} class={ctl.dropdownBtn}>
       <button
-        class="btn btn-sm"
+        class={`${ctl.btn} ${ctl.btnSm}`}
         onClick={(e) => {
           e.stopPropagation();
           setOpen(!open);
@@ -578,11 +582,11 @@ function SelectionToolbar({
   return (
     <div style="display:contents">
       <div class="toolbar-group">
-        <button class="btn btn-sm" onClick={onExit}>
+        <button class={`${ctl.btn} ${ctl.btnSm}`} onClick={onExit}>
           Cancel
         </button>
         <button
-          class="btn btn-sm"
+          class={`${ctl.btn} ${ctl.btnSm}`}
           onClick={() => onSelectPage(headerState !== 'all')}
           title={headerState === 'all' ? 'Deselect all on page' : 'Select all on page'}
         >
@@ -612,7 +616,7 @@ function SelectionToolbar({
               ))}
               <div class="selection-popover-actions">
                 <button
-                  class="btn-link"
+                  class={ctl.btnLink}
                   onClick={() => {
                     setPopoverOpen(false);
                     onViewSelected();
@@ -621,7 +625,7 @@ function SelectionToolbar({
                   View selected only
                 </button>
                 <button
-                  class="btn-link"
+                  class={ctl.btnLink}
                   onClick={() => {
                     setPopoverOpen(false);
                     onClearSelection();
@@ -634,17 +638,21 @@ function SelectionToolbar({
           )}
         </div>
         {total > 0 && (
-          <button class="btn-link" onClick={onClearSelection}>
+          <button class={ctl.btnLink} onClick={onClearSelection}>
             Clear
           </button>
         )}
       </div>
       <div style="flex:1"></div>
       <div class="toolbar-group">
-        <button class="btn btn-sm" disabled={total === 0} onClick={onBulkUpdate}>
+        <button class={`${ctl.btn} ${ctl.btnSm}`} disabled={total === 0} onClick={onBulkUpdate}>
           Edit selected
         </button>
-        <button class="btn btn-sm btn-danger" disabled={total === 0} onClick={onBulkDelete}>
+        <button
+          class={`${ctl.btn} ${ctl.btnSm} ${ctl.btnDanger}`}
+          disabled={total === 0}
+          onClick={onBulkDelete}
+        >
           Delete selected
         </button>
       </div>

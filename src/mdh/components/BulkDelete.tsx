@@ -7,6 +7,7 @@ import BulkConfirm from './BulkConfirm.jsx';
 import * as api from '../api.js';
 import { previewMatch, runBulkDelete, selectionToFilter, UNDO_LIMIT } from '../bulkOps.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
+import ctl from '../../ui/controls.module.css';
 
 const PREVIEW_DEBOUNCE_MS = 400;
 
@@ -209,7 +210,7 @@ function Body({
         forceNameGate={isEmptyFilter}
         disabled={running || !!resultMsg || count === 0}
         submitLabel={running ? 'Deleting…' : 'Delete'}
-        submitClass="btn-danger"
+        submitClass={ctl.btnDanger}
         onSubmit={handleSubmit}
         onCancel={closeModal}
       />

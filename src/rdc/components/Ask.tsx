@@ -6,6 +6,7 @@ import { answerFor } from '../core.js';
 import type { Prompt } from '../wasm.js';
 import { LogLine } from './Log.jsx';
 import styles from './Deploy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 type Pending = { prompt: Prompt; answer: (key: string | null) => void };
 
@@ -67,11 +68,11 @@ export function AskPanel({
         <div class={styles.question}>{pending.prompt.question}</div>
         <div class={styles.choices}>
           {pending.prompt.choices.map((c) => (
-            <button class="btn btn-secondary" onClick={() => pending.answer(c.key)}>
+            <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={() => pending.answer(c.key)}>
               {c.label}
             </button>
           ))}
-          <button class="btn btn-secondary" onClick={() => pending.answer(null)}>
+          <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={() => pending.answer(null)}>
             Cancel
           </button>
         </div>

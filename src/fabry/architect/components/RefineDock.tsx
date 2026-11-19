@@ -5,6 +5,7 @@ import DiffView from '../../../ui/DiffView.jsx';
 import FabryInput from '../../../ui/fabry/FabryInput.jsx';
 import FabryQuestions from '../../components/FabryQuestions.jsx';
 import type { Deliverable } from '../collectionPlan.js';
+import ctl from '../../../ui/controls.module.css';
 
 const GERUNDS = ['Refining', 'Consulting the org', 'Tightening the wording', 'Checking names'];
 
@@ -103,7 +104,7 @@ export default function RefineDock({ deliverable }: { deliverable: Deliverable }
           <FabryQuestions questions={questions} onSubmit={onAnswer} />
           <div class="fabry-arch-refine-card-actions">
             <span class="fabry-arch-credit">by Mr. Fabry</span>
-            <button type="button" class="btn btn-secondary" onClick={reset}>
+            <button type="button" class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={reset}>
               Discard
             </button>
           </div>
@@ -121,10 +122,15 @@ export default function RefineDock({ deliverable }: { deliverable: Deliverable }
           )}
           <div class="fabry-arch-refine-card-actions">
             <span class="fabry-arch-credit">by Mr. Fabry</span>
-            <button type="button" class="btn btn-secondary" onClick={reset}>
+            <button type="button" class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={reset}>
               Discard
             </button>
-            <button type="button" class="btn btn-primary" disabled={!changed} onClick={accept}>
+            <button
+              type="button"
+              class={`${ctl.btn} ${ctl.btnPrimary}`}
+              disabled={!changed}
+              onClick={accept}
+            >
               Accept changes
             </button>
           </div>

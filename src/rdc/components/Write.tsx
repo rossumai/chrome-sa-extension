@@ -15,6 +15,7 @@ import { LogLine } from './Log.jsx';
 import Wip from './Wip.jsx';
 import { explainRunError, tracked } from '../runs.js';
 import styles from './Deploy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 export type WriteResult = {
   outcome: CycleOutcome;
@@ -136,7 +137,7 @@ export default function Write(p: Props) {
               onInput={(e) => setTyped((e.target as HTMLInputElement).value)}
             />
             <button
-              class="btn btn-primary"
+              class={`${ctl.btn} ${ctl.btnPrimary}`}
               disabled={!confirmed || busy || !p.plan || !!p.blocked}
               title={p.blocked || undefined}
               onClick={write}
@@ -175,11 +176,11 @@ export default function Write(p: Props) {
         </div>
       </div>
       <div class={styles.foot}>
-        <button class="btn btn-secondary" disabled={busy} onClick={p.onBack}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} disabled={busy} onClick={p.onBack}>
           Back
         </button>
         <span class={styles.sp}></span>
-        <button class="btn btn-secondary" disabled={busy} onClick={p.onCancel}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} disabled={busy} onClick={p.onCancel}>
           Cancel
         </button>
       </div>
@@ -238,7 +239,7 @@ export function Done({
             </div>
           )}
           <div class={styles.foot}>
-            <button class="btn btn-primary" onClick={onBack}>
+            <button class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={onBack}>
               Back to {targetName}
             </button>
           </div>

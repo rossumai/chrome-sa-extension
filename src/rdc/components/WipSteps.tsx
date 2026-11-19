@@ -3,6 +3,7 @@
 import { h } from 'preact';
 import Wip from './Wip.jsx';
 import styles from './Deploy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 export function OwnValues({ targetName, onBack }: { targetName: string; onBack: () => void }) {
   return (
@@ -22,7 +23,7 @@ export function OwnValues({ targetName, onBack }: { targetName: string; onBack: 
           </p>
         </div>
         <span class={styles.sp}></span>
-        <button class="btn btn-primary" disabled>
+        <button class={`${ctl.btn} ${ctl.btnPrimary}`} disabled>
           Save changes
         </button>
       </div>
@@ -39,7 +40,7 @@ export function OwnValues({ targetName, onBack }: { targetName: string; onBack: 
             <select aria-label="Setting" disabled>
               <option>Choose a setting{'…'}</option>
             </select>
-            <button class="btn btn-secondary" disabled>
+            <button class={`${ctl.btn} ${ctl.btnSecondary}`} disabled>
               Add value
             </button>
           </div>

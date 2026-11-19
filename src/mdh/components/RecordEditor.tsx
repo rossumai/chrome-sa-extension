@@ -6,6 +6,7 @@ import JsonEditor from './JsonEditor.jsx';
 import { stripEmptyOperators } from '../updateExpr.js';
 import * as api from '../api.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
+import ctl from '../../ui/controls.module.css';
 
 // Builds the prefilled editor text. Both blocks have parallel hint comments
 // inside so the syntax is discoverable without bloating the modal with extra
@@ -95,10 +96,10 @@ function Body({
       <JsonEditor value={initialValue} minHeight="200px" fields={fieldsFn} editorRef={editorRef} />
       <div ref={hintRef} class="input-hint"></div>
       <ModalActions>
-        <button class="btn btn-secondary" onClick={closeModal}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
           Cancel
         </button>
-        <button class="btn btn-primary" onClick={handleSubmit}>
+        <button class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={handleSubmit}>
           {mode === 'edit' ? 'Update' : 'Replace'}
         </button>
       </ModalActions>

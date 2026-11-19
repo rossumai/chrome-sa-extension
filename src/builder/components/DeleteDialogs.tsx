@@ -3,13 +3,14 @@ import { useEffect, useRef } from 'preact/hooks';
 import { openModal, closeModal, ModalBody, ModalMessage, ModalActions } from '../../ui/Modal.jsx';
 import { dirty, selectedQueueId } from '../store.js';
 import { deleteQueue, deleteSchema } from '../index.jsx';
+import ctl from '../../ui/controls.module.css';
 
 // Cancel is the default: it takes the focus, so Enter cancels; Escape cancels too.
 function CancelButton() {
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => ref.current?.focus(), []);
   return (
-    <button type="button" class="btn btn-secondary" ref={ref} onClick={closeModal}>
+    <button type="button" class={`${ctl.btn} ${ctl.btnSecondary}`} ref={ref} onClick={closeModal}>
       Cancel
     </button>
   );
@@ -39,7 +40,7 @@ export function confirmQueueDelete(q: { id: number; name: string }) {
         <CancelButton />
         <button
           type="button"
-          class="btn btn-secondary"
+          class={`${ctl.btn} ${ctl.btnSecondary}`}
           data-action="delete-later"
           onClick={() => run(false)}
         >
@@ -47,7 +48,7 @@ export function confirmQueueDelete(q: { id: number; name: string }) {
         </button>
         <button
           type="button"
-          class="btn btn-danger"
+          class={`${ctl.btn} ${ctl.btnDanger}`}
           data-action="delete-now"
           onClick={() => run(true)}
         >
@@ -72,7 +73,7 @@ export function confirmSchemaDelete(x: { id: number; name: string }) {
         <CancelButton />
         <button
           type="button"
-          class="btn btn-danger"
+          class={`${ctl.btn} ${ctl.btnDanger}`}
           data-action="confirm-delete"
           onClick={() => {
             closeModal();

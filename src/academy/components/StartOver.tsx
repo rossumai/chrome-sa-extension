@@ -3,6 +3,7 @@ import * as store from '../store.js';
 import { openModal, closeModal, ModalBody, ModalActions, ModalMessage } from '../../ui/Modal.jsx';
 import type { RunObject } from '../cleanup.js';
 import css from '../Academy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const KIND: Record<RunObject['kind'], string> = {
   rule: 'Rule',
@@ -45,12 +46,12 @@ function Body() {
           {'’'}s objects stay, and no check counts them.
         </ModalMessage>
         <ModalActions>
-          <button type="button" class="btn btn-secondary" onClick={closeModal}>
+          <button type="button" class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
             Cancel
           </button>
           <button
             type="button"
-            class="btn btn-secondary"
+            class={`${ctl.btn} ${ctl.btnSecondary}`}
             onClick={async () => {
               await store.startOverKeeping();
               closeModal();
@@ -85,12 +86,17 @@ function Body() {
       )}
       {items.length > 0 && <ItemList items={items} failed={failed} />}
       <ModalActions>
-        <button type="button" class="btn btn-secondary" disabled={working} onClick={closeModal}>
+        <button
+          type="button"
+          class={`${ctl.btn} ${ctl.btnSecondary}`}
+          disabled={working}
+          onClick={closeModal}
+        >
           Cancel
         </button>
         <button
           type="button"
-          class="btn btn-secondary"
+          class={`${ctl.btn} ${ctl.btnSecondary}`}
           disabled={working}
           onClick={async () => {
             await store.startOverKeeping();
@@ -102,7 +108,7 @@ function Body() {
         {items.length > 0 && (
           <button
             type="button"
-            class="btn btn-danger"
+            class={`${ctl.btn} ${ctl.btnDanger}`}
             disabled={working}
             onClick={async () => {
               await store.startOverDeleting();

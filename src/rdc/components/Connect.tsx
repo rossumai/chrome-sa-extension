@@ -8,6 +8,7 @@ import { isRateLimited, rateLimitMessage } from '../../net/rateLimit.js';
 import { fetchOrgs as defaultFetch, type FetchOrgs } from './ChooseSource.jsx';
 import Wip from './Wip.jsx';
 import styles from './Deploy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 type Props = {
   source: Source;
@@ -97,7 +98,7 @@ export default function Connect({
               <small>Used for this deployment only, then forgotten.</small>
             </div>
             <div>
-              <button class="btn btn-secondary" disabled={busy} onClick={check}>
+              <button class={`${ctl.btn} ${ctl.btnSecondary}`} disabled={busy} onClick={check}>
                 Check token
               </button>
             </div>
@@ -132,15 +133,15 @@ export default function Connect({
         </div>
       )}
       <div class={styles.foot}>
-        <button class="btn btn-secondary" onClick={onBack}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={onBack}>
           Back
         </button>
         <span class={styles.sp}></span>
-        <button class="btn btn-secondary" onClick={onCancel}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={onCancel}>
           Cancel
         </button>
         <button
-          class="btn btn-primary"
+          class={`${ctl.btn} ${ctl.btnPrimary}`}
           disabled={!checked || !!blocked}
           title={blocked || undefined}
           onClick={() => onConnected(checked)}

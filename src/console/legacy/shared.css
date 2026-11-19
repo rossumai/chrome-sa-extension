@@ -223,89 +223,6 @@
   cursor: default;
 }
 
-/* @order 22 */
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    border-color 0.15s,
-    color 0.15s;
-  background: var(--bg-card);
-  color: var(--text-primary);
-  flex-shrink: 0;
-}
-
-.btn:hover {
-  background: var(--bg-hover);
-}
-
-.btn-sm {
-  padding: 4px 10px;
-  font-size: 11px;
-}
-
-.btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-}
-
-/* @order 24 */
-
-.btn-danger {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: #fff;
-}
-
-.btn-danger:hover {
-  background: var(--danger-hover);
-  border-color: var(--danger-hover);
-}
-
-.btn-secondary {
-  background: var(--bg-card);
-  border-color: var(--border);
-  color: var(--text-primary);
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 16px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition:
-    background 0.1s,
-    color 0.1s;
-}
-
-.icon-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.icon-btn[aria-pressed='true'] {
-  color: var(--accent);
-}
-
 /* @order 26 */
 
 .input {
@@ -333,35 +250,6 @@
 /* The whole .modal-* system moved to the self-contained CSS Module
    src/ui/Modal.module.css. Consumers compose modals with its sub-components
    (ModalBody / ModalActions / ModalMessage / ModalFieldLabel / …). */
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn:disabled:hover {
-  background: var(--bg-card);
-}
-
-.btn-danger:disabled:hover {
-  background: var(--danger);
-}
-
-.btn-primary:disabled:hover {
-  background: var(--accent);
-}
-
-/* @order 28 */
-
-.btn-link {
-  background: none;
-  border: none;
-  color: var(--accent);
-  cursor: pointer;
-  font-size: 12px;
-  padding: 4px 6px;
-  text-decoration: underline;
-}
 
 /* @order 32 */
 

@@ -7,6 +7,7 @@ import { h, type ComponentChildren } from 'preact';
 import { signal } from '@preact/signals';
 import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import styles from './Modal.module.css';
+import ctl from './controls.module.css';
 
 // The one open modal: a title, a render function, and an optional close hook the
 // promisified helpers (confirmModal / promptModal) use to resolve.
@@ -151,11 +152,11 @@ export function confirmModal(title: string, message: ComponentChildren, onConfir
         <ModalBody>
           <ModalMessage>{message}</ModalMessage>
           <ModalActions>
-            <button class="btn btn-secondary" onClick={closeModal}>
+            <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
               Cancel
             </button>
             <button
-              class="btn btn-danger"
+              class={`${ctl.btn} ${ctl.btnDanger}`}
               onClick={() => {
                 confirmed = true;
                 closeModal();
@@ -275,10 +276,10 @@ function PromptBody({
       />
       <div ref={hintRef} class="input-hint"></div>
       <ModalActions>
-        <button class="btn btn-secondary" onClick={closeModal}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
           Cancel
         </button>
-        <button class={`btn ${submitClass || 'btn-primary'}`} onClick={doSubmit}>
+        <button class={`${ctl.btn} ${submitClass || ctl.btnPrimary}`} onClick={doSubmit}>
           {submitLabel || 'OK'}
         </button>
       </ModalActions>

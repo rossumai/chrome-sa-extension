@@ -14,6 +14,7 @@ import {
 import * as api from '../api.js';
 import FlashOnChange from './FlashOnChange.jsx';
 import FilterInput from '../../ui/FilterInput.jsx';
+import ctl from '../../ui/controls.module.css';
 
 const DEFAULT_COL_WIDTHS: Record<string, number> = {
   status: 130,
@@ -834,7 +835,7 @@ export default function UploadsPanel() {
           placeholder="Filter by dataset, filename, type, or error…"
           title={search ? `Filtering by "${search}" — click × to clear` : ''}
         />
-        <button class="icon-btn" title="Refresh" onClick={() => loadOperations()}>
+        <button class={ctl.iconBtn} title="Refresh" onClick={() => loadOperations()}>
           {'\u21bb'}
         </button>
       </div>

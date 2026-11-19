@@ -40,6 +40,7 @@ import {
 import StatsSummary from './StatsSummary.jsx';
 import StatsSchema from './StatsSchema.jsx';
 import StatsFieldGrid from './StatsFieldGrid.jsx';
+import ctl from '../../ui/controls.module.css';
 
 export default function StatsPanel() {
   const [overview, setOverview] = useState<any>(null); // { total, fieldCount }
@@ -426,7 +427,7 @@ export default function StatsPanel() {
           </span>
         )}
         <button
-          class="icon-btn"
+          class={ctl.iconBtn}
           title="Re-run analysis"
           onClick={() => {
             cache.invalidateData(selectedCollection.value);

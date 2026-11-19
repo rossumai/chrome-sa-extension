@@ -40,6 +40,7 @@ vi.mock('../src/galaxy/index.jsx', async (importOriginal) => ({
 
 import App from '../src/galaxy/components/App.jsx';
 import * as store from '../src/galaxy/store.js';
+import ctl from '../src/ui/controls.module.css';
 
 function mount(connected: any) {
   const root = document.createElement('div');
@@ -84,7 +85,7 @@ describe('Galaxy App', () => {
     const root = mount(false);
     expect(root.textContent).toContain('Rossum is rate-limiting requests. Try again in 8 s.');
     expect(root.textContent).not.toMatch(/not connected/i);
-    const btn = root.querySelector<HTMLButtonElement>('.empty-state button.btn')!;
+    const btn = root.querySelector<HTMLButtonElement>('.empty-state button.' + ctl.btn)!;
     expect(btn.textContent).toBe('Retry');
     initGalaxy.mockClear();
     btn.click();

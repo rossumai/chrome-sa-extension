@@ -4,6 +4,7 @@ import { useSignal } from '@preact/signals';
 import { effect } from '@preact/signals';
 import { UNDO_LIMIT } from '../bulkOps.js';
 import { ModalActions } from './Modal.jsx';
+import ctl from '../../ui/controls.module.css';
 
 // One-click threshold below which no type-gate is required.
 const ONE_CLICK_LIMIT = 10;
@@ -38,7 +39,7 @@ export default function BulkConfirm({
   forceNameGate = false,
   disabled = false,
   submitLabel,
-  submitClass = 'btn-primary',
+  submitClass = ctl.btnPrimary,
   onSubmit,
   onCancel,
 }: {
@@ -111,12 +112,16 @@ export default function BulkConfirm({
         <div class="bulk-confirm-row bulk-confirm-blocked">Waiting for record count{'…'}</div>
       )}
       <ModalActions>
-        <button class="btn btn-secondary" data-testid="bulk-cancel" onClick={onCancel}>
+        <button
+          class={`${ctl.btn} ${ctl.btnSecondary}`}
+          data-testid="bulk-cancel"
+          onClick={onCancel}
+        >
           Cancel
         </button>
         <button
           ref={submitRef}
-          class={`btn ${submitClass}`}
+          class={`${ctl.btn} ${submitClass}`}
           data-testid="bulk-submit"
           disabled={submitDisabled}
           onClick={onSubmit}

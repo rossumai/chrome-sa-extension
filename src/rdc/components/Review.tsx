@@ -11,6 +11,7 @@ import type { OrgUser } from '../users.js';
 import type { PlanItem } from '../wasm.js';
 import { LogLine } from './Log.jsx';
 import styles from './Deploy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 type Props = {
   planned: Planned;
@@ -197,15 +198,15 @@ export default function Review(p: Props) {
         </div>
       </div>
       <div class={styles.foot}>
-        <button class="btn btn-secondary" onClick={p.onBack}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={p.onBack}>
           Back
         </button>
         <span class={styles.sp}></span>
-        <button class="btn btn-secondary" onClick={p.onCancel}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={p.onCancel}>
           Cancel
         </button>
         <button
-          class="btn btn-primary"
+          class={`${ctl.btn} ${ctl.btnPrimary}`}
           disabled={missing || p.replanning}
           title={missing ? "Choose who owns the hooks' tokens first" : undefined}
           onClick={p.onNext}

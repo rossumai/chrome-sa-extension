@@ -1,5 +1,6 @@
 import { h, Fragment } from 'preact';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // The foot of the rule and hook editors, which save on their own: the errors, then Close,
 // Discard and Save.
@@ -30,12 +31,12 @@ export default function DraftFooter({
         </div>
       )}
       <div class={s.dialogActions}>
-        <button type="button" class="btn btn-sm" onClick={onClose}>
+        <button type="button" class={`${ctl.btn} ${ctl.btnSm}`} onClick={onClose}>
           Close
         </button>
         <button
           type="button"
-          class="btn btn-sm"
+          class={`${ctl.btn} ${ctl.btnSm}`}
           data-action={`discard-${what}`}
           disabled={!dirty}
           onClick={onDiscard}
@@ -44,7 +45,7 @@ export default function DraftFooter({
         </button>
         <button
           type="button"
-          class="btn btn-sm btn-primary"
+          class={`${ctl.btn} ${ctl.btnSm} ${ctl.btnPrimary}`}
           data-action={`save-${what}`}
           disabled={!dirty || saving}
           onClick={onSave}

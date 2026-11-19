@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { collections, loading, error } from '../store.js';
 import { showCreateModal } from './Sidebar.jsx';
+import ctl from '../../ui/controls.module.css';
 
 // State-aware empty state for the Dataset Management main pane, shown when no
 // collection is selected in the default (collection) view. Because
@@ -28,7 +29,7 @@ export default function CollectionEmptyState({ connected }: { connected: boolean
           Master Data Hub keeps your reference data in collections you can browse and query. This
           organization doesn't have any yet.
         </p>
-        <button class="btn btn-success" onClick={() => showCreateModal()}>
+        <button class={`${ctl.btn} ${ctl.btnSuccess}`} onClick={() => showCreateModal()}>
           Create collection
         </button>
       </div>

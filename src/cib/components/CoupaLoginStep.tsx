@@ -5,6 +5,7 @@ import { h, Fragment } from 'preact';
 import { loginPanel } from '../view.js';
 import type { LoginRoute } from '../view.js';
 import styles from './App.module.css';
+import ctl from '../../ui/controls.module.css';
 
 export default function CoupaLoginStep({
   route,
@@ -41,7 +42,7 @@ export default function CoupaLoginStep({
     </label>
   );
   const remove = (
-    <button type="button" class="btn" disabled={busy} onClick={onRemove}>
+    <button type="button" class={ctl.btn} disabled={busy} onClick={onRemove}>
       Remove check function
     </button>
   );
@@ -83,7 +84,12 @@ export default function CoupaLoginStep({
             HTTPS hosts.
             <span class={styles.hint}>Until it exists, Check logs in from this browser.</span>
           </span>
-          <button type="button" class="btn btn-primary" disabled={busy} onClick={onCreate}>
+          <button
+            type="button"
+            class={`${ctl.btn} ${ctl.btnPrimary}`}
+            disabled={busy}
+            onClick={onCreate}
+          >
             Create check function
           </button>
         </div>

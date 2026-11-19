@@ -2,6 +2,7 @@ import { h, type ComponentChildren } from 'preact';
 import { panelWide, setPanelWide } from './panels.js';
 import Icon from './icons.jsx';
 import s from './Builder.module.css';
+import ctl from '../../ui/controls.module.css';
 
 // Every right panel's header: its title, the switch between 400px and wide, and ✕.
 export default function PanelHead({
@@ -21,7 +22,7 @@ export default function PanelHead({
       <h4 class={(mono ? s.mono + ' ' : '') + s.inspTitle}>{title}</h4>
       <button
         type="button"
-        class={'icon-btn ' + s.wideBtn}
+        class={`${ctl.iconBtn} ${s.iconBtn} ` + s.wideBtn}
         data-action="panel-wide"
         aria-pressed={wide ? 'true' : 'false'}
         title={wide ? 'Narrow panel' : 'Wide panel'}
@@ -31,7 +32,7 @@ export default function PanelHead({
       </button>
       <button
         type="button"
-        class="icon-btn"
+        class={`${ctl.iconBtn} ${s.iconBtn}`}
         data-action={closeAction}
         title="Close (Esc)"
         onClick={onClose}

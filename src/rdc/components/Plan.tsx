@@ -13,6 +13,7 @@ import { LogLine } from './Log.jsx';
 import Wip from './Wip.jsx';
 import { explainRunError } from '../runs.js';
 import styles from './Deploy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 type Props = {
   project: RdcProject | null;
@@ -152,7 +153,7 @@ export default function Plan(props: Props) {
             {error}
           </span>
           <button
-            class="btn btn-secondary"
+            class={`${ctl.btn} ${ctl.btnSecondary}`}
             disabled={busy}
             onClick={() => setAttempt((a) => a + 1)}
           >
@@ -275,14 +276,14 @@ export default function Plan(props: Props) {
         </div>
       </div>
       <div class={styles.foot}>
-        <button class="btn btn-secondary" onClick={props.onBack}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={props.onBack}>
           Back
         </button>
         <span class={styles.sp}></span>
-        <button class="btn btn-secondary" onClick={props.onCancel}>
+        <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={props.onCancel}>
           Cancel
         </button>
-        <button class="btn btn-primary" disabled={!ready} onClick={props.onNext}>
+        <button class={`${ctl.btn} ${ctl.btnPrimary}`} disabled={!ready} onClick={props.onNext}>
           Review the changes
         </button>
       </div>

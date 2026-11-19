@@ -15,6 +15,7 @@ import { createScene } from '../scene.js';
 import Legend from './Legend.jsx';
 import NavGuide from './NavGuide.jsx';
 import DetailCard from './DetailCard.jsx';
+import ctl from '../../ui/controls.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -56,7 +57,7 @@ export default function App({ connected }: { connected: boolean | null }) {
           {error.value ||
             'Not connected — open a Rossum page and click Galaxy in the extension popup.'}
           {retryable.value && (
-            <button type="button" class="btn" onClick={() => initGalaxy()}>
+            <button type="button" class={ctl.btn} onClick={() => initGalaxy()}>
               Retry
             </button>
           )}
@@ -85,7 +86,7 @@ export default function App({ connected }: { connected: boolean | null }) {
           <div class="galaxy-error">
             <span>{error.value}</span>
             {retryable.value && (
-              <button type="button" class="btn" onClick={() => loadGraph()}>
+              <button type="button" class={ctl.btn} onClick={() => loadGraph()}>
                 Retry
               </button>
             )}

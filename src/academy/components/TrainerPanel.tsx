@@ -5,6 +5,7 @@ import { hmacSha256 } from '../../training/hmac.js';
 import { RECEIPT_KEY } from '../../training/receiptKey.js';
 import { track } from '../../usage/track.js';
 import css from '../Academy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 const sign = (msg: string) => hmacSha256(RECEIPT_KEY, msg);
 
@@ -34,7 +35,7 @@ export default function TrainerPanel() {
           setResult(null);
         }}
       />
-      <button type="button" class="btn btn-primary" onClick={check}>
+      <button type="button" class={`${ctl.btn} ${ctl.btnPrimary}`} onClick={check}>
         Check
       </button>
       {/* Naming the person is safe only because canonicalString SIGNS the username. */}

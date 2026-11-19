@@ -1,3 +1,14 @@
+/* Hooks for the shared buttons (src/ui/controls.module.css), so this module's rules can name
+   them in context (.root .iconBtn:disabled, .wsName .btnLink, …): an element carries
+   `ctl.iconBtn` for the look and `s.iconBtn` for these rules. Empty on purpose — not
+   `composes`, which would pull controls.module.css's rules down to this module's place in
+   app.css, after the modules that must win a tie against them. */
+.iconBtn {
+}
+
+.btnLink {
+}
+
 .root {
   position: relative;
   min-height: 0;
@@ -121,8 +132,8 @@
   font-weight: 600;
 }
 
-.wsName :global(.btn-link),
-.groupTitle :global(.btn-link) {
+.wsName .btnLink,
+.groupTitle .btnLink {
   font-size: 11px;
   font-weight: 400;
   text-transform: none;
@@ -462,7 +473,7 @@
   text-decoration: none;
 }
 
-.root :global(.icon-btn:disabled) {
+.root .iconBtn:disabled {
   opacity: 0.3;
   cursor: default;
 }
@@ -1377,7 +1388,7 @@
   color: var(--text-secondary);
 }
 
-.engineList .engineRow :global(.icon-btn) {
+.engineList .engineRow .iconBtn {
   flex: none;
   margin-left: auto;
 }

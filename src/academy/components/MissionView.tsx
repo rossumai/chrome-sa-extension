@@ -7,6 +7,7 @@ import TaskCard from './TaskCard.jsx';
 import CopyName from './CopyName.jsx';
 import BuildBoard from './BuildBoard.jsx';
 import css from '../Academy.module.css';
+import ctl from '../../ui/controls.module.css';
 
 function downloadCsv() {
   const url = URL.createObjectURL(new Blob([vendorsCsv()], { type: 'text/csv' }));
@@ -43,7 +44,7 @@ export default function MissionView({
         <div class={css.mactions}>
           <button
             type="button"
-            class="btn"
+            class={ctl.btn}
             disabled={store.checking.value}
             onClick={() => store.checkNow()}
           >
@@ -51,7 +52,7 @@ export default function MissionView({
           </button>
           <button
             type="button"
-            class="btn btn-primary"
+            class={`${ctl.btn} ${ctl.btnPrimary}`}
             // Always Documents, the way into every queue (Rossum has no /queues page): the
             // trainee finds their own way from there.
             onClick={() => store.openInRossum('/documents')}
@@ -96,7 +97,7 @@ export default function MissionView({
           </p>
           <button
             type="button"
-            class="btn btn-primary"
+            class={`${ctl.btn} ${ctl.btnPrimary}`}
             onClick={() => {
               store.selectedMission.value = next ? next.id : 'handover';
             }}
