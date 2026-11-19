@@ -75,6 +75,7 @@ import IndexPanel from '../src/mdh/components/IndexPanel.jsx';
 import Modal from '../src/mdh/components/Modal.jsx';
 import mstyles from '../src/ui/Modal.module.css';
 import { selectedCollection, activePanel, loading, error, opNotice } from '../src/mdh/store.js';
+import seg from '../src/ui/Segmented.module.css';
 
 const writeText = vi.fn().mockResolvedValue(undefined);
 
@@ -335,7 +336,7 @@ describe('IndexPanel — presets', () => {
     const root = mountWithModal();
     await vi.waitFor(() => expect(cardByName(root, '_id_')).toBeTruthy());
     await openCreate(root);
-    expect(root.querySelector('[data-testid="index-preset-row"]')!.className).toContain('seg-tabs');
+    expect(root.querySelector('[data-testid="index-preset-row"]')!.className).toContain(seg.tabs);
   });
 
   // A wildcard index already covers every single field, so offering a

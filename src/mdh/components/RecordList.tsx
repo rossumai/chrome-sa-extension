@@ -23,6 +23,7 @@ import { ALT_KEY } from '../platform.js';
 import type { SortFilterControls } from '../hooks/usePipeline.js';
 import type { PaginationWindow } from '../pipelineOps.js';
 import ctl from '../../ui/controls.module.css';
+import seg from '../../ui/Segmented.module.css';
 
 export default function RecordList({
   records,
@@ -481,12 +482,12 @@ const VIEW_OPTIONS = [
 // (replaces the old "View: ▾" dropdown that took two clicks).
 function ViewSwitch({ view, changeView }: { view?: string; changeView: (v: string) => void }) {
   return (
-    <div class="view-seg" role="group" title="Results view">
+    <div class={seg.root} role="group" title="Results view">
       {VIEW_OPTIONS.map((o) => (
         <button
           key={o.value}
           type="button"
-          class={'view-seg-opt' + (view === o.value ? ' is-on' : '')}
+          class={seg.opt + (view === o.value ? ` ${seg.on}` : '')}
           aria-pressed={view === o.value}
           onClick={() => changeView(o.value)}
         >

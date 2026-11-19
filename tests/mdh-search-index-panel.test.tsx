@@ -75,6 +75,7 @@ import SearchIndexPanel from '../src/mdh/components/SearchIndexPanel.jsx';
 import { selectedCollection, activePanel, loading, error } from '../src/mdh/store.js';
 import { defaultPreset } from '../src/mdh/searchIndexPresets.js';
 import ctl from '../src/ui/controls.module.css';
+import seg from '../src/ui/Segmented.module.css';
 
 const writeText = vi.fn().mockResolvedValue(undefined);
 
@@ -454,7 +455,7 @@ describe('SearchIndexPanel — presets', () => {
     const root = mount();
     await Promise.resolve();
     await openCreate(root);
-    expect(root.querySelector('[data-testid="preset-row"]')!.className).toContain('seg-tabs');
+    expect(root.querySelector('[data-testid="preset-row"]')!.className).toContain(seg.tabs);
   });
 
   it('offers both presets in create mode', async () => {

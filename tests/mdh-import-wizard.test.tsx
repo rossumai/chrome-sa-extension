@@ -47,6 +47,7 @@ import { selectedCollection } from '../src/mdh/store.js';
 import ImportWizard from '../src/mdh/components/ImportWizard.jsx';
 import * as api from '../src/mdh/api.js';
 import { runChunkedInsert } from '../src/mdh/importFile.js';
+import seg from '../src/ui/Segmented.module.css';
 
 function mount(vnode: any) {
   const el = document.createElement('div');
@@ -114,7 +115,7 @@ describe('ImportWizard — source toggle + detection', () => {
 
   it('switches to Clipboard, shows the JSON editor + Next, and blocks empty input', async () => {
     const root = mount(<ImportWizard onSuccess={() => {}} />);
-    const clip = [...root.querySelectorAll('.csv-seg-opt')].find(
+    const clip = [...root.querySelectorAll('.' + seg.csvOpt)].find(
       (b) => b.textContent.trim() === 'Clipboard',
     );
     (clip as HTMLElement).click();
@@ -177,7 +178,7 @@ describe('ImportWizard routing', () => {
     // Switch to Replace mode
     const modeReplace = [
       ...root.querySelectorAll(
-        '[data-testid="import-mode"] button, [aria-label="Import mode"] button, .csv-seg-opt',
+        '[data-testid="import-mode"] button, [aria-label="Import mode"] button, .' + seg.csvOpt,
       ),
     ].find((b) => b.textContent.trim() === 'Replace');
     expect(modeReplace).toBeTruthy();
@@ -217,7 +218,7 @@ describe('ImportWizard routing', () => {
     const root = mount(<ImportWizard onSuccess={vi.fn()} />);
     await toDecideViaFile(root, docs);
 
-    const modeUpdate = [...root.querySelectorAll('.csv-seg-opt')].find(
+    const modeUpdate = [...root.querySelectorAll('.' + seg.csvOpt)].find(
       (b) => b.textContent.trim() === 'Update',
     );
     (modeUpdate as HTMLElement).click();
@@ -274,7 +275,7 @@ describe('ImportWizard routing', () => {
     await toDecideViaFile(root, [{ _id: '1', name: 'Foo' }]);
 
     const modeReplace = [
-      ...root.querySelectorAll('[data-testid="import-mode"] button, .csv-seg-opt'),
+      ...root.querySelectorAll('[data-testid="import-mode"] button, .' + seg.csvOpt),
     ].find((b) => b.textContent.trim() === 'Replace');
     (modeReplace as HTMLElement).click();
     const goBtn = await waitFor(() => {
@@ -344,7 +345,7 @@ describe('ImportWizard — back navigation', () => {
       const b = [...root.querySelectorAll('[data-testid="import-mode"] button')].find(
         (btn) => btn.textContent.trim() === 'Replace',
       );
-      return b!.classList.contains('is-on') ? b : null;
+      return b!.classList.contains(seg.on) ? b : null;
     });
 
     const back = await waitFor(() => root.querySelector('[data-testid="import-back"]'));
@@ -357,14 +358,14 @@ describe('ImportWizard — back navigation', () => {
     const restoredReplace = [...root.querySelectorAll('[data-testid="import-mode"] button')].find(
       (b) => b.textContent.trim() === 'Replace',
     )!;
-    expect(restoredReplace.classList.contains('is-on')).toBe(true);
+    expect(restoredReplace.classList.contains(seg.on)).toBe(true);
     expect(restoredReplace.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('clipboard round-trip: submitted text is restored after Back', async () => {
     const root = mount(<ImportWizard onSuccess={vi.fn()} />);
     (
-      [...root.querySelectorAll('.csv-seg-opt')].find(
+      [...root.querySelectorAll('.' + seg.csvOpt)].find(
         (b) => b.textContent.trim() === 'Clipboard',
       ) as HTMLElement
     ).click();
@@ -389,7 +390,7 @@ describe('ImportWizard — Decide screen', () => {
     pick(root, file('sku,name\nA1,Foo\n', 'rows.csv'));
     await waitFor(() => root.querySelector('[data-testid="parse-strip"]'));
 
-    const modeUpdate = [...root.querySelectorAll('.csv-seg-opt')].find(
+    const modeUpdate = [...root.querySelectorAll('.' + seg.csvOpt)].find(
       (b) => b.textContent.trim() === 'Update',
     );
     (modeUpdate as HTMLElement).click();
@@ -419,7 +420,7 @@ describe('ImportWizard — Decide screen', () => {
   it('clipboard JSON renders a compact JsonPreview instead of the CSV table', async () => {
     const root = mount(<ImportWizard onSuccess={vi.fn()} />);
     (
-      [...root.querySelectorAll('.csv-seg-opt')].find(
+      [...root.querySelectorAll('.' + seg.csvOpt)].find(
         (b) => b.textContent.trim() === 'Clipboard',
       ) as HTMLElement
     ).click();
@@ -488,7 +489,7 @@ describe('ImportWizard — restore', () => {
 describe('ImportWizard — the paste label is grouped with its editor', () => {
   it('keeps the label and the JSON editor inside one field', async () => {
     const root = mount(<ImportWizard onSuccess={() => {}} />);
-    const clip = [...root.querySelectorAll('.csv-seg-opt')].find(
+    const clip = [...root.querySelectorAll('.' + seg.csvOpt)].find(
       (b) => b.textContent.trim() === 'Clipboard',
     ) as HTMLElement;
     clip.click();

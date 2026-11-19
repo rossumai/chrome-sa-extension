@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import StatsFieldCard from './StatsFieldCard.jsx';
+import seg from '../../ui/Segmented.module.css';
 
 const SORTS = [
   ['issues', 'Issues first'],
@@ -56,11 +57,11 @@ export default function StatsFieldGrid({
           value={filter}
           onInput={(e: any) => setFilter(e.target.value)}
         />
-        <span class="view-seg">
+        <span class={seg.root}>
           {SORTS.map(([k, label]) => (
             <button
               type="button"
-              class={`view-seg-opt${sort === k ? ' is-on' : ''}`}
+              class={`${seg.opt}${sort === k ? ` ${seg.on}` : ''}`}
               onClick={() => setSort(k)}
             >
               {label}

@@ -1,0 +1,143 @@
+/* Segmented controls: one click switches between a few options. Moved from the global
+   src/mdh/legacy.css, rules in their original relative order.
+
+   .root / .opt — the results-view switch (List / Table / Stages) and its kin; options in
+   --text-primary. .csv / .csvOpt — the import wizard's pill group, options in
+   --text-secondary, with two variants on the container: .tabs (left-aligned tabs with an
+   accent underline) and .quiet (no frame, a card-coloured chip for the selected option).
+   .on marks the selected option of either. The two families are kept apart as found. */
+
+.root {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.opt {
+  padding: 4px 9px;
+  font-size: 11px;
+  font-family: inherit;
+  line-height: 1.4;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.opt:last-child {
+  border-right: none;
+}
+
+.opt:hover {
+  background: var(--bg-hover);
+}
+
+.opt.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+.opt.on:hover {
+  background: var(--accent);
+}
+
+.opt:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.opt:disabled:hover {
+  background: var(--bg-card);
+}
+
+.csv {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.csvOpt {
+  padding: 4px 9px;
+  font-size: 11px;
+  font-family: inherit;
+  line-height: 1.4;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.csvOpt:last-child {
+  border-right: none;
+}
+
+.csvOpt.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Tab-bar variant, for the top-level Import source (File/Clipboard) and mode
+   (Insert/Update/Replace) switchers. Left-aligned tabs with an accent underline — reads as
+   intentional tabs, not a cramped pill. */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  overflow: visible;
+}
+
+.tabs .csvOpt {
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 7px 14px;
+  font-size: 12px;
+  border-radius: 0;
+}
+
+.tabs .csvOpt:hover:not(.on) {
+  color: var(--text-primary);
+}
+
+.tabs .csvOpt.on {
+  background: transparent;
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* Quiet variant: no frame, and the selected option is a card-coloured chip rather than an
+   accent fill, for a switch that sits inside dense content. */
+.quiet {
+  gap: 2px;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.quiet .csvOpt {
+  border: none;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: none;
+  color: var(--text-secondary);
+}
+
+.quiet .csvOpt.on {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.quiet .csvOpt:disabled {
+  cursor: default;
+  opacity: 0.5;
+}

@@ -16,6 +16,7 @@ import {
 } from '../store.js';
 import EmptyStageExplain from './EmptyStageExplain.jsx';
 import { firstEmptyStage, explainSignature } from '../agent/explainEmpty.js';
+import seg from '../../ui/Segmented.module.css';
 
 const SLOW_QUERY_MS = 1000;
 const HIGHLIGHT_MS = 1600; // ≥ the .pipeline-inspect-flash animation (1.5s) so the class outlasts it
@@ -255,12 +256,12 @@ export default function StagesView({
       <div class="pipeline-inspect-opts">
         <div class="pipeline-inspect-opt">
           <span class="pipeline-inspect-opt-label">Records per stage</span>
-          <div class="view-seg" role="group" aria-label="Records per stage">
+          <div class={seg.root} role="group" aria-label="Records per stage">
             {STAGE_SAMPLE_SIZES.map((n) => (
               <button
                 key={n}
                 type="button"
-                class={'view-seg-opt' + (sampleSize === n ? ' is-on' : '')}
+                class={seg.opt + (sampleSize === n ? ` ${seg.on}` : '')}
                 aria-pressed={sampleSize === n}
                 onClick={() => {
                   stagesSampleSize.value = n;

@@ -1,6 +1,7 @@
 import { h, Fragment } from 'preact';
 import { getEjsonType, formatEjsonValue } from '../displayValue.js';
 import { getByPath, hasByPath } from '../flatten.js';
+import seg from '../../ui/Segmented.module.css';
 
 // Shared presentational controls for the MDH import/export wizards (Segmented
 // pill group, Toggle switch, CsvPreview table). Extracted from the former
@@ -30,7 +31,7 @@ export function Segmented({
 }) {
   return (
     <span
-      class={`csv-seg${tabs ? ' seg-tabs' : ''}${quiet ? ' seg-quiet' : ''}`}
+      class={`${seg.csv}${tabs ? ' ' + seg.tabs : ''}${quiet ? ' ' + seg.quiet : ''}`}
       role="group"
       aria-label={ariaLabel}
       data-testid={testid}
@@ -39,7 +40,7 @@ export function Segmented({
         <button
           key={o.value}
           type="button"
-          class={`csv-seg-opt${o.value === value ? ' is-on' : ''}`}
+          class={`${seg.csvOpt}${o.value === value ? ' ' + seg.on : ''}`}
           title={o.title}
           data-testid={o.testid}
           aria-pressed={o.value === value}

@@ -37,6 +37,7 @@ import {
   resultsView,
   inspectTarget,
 } from '../src/mdh/store.js';
+import seg from '../src/ui/Segmented.module.css';
 
 const pagination = { hasPrev: () => false, hasNext: () => false, page: () => 1 };
 
@@ -90,9 +91,9 @@ describe('RecordList view switch', () => {
   it('renders a 3-way segmented switch and switches to Table in one click', async () => {
     const root = renderList();
     expect(root.querySelector('.view-toggle')).toBeNull();
-    const seg = root.querySelector('.view-seg');
-    expect(seg).not.toBeNull();
-    const tableOpt = [...seg!.querySelectorAll('.view-seg-opt')].find(
+    const group = root.querySelector('.' + seg.root);
+    expect(group).not.toBeNull();
+    const tableOpt = [...group!.querySelectorAll('.' + seg.opt)].find(
       (b) => b.textContent.trim() === 'Table',
     );
     expect(tableOpt).toBeTruthy();
@@ -105,7 +106,7 @@ describe('RecordList view switch', () => {
 
   it('offers exactly List / Table / Stages (no JSON)', () => {
     const root = renderList();
-    const labels = [...root.querySelectorAll('.view-seg-opt')].map((b) => b.textContent.trim());
+    const labels = [...root.querySelectorAll('.' + seg.opt)].map((b) => b.textContent.trim());
     expect(labels).toEqual(['List', 'Table', 'Stages']);
   });
 
@@ -114,7 +115,7 @@ describe('RecordList view switch', () => {
       cb({ mdhResultsView: 'json' }) as any as any) as any;
     const root = renderList();
     await act(() => {});
-    const active = root.querySelector('.view-seg-opt.is-on');
+    const active = root.querySelector('.' + seg.opt + '.' + seg.on);
     expect(active).toBeTruthy();
     expect(active!.textContent.trim()).toBe('List');
     expect(root.querySelector('table.record-table')).toBeNull();
@@ -137,7 +138,7 @@ describe('RecordList — stages view', () => {
 
   it('switches to the Stages view in one click via the segmented switch', async () => {
     const root = renderList();
-    const stagesOpt = [...root.querySelectorAll('.view-seg-opt')].find(
+    const stagesOpt = [...root.querySelectorAll('.' + seg.opt)].find(
       (b) => b.textContent.trim() === 'Stages',
     );
     expect(stagesOpt).toBeTruthy();
@@ -172,7 +173,7 @@ describe('RecordList — stages view', () => {
       expect((g.getAttribute('title') || '').toLowerCase()).toContain('stages view');
     }
     // The View switch stays enabled (not inside a disabled group).
-    const stagesOpt = [...root.querySelectorAll('.view-seg-opt')].find(
+    const stagesOpt = [...root.querySelectorAll('.' + seg.opt)].find(
       (b) => b.textContent.trim() === 'Stages',
     );
     expect(stagesOpt).toBeTruthy();

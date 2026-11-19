@@ -2,6 +2,7 @@
 // dist/console/app.css: they used to sit in the global sheet, ahead of every module, and every
 // other module's rule must still win a tie against them. Keep these the first imports.
 import '../ui/controls.module.css';
+import '../ui/Segmented.module.css';
 import { h, render } from 'preact';
 import { effect } from '@preact/signals';
 import { activeApp, experimentalUnlocked, connectedOrg } from './store.js';

@@ -41,6 +41,7 @@ import StatsSummary from './StatsSummary.jsx';
 import StatsSchema from './StatsSchema.jsx';
 import StatsFieldGrid from './StatsFieldGrid.jsx';
 import ctl from '../../ui/controls.module.css';
+import seg from '../../ui/Segmented.module.css';
 
 export default function StatsPanel() {
   const [overview, setOverview] = useState<any>(null); // { total, fieldCount }
@@ -384,7 +385,7 @@ export default function StatsPanel() {
     <div class="panel stats-panel">
       <div class="toolbar">
         <span style="flex:1;font-weight:500">Collection Stats</span>
-        <span class="view-seg stats-mode-seg" role="group" aria-label="Analysis mode">
+        <span class={`${seg.root} stats-mode-seg`} role="group" aria-label="Analysis mode">
           {STATS_MODES.map((m) => {
             // Only Sample can ever be the disabled one: a collection that
             // fits the budgets is read in full regardless of mode, so there
@@ -394,7 +395,7 @@ export default function StatsPanel() {
               <button
                 key={m}
                 type="button"
-                class={`view-seg-opt${shownMode === m ? ' is-on' : ''}`}
+                class={`${seg.opt}${shownMode === m ? ` ${seg.on}` : ''}`}
                 aria-pressed={shownMode === m}
                 disabled={isDisabled}
                 title={

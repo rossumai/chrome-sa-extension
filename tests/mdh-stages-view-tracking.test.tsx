@@ -41,6 +41,7 @@ import {
   resultsView,
   inspectTarget,
 } from '../src/mdh/store.js';
+import seg from '../src/ui/Segmented.module.css';
 
 const pagination = { hasPrev: () => false, hasNext: () => false, page: () => 1 };
 
@@ -79,7 +80,7 @@ function renderList() {
 
 const clickView = (root: any, label: any) =>
   act(() => {
-    const btn = [...root.querySelectorAll('.view-seg-opt')].find(
+    const btn = [...root.querySelectorAll('.' + seg.opt)].find(
       (b) => b.textContent.trim() === label,
     );
     if (!btn) throw new Error(`no "${label}" view button`);

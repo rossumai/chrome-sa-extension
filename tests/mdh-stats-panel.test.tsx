@@ -20,6 +20,7 @@ import {
 } from '../src/mdh/statsPipelines.js';
 import { assembleSampledStats } from '../src/mdh/statsCompute.js';
 import { prefetchForPanel } from '../src/mdh/prefetch.js';
+import seg from '../src/ui/Segmented.module.css';
 
 function pipelinesSent() {
   return vi.mocked(api.aggregate).mock.calls.map((c) => c[1]);
@@ -144,7 +145,7 @@ describe('the analysis-mode control', () => {
   it('offers both modes and marks the stored mode active on a large collection', async () => {
     const root = mount();
     await settle();
-    const opts = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')] as HTMLButtonElement[];
+    const opts = [...root.querySelectorAll('.stats-mode-seg .' + seg.opt)] as HTMLButtonElement[];
     expect(opts.map((o) => o.textContent)).toEqual(['Sample', 'Exact']);
     expect(opts.find((o) => o.getAttribute('aria-pressed') === 'true')!.textContent).toBe('Sample');
     expect(opts.every((o) => !o.disabled)).toBe(true);
@@ -153,7 +154,7 @@ describe('the analysis-mode control', () => {
   it('writes the signal and re-runs when a different mode is chosen', async () => {
     const root = mount();
     await settle();
-    const opts = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')];
+    const opts = [...root.querySelectorAll('.stats-mode-seg .' + seg.opt)];
     (opts.find((o) => o.textContent === 'Exact') as HTMLButtonElement).click();
     expect(statsMode.value).toBe(STATS_MODE_EXACT);
   });
@@ -164,7 +165,7 @@ describe('the analysis-mode control', () => {
     // state against an empty cache.
     const root = mount();
     await settle();
-    const opts = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')];
+    const opts = [...root.querySelectorAll('.stats-mode-seg .' + seg.opt)];
     (opts.find((o) => o.textContent === 'Sample') as HTMLButtonElement).click();
     expect(cache.get('example', 'statsFields')).not.toBeNull();
     expect(cache.get('example', 'totalCount')).not.toBeNull();
@@ -174,7 +175,7 @@ describe('the analysis-mode control', () => {
     mockCollection(SMALL_TOTAL);
     const root = mount();
     await settle();
-    const opts = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')] as HTMLButtonElement[];
+    const opts = [...root.querySelectorAll('.stats-mode-seg .' + seg.opt)] as HTMLButtonElement[];
     const sampleBtn = opts.find((o) => o.textContent === 'Sample')!;
     const exactBtn = opts.find((o) => o.textContent === 'Exact')!;
     expect(exactBtn.getAttribute('aria-pressed')).toBe('true');
@@ -205,7 +206,7 @@ describe('the analysis-mode control', () => {
     await vi.waitFor(() =>
       expect(pipelinesSent().some((p) => p.some((st) => st.$facet))).toBe(true),
     );
-    const sampleBtn = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')].find(
+    const sampleBtn = [...root.querySelectorAll('.stats-mode-seg .' + seg.opt)].find(
       (o) => o.textContent === 'Sample',
     ) as HTMLButtonElement;
     expect(sampleBtn.disabled).toBe(true);
@@ -218,7 +219,7 @@ describe('the analysis-mode control', () => {
     statsMode.value = STATS_MODE_EXACT;
     const root = mount();
     await settle();
-    const opts = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')] as HTMLButtonElement[];
+    const opts = [...root.querySelectorAll('.stats-mode-seg .' + seg.opt)] as HTMLButtonElement[];
     const sampleBtn = opts.find((o) => o.textContent === 'Sample')!;
     const exactBtn = opts.find((o) => o.textContent === 'Exact')!;
     expect(exactBtn.getAttribute('aria-pressed')).toBe('true');
@@ -229,7 +230,7 @@ describe('the analysis-mode control', () => {
     mockCollection(SMALL_TOTAL);
     const root = mount();
     await settle();
-    let opts = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')] as HTMLButtonElement[];
+    let opts = [...root.querySelectorAll('.stats-mode-seg .' + seg.opt)] as HTMLButtonElement[];
     expect(opts.find((o) => o.getAttribute('aria-pressed') === 'true')!.textContent).toBe('Exact');
 
     vi.mocked(api.aggregate).mockReset();
@@ -237,7 +238,7 @@ describe('the analysis-mode control', () => {
     selectedCollection.value = 'other-example';
     await settle();
 
-    opts = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')] as HTMLButtonElement[];
+    opts = [...root.querySelectorAll('.stats-mode-seg .' + seg.opt)] as HTMLButtonElement[];
     const sampleBtn = opts.find((o) => o.textContent === 'Sample')!;
     expect(sampleBtn.getAttribute('aria-pressed')).toBe('true');
     expect(sampleBtn.disabled).toBe(false);
@@ -270,7 +271,7 @@ describe('the analysis-mode control', () => {
     await vi.waitFor(() =>
       expect(vi.mocked(api.aggregate).mock.calls.length).toBeGreaterThanOrEqual(1),
     );
-    const opts = [...root.querySelectorAll('.stats-mode-seg .view-seg-opt')] as HTMLButtonElement[];
+    const opts = [...root.querySelectorAll('.stats-mode-seg .' + seg.opt)] as HTMLButtonElement[];
     expect(opts).toHaveLength(2);
     expect(opts.every((o) => !o.disabled)).toBe(true);
     expect(opts.find((o) => o.getAttribute('aria-pressed') === 'true')!.textContent).toBe('Sample');
