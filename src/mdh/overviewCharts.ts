@@ -12,7 +12,7 @@ export const TOP_N = 14;
 export const SCALE_MODES = ['linear', 'sqrt', 'log'];
 
 // Color scale stops for index overhead: data-heavy (blue) → teal → index-heavy
-// (yellow). Kept in sync with the legend gradient in console.css (.oc-legend-bar).
+// (yellow). Kept in sync with the legend gradient in src/mdh/legacy.css (.oc-legend-bar).
 const SCALE_STOPS: [Rgb, Rgb, Rgb] = [
   [66, 112, 219], // #4270db blue (data-heavy)
   [25, 184, 154], // #19b89a teal

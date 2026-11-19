@@ -8,9 +8,12 @@
    names never do, so a hyphenated class can never collide with one
    (tests/css-class-collision-boundary.test.ts).
 
-   build.js concatenates the Console's partials (CONSOLE_GLOBAL_PARTS) into
-   dist/console/console.base.css in a fixed order, so moving a rule to another partial moves it
-   in the cascade. */
+   build.js assembles dist/console/console.base.css from the Console's partials
+   (CONSOLE_GLOBAL_PARTS): each "@order N" comment starts a segment, and the segments of every
+   partial are emitted by N, which is the original rule order of the former monolith. A rule's
+   place in the cascade is its segment's N, not the file it sits in. */
+
+/* @order 38 */
 
 /* ============================================================
    Annotation Inspector
@@ -26,6 +29,8 @@
 .inspector-report {
   max-width: 1080px;
 }
+
+/* @order 40 */
 
 .inspector-loading {
   color: var(--text-secondary);
@@ -620,6 +625,8 @@
   white-space: pre;
 }
 
+/* @order 42 */
+
 /* reliability badges */
 .inspector-rb {
   font-size: 10px;
@@ -956,6 +963,8 @@
   padding: 12px 16px;
 }
 
+/* @order 44 */
+
 .inspector-sst {
   margin-left: auto;
   font-size: 10.5px;
@@ -1012,6 +1021,8 @@
 .inspector-followup {
   margin-bottom: 8px;
 }
+
+/* @order 46 */
 
 /* The ask input is now <FabryInput size="sm">; the sizing lives in aiInput.module.css.
    .inspector-ask only supplies the panel spacing now. */
@@ -1155,6 +1166,8 @@
   margin-bottom: 8px;
   color: var(--diag-fg);
 }
+
+/* @order 48 */
 
 .inspector-diag-phase {
   margin-left: auto;

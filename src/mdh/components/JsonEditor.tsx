@@ -548,7 +548,8 @@ export default function JsonEditor({
         //
         // The INTERSECTION of the container and CodeMirror's scroller, because
         // which of the two clips depends on the layout: in the data panel the
-        // outer `.json-editor` is the scroller (console.css:408) and
+        // outer `.json-editor` is the scroller (`.data-panel-left .json-editor`
+        // in src/mdh/legacy.css) and
         // `.cm-scroller`'s rect is the full content height, so the container
         // wins; if a layout ever makes `.cm-scroller` the scroller, its rect is
         // the tighter one and wins instead. null before mount.
@@ -586,7 +587,8 @@ export default function JsonEditor({
           // Animated rather than CodeMirror's scrollIntoView effect, which has no
           // behaviour option and always teleports. That means computing the
           // target ourselves — and scrolling the element that ACTUALLY scrolls:
-          // `.cm-scroller` has zero range in this layout (console.css:408 makes
+          // `.cm-scroller` has zero range in this layout (`.data-panel-left
+          // .json-editor` in src/mdh/legacy.css makes
           // the outer `.json-editor` the scroller, and the generic
           // `.json-editor .cm-editor { flex: 1 }` has no `min-height: 0`, so
           // `.cm-scroller`'s `height: 100%` never resolves). Writing

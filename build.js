@@ -2,12 +2,13 @@ const esbuild = require('esbuild');
 const { execSync } = require('child_process');
 const { cpSync, existsSync, rmSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
 
-// The Console's global stylesheet, dist/console/console.base.css: these partials concatenated
-// in THIS order. They were split per area out of the former src/console/console.css monolith,
-// in its original rule order wherever the order could change which rule wins (proven when the
-// split landed, 2026-11-19), so the order here is part of the cascade: moving a rule to another
-// partial, or reordering this list, can change what the Console looks like. Each area's partial
-// goes when that area moves to CSS Modules; tokens.css stays.
+// The Console's global stylesheet, dist/console/console.base.css, is assembled from these
+// partials, split per area out of the former src/console/console.css monolith. Each
+// `/* @order N */` comment in a partial starts a segment, and consoleBaseCss() emits the
+// segments of every partial by N — the monolith's original rule order — so Chrome's CSSOM is
+// rule-for-rule the monolith's (proven when the split landed, 2026-11-19). The order of this
+// list does not matter; a rule's N does. Each area's partial goes when that area moves to CSS
+// Modules; tokens.css stays.
 // Exported for tests/console-css-split.test.ts, which requires this file without building.
 const CONSOLE_GLOBAL_PARTS = [
   'src/console/tokens.css',
@@ -19,7 +20,17 @@ const CONSOLE_GLOBAL_PARTS = [
   'src/inspector/legacy.css',
   'src/fabry/legacy.css',
 ];
-module.exports = { CONSOLE_GLOBAL_PARTS };
+// Text before a partial's first marker (its header comment) is not emitted.
+function consoleBaseCss() {
+  const segments = [];
+  for (const part of CONSOLE_GLOBAL_PARTS) {
+    for (const seg of readFileSync(part, 'utf8').split(/(?=\/\* @order \d+ \*\/)/).slice(1)) {
+      segments.push({ n: Number(/\d+/.exec(seg)[0]), seg });
+    }
+  }
+  return segments.sort((a, b) => a.n - b.n).map((s) => s.seg).join('');
+}
+module.exports = { CONSOLE_GLOBAL_PARTS, consoleBaseCss };
 if (require.main !== module) return;
 
 const isWatch = process.argv.includes('--watch');
@@ -47,14 +58,12 @@ cpSync('icons', 'dist/icons', { recursive: true });
 cpSync('src/popup/popup.html', 'dist/popup/popup.html');
 cpSync('src/popup/popup.css', 'dist/popup/popup.css');
 cpSync('src/console/console.html', 'dist/console/console.html');
-// The LEGACY base stylesheet: the global partials (CONSOLE_GLOBAL_PARTS, above) concatenated.
+// The LEGACY base stylesheet: the global partials (CONSOLE_GLOBAL_PARTS, above), merged in
+// their original rule order by consoleBaseCss().
 // esbuild emits dist/console/app.css from imported CSS Modules (self-contained design-system
 // component styles). As areas migrate their rules into CSS Modules, console.base.css shrinks
 // to the tokens. console.html links both (base first, then the modules).
-writeFileSync(
-  'dist/console/console.base.css',
-  CONSOLE_GLOBAL_PARTS.map((p) => readFileSync(p, 'utf8')).join(''),
-);
+writeFileSync('dist/console/console.base.css', consoleBaseCss());
 cpSync('src/devtools/devtools.html', 'dist/devtools/devtools.html');
 cpSync('src/devtools/panel.html', 'dist/devtools/panel.html');
 cpSync('src/devtools/panel.css', 'dist/devtools/panel.css');

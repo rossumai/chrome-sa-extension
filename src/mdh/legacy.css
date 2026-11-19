@@ -8,9 +8,12 @@
    names never do, so a hyphenated class can never collide with one
    (tests/css-class-collision-boundary.test.ts).
 
-   build.js concatenates the Console's partials (CONSOLE_GLOBAL_PARTS) into
-   dist/console/console.base.css in a fixed order, so moving a rule to another partial moves it
-   in the cascade. */
+   build.js assembles dist/console/console.base.css from the Console's partials
+   (CONSOLE_GLOBAL_PARTS): each "@order N" comment starts a segment, and the segments of every
+   partial are emitted by N, which is the original rule order of the former monolith. A rule's
+   place in the cascade is its segment's N, not the file it sits in. */
+
+/* @order 5 */
 
 .sidebar {
   width: 260px;
@@ -260,6 +263,8 @@
   background: var(--accent);
 }
 
+/* @order 7 */
+
 .main-content {
   flex: 1;
   display: flex;
@@ -267,11 +272,15 @@
   overflow: hidden;
 }
 
+/* @order 9 */
+
 .cache-indicator {
   margin-left: auto;
   font-size: 10px;
   opacity: 0.5;
 }
+
+/* @order 11 */
 
 /* Non-error operation notice — same shape/placement as .error-banner. */
 .op-notice-banner {
@@ -314,6 +323,8 @@
   opacity: 1;
 }
 
+/* @order 13 */
+
 .loading-overlay {
   position: absolute;
   inset: 0;
@@ -349,6 +360,8 @@
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
+
+/* @order 15 */
 
 .tab-alert {
   display: inline-block;
@@ -466,6 +479,14 @@
   font-size: 11px;
   color: var(--accent);
   flex-shrink: 0;
+}
+
+.placeholder-input {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 2px 8px;
+  font-size: 12px;
 }
 
 .placeholder-type-select {
@@ -1125,11 +1146,20 @@
   flex: 1;
 }
 
+/* The name field in the Edit Search Index modal: the name is the resource
+   identity, so it is shown and not editable. */
+.input-locked {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
 .record-card-body {
   padding: 8px 12px 10px;
   border-top: 1px solid var(--border);
   background: var(--bg-code);
 }
+
+/* @order 17 */
 
 .json-tree-nested {
   padding-left: 18px;
@@ -1354,12 +1384,16 @@
   }
 }
 
+/* @order 19 */
+
 .pagination-hint {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-secondary);
   opacity: 0.75;
 }
+
+/* @order 21 */
 
 .split-pane-label {
   font-size: 11px;
@@ -1475,6 +1509,16 @@
   color: var(--warning-fg);
 }
 
+.btn-warning {
+  background: var(--warning);
+  border-color: var(--warning);
+  color: #fff;
+}
+
+.btn-warning:hover {
+  opacity: 0.85;
+}
+
 .index-list {
   flex: 1;
   overflow-y: auto;
@@ -1584,6 +1628,8 @@
   max-height: none;
 }
 
+/* @order 23 */
+
 .btn-success {
   background: var(--success);
   border-color: var(--success);
@@ -1594,6 +1640,8 @@
   background: var(--success-hover);
   border-color: var(--success-hover);
 }
+
+/* @order 25 */
 
 /* This extension's own collections: an expandable group pinned BELOW the customer's list
    (owner, 2026-08-18). `margin-top: auto` is what pins it — the sidebar is a flex column, so
@@ -1674,6 +1722,8 @@
   overscroll-behavior: none;
   background: var(--bg-hover);
 }
+
+/* @order 27 */
 
 .btn-success:disabled:hover {
   background: var(--success);
@@ -4436,6 +4486,8 @@ tbody.uploads-row-failed tr {
   border-bottom: 1px dotted var(--text-secondary);
 }
 
+/* @order 29 */
+
 .selection-mismatch-banner {
   background: var(--warning-bg);
   color: var(--warning-fg);
@@ -4498,6 +4550,8 @@ tbody.uploads-row-failed tr {
   gap: 8px;
 }
 
+/* @order 37 */
+
 /* Disable-stage feature: a tiny checkbox toggles each stage (checked = enabled).
    Small + muted by default so it doesn't draw the eye; brightens on hover. */
 .pipeline-stage-toggle {
@@ -4557,6 +4611,8 @@ tbody.uploads-row-failed tr {
   opacity: 0.55;
   font-style: italic;
 }
+
+/* @order 49 */
 
 /* .inspector-modal* migrated to the self-contained CSS Module
    src/ui/fabry/FabryTranscript.module.css (the only renderer of the transcript modal). */

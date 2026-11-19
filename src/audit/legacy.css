@@ -8,9 +8,12 @@
    names never do, so a hyphenated class can never collide with one
    (tests/css-class-collision-boundary.test.ts).
 
-   build.js concatenates the Console's partials (CONSOLE_GLOBAL_PARTS) into
-   dist/console/console.base.css in a fixed order, so moving a rule to another partial moves it
-   in the cascade. */
+   build.js assembles dist/console/console.base.css from the Console's partials
+   (CONSOLE_GLOBAL_PARTS): each "@order N" comment starts a segment, and the segments of every
+   partial are emitted by N, which is the original rule order of the former monolith. A rule's
+   place in the cascade is its segment's N, not the file it sits in. */
+
+/* @order 31 */
 
 /* ===================================================================== */
 /* Audit Log Viewer                                                      */
@@ -21,6 +24,8 @@
   font-size: 10px;
   opacity: 0.5;
 }
+
+/* @order 33 */
 
 /* Feature-unavailable view (audit endpoint refused with 403/404) */
 .unavailable-panel {
@@ -239,6 +244,8 @@
   text-align: right;
 }
 
+/* @order 35 */
+
 .type-pill {
   display: inline-block;
   padding: 1px 8px;
@@ -424,6 +431,8 @@
   padding: 24px 8px;
   text-align: center;
 }
+
+/* @order 50 */
 
 /* Audit — Mr. Fabry insights band (Inspector Diagnosis identity, attached above the filters).
    Collapsed: one line with a live preview. Expanded: chat-ordered thread, input last. */

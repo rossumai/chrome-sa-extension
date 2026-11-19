@@ -8,9 +8,12 @@
    names never do, so a hyphenated class can never collide with one
    (tests/css-class-collision-boundary.test.ts).
 
-   build.js concatenates the Console's partials (CONSOLE_GLOBAL_PARTS) into
-   dist/console/console.base.css in a fixed order, so moving a rule to another partial moves it
-   in the cascade. */
+   build.js assembles dist/console/console.base.css from the Console's partials
+   (CONSOLE_GLOBAL_PARTS): each "@order N" comment starts a segment, and the segments of every
+   partial are emitted by N, which is the original rule order of the former monolith. A rule's
+   place in the cascade is its segment's N, not the file it sits in. */
+
+/* @order 36 */
 
 /* ===================================================================== */
 /* Galaxy app (3D force-directed graph)                                  */

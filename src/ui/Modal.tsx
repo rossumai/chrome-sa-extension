@@ -2,7 +2,7 @@
 // MDH re-exports this; Fabry Architect uses confirmModal for deletes). Styling is
 // the self-contained CSS Module Modal.module.css; consumers compose modal content
 // with the presentational sub-components below (ModalBody / ModalActions / …) and
-// never reference the (now-scoped) class names. .btn-* live in console.css.
+// never reference the (now-scoped) class names. .btn-* live in src/console/legacy/shared.css.
 import { h, type ComponentChildren } from 'preact';
 import { signal } from '@preact/signals';
 import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
