@@ -137,7 +137,7 @@ export default function FabryPanel() {
             </span>{' '}
             Audit insights
           </span>
-          <span class={dg.credit}>by Mr. Fabry</span>
+          <span class={dg.credit + ' audit-fabry-credit'}>by Mr. Fabry</span>
           {!open && preview ? <span class="audit-fabry-preview">{'— ' + preview}</span> : null}
           {!open && preview && stale ? (
             <span class="audit-fabry-stale">{'· view changed'}</span>

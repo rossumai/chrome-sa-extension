@@ -64,7 +64,7 @@ export const auditLogs = {
     {
       key: 'timestamp',
       label: 'Timestamp',
-      cls: 'col-time mono',
+      cls: 'col-time ' + txt.mono,
       render: (r: any) => fmtTime(r.timestamp),
     },
     { key: 'username', label: 'User', cls: 'col-user', render: (r: any) => r.username || dash() },
@@ -79,19 +79,19 @@ export const auditLogs = {
     {
       key: 'action',
       label: 'Action',
-      cls: 'col-action mono',
+      cls: 'col-action ' + txt.mono,
       render: (r: any) => r.action || dash(),
     },
     {
       key: 'object',
       label: 'Object',
-      cls: 'col-id mono',
+      cls: 'col-id ' + txt.mono,
       render: (r: any, ctx: any) => objectLink(r, ctx),
     },
     {
       key: 'status',
       label: 'Status',
-      cls: 'col-status mono',
+      cls: 'col-status ' + txt.mono,
       render: (r: any) => {
         const s = r.content?.status_code;
         return <span class={statusClass(s)}>{s ?? '—'}</span>;
