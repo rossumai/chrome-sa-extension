@@ -4,6 +4,8 @@ import { domain, token } from '../store.js';
 import { isJson5NumberLiteral } from '../hooks/usePipeline.js';
 import { annotationIdFromInput } from '../../rossum/annotationUrl.js';
 import inp from '../../ui/Input.module.css';
+import pd from './PipelineDebug.module.css';
+import styles from './PlaceholderInputs.module.css';
 
 // True when the typed value can be matched as the given type (drives the
 // "won't match" hint). string / null / auto / undefined accept anything.
@@ -122,15 +124,15 @@ export default function PlaceholderInputs({
   }
 
   return (
-    <div class="placeholder-container">
-      <div class="placeholder-header">
-        <div class="placeholder-label">Variables</div>
-        <button class="placeholder-annotation-btn" onClick={() => setAnnotRow(!annotRow)}>
+    <div class={pd.placeholderContainer}>
+      <div class={pd.placeholderHeader}>
+        <div class={pd.placeholderLabel}>Variables</div>
+        <button class={pd.placeholderAnnotationBtn} onClick={() => setAnnotRow(!annotRow)}>
           Fill from Annotation
         </button>
       </div>
       {annotRow && (
-        <div class="placeholder-annotation-row">
+        <div class={pd.placeholderAnnotationRow}>
           <input
             class={`${inp.input} ${inp.inAnnotationRow}`}
             placeholder={'Annotation ID or URL\u2026'}
@@ -142,7 +144,7 @@ export default function PlaceholderInputs({
               setTimeout(() => loadAnnotation(e.target.value.trim()), 0);
             }}
           />
-          <span class="placeholder-annotation-status">{annotStatus}</span>
+          <span class={styles.placeholderAnnotationStatus}>{annotStatus}</span>
         </div>
       )}
       {names.map((name) => {
@@ -156,12 +158,12 @@ export default function PlaceholderInputs({
         const effective = override || rt.type; // override-first effective type, for the compat check
         const incompatible = value !== '' && !isCompatibleWithType(value, effective);
         return (
-          <div class="placeholder-row" key={name}>
-            <span class="placeholder-name">
+          <div class={styles.placeholderRow} key={name}>
+            <span class={styles.placeholderName}>
               {lookupNames.includes(name) ? `$$${name}` : `{${name}}`}
             </span>
             <input
-              class={`${inp.input} placeholder-input`}
+              class={`${inp.input} ${styles.placeholderInput}`}
               value={value}
               onInput={(e: any) => {
                 onSetValue(name, e.target.value);
@@ -171,7 +173,7 @@ export default function PlaceholderInputs({
               }}
             />
             <select
-              class="placeholder-type-select"
+              class={styles.placeholderTypeSelect}
               value={override || 'auto'}
               title={TYPE_SELECT_TITLE}
               onChange={(e: any) => onSetType(name, e.target.value)}
@@ -185,7 +187,10 @@ export default function PlaceholderInputs({
               ))}
             </select>
             {incompatible && (
-              <span class="placeholder-warn" title={`This value won't match as ${CAP[effective]}`}>
+              <span
+                class={styles.placeholderWarn}
+                title={`This value won't match as ${CAP[effective]}`}
+              >
                 {'⚠'}
               </span>
             )}

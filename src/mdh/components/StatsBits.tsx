@@ -1,13 +1,14 @@
 import { h } from 'preact';
+import sfc from './StatsFieldCard.module.css';
 
 export function FieldName({ path }: { path: string }) {
   const parts = path.split('.');
-  if (parts.length === 1) return <span class="stats-field-name">{path}</span>;
+  if (parts.length === 1) return <span class={sfc.statsFieldName}>{path}</span>;
   const parent = parts.slice(0, -1).join('.');
   const leaf = parts[parts.length - 1];
   return (
-    <span class="stats-field-name">
-      <span class="stats-field-parent">{parent}.</span>
+    <span class={sfc.statsFieldName}>
+      <span class={sfc.statsFieldParent}>{parent}.</span>
       {leaf}
     </span>
   );
@@ -43,11 +44,11 @@ export function isSpecialValue(v: any) {
 }
 
 export function FormattedValue({ value }: { value: any }) {
-  if (value === null) return <span class="stats-dist-special">null</span>;
-  if (value === '') return <em class="stats-dist-special">empty</em>;
-  if (value === true) return <span class="stats-dist-special">true</span>;
-  if (value === false) return <span class="stats-dist-special">false</span>;
+  if (value === null) return <span class={sfc.statsDistSpecial}>null</span>;
+  if (value === '') return <em class={sfc.statsDistSpecial}>empty</em>;
+  if (value === true) return <span class={sfc.statsDistSpecial}>true</span>;
+  if (value === false) return <span class={sfc.statsDistSpecial}>false</span>;
   if (typeof value === 'object')
-    return <span class="stats-dist-object">{JSON.stringify(value)}</span>;
+    return <span class={sfc.statsDistObject}>{JSON.stringify(value)}</span>;
   return String(value);
 }

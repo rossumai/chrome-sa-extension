@@ -1,0 +1,33 @@
+.sampleCardDiffFrom {
+  color: var(--danger);
+}
+
+.sampleCardDiffTo {
+  color: var(--success);
+}
+
+.sampleCardDiffStrike {
+  text-decoration: line-through;
+}
+
+/* Inline diff lines inside a sample-card-body <pre>. The full-width tint
+   sits behind a single JSON line so the eye locks on to changing fields
+   without losing the surrounding doc structure. */
+
+.sampleCardLineChanged {
+  display: block;
+  background: var(--warning-bg);
+  border-radius: 2px;
+}
+
+.sampleCardLineAdded {
+  display: block;
+  background: var(--success-bg);
+  border-radius: 2px;
+}
+
+.sampleCardLineRemoved {
+  display: block;
+  background: var(--danger-bg);
+  border-radius: 2px;
+}

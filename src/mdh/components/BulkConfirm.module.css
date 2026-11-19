@@ -1,0 +1,20 @@
+.bulkConfirm {
+  margin-top: 12px;
+}
+
+.bulkConfirmRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.bulkConfirmLabel {
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.bulkConfirmBlocked {
+  color: var(--text-secondary);
+  font-style: italic;
+}

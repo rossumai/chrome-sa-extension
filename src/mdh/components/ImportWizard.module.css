@@ -1,0 +1,18 @@
+.fileInputLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.fileInputInfo {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  margin-top: 6px;
+}
+
+/* Import Decide screen: parsing options shown inline (no summary/toggle). */
+
+.parseStrip {
+  margin-bottom: 8px;
+}

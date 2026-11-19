@@ -82,6 +82,7 @@ import {
   stagesAutoscroll,
 } from '../src/mdh/store.js';
 import { rect } from './support/dom.js';
+import stagesViewCss from '../src/mdh/components/StagesView.module.css';
 
 async function waitFor(condition: any, description = 'condition', timeoutMs = 3000) {
   const start = Date.now();
@@ -145,7 +146,7 @@ beforeEach(() => {
 function stagesPane(entries = [0, 1, 2]) {
   const panel = document.createElement('div');
   const pane = document.createElement('div');
-  pane.className = 'pipeline-inspect-scroll';
+  pane.className = stagesViewCss.pipelineInspectScroll;
   entries.forEach((i) => {
     const sec = document.createElement('div');
     sec.setAttribute('data-entry', String(i));
@@ -185,7 +186,7 @@ describe('hovering a stage in the editor', () => {
   it('does not scroll the pane even with Auto-scroll on and the section far down', async () => {
     const api2 = fakeEditor();
     const panel = stagesPane([0, 1, 2, 3, 4, 5]);
-    const pane = panel.querySelector('.pipeline-inspect-scroll');
+    const pane = panel.querySelector(`.${stagesViewCss.pipelineInspectScroll}`);
     // Real geometry: the target sits well below the pane's viewport, i.e. exactly
     // the case the old code scrolled for.
     pane!.getBoundingClientRect = () =>

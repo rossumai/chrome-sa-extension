@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { h, render } from 'preact';
 import PlaceholderInputs, { parseAnnotationId } from '../src/mdh/components/PlaceholderInputs.jsx';
+import placeholderInputsCss from '../src/mdh/components/PlaceholderInputs.module.css';
 
 function renderInputs(props: any) {
   const container = document.createElement('div');
@@ -17,7 +18,9 @@ describe('PlaceholderInputs Auto label — value-based guess', () => {
       types: {},
       resolvedTypeFor: () => ({ type: undefined, autoType: undefined }),
     });
-    const autoOpt = container.querySelector('.placeholder-type-select option[value="auto"]');
+    const autoOpt = container.querySelector(
+      `.${placeholderInputsCss.placeholderTypeSelect} option[value="auto"]`,
+    );
     expect(autoOpt!.textContent).toBe('Auto (Number?)');
   });
 
@@ -28,7 +31,9 @@ describe('PlaceholderInputs Auto label — value-based guess', () => {
       types: {},
       resolvedTypeFor: () => ({ type: 'string', autoType: 'string' }),
     });
-    const autoOpt = container.querySelector('.placeholder-type-select option[value="auto"]');
+    const autoOpt = container.querySelector(
+      `.${placeholderInputsCss.placeholderTypeSelect} option[value="auto"]`,
+    );
     expect(autoOpt!.textContent).toBe('Auto (String)');
   });
 });

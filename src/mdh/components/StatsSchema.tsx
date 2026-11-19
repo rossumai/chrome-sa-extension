@@ -2,6 +2,8 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { buildShapeFilterPipeline } from '../statsView.js';
 import { selectedCollection, activePanel, pendingPipelineLoad } from '../store.js';
+import styles from './StatsSchema.module.css';
+import ssum from './StatsSummary.module.css';
 
 // The collapsed view keeps the first HEAD_ROWS and the last TAIL_ROWS of the
 // common block, eliding only its middle.
@@ -82,17 +84,17 @@ function ElisionRow({
 }) {
   if (row.kind === 'less') {
     return (
-      <li class="stats-schema-more">
+      <li class={styles.statsSchemaMore}>
         <button type="button" onClick={() => onToggle(false)}>
-          <span class="stats-schema-chev">{'▴'}</span> Show fewer
+          <span class={styles.statsSchemaChev}>{'▴'}</span> Show fewer
         </button>
       </li>
     );
   }
   return (
-    <li class="stats-schema-more">
+    <li class={styles.statsSchemaMore}>
       <button type="button" onClick={() => onToggle(true)}>
-        <span class="stats-schema-chev">{'▾'}</span> Show {row.count} more
+        <span class={styles.statsSchemaChev}>{'▾'}</span> Show {row.count} more
       </button>
     </li>
   );
@@ -122,31 +124,33 @@ function ShapeColumns({
 }) {
   const total = schemaShapes.reduce((sum, x) => sum + x.docCount, 0) || 1;
   return (
-    <div class="stats-shape-cols">
+    <div class={styles.statsShapeCols}>
       {schemaShapes.map((s, i) => {
         const has = new Set(s.fields || []);
         const absentFields = differingFields.filter((f) => !has.has(f));
         const pct = Math.round((s.docCount / total) * 100);
         return (
-          <div class="stats-shape-col">
-            <div class="stats-shape-col-h">
+          <div class={styles.statsShapeCol}>
+            <div class={styles.statsShapeColH}>
               {multi && (
                 <span>
                   <b>Shape {i + 1}</b>
-                  {i === 0 ? <span class="stats-shape-baseline"> {'·'} most common</span> : ''}
+                  {i === 0 ? <span class={styles.statsShapeBaseline}> {'·'} most common</span> : ''}
                 </span>
               )}
               {multi ? (
-                <span class="stats-shape-col-meta">
+                <span class={styles.statsShapeColMeta}>
                   {s.fieldCount} fields {'·'} {s.docCount.toLocaleString()} {'·'}{' '}
                   {pct === 0 && s.docCount > 0 ? '<1' : pct}%
                 </span>
               ) : (
-                <span class="stats-shape-col-meta">{s.docCount.toLocaleString()} documents</span>
+                <span class={styles.statsShapeColMeta}>
+                  {s.docCount.toLocaleString()} documents
+                </span>
               )}
               <button
                 type="button"
-                class="stats-shape-records"
+                class={styles.statsShapeRecords}
                 title="Open the Data tab filtered to this shape"
                 onClick={() => shapeToRecords(s.fields, absentFields)}
               >
@@ -161,10 +165,10 @@ function ShapeColumns({
                 const f = row.field;
                 const present = has.has(f);
                 const added = present && !baselineSet.has(f);
-                const cls = !present ? 'is-gone' : added ? 'is-add' : '';
+                const cls = !present ? styles.isGone : added ? styles.isAdd : '';
                 return (
                   <li class={cls} key={f}>
-                    <span class="stats-shape-mark">{!present ? '·' : added ? '+' : ''}</span>
+                    <span class={styles.statsShapeMark}>{!present ? '·' : added ? '+' : ''}</span>
                     {f}
                   </li>
                 );
@@ -202,9 +206,9 @@ export default function StatsSchema({ schemaShapes }: { schemaShapes?: any[] | n
 
   return (
     <div>
-      <div class="stats-band-label">Schema</div>
+      <div class={ssum.statsBandLabel}>Schema</div>
       {shapesCount > 0 && (
-        <div class="stats-schema-line">
+        <div class={ssum.statsSchemaLine}>
           {multi
             ? `${shapesCount} shapes · ${union.length} fields across all`
             : `Consistent · 1 shape${single.fieldCount != null ? ` · ${single.fieldCount} fields` : ''}`}

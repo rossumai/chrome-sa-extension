@@ -1,0 +1,27 @@
+.recordTableSortBadge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #fff;
+  vertical-align: middle;
+}
+
+.recordTableSortBadge.asc {
+  background: var(--success);
+}
+
+.recordTableSortBadge.desc {
+  background: var(--danger);
+}
+
+.recordTableCaret {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.recordTableNested {
+  margin-top: 4px;
+}

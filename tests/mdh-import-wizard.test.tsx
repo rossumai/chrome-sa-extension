@@ -49,6 +49,9 @@ import * as api from '../src/mdh/api.js';
 import { runChunkedInsert } from '../src/mdh/importFile.js';
 import seg from '../src/ui/Segmented.module.css';
 import inp from '../src/ui/Input.module.css';
+import fileDropAreaCss from '../src/mdh/components/FileDropArea.module.css';
+import importStagesCss from '../src/mdh/components/ImportStages.module.css';
+import matchKeyPickerCss from '../src/mdh/components/MatchKeyPicker.module.css';
 
 function mount(vnode: any) {
   const el = document.createElement('div');
@@ -95,7 +98,7 @@ describe('ImportWizard — source toggle + detection', () => {
   it('defaults to the File source and shows the source toggle', () => {
     const root = mount(<ImportWizard onSuccess={() => {}} />);
     expect(root.querySelector('[data-testid="import-source"]')).toBeTruthy();
-    expect(root.querySelector('.file-input-area')).toBeTruthy();
+    expect(root.querySelector(`.${fileDropAreaCss.fileInputArea}`)).toBeTruthy();
   });
 
   it('detects a selected CSV file and lands directly on Decide with parsing options shown', async () => {
@@ -287,7 +290,12 @@ describe('ImportWizard routing', () => {
 
     // Once the server-processing (indeterminate) stage shows, click "Stop watching".
     const cancelBtn = await waitFor(() => {
-      if (!root.querySelector('.import-progress-fill.indeterminate')) return null;
+      if (
+        !root.querySelector(
+          `.${importStagesCss.importProgressFill}.${importStagesCss.indeterminate}`,
+        )
+      )
+        return null;
       return (
         [...root.querySelectorAll('.' + mstyles.actions + ' button')].find(
           (b) => b.textContent.trim() === 'Stop watching',
@@ -404,13 +412,15 @@ describe('ImportWizard — Decide screen', () => {
         ) || null,
     );
     skuBtn.click();
-    await waitFor(() => root.querySelector('.match-key-chip'));
+    await waitFor(() => root.querySelector(`.${matchKeyPickerCss.matchKeyChip}`));
 
     // Parsing controls are inline; toggle "First row is a header" off directly.
     const headerToggle = await waitFor(() => root.querySelector('[data-testid="csv-header"]'));
     headerToggle.click();
 
-    await waitFor(() => (root.querySelector('.match-key-chip') === null ? true : null));
+    await waitFor(() =>
+      root.querySelector(`.${matchKeyPickerCss.matchKeyChip}`) === null ? true : null,
+    );
     await waitFor(() =>
       root.querySelector('[data-testid="csv-header"]')!.getAttribute('aria-checked') === 'false'
         ? true

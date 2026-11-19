@@ -64,6 +64,8 @@ import { buildExportJob } from '../exportFormats.jsx';
 import JSON5 from 'json5';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
 import ctl from '../../ui/controls.module.css';
+import pnl from './panel.module.css';
+import styles from './DataPanel.module.css';
 export default function DataPanel() {
   const editorRef = useRef<JsonEditorHandle | null>(null);
   const pipeline = usePipeline();
@@ -733,8 +735,8 @@ export default function DataPanel() {
   const writeStage = terminalWriteStage(effectiveStages);
 
   return (
-    <div class="panel" style="display:flex;flex-direction:row" ref={panelRef}>
-      <div class="data-panel-left" ref={leftRef}>
+    <div class={pnl.panel} style="display:flex;flex-direction:row" ref={panelRef}>
+      <div class={pnl.dataPanelLeft} ref={leftRef}>
         <PipelineEditor
           editorRef={editorRef}
           initialValue={buildInitialPipeline()}
@@ -749,8 +751,8 @@ export default function DataPanel() {
           }}
         />
         {writeStage && (
-          <div class="pipeline-write-banner">
-            <span class="pipeline-write-msg">
+          <div class={styles.pipelineWriteBanner}>
+            <span class={styles.pipelineWriteMsg}>
               {'⚠'} This pipeline writes to <strong>{writeStage.target}</strong> ({writeStage.op})
               and will not run automatically.
             </span>
@@ -784,8 +786,8 @@ export default function DataPanel() {
           onInspectStage={handleInspectStage}
         />
       </div>
-      <div class="data-panel-resizer" onMouseDown={initPanelResize}></div>
-      <div class="data-panel-right">
+      <div class={styles.dataPanelResizer} onMouseDown={initPanelResize}></div>
+      <div class={styles.dataPanelRight}>
         <RecordList
           records={records.value}
           pipelineText={pipelineText}

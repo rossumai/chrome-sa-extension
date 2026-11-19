@@ -26,6 +26,10 @@ import * as agentApi from '../src/agent/agentApi.js';
 import StagesView from '../src/mdh/components/StagesView.jsx';
 import { hoveredStage, stagesShowDef, stagesSourceOpen, aiAvailable } from '../src/mdh/store.js';
 import { _resetExplanationCache } from '../src/mdh/agent/explainEmpty.js';
+import stagesViewCss from '../src/mdh/components/StagesView.module.css';
+import pd from '../src/mdh/components/PipelineDebug.module.css';
+import pnl from '../src/mdh/components/panel.module.css';
+import emptyStageExplainCss from '../src/mdh/components/EmptyStageExplain.module.css';
 
 async function waitFor(condition: any, description = 'condition', timeoutMs = 2000) {
   const start = Date.now();
@@ -95,7 +99,7 @@ describe('StagesView', () => {
     vi.mocked(api.aggregate).mockResolvedValue({ result: [{ _id: 'a' }] });
     const root = mount({ collection: 'vendors', entries });
     await waitFor(
-      () => root.querySelectorAll('.pipeline-inspect-section').length === 3,
+      () => root.querySelectorAll(`.${stagesViewCss.pipelineInspectSection}`).length === 3,
       '3 sections',
     );
     const text = root.textContent;
@@ -104,9 +108,9 @@ describe('StagesView', () => {
     expect(text).toContain('$match');
     expect(text).toContain('$limit');
     // It must NOT read as stage zero: no number badge on the source card.
-    const source = root.querySelector('.pipeline-inspect-source');
+    const source = root.querySelector(`.${stagesViewCss.pipelineInspectSource}`);
     expect(source).toBeTruthy();
-    expect(source.querySelector('.pipeline-inspect-num')).toBeNull();
+    expect(source.querySelector(`.${pd.pipelineInspectNum}`)).toBeNull();
     expect(source.textContent).not.toContain('input');
   });
 
@@ -118,8 +122,8 @@ describe('StagesView', () => {
     ];
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries });
-    await waitFor(() => root.querySelector('.pipeline-inspect-start'), 'divider rendered');
-    expect(root.querySelector('.pipeline-inspect-start').textContent).toBe(
+    await waitFor(() => root.querySelector(`.${pnl.pipelineInspectStart}`), 'divider rendered');
+    expect(root.querySelector(`.${pnl.pipelineInspectStart}`).textContent).toBe(
       'pipeline starts here \u00b7 2 of 3 stages run',
     );
   });
@@ -127,8 +131,11 @@ describe('StagesView', () => {
   it('omits the divider when there are no stages at all', async () => {
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries: [] });
-    await waitFor(() => root.querySelector('.pipeline-inspect-source'), 'source card rendered');
-    expect(root.querySelector('.pipeline-inspect-start')).toBeNull();
+    await waitFor(
+      () => root.querySelector(`.${stagesViewCss.pipelineInspectSource}`),
+      'source card rendered',
+    );
+    expect(root.querySelector(`.${pnl.pipelineInspectStart}`)).toBeNull();
   });
 
   it('fires one 10-doc preview per active stage, $search first (none for the collapsed source)', async () => {
@@ -192,8 +199,11 @@ describe('StagesView', () => {
       return Promise.resolve({ result: [{ _id: '1' }] });
     });
     const root = mount({ collection: 'vendors', entries });
-    await waitFor(() => root.querySelector('.pipeline-inspect-error'), 'error rendered');
-    const err = root.querySelector('.pipeline-inspect-error');
+    await waitFor(
+      () => root.querySelector(`.${stagesViewCss.pipelineInspectError}`),
+      'error rendered',
+    );
+    const err = root.querySelector(`.${stagesViewCss.pipelineInspectError}`);
     expect(err.textContent).toContain('boom');
     expect(err.textContent).toMatch(/400/);
     expect(root.querySelectorAll('.rc-stub').length).toBeGreaterThan(0);
@@ -207,7 +217,7 @@ describe('StagesView', () => {
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries });
     await waitFor(() => previewCalls().length >= 1, '1 active preview');
-    expect(root.querySelector('.pipeline-inspect-disabled')).not.toBeNull();
+    expect(root.querySelector(`.${stagesViewCss.pipelineInspectDisabled}`)).not.toBeNull();
     for (const [, pl] of vi.mocked(api.aggregate).mock.calls)
       expect(JSON.stringify(pl)).not.toContain('$sort');
   });
@@ -241,10 +251,10 @@ describe('StagesView', () => {
       onToggleStage: (i: any) => toggled.push(i),
     });
     await waitFor(
-      () => root.querySelectorAll('.pipeline-stage-toggle').length === 2,
+      () => root.querySelectorAll(`.${pd.pipelineStageToggle}`).length === 2,
       'two stage toggles',
     );
-    root.querySelectorAll('.pipeline-stage-toggle')[1].click();
+    root.querySelectorAll(`.${pd.pipelineStageToggle}`)[1].click();
     expect(toggled).toEqual([1]);
   });
 
@@ -268,7 +278,10 @@ describe('StagesView', () => {
         { disabled: true, stage: { $sort: { _id: 1 } } },
       ],
     });
-    await waitFor(() => root.querySelector('.pipeline-inspect-disabled'), 'stage greyed via prop');
+    await waitFor(
+      () => root.querySelector(`.${stagesViewCss.pipelineInspectDisabled}`),
+      'stage greyed via prop',
+    );
     await waitFor(() => vi.mocked(api.aggregate).mock.calls.length > 0, 'requests re-issued');
     expect(
       vi.mocked(api.aggregate).mock.calls.every((c) => !JSON.stringify(c[1]).includes('$sort')),
@@ -279,9 +292,12 @@ describe('StagesView', () => {
     const entries = [{ disabled: false, stage: { $match: { x: 1 } } }];
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries });
-    await waitFor(() => root.querySelector('.pipeline-inspect-section'), 'section rendered');
+    await waitFor(
+      () => root.querySelector(`.${stagesViewCss.pipelineInspectSection}`),
+      'section rendered',
+    );
     expect(root.querySelector('.pipeline-inspect-def')).toBeNull();
-    expect(root.querySelector('.pipeline-inspect-output')).not.toBeNull();
+    expect(root.querySelector(`.${pnl.pipelineInspectOutput}`)).not.toBeNull();
   });
 
   it("renders each active stage's substituted definition when Definitions is on", async () => {
@@ -293,10 +309,10 @@ describe('StagesView', () => {
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries });
     await waitFor(
-      () => root.querySelectorAll('.pipeline-inspect-stagedef').length === 2,
+      () => root.querySelectorAll(`.${stagesViewCss.pipelineInspectStagedef}`).length === 2,
       'two definition blocks',
     );
-    const defs = [...root.querySelectorAll('.pipeline-inspect-stagedef')].map(
+    const defs = [...root.querySelectorAll(`.${stagesViewCss.pipelineInspectStagedef}`)].map(
       (el) => el.textContent,
     );
     // Faithful pretty-printed substituted stage object (values already resolved upstream).
@@ -310,8 +326,11 @@ describe('StagesView', () => {
     const entries = [{ disabled: false, stage: { $match: { x: 1 } } }];
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries });
-    await waitFor(() => root.querySelector('.pipeline-inspect-section'), 'section rendered');
-    expect(root.querySelector('.pipeline-inspect-stagedef')).toBeNull();
+    await waitFor(
+      () => root.querySelector(`.${stagesViewCss.pipelineInspectSection}`),
+      'section rendered',
+    );
+    expect(root.querySelector(`.${stagesViewCss.pipelineInspectStagedef}`)).toBeNull();
   });
 
   it('renders no definition block for the input section or disabled stages', async () => {
@@ -323,14 +342,20 @@ describe('StagesView', () => {
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries });
     await waitFor(
-      () => root.querySelectorAll('.pipeline-inspect-stagedef').length === 1,
+      () => root.querySelectorAll(`.${stagesViewCss.pipelineInspectStagedef}`).length === 1,
       'exactly one def block',
     );
     // Only the single active $match stage has a block: input (data-idx="-1") and the
     // disabled $sort do not.
-    const inputSection = root.querySelector('.pipeline-inspect-section[data-idx="-1"]');
-    expect(inputSection.querySelector('.pipeline-inspect-stagedef')).toBeNull();
-    expect(root.querySelector('.pipeline-inspect-disabled .pipeline-inspect-stagedef')).toBeNull();
+    const inputSection = root.querySelector(
+      `.${stagesViewCss.pipelineInspectSection}[data-idx="-1"]`,
+    );
+    expect(inputSection.querySelector(`.${stagesViewCss.pipelineInspectStagedef}`)).toBeNull();
+    expect(
+      root.querySelector(
+        `.${stagesViewCss.pipelineInspectDisabled} .${stagesViewCss.pipelineInspectStagedef}`,
+      ),
+    ).toBeNull();
   });
 
   it('hovering a stage section publishes its entry index + element to hoveredStage', async () => {
@@ -341,12 +366,14 @@ describe('StagesView', () => {
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries });
     await waitFor(
-      () => root.querySelectorAll('.pipeline-inspect-section[data-idx]').length >= 3,
+      () => root.querySelectorAll(`.${stagesViewCss.pipelineInspectSection}[data-idx]`).length >= 3,
       'sections rendered',
     );
 
     // The 2nd stage section is entry index 1 (input section has data-idx="-1").
-    const sortSection = root.querySelector('.pipeline-inspect-section[data-idx="1"]');
+    const sortSection = root.querySelector(
+      `.${stagesViewCss.pipelineInspectSection}[data-idx="1"]`,
+    );
     expect(sortSection).toBeTruthy();
     sortSection.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
     expect(hoveredStage.value).toBeTruthy();
@@ -365,8 +392,13 @@ describe('StagesView', () => {
     ];
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries, inspectTarget: { index: 1 } });
-    await waitFor(() => root.querySelector('.pipeline-inspect-highlight'), 'highlighted section');
-    expect(root.querySelector('.pipeline-inspect-highlight').getAttribute('data-idx')).toBe('1');
+    await waitFor(
+      () => root.querySelector(`.${stagesViewCss.pipelineInspectHighlight}`),
+      'highlighted section',
+    );
+    expect(
+      root.querySelector(`.${stagesViewCss.pipelineInspectHighlight}`).getAttribute('data-idx'),
+    ).toBe('1');
     expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
   });
 
@@ -378,12 +410,15 @@ describe('StagesView', () => {
     const bare = () =>
       previewCalls().filter((c) => JSON.stringify(c[1]) === JSON.stringify([{ $limit: 10 }]));
     expect(bare().length).toBe(0); // collapsed: one fewer aggregate per open
-    expect(root.querySelector('.pipeline-inspect-source .pipeline-inspect-body')).toBeNull();
+    expect(
+      root.querySelector(`.${stagesViewCss.pipelineInspectSource} .${pnl.pipelineInspectBody}`),
+    ).toBeNull();
 
-    root.querySelector('.pipeline-inspect-source-head').click();
+    root.querySelector(`.${stagesViewCss.pipelineInspectSourceHead}`).click();
     await waitFor(() => bare().length === 1, 'source sample fetched on expand');
     await waitFor(
-      () => root.querySelector('.pipeline-inspect-source .pipeline-inspect-body'),
+      () =>
+        root.querySelector(`.${stagesViewCss.pipelineInspectSource} .${pnl.pipelineInspectBody}`),
       'records shown',
     );
   });
@@ -395,10 +430,10 @@ describe('StagesView', () => {
       entries: [{ disabled: false, stage: { $match: {} } }],
     });
     await waitFor(
-      () => root.querySelector('.pipeline-inspect-source-head'),
+      () => root.querySelector(`.${stagesViewCss.pipelineInspectSourceHead}`),
       'source head rendered',
     );
-    const head = root.querySelector('.pipeline-inspect-source-head');
+    const head = root.querySelector(`.${stagesViewCss.pipelineInspectSourceHead}`);
     expect(head.getAttribute('aria-expanded')).toBe('false');
     head.click();
     await waitFor(() => head.getAttribute('aria-expanded') === 'true', 'expanded reported');
@@ -420,7 +455,9 @@ describe('StagesView', () => {
       [...root.querySelectorAll('[data-entry]')].map((el) => el.getAttribute('data-entry')),
     ).toEqual(['0', '1', '2']);
     expect(
-      root.querySelector('[data-entry="1"]').classList.contains('pipeline-inspect-disabled'),
+      root
+        .querySelector('[data-entry="1"]')
+        .classList.contains(stagesViewCss.pipelineInspectDisabled),
     ).toBe(true);
   });
 });
@@ -432,7 +469,10 @@ describe('empty-stage explanation', () => {
     aiAvailable.value = true;
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries: EMPTY });
-    await waitFor(() => root.querySelector('.stage-explain'), 'Fabry panel rendered');
+    await waitFor(
+      () => root.querySelector(`.${emptyStageExplainCss.stageExplain}`),
+      'Fabry panel rendered',
+    );
     expect(root.textContent).toContain('No documents at this stage');
     // The regression this guards: a throw during render left the stage body
     // stuck on "Loading…" and neither the message nor the panel ever appeared.
@@ -444,7 +484,7 @@ describe('empty-stage explanation', () => {
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries: EMPTY });
     await waitFor(() => root.textContent.includes('No documents at this stage'), 'empty message');
-    expect(root.querySelector('.stage-explain')).toBeNull();
+    expect(root.querySelector(`.${emptyStageExplainCss.stageExplain}`)).toBeNull();
   });
 
   it('explains only the FIRST empty stage, not every downstream one', async () => {
@@ -456,9 +496,12 @@ describe('empty-stage explanation', () => {
       { disabled: false, stage: { $sort: { n: -1 } } },
     ];
     const root = mount({ collection: 'vendors', entries });
-    await waitFor(() => root.querySelector('.stage-explain'), 'one panel rendered');
-    expect(root.querySelectorAll('.stage-explain').length).toBe(1);
-    expect(root.querySelector('[data-idx="0"] .stage-explain')).toBeTruthy();
+    await waitFor(
+      () => root.querySelector(`.${emptyStageExplainCss.stageExplain}`),
+      'one panel rendered',
+    );
+    expect(root.querySelectorAll(`.${emptyStageExplainCss.stageExplain}`).length).toBe(1);
+    expect(root.querySelector(`[data-idx="0"] .${emptyStageExplainCss.stageExplain}`)).toBeTruthy();
   });
 });
 
@@ -469,32 +512,40 @@ describe('empty-stage explanation — placement and reuse', () => {
     aiAvailable.value = true;
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries: EMPTY });
-    await waitFor(() => root.querySelector('.stage-explain'), 'panel rendered');
+    await waitFor(
+      () => root.querySelector(`.${emptyStageExplainCss.stageExplain}`),
+      'panel rendered',
+    );
 
     // .pipeline-inspect-output is `flex-direction: row` for record cards, so a
     // panel inside it sits BESIDE the message and is squeezed to a card's width.
-    expect(root.querySelector('.pipeline-inspect-output .stage-explain')).toBeNull();
+    expect(
+      root.querySelector(`.${pnl.pipelineInspectOutput} .${emptyStageExplainCss.stageExplain}`),
+    ).toBeNull();
     // It is a section child, after the body — i.e. under the message, full width.
     const section = root.querySelector('[data-idx="0"]');
     const kids = [...section.children];
-    expect(kids.indexOf(section.querySelector('.stage-explain'))).toBeGreaterThan(
-      kids.indexOf(section.querySelector('.pipeline-inspect-body')),
-    );
+    expect(
+      kids.indexOf(section.querySelector(`.${emptyStageExplainCss.stageExplain}`)),
+    ).toBeGreaterThan(kids.indexOf(section.querySelector(`.${pnl.pipelineInspectBody}`)));
   });
 
   it('lets an empty stage hug its content instead of holding a 324px records band', async () => {
     aiAvailable.value = true;
     vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
     const root = mount({ collection: 'vendors', entries: EMPTY });
-    await waitFor(() => root.querySelector('.stage-explain'), 'panel rendered');
-    expect(root.querySelector('.pipeline-inspect-body-empty')).toBeTruthy();
+    await waitFor(
+      () => root.querySelector(`.${emptyStageExplainCss.stageExplain}`),
+      'panel rendered',
+    );
+    expect(root.querySelector(`.${pnl.pipelineInspectBodyEmpty}`)).toBeTruthy();
   });
 
   it('keeps the fixed records band when the stage HAS documents', async () => {
     vi.mocked(api.aggregate).mockResolvedValue({ result: [{ _id: 'a' }] });
     const root = mount({ collection: 'vendors', entries: EMPTY });
     await waitFor(() => root.querySelector('.rc-stub'), 'records rendered');
-    expect(root.querySelector('.pipeline-inspect-body-empty')).toBeNull();
+    expect(root.querySelector(`.${pnl.pipelineInspectBodyEmpty}`)).toBeNull();
   });
 
   it('does not re-investigate when the source card is toggled', async () => {
@@ -504,14 +555,16 @@ describe('empty-stage explanation — placement and reuse', () => {
     await waitFor(() => root.textContent.includes('DEU'), 'explanation arrived');
     const asked = vi.mocked(agentApi.createChat).mock.calls.length;
 
-    root.querySelector('.pipeline-inspect-source-head').click(); // expand
+    root.querySelector(`.${stagesViewCss.pipelineInspectSourceHead}`).click(); // expand
     await waitFor(
-      () => root.querySelector('.pipeline-inspect-source .pipeline-inspect-body'),
+      () =>
+        root.querySelector(`.${stagesViewCss.pipelineInspectSource} .${pnl.pipelineInspectBody}`),
       'source expanded',
     );
-    root.querySelector('.pipeline-inspect-source-head').click(); // collapse
+    root.querySelector(`.${stagesViewCss.pipelineInspectSourceHead}`).click(); // collapse
     await waitFor(
-      () => !root.querySelector('.pipeline-inspect-source .pipeline-inspect-body'),
+      () =>
+        !root.querySelector(`.${stagesViewCss.pipelineInspectSource} .${pnl.pipelineInspectBody}`),
       'source collapsed',
     );
 
@@ -526,7 +579,7 @@ describe('empty-stage explanation — placement and reuse', () => {
     const root = mount({ collection: 'vendors', entries: EMPTY });
     await waitFor(() => root.querySelector('.rc-stub'), 'records rendered');
     const before = previewCalls().length;
-    root.querySelector('.pipeline-inspect-source-head').click();
+    root.querySelector(`.${stagesViewCss.pipelineInspectSourceHead}`).click();
     await waitFor(() => previewCalls().length > before, 'the source sample was fetched');
     // Exactly one new request — the source sample — not one per stage.
     expect(previewCalls().length).toBe(before + 1);
@@ -540,14 +593,17 @@ describe('the empty-stage message is hard to miss', () => {
       collection: 'vendors',
       entries: [{ disabled: false, stage: { $match: {} } }],
     });
-    await waitFor(() => root.querySelector('.pipeline-inspect-empty'), 'empty band rendered');
-    const band = root.querySelector('.pipeline-inspect-empty');
-    expect(band.textContent).toContain('No documents at this stage');
-    expect(band.querySelector('.pipeline-inspect-empty-icon')).toBeTruthy();
-    // Decorative: the sentence beside it already carries the meaning.
-    expect(band.querySelector('.pipeline-inspect-empty-icon').getAttribute('aria-hidden')).toBe(
-      'true',
+    await waitFor(
+      () => root.querySelector(`.${stagesViewCss.pipelineInspectEmpty}`),
+      'empty band rendered',
     );
+    const band = root.querySelector(`.${stagesViewCss.pipelineInspectEmpty}`);
+    expect(band.textContent).toContain('No documents at this stage');
+    expect(band.querySelector(`.${stagesViewCss.pipelineInspectEmptyIcon}`)).toBeTruthy();
+    // Decorative: the sentence beside it already carries the meaning.
+    expect(
+      band.querySelector(`.${stagesViewCss.pipelineInspectEmptyIcon}`).getAttribute('aria-hidden'),
+    ).toBe('true');
   });
 
   it('does not give the still-loading state the warning treatment', async () => {
@@ -562,8 +618,11 @@ describe('the empty-stage message is hard to miss', () => {
       collection: 'vendors',
       entries: [{ disabled: false, stage: { $match: {} } }],
     });
-    await waitFor(() => root.querySelector('.pipeline-inspect-loading'), 'loading shown');
-    expect(root.querySelector('.pipeline-inspect-empty')).toBeNull();
+    await waitFor(
+      () => root.querySelector(`.${stagesViewCss.pipelineInspectLoading}`),
+      'loading shown',
+    );
+    expect(root.querySelector(`.${stagesViewCss.pipelineInspectEmpty}`)).toBeNull();
     resolve({ result: [] });
   });
 });

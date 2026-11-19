@@ -19,6 +19,8 @@ vi.mock('../src/mdh/components/JsonEditor.jsx', () => ({
 
 import PipelineEditor from '../src/mdh/components/PipelineEditor.jsx';
 import { selectedCollection } from '../src/mdh/store.js';
+import pipelineEditorCss from '../src/mdh/components/PipelineEditor.module.css';
+import menuCss from '../src/mdh/components/toolbarMenu.module.css';
 
 describe('PipelineEditor Beautify', () => {
   it('preserves a disabled stage when beautifying', async () => {
@@ -51,14 +53,16 @@ describe('PipelineEditor Beautify', () => {
     );
 
     // Open the overflow menu and click Beautify.
-    root.querySelector<HTMLElement>('.pipeline-overflow-btn')!.click();
+    root.querySelector<HTMLElement>(`.${pipelineEditorCss.pipelineOverflowBtn}`)!.click();
     await vi.waitFor(() =>
       expect(
-        [...root.querySelectorAll('.toolbar-menu-item')].some((b) => b.textContent === 'Beautify'),
+        [...root.querySelectorAll(`.${menuCss.toolbarMenuItem}`)].some(
+          (b) => b.textContent === 'Beautify',
+        ),
       ).toBe(true),
     );
     (
-      [...root.querySelectorAll('.toolbar-menu-item')].find(
+      [...root.querySelectorAll(`.${menuCss.toolbarMenuItem}`)].find(
         (b) => b.textContent === 'Beautify',
       ) as HTMLElement
     ).click();

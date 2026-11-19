@@ -1,6 +1,7 @@
 import { h, Fragment } from 'preact';
 import { parseXml } from '../xml.js';
 import { Toggle } from '../components/ImportControls.jsx';
+import fmtCss from './formats.module.css';
 
 // The options bag every format's Configure controls edit, plus its setter.
 type ControlsProps = { opts: Record<string, any>; setOpt: (key: string, value: any) => void };
@@ -11,14 +12,14 @@ function ConfigureControls({ opts, setOpt, parsed }: ControlsProps & { parsed?: 
   const candidates = parsed?.recordCandidates || [];
   return (
     <Fragment>
-      <div class="csv-toolbar">
+      <div class={fmtCss.csvToolbar}>
         {candidates.length > 1 && (
-          <span class="csv-tb-item">
-            <span class="csv-tb-k" title="Which repeating element becomes one document.">
+          <span class={fmtCss.csvTbItem}>
+            <span class={fmtCss.csvTbK} title="Which repeating element becomes one document.">
               Record element
             </span>
             <select
-              class="xlsx-sheet-select"
+              class={fmtCss.xlsxSheetSelect}
               data-testid="xml-record"
               value={parsed?.recordKey ?? ''}
               onChange={(e: any) => setOpt('recordKey', e.target.value)}
@@ -31,9 +32,9 @@ function ConfigureControls({ opts, setOpt, parsed }: ControlsProps & { parsed?: 
             </select>
           </span>
         )}
-        <span class="csv-tb-item">
+        <span class={fmtCss.csvTbItem}>
           <span
-            class="csv-tb-k"
+            class={fmtCss.csvTbK}
             title="Rebuild objects and arrays the export flattened, and match values to the types this collection already uses."
           >
             Restore structure {'&'} types
@@ -45,9 +46,9 @@ function ConfigureControls({ opts, setOpt, parsed }: ControlsProps & { parsed?: 
             title="Rebuild what the export flattened."
           />
         </span>
-        <span class="csv-tb-item">
+        <span class={fmtCss.csvTbItem}>
           <span
-            class="csv-tb-k"
+            class={fmtCss.csvTbK}
             title="Read numbers and true/false out of text, for columns the collection has no type for."
           >
             Detect numbers {'&'} booleans
@@ -60,7 +61,7 @@ function ConfigureControls({ opts, setOpt, parsed }: ControlsProps & { parsed?: 
           />
         </span>
       </div>
-      <div class="csv-opt-hint">
+      <div class={fmtCss.csvOptHint}>
         Attributes become @_-prefixed fields; namespace prefixes are stripped.
       </div>
     </Fragment>

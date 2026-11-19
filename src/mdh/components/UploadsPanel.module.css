@@ -1,0 +1,259 @@
+.opStatusBadge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.opStatusBadge.running {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.opStatusBadge.finished {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.opStatusBadge.failed {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.uploadsSparklineHost {
+  position: relative;
+  line-height: 0;
+}
+
+.uploadsSparkline {
+  display: block;
+  shape-rendering: crispEdges;
+}
+
+.uploadsSparklineTip {
+  position: absolute;
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  z-index: 10;
+}
+
+.uploadsDatasetLink {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.uploadsDatasetLink:hover {
+  text-decoration: underline;
+}
+
+.uploadsErrorInner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.uploadsErrorText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.uploadsErrorTextMsg {
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.uploadsErrorTextMsgClamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.uploadsErrorToggle {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--danger);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.uploadsErrorToggle:hover {
+  opacity: 1;
+}
+
+.uploadsErrorToggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.uploadsRowGroup {
+  cursor: pointer;
+}
+
+.uploadsGroupCount {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-radius: 3px;
+  margin-left: 6px;
+}
+
+.uploadsRowFailed .uploadsGroupCount {
+  background: rgba(239, 68, 68, 0.18);
+  color: var(--danger);
+}
+
+/* Sub-rows: status badge is indented past a ↳ ("return-then-right") glyph
+   in the gutter, so children visibly hang under their parent group row. */
+
+.uploadsRowSub td {
+  background: color-mix(in srgb, var(--bg-code) 35%, var(--bg-card));
+}
+
+/* Selectors qualified with `tr` to outrank `.uploads-table td:first-child`'s
+   `padding-left: 12px` — equal-specificity ties resolve to source order, and
+   the table-wide rule sits later in the file. */
+
+tr.uploadsRowSub td:first-child {
+  position: relative;
+  padding-left: 32px;
+  box-shadow: inset 2px 0 0 var(--border);
+}
+
+tr.uploadsRowSub:not(.uploadsRowError) td:first-child::before {
+  content: '↳';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.uploadsRowFailed tr.uploadsRowSub td {
+  background: rgba(239, 68, 68, 0.03);
+}
+
+.uploadsRowFailed tr.uploadsRowSub td:first-child {
+  box-shadow: inset 2px 0 0 rgba(239, 68, 68, 0.35);
+}
+
+.uploadsRowFailed tr.uploadsRowSub:not(.uploadsRowError) td:first-child::before {
+  color: rgba(239, 68, 68, 0.7);
+}
+
+.uploadsNewFloat {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  z-index: 2;
+  transition:
+    background 0.1s,
+    transform 0.1s,
+    box-shadow 0.1s;
+}
+
+.uploadsNewFloat:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.uploadsTableWrap {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+
+.uploadsCellDataset {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.uploadsCellFile {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+tbody.uploadsRowFailed tr {
+  background: rgba(239, 68, 68, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  tbody.uploadsRowFailed tr {
+    background: rgba(239, 68, 68, 0.08);
+  }
+}
+
+.uploadsRowHasError td {
+  border-bottom: none;
+}
+
+.uploadsRowError td {
+  padding: 0 12px 8px;
+  font-size: 11px;
+  color: var(--danger);
+  font-family: var(--font-mono);
+  white-space: normal;
+  word-break: break-word;
+  border-bottom: 1px solid var(--border-light, var(--border));
+}
+
+/* Width only. The Operation Logs filter is a fixed box in a toolbar, while the sidebar one
+   fills its column; everything else about both boxes — height, font, states, the clear
+   button — is owned by src/ui/FilterInput.module.css, which they now render through. */
+
+.uploadsOpsFilter {
+  width: 280px;
+}

@@ -9,6 +9,7 @@ import {
   firstValidationLine,
   matchesNothing,
 } from '../src/mdh/searchIndexDef.js';
+import pnl from '../src/mdh/components/panel.module.css';
 
 describe('toSearchIndexDefinition', () => {
   it('returns the definition object untouched — V2 already hands back create-ready input', () => {
@@ -41,7 +42,7 @@ describe('statusBadge', () => {
   it('maps READY to the ready class and renders it lowercase', () => {
     expect(statusBadge('READY')).toEqual({
       text: 'ready',
-      cls: 'index-badge-ready',
+      cls: pnl.indexBadgeReady,
       title: 'Built and queryable',
     });
   });
@@ -62,14 +63,14 @@ describe('statusBadge', () => {
       'DELETING',
     ]) {
       const badge = statusBadge(s)!;
-      expect(badge.cls).toBe('index-badge-pending');
+      expect(badge.cls).toBe(pnl.indexBadgePending);
       expect(badge.title.length).toBeGreaterThan(0);
     }
   });
 
   it('treats FAILED and STALE as failed', () => {
-    expect(statusBadge('FAILED')!.cls).toBe('index-badge-failed');
-    expect(statusBadge('STALE')!.cls).toBe('index-badge-failed');
+    expect(statusBadge('FAILED')!.cls).toBe(pnl.indexBadgeFailed);
+    expect(statusBadge('STALE')!.cls).toBe(pnl.indexBadgeFailed);
   });
 
   it('renders an unrecognised status neutrally rather than guessing', () => {

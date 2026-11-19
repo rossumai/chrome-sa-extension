@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { activePanel, selectedCollection, statsSummary } from '../store.js';
 import tb from '../../ui/Tabs.module.css';
+import styles from './TabBar.module.css';
 
 const TABS = [
   { id: 'data', label: 'Data' },
@@ -19,10 +20,10 @@ function StatsAlertIcon() {
   // is the same Fair/Poor split users see in the panel.
   const severity = summary.health < 50 ? 'danger' : 'warning';
   const tooltip = `Health: ${summary.health} (${summary.label})`;
-  const iconCls = `tab-alert-icon tab-alert-${severity}`;
+  const iconCls = `${styles.tabAlertIcon} ${severity === 'danger' ? styles.tabAlertDanger : styles.tabAlertWarning}`;
 
   return (
-    <span class="tab-alert" title={tooltip}>
+    <span class={styles.tabAlert} title={tooltip}>
       {severity === 'danger' ? (
         // Filled circle with white "!" — high severity (Poor: < 50)
         <svg class={iconCls} width="14" height="14" viewBox="0 0 16 16" aria-label={tooltip}>

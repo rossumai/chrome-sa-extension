@@ -1,0 +1,7 @@
+/* Neutral shape-block states (loading / empty collection) — NOT .input-hint,
+   which is danger-red by default. */
+
+.importShapeNeutral {
+  font-size: 12px;
+  color: var(--text-secondary);
+}

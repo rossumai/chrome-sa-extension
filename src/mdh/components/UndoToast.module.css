@@ -1,0 +1,107 @@
+/* Immediate custom tooltip (Tip.jsx) — no native-title delay, viewport-clamped. */
+
+/* .stats-tip-* (the custom tooltip) moved to the self-contained CSS Module
+   src/ui/Tip.module.css when Tip was promoted to the design system. */
+
+/* Undo toast — bottom-center, fixed, above modal-overlay (z=1000-ish);
+   single instance, replaces previous on new operation. */
+
+.undoToast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 2000;
+  min-width: 320px;
+  max-width: 560px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  font-size: 13px;
+  overflow: hidden;
+  animation: undo-toast-in 0.18s ease-out;
+}
+
+@keyframes undo-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.undoToastRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.undoToastMessage {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undoToastAction {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.undoToastAction:hover {
+  background: var(--bg-hover);
+}
+
+.undoToastCountdown {
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.undoToastDismiss {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.undoToastDismiss:hover {
+  color: var(--text-primary);
+}
+
+.undoToastProgress {
+  height: 2px;
+  background: var(--accent);
+  transform-origin: left center;
+  transition: transform 250ms linear;
+}
+
+.undoToastRunning .undoToastMessage,
+.undoToastDone .undoToastMessage {
+  color: var(--success);
+}
+
+.undoToastError {
+  border-color: var(--danger-border);
+}
+
+.undoToastError .undoToastMessage {
+  color: var(--danger);
+  white-space: normal;
+}

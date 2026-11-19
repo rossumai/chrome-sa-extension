@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { h, render } from 'preact';
 import JsonEditor from '../src/mdh/components/JsonEditor.jsx';
 import { stageToggleGutter } from '../src/mdh/pipelineGutter.js';
+import pd from '../src/mdh/components/PipelineDebug.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -33,8 +34,10 @@ describe('JsonEditor aggregate gutter', () => {
     const value = '[\n  { "$match": {} },\n  { "$limit": 50 }\n]';
     render(<JsonEditor mode="aggregate" value={value} onToggleStage={() => {}} />, root);
 
-    await waitForCM(() => expect(root.querySelectorAll('.pipeline-stage-toggle').length).toBe(2));
-    const markers = root.querySelectorAll<HTMLInputElement>('.pipeline-stage-toggle');
+    await waitForCM(() =>
+      expect(root.querySelectorAll(`.${pd.pipelineStageToggle}`).length).toBe(2),
+    );
+    const markers = root.querySelectorAll<HTMLInputElement>(`.${pd.pipelineStageToggle}`);
     expect(markers[0].type).toBe('checkbox');
     expect(markers[0].checked).toBe(true); // enabled = checked
     expect(markers[1].checked).toBe(true);
@@ -45,8 +48,10 @@ describe('JsonEditor aggregate gutter', () => {
     const value = '[\n  { "$match": {} },\n  /* @disabled-stage\n  { "$limit": 50 } */\n]';
     render(<JsonEditor mode="aggregate" value={value} onToggleStage={() => {}} />, root);
 
-    await waitForCM(() => expect(root.querySelectorAll('.pipeline-stage-toggle').length).toBe(2));
-    const markers = root.querySelectorAll<HTMLInputElement>('.pipeline-stage-toggle');
+    await waitForCM(() =>
+      expect(root.querySelectorAll(`.${pd.pipelineStageToggle}`).length).toBe(2),
+    );
+    const markers = root.querySelectorAll<HTMLInputElement>(`.${pd.pipelineStageToggle}`);
     expect(markers[0].checked).toBe(true); // enabled
     expect(markers[1].checked).toBe(false); // disabled = unchecked
     expect(markers[1].classList.contains('pipeline-stage-toggle-off')).toBe(true);
@@ -60,7 +65,7 @@ describe('JsonEditor aggregate gutter', () => {
     );
     // Give the mount effect a beat; no aggregate gutter should appear.
     await waitForCM(() => expect(root.querySelector('.cm-editor')).not.toBeNull());
-    expect(root.querySelectorAll('.pipeline-stage-toggle').length).toBe(0);
+    expect(root.querySelectorAll(`.${pd.pipelineStageToggle}`).length).toBe(0);
   });
 
   it('does not add stage toggles when no onToggleStage prop', async () => {
@@ -68,7 +73,9 @@ describe('JsonEditor aggregate gutter', () => {
     render(<JsonEditor mode="aggregate" value={'[ { "$match": {} } ]'} />, root);
     await waitForCM(() => expect(root.querySelector('.cm-editor')).not.toBeNull());
     // gutter is only pushed when mode==='aggregate', regardless of onToggleStage
-    await waitForCM(() => expect(root.querySelectorAll('.pipeline-stage-toggle').length).toBe(1));
+    await waitForCM(() =>
+      expect(root.querySelectorAll(`.${pd.pipelineStageToggle}`).length).toBe(1),
+    );
   });
 });
 
@@ -79,7 +86,7 @@ describe('JsonEditor gutters by mode', () => {
       <JsonEditor mode="aggregate" value={'[\n  { "$match": {} }\n]'} onToggleStage={() => {}} />,
       root,
     );
-    await waitForCM(() => expect(root.querySelector('.pipeline-stage-toggle')).not.toBeNull());
+    await waitForCM(() => expect(root.querySelector(`.${pd.pipelineStageToggle}`)).not.toBeNull());
     expect(root.querySelector('.cm-lineNumbers')).toBeNull();
     expect(root.querySelector('.cm-foldGutter')).toBeNull();
   });

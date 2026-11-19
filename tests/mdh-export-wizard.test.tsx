@@ -11,6 +11,7 @@ import ExportWizard from '../src/mdh/components/ExportWizard.jsx';
 import * as api from '../src/mdh/api.js';
 import { closeModal } from '../src/mdh/components/Modal.jsx';
 import mstyles from '../src/ui/Modal.module.css';
+import fmtCss from '../src/mdh/formats/formats.module.css';
 
 function mount(props: any) {
   const el = document.createElement('div');
@@ -207,7 +208,7 @@ describe('ExportWizard', () => {
       (b) => b.textContent.trim() === 'Excel',
     );
     (xlsxBtn as HTMLElement).click();
-    await waitFor(() => root.querySelector('.csv-preview-table')); // grid preview
+    await waitFor(() => root.querySelector(`.${fmtCss.csvPreviewTable}`)); // grid preview
   });
 
   it('what-will-happen shows the columns line only for column formats', async () => {
@@ -307,7 +308,7 @@ describe('ExportWizard', () => {
         (b) => b.textContent.trim() === 'Excel',
       ) as HTMLElement
     ).click();
-    await waitFor(() => root.querySelector('.csv-preview-table'));
+    await waitFor(() => root.querySelector(`.${fmtCss.csvPreviewTable}`));
     expect(groupCalls()).toBe(1); // xlsx reuses the cached columns — no refetch
   });
 
@@ -397,7 +398,7 @@ describe('ExportWizard', () => {
         (b) => b.textContent.trim() === 'Excel',
       ) as HTMLElement
     ).click();
-    const table = await waitFor(() => root.querySelector('.csv-preview-table'));
+    const table = await waitFor(() => root.querySelector(`.${fmtCss.csvPreviewTable}`));
     await waitFor(() => /meta\.role/.test(table.textContent));
     const headerCells = [...table.querySelectorAll('thead th')].map((th) => th.textContent);
     const idx = headerCells.indexOf('meta.role');

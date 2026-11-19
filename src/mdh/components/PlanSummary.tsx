@@ -1,5 +1,6 @@
 import { h, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
+import styles from './PlanSummary.module.css';
 
 // One-sentence outcome+risk summary with a collapsed "Details" expander that
 // holds the full verified bullet list (the caller passes the <ul>). Replaces
@@ -16,15 +17,15 @@ export default function PlanSummary({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div class="plan-summary">
-      <div class="plan-summary-line">
-        <span class="plan-summary-text" data-testid={summaryTestid}>
+    <div class={styles.planSummary}>
+      <div class={styles.planSummaryLine}>
+        <span class={styles.planSummaryText} data-testid={summaryTestid}>
           {summary}
         </span>
         {children && (
           <button
             type="button"
-            class="plan-summary-toggle"
+            class={styles.planSummaryToggle}
             aria-expanded={open}
             data-testid={summaryTestid ? `${summaryTestid}-toggle` : undefined}
             onClick={() => setOpen(!open)}
@@ -33,7 +34,7 @@ export default function PlanSummary({
           </button>
         )}
       </div>
-      {open && <div class="import-steps">{children}</div>}
+      {open && <div class={styles.importSteps}>{children}</div>}
     </div>
   );
 }

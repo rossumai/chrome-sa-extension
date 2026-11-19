@@ -20,6 +20,7 @@ import * as api from '../src/mdh/api.js';
 import * as store from '../src/mdh/store.js';
 import Sidebar from '../src/mdh/components/Sidebar.jsx';
 import { COLLECTION, LEGACY_COLLECTION } from '../src/fabry/architect/collectionNames.js';
+import sb from '../src/mdh/components/Sidebar.module.css';
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 // loadCollections is async and the render follows it, so a single macrotask is not enough —
@@ -43,9 +44,9 @@ async function mount() {
   await tick();
   return root;
 }
-const names = (root: any, sel = '.collection-item-name') =>
+const names = (root: any, sel = `.${sb.collectionItemName}`) =>
   [...root.querySelectorAll(sel)].map((e) => e.textContent);
-const group = (root: any) => root.querySelector('.collection-hidden-group');
+const group = (root: any) => root.querySelector(`.${sb.collectionHiddenGroup}`);
 
 afterEach(() => {
   if (mounted) {
@@ -68,17 +69,17 @@ describe('Sidebar — this extension own collections live in a group below the l
   it('keeps them out of the main list and offers them collapsed underneath', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', COLLECTION, 'items'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
     // main list: the customer own collections only
     expect(names(root)).toEqual(['items', 'vendors']);
     const g = group(root);
     expect(g).toBeTruthy();
-    const toggle = g.querySelector('.collection-hidden-toggle');
+    const toggle = g.querySelector(`.${sb.collectionHiddenToggle}`);
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     expect(toggle.textContent).toMatch(/Extension collections/);
     expect(toggle.textContent).toMatch(/\(1\)/);
     // collapsed: no rows rendered at all
-    expect(g.querySelector('.collection-item')).toBe(null);
+    expect(g.querySelector(`.${sb.collectionItem}`)).toBe(null);
   });
 
   it('expands to real rows — same renderer, so they behave like any other collection', async () => {
@@ -86,14 +87,14 @@ describe('Sidebar — this extension own collections live in a group below the l
       result: ['vendors', COLLECTION, LEGACY_COLLECTION],
     });
     const root = await mount();
-    const toggle = group(root).querySelector('.collection-hidden-toggle');
+    const toggle = group(root).querySelector(`.${sb.collectionHiddenToggle}`);
     toggle.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await tick();
-    const rows = [...group(root).querySelectorAll('.collection-item')];
+    const rows = [...group(root).querySelectorAll(`.${sb.collectionItem}`)];
     expect(rows).toHaveLength(2);
-    expect(rows.map((r) => r.querySelector('.collection-item-name').textContent).sort()).toEqual(
-      [LEGACY_COLLECTION, COLLECTION].sort(),
-    );
+    expect(
+      rows.map((r) => r.querySelector(`.${sb.collectionItemName}`).textContent).sort(),
+    ).toEqual([LEGACY_COLLECTION, COLLECTION].sort());
     // the kebab actions menu comes along, since it is the same row markup
     expect(rows[0].querySelector('.collection-action-menu-btn')).toBeTruthy();
     // clicking one selects it like any other collection
@@ -104,7 +105,7 @@ describe('Sidebar — this extension own collections live in a group below the l
   it('shows no group at all on an org that has none of ours', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', 'items'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
     expect(group(root)).toBe(null);
   });
 

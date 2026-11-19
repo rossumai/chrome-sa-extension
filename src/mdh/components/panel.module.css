@@ -1,0 +1,632 @@
+/* Dataset Management's shared panel layout — the panel shell, its toolbar, record and index
+   cards, badges and the JSON editor — used by every MDH panel. Moved from the global
+   src/mdh/legacy.css in its original rule order.
+
+   TEMPORARY, emits nothing: an empty :global() rule makes esbuild's minifier treat these names
+   as taken, so no module class here is renamed to them. Both are hand-written, hyphen-less
+   classes of the Inspector (still allowlisted in tests/css-class-collision-boundary.test.ts)
+   that this file's new local names would otherwise land on. Delete it once the Inspector's own
+   CSS Modules migration has removed them. */
+:global(.mc),
+:global(.nm) {
+}
+
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Data Panel (split: pipeline + records) ───── */
+
+.dataPanelLeft {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.dataPanelLeft .jsonEditor {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.toolbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+
+/* The Search Indexes toolbar stacks a collection-level sync line under its title.
+   These live in the monolith rather than a CSS Module because every class that
+   panel uses is global and lives here, and .toolbar-group directly above is the
+   existing precedent for a .toolbar child. */
+
+.toolbarStack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.toolbarSync {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbarSync .dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  margin-right: 5px;
+  vertical-align: 1px;
+}
+
+.toolbarSync .dotWork {
+  background: var(--warning-fg);
+}
+
+.toolbarSync .spin {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border: 1.5px solid var(--warning-fg);
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: 0;
+  animation: sa-index-spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indexBadgePending::before,
+  .toolbarSync .spin {
+    animation: none;
+  }
+}
+
+.recordCard {
+  margin-bottom: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.recordCardExpanded {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.recordCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.recordCardHeader:hover {
+  background: var(--bg-hover);
+}
+
+/* A non-collapsible card (Stages view) has an inert header — no collapse cursor/hover. */
+
+.recordCardStatic .recordCardHeader {
+  cursor: default;
+}
+
+.recordCardStatic .recordCardHeader:hover {
+  background: transparent;
+}
+
+.recordChevron {
+  font-size: 9px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+}
+
+.recordSummary {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recordSummaryEmpty {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* ── Shared card actions (records + indexes) ──── */
+
+.recordActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.recordActions button {
+  background: none;
+  border: none;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition:
+    background 0.1s,
+    color 0.1s;
+  color: var(--text-secondary);
+}
+
+.recordActions button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.recordActions .actionCopy {
+  color: var(--accent);
+}
+
+.recordActions .actionDelete {
+  color: var(--danger);
+}
+
+.recordActions .actionDelete:hover {
+  color: var(--danger);
+}
+
+.recordActions .actionEdit {
+  color: var(--accent);
+}
+
+/* A card-level statement the reader must not have to expand the card to see —
+   currently "this index failed but the previous build is still serving". Sits on
+   the body's surface so it reads as part of the card, not as a banner. */
+
+.recordCardNotice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-code);
+  font-size: 11.5px;
+  color: var(--text-primary);
+}
+
+.recordCardBody {
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-code);
+}
+
+.indexList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+.indexBadge {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.indexBadgeDefault {
+  background: var(--accent);
+  color: #fff;
+}
+
+.indexBadgeUnique {
+  background: #7c3aed;
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .indexBadgeUnique {
+    background: #6d28d9;
+  }
+}
+
+.indexBadgeReady {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.indexBadgePending {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+/* A transitional search index is genuinely working — a static badge reads as a
+   stuck one. Only searchIndexDef.statusBadge emits this class, so the spinner
+   cannot leak onto any other badge. */
+
+.indexBadgePending::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -1px;
+  animation: sa-index-spin 0.7s linear infinite;
+}
+
+@keyframes sa-index-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.indexBadgeWarning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.indexBadgeFailed {
+  background: var(--danger);
+  color: #fff;
+}
+
+.indexCardMeta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.panelMeta {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.recordCardFailed {
+  border-color: var(--danger);
+  box-shadow: inset 3px 0 0 var(--danger);
+}
+
+.recordCardFailed.recordCardExpanded {
+  border-color: var(--danger);
+}
+
+.recordCardBody .jsonEditor {
+  border: none;
+}
+
+.recordCardBody .jsonEditorCompact :global(.cm-editor) {
+  max-height: none;
+}
+
+/* Marks where the pipeline actually begins. A rule rather than more whitespace:
+   the boundary is stated, not left to be inferred from spacing. */
+
+.pipelineInspectStart {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin: -2px 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.pipelineInspectStart::before,
+.pipelineInspectStart::after {
+  content: '';
+  height: 1px;
+  background: var(--border);
+  flex: 1;
+}
+
+/* Mr. Fabry explaining an empty stage, inside that stage's own body. Uses the
+   shared Inspector Diagnosis identity (--diag-*) so every Fabry surface in the
+   extension reads as the same thing: purple-tinted panel, star mark, credited
+   and hedged in the footer. Sits below the "No documents at this stage" line. */
+
+/* An empty stage has no records to size, so the fixed band would be 324px of
+   nothing — a wall of whitespace under "No documents at this stage", and above
+   any explanation. Let it hug its content instead: the band exists to keep
+   RECORDS uniform, and there are none.
+
+   COMPOUND selector on purpose. `.pipeline-inspect-body` sets the fixed height
+   ~65 lines BELOW this, and at equal specificity the later rule wins — so the
+   single-class version of this rule silently did nothing. Matching both classes
+   (0,2,0) makes it independent of where either rule sits in the file. jsdom has
+   no layout engine, so no unit test can catch that regressing; the selector
+   carrying its own weight is the guard. */
+
+.pipelineInspectBody.pipelineInspectBodyEmpty {
+  height: auto;
+}
+
+/* Records span the full section width (the per-stage query box was removed —
+   hover a stage to draw a connector line to its code in the pipeline editor), and
+   this band carries the section's fixed height rather than taking whatever the
+   header + definition leave over — so its height, and every card's, is identical
+   with Definitions on and off. A DEFINITE height here is what keeps the
+   minmax(0, 1fr) row resolvable, which is what lets each card stretch to the band
+   and scroll its own JSON. */
+
+.pipelineInspectBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  height: var(--stage-records-h);
+  flex: none;
+}
+
+/* Records sit side-by-side as fixed-width cards (stages stay stacked above).
+   The row scrolls horizontally when there are more docs than fit; each card
+   scrolls vertically when its JSON is taller than the row. */
+
+/* The records row scrolls horizontally; a vertical wheel passes through to the
+   stage list. overscroll-behavior-x: none (NOT the all-axes shorthand) stops the
+   horizontal rubber-band without blocking vertical scroll-chaining. A record
+   taller than the stage band scrolls within itself (max-height + overflow-y:
+   auto) and, once at its top/bottom, chains the wheel up to the list (default
+   overscroll-behavior on the card = chaining, so the page keeps scrolling when the
+   mouse is over a record — the macOS vertical rubber-band is the unavoidable cost
+   of that chaining). A record that fits chains immediately, so the list always
+   scrolls when there's nothing left to scroll. */
+
+.pipelineInspectOutput {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
+  min-height: 0;
+  padding-bottom: 4px;
+  overscroll-behavior-x: none;
+}
+
+/* Cards fill the section height even when the record is short: the card becomes a
+   flex column (header pinned) whose body grows to fill the row and scrolls when the
+   JSON is taller than the row. Collapsed cards (header only) hug the top instead. */
+
+.pipelineInspectOutput > .recordCard {
+  flex: 0 0 var(--stage-card-w);
+  max-width: var(--stage-card-w);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pipelineInspectOutput > .recordCard:not(.recordCardExpanded) {
+  align-self: flex-start;
+}
+
+.pipelineInspectOutput > .recordCard > .recordCardBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* ── Uploads table ─────────────────────────────── */
+
+.uploadsPanel {
+  background: var(--bg-card);
+}
+
+.uploadsStats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  font-size: 11px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+
+.uploadsStatChip {
+  --chip-tone: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.uploadsStatChip:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.uploadsStatChip b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* Was `[class*='tone-']`: a module class is renamed at build time, so the three tones are
+   named instead. Same specificity — an attribute selector and a class both count (0,1,0). */
+.uploadsStatChip.toneSuccess::before,
+.uploadsStatChip.toneDanger::before,
+.uploadsStatChip.toneWarning::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--chip-tone);
+}
+
+.uploadsStatChip.toneSuccess {
+  --chip-tone: var(--success);
+}
+
+.uploadsStatChip.toneDanger {
+  --chip-tone: var(--danger);
+}
+
+.uploadsStatChip.toneWarning {
+  --chip-tone: var(--warning);
+}
+
+.uploadsStatChip.active {
+  background: color-mix(in srgb, var(--chip-tone) 14%, transparent);
+  border-color: color-mix(in srgb, var(--chip-tone) 48%, transparent);
+  color: var(--chip-tone);
+}
+
+.uploadsStatChip.active b {
+  color: var(--chip-tone);
+}
+
+.uploadsStatChip.active:hover {
+  background: color-mix(in srgb, var(--chip-tone) 22%, transparent);
+  border-color: color-mix(in srgb, var(--chip-tone) 60%, transparent);
+}
+
+.uploadsStatOf {
+  font-weight: 400;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+
+.uploadsSparklineWrap {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 2px 2px 10px;
+  border-left: 1px solid var(--border);
+}
+
+/* ── JSON Editor (CodeMirror wrapper) ─────────── */
+
+.jsonEditor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.jsonEditor :global(.cm-editor) {
+  flex: 1;
+}
+
+.jsonEditor :global(.cm-editor):global(.cm-focused) {
+  outline: none;
+}
+
+.jsonEditorCompact {
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--radius);
+}
+
+.jsonEditorCompact :global(.cm-editor) {
+  max-height: 120px;
+}
+
+/* `fill`: let the editor resolve to the height its container was GIVEN rather than
+   growing to fit the document, so CodeMirror's own `.cm-scroller` owns the
+   overflow. The generic rule above deliberately omits `min-height: 0` — without
+   it `.cm-scroller`'s `height: 100%` never resolves and the outer .json-editor is
+   the scroller (JsonEditor's stage-scroll code depends on that in the Stages
+   layout), so this is an opt-in rather than a change to every consumer. */
+
+.jsonEditorFill :global(.cm-editor) {
+  min-height: 0;
+}
+
+/* ── Stats Panel ─────────────────────────────── */
+
+.statsProgress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.statsProgressSpinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.statsLoadingBottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.recordCardSelected {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+/* A copy of the global @keyframes spin (src/console/legacy/shared.css): a CSS Module
+   localises the name it animates, so the keyframes must be local too. */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

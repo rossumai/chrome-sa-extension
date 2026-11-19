@@ -1,5 +1,14 @@
 import { h, Fragment } from 'preact';
 import { hasSpecial, tokenizeSpecial, cpLabel } from '../specialChars.js';
+import styles from './SpecialText.module.css';
+
+// specialChars.ts's categories, each with its own colour.
+const CATEGORY_CLASS: Record<string, string> = {
+  space: styles.mdhSpecialSpace,
+  'zero-width': styles.mdhSpecialZeroWidth,
+  bidi: styles.mdhSpecialBidi,
+  control: styles.mdhSpecialControl,
+};
 
 // Renders a record-value string, revealing special / invisible characters as
 // labeled, color-coded markers (e.g. "NBSP", "ZWSP" — see specialChars.js). A
@@ -31,7 +40,11 @@ export default function SpecialText({
       const core = rest.slice(0, rest.length - trail.length);
       const marks = (run: string, keyBase: string) =>
         [...run].map((_, i) => (
-          <span key={keyBase + i} class="mdh-special mdh-special-space" title="U+0020 SPACE">
+          <span
+            key={keyBase + i}
+            class={`${styles.mdhSpecial} ${styles.mdhSpecialSpace}`}
+            title="U+0020 SPACE"
+          >
             {'·'}
           </span>
         ));
@@ -68,7 +81,7 @@ export default function SpecialText({
         ) : (
           <span
             key={i}
-            class={'mdh-special mdh-special-' + t.category}
+            class={`${styles.mdhSpecial} ${CATEGORY_CLASS[t.category] ?? ''}`}
             title={cpLabel(t.cp) + ' ' + t.name}
           >
             {t.abbr}

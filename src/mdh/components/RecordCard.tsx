@@ -5,6 +5,8 @@ import { selectionMode } from '../store.js';
 import { isRecordSelected, toggleRecordSelection } from '../recordSelection.js';
 import { recordSummary, MIN_CHAR_BUDGET, EMPTY_SENTINEL } from '../recordSummary.js';
 import type { SortFilterControls } from '../hooks/usePipeline.js';
+import pnl from './panel.module.css';
+import jv from './jsonValues.module.css';
 
 export default function RecordCard({
   record,
@@ -87,18 +89,18 @@ export default function RecordCard({
   return (
     <div
       class={
-        'record-card' +
-        (showBody ? ' record-card-expanded' : '') +
-        (collapsible ? '' : ' record-card-static') +
-        (isSelected ? ' record-card-selected' : '')
+        pnl.recordCard +
+        (showBody ? ` ${pnl.recordCardExpanded}` : '') +
+        (collapsible ? '' : ` ${pnl.recordCardStatic}`) +
+        (isSelected ? ` ${pnl.recordCardSelected}` : '')
       }
     >
       <div
-        class="record-card-header"
+        class={pnl.recordCardHeader}
         onClick={
           collapsible
             ? (e: any) => {
-                if (!e.target.closest('.record-actions')) onToggle(index);
+                if (!e.target.closest(`.${pnl.recordActions}`)) onToggle(index);
               }
             : undefined
         }
@@ -106,16 +108,18 @@ export default function RecordCard({
         {isSelectionMode && (
           <input
             type="checkbox"
-            class="record-checkbox"
+            class={jv.recordCheckbox}
             checked={isSelected}
             onClick={toggleSelected}
             onChange={() => {}}
             aria-label="Select record"
           />
         )}
-        {collapsible && <span class="record-chevron">{showBody ? '\u25BC' : '\u25B6'}</span>}
-        <span class={'record-summary' + (isEmpty ? ' record-summary-empty' : '')}>{summary}</span>
-        <span class="record-actions">
+        {collapsible && <span class={pnl.recordChevron}>{showBody ? '\u25BC' : '\u25B6'}</span>}
+        <span class={pnl.recordSummary + (isEmpty ? ` ${pnl.recordSummaryEmpty}` : '')}>
+          {summary}
+        </span>
+        <span class={pnl.recordActions}>
           {showBody && isLarge && (
             <button
               class="action-toggle-all"
@@ -125,12 +129,12 @@ export default function RecordCard({
               {allExpanded ? 'Collapse' : 'Expand'}
             </button>
           )}
-          <button class="action-copy" title="Copy record as JSON" onClick={handleCopy}>
+          <button class={pnl.actionCopy} title="Copy record as JSON" onClick={handleCopy}>
             Copy
           </button>
           {!isSelectionMode && !readOnly && (
             <button
-              class="action-edit"
+              class={pnl.actionEdit}
               title="Edit with update expression"
               onClick={() => onEdit(record)}
             >
@@ -139,7 +143,7 @@ export default function RecordCard({
           )}
           {!isSelectionMode && !readOnly && (
             <button
-              class="action-delete"
+              class={pnl.actionDelete}
               title="Delete this record"
               onClick={() => onDelete(record, index)}
             >
@@ -149,7 +153,7 @@ export default function RecordCard({
         </span>
       </div>
       {showBody && (
-        <div class="record-card-body">
+        <div class={pnl.recordCardBody}>
           <JsonTree
             key={treeKey}
             data={record}

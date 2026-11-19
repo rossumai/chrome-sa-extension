@@ -3,6 +3,8 @@ import { describe, it, expect } from 'vitest';
 import { h, render } from 'preact';
 import StatsSummary from '../src/mdh/components/StatsSummary.jsx';
 import StatsFieldCard from '../src/mdh/components/StatsFieldCard.jsx';
+import ssum from '../src/mdh/components/StatsSummary.module.css';
+import sfc from '../src/mdh/components/StatsFieldCard.module.css';
 
 function mount(props: any) {
   const root = document.createElement('div');
@@ -13,7 +15,7 @@ function mount(props: any) {
 describe('StatsSummary sampling notice', () => {
   it('states the sample and what stayed exact, instead of warning about timeouts', () => {
     const root = mount({ sampled: 5000 });
-    const note = root.querySelector('.stats-note')!;
+    const note = root.querySelector(`.${ssum.statsNote}`)!;
     expect(note.textContent).toContain('5,000');
     expect(note.textContent).toContain('4,210,663');
     expect(note.textContent).toContain('exact');
@@ -22,7 +24,7 @@ describe('StatsSummary sampling notice', () => {
 
   it('says nothing on an exact run, at any size', () => {
     const root = mount({ sampled: null });
-    expect(root.querySelector('.stats-note')).toBeNull();
+    expect(root.querySelector(`.${ssum.statsNote}`)).toBeNull();
     expect(root.querySelector('.stats-warn')).toBeNull();
   });
 });
@@ -33,7 +35,7 @@ describe('StatsSummary document size', () => {
       sampled: 5000,
       docSize: { count: 10, avg: 812, min: null, max: null, total: 8120 },
     });
-    const card = [...root.querySelectorAll('.stats-overview-card')].find((c) =>
+    const card = [...root.querySelectorAll(`.${ssum.statsOverviewCard}`)].find((c) =>
       c.textContent!.includes('Avg doc'),
     )!;
     expect(card.textContent).toContain('812 B');
@@ -45,7 +47,7 @@ describe('StatsSummary document size', () => {
       sampled: null,
       docSize: { count: 10, avg: 812, min: 100, max: 2000, total: 8120 },
     });
-    const card = [...root.querySelectorAll('.stats-overview-card')].find((c) =>
+    const card = [...root.querySelectorAll(`.${ssum.statsOverviewCard}`)].find((c) =>
       c.textContent!.includes('Avg doc'),
     )!;
     expect(card.getAttribute('title')).toContain('Min:');
@@ -81,14 +83,14 @@ function mountCard(props: any) {
 
 describe('StatsFieldCard distinct count', () => {
   it('marks the count as a lower bound and names the sample it came from', () => {
-    const meta = mountCard({ sampled: 5000 }).querySelector('.stats-fcard-meta')!;
+    const meta = mountCard({ sampled: 5000 }).querySelector(`.${sfc.statsFcardMeta}`)!;
     expect(meta.textContent).toContain('4,812');
     expect(meta.textContent).toContain('≥'); // the count is a floor: a sample
     expect(meta.textContent).toContain('in 5,000 sampled'); // cannot see a value it did not draw
   });
 
   it('drops the qualifier on an exact run, because then it is the real count', () => {
-    const meta = mountCard({ sampled: null }).querySelector('.stats-fcard-meta')!;
+    const meta = mountCard({ sampled: null }).querySelector(`.${sfc.statsFcardMeta}`)!;
     expect(meta.textContent).toContain('4,812 distinct');
     expect(meta.textContent).not.toContain('≥');
     expect(meta.textContent).not.toContain('sampled');
@@ -97,6 +99,6 @@ describe('StatsFieldCard distinct count', () => {
   it('renders no meta row when there is no count to show', () => {
     const root = document.createElement('div');
     render(<StatsFieldCard profile={{ ...profile, distinct: 0 }} sampled={null} />, root);
-    expect(root.querySelector('.stats-fcard-meta')).toBeNull();
+    expect(root.querySelector(`.${sfc.statsFcardMeta}`)).toBeNull();
   });
 });

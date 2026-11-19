@@ -1,0 +1,191 @@
+.toolbarGroup {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* A toolbar group shown but inert (e.g. record actions while in the Stages view). */
+
+/* A toolbar group shown but inert (e.g. record actions while in the Stages view).
+   pointer-events go on the CHILDREN so the group itself still catches hover and can
+   show its `title` tooltip explaining why the actions are unavailable. */
+
+.toolbarGroupDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbarGroupDisabled > * {
+  pointer-events: none;
+}
+
+.downloadProgress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.downloadProgressText {
+  white-space: nowrap;
+}
+
+.downloadCancelBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 0 4px;
+  border-radius: 3px;
+  line-height: 1;
+  transition:
+    color 0.1s,
+    background 0.1s;
+}
+
+.downloadCancelBtn:hover {
+  color: var(--danger);
+  background: var(--bg-hover);
+}
+
+.downloadBar {
+  width: 80px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.downloadBarFill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.downloadBarIndeterminate {
+  width: 40%;
+  animation: indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* ── Record List ──────────────────────────────── */
+
+.recordList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+.recordListEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.recordListEmpty p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.recordListEmptyHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin-top: 6px !important;
+}
+
+.paginationHint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.75;
+}
+
+.selectionCount {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-left: 4px;
+  cursor: pointer;
+  border-bottom: 1px dotted var(--text-secondary);
+}
+
+.selectionMismatchBanner {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  padding: 8px 12px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selectionPopover {
+  position: absolute;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 8px;
+  min-width: 240px;
+  max-width: 360px;
+  max-height: 320px;
+  overflow: auto;
+  z-index: 100;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.selectionPopoverRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.selectionPopoverRow:hover {
+  background: var(--bg-hover);
+}
+
+.selectionPopoverId {
+  color: var(--text-primary);
+}
+
+.selectionPopoverRemove {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.selectionPopoverRemove:hover {
+  color: var(--danger);
+}
+
+.selectionPopoverActions {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}

@@ -21,6 +21,8 @@ import {
 import { assembleSampledStats } from '../src/mdh/statsCompute.js';
 import { prefetchForPanel } from '../src/mdh/prefetch.js';
 import seg from '../src/ui/Segmented.module.css';
+import pnl from '../src/mdh/components/panel.module.css';
+import ssum from '../src/mdh/components/StatsSummary.module.css';
 
 function pipelinesSent() {
   return vi.mocked(api.aggregate).mock.calls.map((c) => c[1]);
@@ -342,7 +344,7 @@ describe('the sampled read is shared with a racing background prefetch', () => {
     // than leaving them pending against an unmounted panel.
     releaseGate();
     await prefetchDone;
-    await vi.waitFor(() => expect(root.querySelector('.stats-progress')).toBeNull());
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.statsProgress}`)).toBeNull());
     singleSpy.mockRestore();
   });
 });
@@ -434,12 +436,14 @@ describe('a failed storage probe costs the sampled path and nothing else', () =>
     const root = mount();
     await settle();
     await vi.waitFor(() =>
-      expect(root.querySelector('.stats-overview-card .stats-metric-value')).not.toBeNull(),
+      expect(
+        root.querySelector(`.${ssum.statsOverviewCard} .${ssum.statsMetricValue}`),
+      ).not.toBeNull(),
     );
     expect(cache.get('example', 'totalCount')).toBe(4_000_000);
-    expect(root.querySelector('.stats-overview-card .stats-metric-value')!.textContent).toBe(
-      (4_000_000).toLocaleString(),
-    );
+    expect(
+      root.querySelector(`.${ssum.statsOverviewCard} .${ssum.statsMetricValue}`)!.textContent,
+    ).toBe((4_000_000).toLocaleString());
   });
 
   it('reads exactly rather than sampling a read it cannot size', async () => {
@@ -486,12 +490,14 @@ describe('a failed count aggregate falls back to the storage probe', () => {
     const root = mount();
     await settle();
     await vi.waitFor(() =>
-      expect(root.querySelector('.stats-overview-card .stats-metric-value')).not.toBeNull(),
+      expect(
+        root.querySelector(`.${ssum.statsOverviewCard} .${ssum.statsMetricValue}`),
+      ).not.toBeNull(),
     );
     expect(cache.get('example', 'totalCount')).toBe(4_000_000);
-    expect(root.querySelector('.stats-overview-card .stats-metric-value')!.textContent).toBe(
-      (4_000_000).toLocaleString(),
-    );
+    expect(
+      root.querySelector(`.${ssum.statsOverviewCard} .${ssum.statsMetricValue}`)!.textContent,
+    ).toBe((4_000_000).toLocaleString());
   });
 });
 
@@ -523,9 +529,11 @@ describe('a failed sampled read clears the planned sample size', () => {
     const root = mount();
     await settle(4);
     await vi.waitFor(() =>
-      expect(root.querySelector('.stats-overview-card .stats-metric-value')).not.toBeNull(),
+      expect(
+        root.querySelector(`.${ssum.statsOverviewCard} .${ssum.statsMetricValue}`),
+      ).not.toBeNull(),
     );
-    expect(root.querySelector('.stats-note')).toBeNull();
+    expect(root.querySelector(`.${ssum.statsNote}`)).toBeNull();
   });
 });
 
@@ -583,8 +591,8 @@ describe('the sampled run reports what actually arrived', () => {
     });
     const root = mount();
     await settle();
-    await vi.waitFor(() => expect(root.querySelector('.stats-note')).not.toBeNull());
-    expect(root.querySelector('.stats-note')!.textContent).toContain('sample of 1 of');
+    await vi.waitFor(() => expect(root.querySelector(`.${ssum.statsNote}`)).not.toBeNull());
+    expect(root.querySelector(`.${ssum.statsNote}`)!.textContent).toContain('sample of 1 of');
   });
 
   it('keeps storage and docSize when the sampled read fails', async () => {
@@ -614,7 +622,9 @@ describe('the sampled run reports what actually arrived', () => {
     const root = mount();
     await settle();
     await vi.waitFor(() => {
-      const labels = [...root.querySelectorAll('.stats-metric-label')].map((n) => n.textContent);
+      const labels = [...root.querySelectorAll(`.${ssum.statsMetricLabel}`)].map(
+        (n) => n.textContent,
+      );
       expect(labels).toContain('On disk');
       expect(labels).toContain('Avg doc');
     });

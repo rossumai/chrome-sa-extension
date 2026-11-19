@@ -11,6 +11,7 @@ import { getSchemaHints } from '../agent/aiContext.js';
 import { stripAiComment } from '../llmPipeline.js';
 import FabryInput from '../../ui/fabry/FabryInput.jsx';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
+import styles from './AgentBox.module.css';
 
 /** All AgentBox ever touches on the editor: it reads the pipeline and writes one back.
  *  Naming the slice (rather than the whole handle) is what lets a caller — or a test —
@@ -80,11 +81,14 @@ function PhaseTracker({ phase, hadRefine }: { phase?: string | null; hadRefine?:
   const steps = hadRefine ? [...PHASES, REFINE_PHASE] : PHASES;
   const idx = steps.findIndex(([k]) => k === phase);
   return (
-    <div class="agent-phases">
+    <div class={styles.agentPhases}>
       {steps.map(([k, label], i) => (
         <span
           key={k}
-          class={'agent-phase' + (k === phase ? ' active' : idx >= 0 && i < idx ? ' done' : '')}
+          class={
+            styles.agentPhase +
+            (k === phase ? ` ${styles.active}` : idx >= 0 && i < idx ? ` ${styles.done}` : '')
+          }
         >
           <i />
           {label}
@@ -97,22 +101,22 @@ function PhaseTracker({ phase, hadRefine }: { phase?: string | null; hadRefine?:
 // Compact result line filling the footer slot when a run finishes.
 function ResultLine({ outcome, onOpen }: { outcome: any; onOpen: (() => void) | null }) {
   return (
-    <div class="agent-result">
-      <span class={outcome.ok ? 'agent-result-ok' : 'agent-result-err'}>
+    <div class={styles.agentResult}>
+      <span class={outcome.ok ? styles.agentResultOk : styles.agentResultErr}>
         {outcome.ok ? '✓' : '✗'}
       </span>
       {outcome.ok ? (
-        <span class="agent-result-sum" title={outcome.request}>
+        <span class={styles.agentResultSum} title={outcome.request}>
           {outcome.request}
         </span>
       ) : (
-        <span class="agent-result-msg" title={outcome.message}>
+        <span class={styles.agentResultMsg} title={outcome.message}>
           {outcome.message}
         </span>
       )}
-      {outcome.ok && <span class="agent-result-meta">{'· ' + outcome.meta}</span>}
+      {outcome.ok && <span class={styles.agentResultMeta}>{'· ' + outcome.meta}</span>}
       {onOpen && (
-        <button type="button" class="agent-transcript-link" onClick={onOpen}>
+        <button type="button" class={styles.agentTranscriptLink} onClick={onOpen}>
           View conversation
         </button>
       )}
@@ -122,18 +126,24 @@ function ResultLine({ outcome, onOpen }: { outcome: any; onOpen: (() => void) | 
 
 const roleLabel = (r: any) => (r === 'user' ? 'You' : r === 'assistant' ? 'Mr. Fabry' : 'Run');
 
+// The role modifiers that carry a rule; the assistant's turn has none.
+const ROLE_CLASS: Record<string, string> = {
+  user: styles.agentChatUser,
+  system: styles.agentChatSystem,
+};
+
 // One transcript turn — assistant shows reasoning (if any) + full reply in a <pre>.
 function Turn({ t }: { t: any }) {
   return (
-    <div class={'agent-chat-turn agent-chat-' + t.role}>
-      <div class="agent-chat-role">{roleLabel(t.role)}</div>
+    <div class={`${styles.agentChatTurn} ${ROLE_CLASS[t.role] ?? ''}`}>
+      <div class={styles.agentChatRole}>{roleLabel(t.role)}</div>
       {t.role === 'assistant' ? (
-        <div class="agent-chat-assistant-body">
-          {t.reasoning ? <div class="agent-chat-reasoning">{t.reasoning}</div> : null}
-          <pre class="agent-chat-code">{t.text}</pre>
+        <div class={styles.agentChatAssistantBody}>
+          {t.reasoning ? <div class={styles.agentChatReasoning}>{t.reasoning}</div> : null}
+          <pre class={styles.agentChatCode}>{t.text}</pre>
         </div>
       ) : (
-        <div class="agent-chat-text">{t.text}</div>
+        <div class={styles.agentChatText}>{t.text}</div>
       )}
     </div>
   );
@@ -204,13 +214,13 @@ export function TranscriptModal({
   }
 
   return (
-    <ModalBody class="agent-chat-modal">
-      <div class="agent-chat" ref={scrollRef}>
+    <ModalBody class={styles.agentChatModal}>
+      <div class={`agent-chat ${styles.agentChat}`} ref={scrollRef}>
         {turns.map((t: any, i: any) => (
           <Turn key={i} t={t} />
         ))}
       </div>
-      <div class="agent-chat-continue">
+      <div class={styles.agentChatContinue}>
         <FabryInput
           size="sm"
           value={input}
@@ -328,7 +338,7 @@ export default function AgentBox({ editorRef }: { editorRef?: { current: EditorS
   }
 
   return (
-    <div class="agent-box">
+    <div class={styles.agentBox}>
       <FabryInput
         value={input}
         onInput={setInput}
@@ -338,7 +348,7 @@ export default function AgentBox({ editorRef }: { editorRef?: { current: EditorS
         gerunds={GERUNDS}
       />
       {(loading || outcome) && (
-        <div class="agent-footer">
+        <div class={styles.agentFooter}>
           {loading ? (
             <PhaseTracker phase={phase} hadRefine={hadRefine} />
           ) : (

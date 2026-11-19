@@ -1,0 +1,97 @@
+.splitPaneLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.pipelineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 6px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pipelineHeaderActions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.pipelineActionBtn {
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 3px 8px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.pipelineActionBtn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.pipelineSaveBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2px 6px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+
+.pipelineSaveBtn:hover {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.pipelineSaveBtnActive {
+  color: var(--warning) !important;
+  border-color: var(--warning) !important;
+  cursor: default;
+}
+
+.pipelineSaveInline {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow:
+    var(--shadow),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.pipelineOverflowWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.pipelineOverflowBtn.pipelineActionBtn {
+  font-size: 13px;
+  letter-spacing: 1px;
+  line-height: 1;
+  padding: 2px 8px;
+}
+
+.queryPanelBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}

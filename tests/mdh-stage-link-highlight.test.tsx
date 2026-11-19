@@ -8,6 +8,9 @@ import type { JsonEditorHandle } from '../src/mdh/components/JsonEditor.jsx';
 import StageLinkOverlay from '../src/mdh/components/StageLinkOverlay.jsx';
 import { hoveredStage, caretStage, stagesAutoscroll } from '../src/mdh/store.js';
 import { rect } from './support/dom.js';
+import jsonEditorCss from '../src/mdh/components/JsonEditor.module.css';
+import stagesViewCss from '../src/mdh/components/StagesView.module.css';
+import stageLinkOverlayCss from '../src/mdh/components/StageLinkOverlay.module.css';
 
 // These drive a REAL CodeMirror instance (no mocks). Its mount can exceed
 // vi.waitFor's 1s default under full-suite CPU contention, so poll longer — the
@@ -38,7 +41,7 @@ afterEach(() => {
 const bandedLines = (root: any) => {
   const lines = [...root.querySelectorAll('.cm-line')];
   return lines.reduce(
-    (acc, el, i) => (el.classList.contains('cm-linked-stage') ? [...acc, i + 1] : acc),
+    (acc, el, i) => (el.classList.contains(jsonEditorCss.cmLinkedStage) ? [...acc, i + 1] : acc),
     [],
   );
 };
@@ -264,7 +267,7 @@ describe('the caret drives the same link, from the other end', () => {
     const root = mount();
     const panel = document.createElement('div');
     const pane = document.createElement('div');
-    pane.className = 'pipeline-inspect-scroll';
+    pane.className = stagesViewCss.pipelineInspectScroll;
     pane.getBoundingClientRect = () =>
       rect({ top: 200, bottom: 700, left: 400, right: 900, width: 500, height: 500 });
     const sec = document.createElement('div');
@@ -280,10 +283,12 @@ describe('the caret drives the same link, from the other end', () => {
 
     caretStage.value = { entryIndex: 1 };
 
-    await vi.waitFor(() => expect(root.querySelector('.stage-link-line')).toBeTruthy());
-    expect(root.querySelector('.stage-link-arrow')).toBeTruthy();
+    await vi.waitFor(() =>
+      expect(root.querySelector(`.${stageLinkOverlayCss.stageLinkLine}`)).toBeTruthy(),
+    );
+    expect(root.querySelector(`.${stageLinkOverlayCss.stageLinkArrow}`)).toBeTruthy();
     // One endpoint marker, not two: the arrow REPLACES the section-end dot.
-    expect(root.querySelectorAll('.stage-link-dot').length).toBe(1);
+    expect(root.querySelectorAll(`.${stageLinkOverlayCss.stageLinkDot}`).length).toBe(1);
   });
 
   // The editor end, same rule (owner 2026-08-14): a stage scrolled out of the
@@ -297,7 +302,7 @@ describe('the caret drives the same link, from the other end', () => {
     const root = mount();
     const panel = document.createElement('div');
     const pane = document.createElement('div');
-    pane.className = 'pipeline-inspect-scroll';
+    pane.className = stagesViewCss.pipelineInspectScroll;
     pane.getBoundingClientRect = () => rect({ top: 100, bottom: 500, left: 400, right: 900 });
     const sec = document.createElement('div');
     sec.setAttribute('data-entry', '1');
@@ -310,8 +315,10 @@ describe('the caret drives the same link, from the other end', () => {
 
     caretStage.value = { entryIndex: 1 };
 
-    await vi.waitFor(() => expect(root.querySelector('.stage-link-line')).toBeTruthy());
-    const d = root.querySelector('.stage-link-line')!.getAttribute('d');
+    await vi.waitFor(() =>
+      expect(root.querySelector(`.${stageLinkOverlayCss.stageLinkLine}`)).toBeTruthy(),
+    );
+    const d = root.querySelector(`.${stageLinkOverlayCss.stageLinkLine}`)!.getAttribute('d');
     const ys = d!
       .match(/-?\d+(?:\.\d+)?/g)!
       .map(Number)
@@ -320,8 +327,8 @@ describe('the caret drives the same link, from the other end', () => {
     // (100) is the floor every point must respect.
     expect(Math.min(...ys)).toBeGreaterThanOrEqual(100);
     // The editor end is an arrow now; the section end (in view) keeps its dot.
-    expect(root.querySelectorAll('.stage-link-arrow').length).toBe(1);
-    expect(root.querySelectorAll('.stage-link-dot').length).toBe(1);
+    expect(root.querySelectorAll(`.${stageLinkOverlayCss.stageLinkArrow}`).length).toBe(1);
+    expect(root.querySelectorAll(`.${stageLinkOverlayCss.stageLinkDot}`).length).toBe(1);
   });
 
   it('hover wins while hovering, and falls back to the caret afterwards', async () => {
@@ -356,7 +363,7 @@ describe('the caret drives the same link, from the other end', () => {
 // under that layer. Verified in Chrome by pixel sampling; asserted here so the
 // rule cannot quietly regress to a plain background.
 describe('linked-stage band paints below the selection layer', () => {
-  const css = readFileSync('src/mdh/legacy.css', 'utf8');
+  const css = readFileSync('src/mdh/components/JsonEditor.module.css', 'utf8');
   // The declaration block for a selector, comments already stripped.
   const blockFor = (selector: any) => {
     const body = css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -368,13 +375,13 @@ describe('linked-stage band paints below the selection layer', () => {
   };
 
   it('does not fill the line element itself', () => {
-    const block = blockFor('.cm-linked-stage');
+    const block = blockFor('.cmLinkedStage');
     expect(block).not.toBeNull();
     expect(block).not.toMatch(/background/);
   });
 
   it('fills a pseudo-element that sits under the selection layer', () => {
-    const block = blockFor('.cm-linked-stage::before');
+    const block = blockFor('.cmLinkedStage::before');
     expect(block).not.toBeNull();
     expect(block).toMatch(/background:\s*var\(--info-bg\)/);
     expect(block).toMatch(/position:\s*absolute/);
@@ -383,6 +390,6 @@ describe('linked-stage band paints below the selection layer', () => {
     // Below `.cm-selectionLayer` (-2), and negative z resolves against
     // `.cm-scroller` only while the line stays a non-stacking-context.
     expect(Number(z![1])).toBeLessThan(-2);
-    expect(blockFor('.cm-linked-stage')).toMatch(/position:\s*relative/);
+    expect(blockFor('.cmLinkedStage')).toMatch(/position:\s*relative/);
   });
 });

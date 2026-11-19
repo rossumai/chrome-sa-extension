@@ -1,0 +1,145 @@
+/* Bulk Update and Bulk Delete's shared preview, sample cards and result lines. Moved from the
+   global src/mdh/legacy.css in its original rule order. */
+
+/* Horizontal carousel of full-JSON document samples. Used by BulkDelete and
+   BulkUpdate. Cards are fixed-width so
+   side-by-side reading is comfortable; the row scrolls horizontally when
+   there are more samples than fit, and each card scrolls vertically when a
+   single document's JSON is taller than the card. */
+
+.sampleCards {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  overflow-x: auto;
+  align-items: stretch;
+  padding-bottom: 4px;
+}
+
+.sampleCard {
+  flex: 0 0 300px;
+  min-width: 300px;
+  max-width: 300px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.sampleCardHeader {
+  padding: 6px 10px;
+  background: var(--bg-hover);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sampleCardHeaderMeta {
+  display: block;
+  margin-top: 4px;
+  font-weight: normal;
+}
+
+.sampleCardBody {
+  padding: 8px 10px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-code);
+  background: var(--bg-code);
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  flex: 1;
+}
+
+.sampleCardDanger {
+  border-color: var(--danger-border);
+}
+
+.sampleCardDanger .sampleCardHeader {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.sampleCardDiffOpaque {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.bulkPreview {
+  margin-top: 12px;
+}
+
+.bulkPreviewLoading {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.bulkPreviewError {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.bulkPreviewCount {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.bulkPreviewSampleNote {
+  font-size: 11px;
+  color: var(--warning-fg);
+  background: var(--warning-bg);
+  border-left: 3px solid var(--warning);
+  padding: 4px 8px;
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.bulkUndoNote {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.bulkResult {
+  padding: 8px;
+  background: var(--success-bg);
+  color: var(--success-fg);
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+.bulkFilterReadonly {
+  margin-bottom: 12px;
+}
+
+.bulkFilterReadonly code {
+  display: block;
+  padding: 8px;
+  background: var(--bg-code);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.bulkFilterReadonlyPre {
+  margin: 0;
+  padding: 8px;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-code);
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

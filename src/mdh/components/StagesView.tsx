@@ -17,12 +17,15 @@ import {
 import EmptyStageExplain from './EmptyStageExplain.jsx';
 import { firstEmptyStage, explainSignature } from '../agent/explainEmpty.js';
 import seg from '../../ui/Segmented.module.css';
+import styles from './StagesView.module.css';
+import pd from './PipelineDebug.module.css';
+import pnl from './panel.module.css';
 
 const SLOW_QUERY_MS = 1000;
 const HIGHLIGHT_MS = 1600; // ≥ the .pipeline-inspect-flash animation (1.5s) so the class outlasts it
 
 const timeCls = (ms: any) =>
-  'pipeline-inspect-time' + (ms > SLOW_QUERY_MS ? ' pipeline-inspect-time-slow' : '');
+  styles.pipelineInspectTime + (ms > SLOW_QUERY_MS ? ` ${styles.pipelineInspectTimeSlow}` : '');
 
 // One sample document. In the Stages view records are always fully shown — the cards
 // are not collapsible (collapsible={false}), so there's no per-card open/close state.
@@ -60,7 +63,7 @@ function StageToggle({
   return (
     <input
       type="checkbox"
-      class={'pipeline-stage-toggle' + (disabled ? ' pipeline-stage-toggle-off' : '')}
+      class={pd.pipelineStageToggle + (disabled ? ' pipeline-stage-toggle-off' : '')}
       checked={!disabled}
       title={disabled ? 'Enable stage' : 'Disable stage'}
       onClick={(e) => {
@@ -89,20 +92,20 @@ function StageHeader({
   ms?: number | null;
 }) {
   let countText = '…';
-  let countCls = 'pipeline-inspect-count';
+  let countCls = pd.pipelineInspectCount;
   if (typeof count === 'number') {
     countText =
       typeof prevCount === 'number' && prevCount !== count
         ? `${prevCount.toLocaleString()} ${'→'} ${count.toLocaleString()} docs`
         : `${count.toLocaleString()} docs`;
-    if (count === 0) countCls += ' pipeline-inspect-zero';
+    if (count === 0) countCls += ` ${pd.pipelineInspectZero}`;
   }
   return (
-    <div class="pipeline-inspect-section-head">
-      {toggle || <span class="pipeline-stage-toggle-spacer" />}
-      <span class="pipeline-inspect-num">{num}</span>
-      <span class="pipeline-inspect-key">{label}</span>
-      {hint && <span class="pipeline-inspect-hint">{hint}</span>}
+    <div class={pd.pipelineInspectSectionHead}>
+      {toggle || <span class={pd.pipelineStageToggleSpacer} />}
+      <span class={pd.pipelineInspectNum}>{num}</span>
+      <span class={pd.pipelineInspectKey}>{label}</span>
+      {hint && <span class={pd.pipelineInspectHint}>{hint}</span>}
       <span class={countCls}>{countText}</span>
       {typeof ms === 'number' && <span class={timeCls(ms)}>{ms}ms</span>}
     </div>
@@ -110,10 +113,10 @@ function StageHeader({
 }
 
 function StageOutput({ info }: { info: any }) {
-  if (!info) return <div class="pipeline-inspect-loading">Loading{'…'}</div>;
+  if (!info) return <div class={styles.pipelineInspectLoading}>Loading{'…'}</div>;
   if (info.error) {
     return (
-      <div class="pipeline-inspect-error">
+      <div class={styles.pipelineInspectError}>
         {info.error.status ? `HTTP ${info.error.status}: ` : ''}
         {info.error.message}
       </div>
@@ -121,8 +124,8 @@ function StageOutput({ info }: { info: any }) {
   }
   if (!info.docs || info.docs.length === 0) {
     return (
-      <div class="pipeline-inspect-empty">
-        <span class="pipeline-inspect-empty-icon" aria-hidden="true">
+      <div class={styles.pipelineInspectEmpty}>
+        <span class={styles.pipelineInspectEmptyIcon} aria-hidden="true">
           {'\u26A0'}
         </span>
         <span>No documents at this stage</span>
@@ -230,7 +233,8 @@ export default function StagesView({
   }, [inspectTarget]);
 
   const sectionCls = (idx: any) =>
-    'pipeline-inspect-section' + (highlightIdx === idx ? ' pipeline-inspect-highlight' : '');
+    styles.pipelineInspectSection +
+    (highlightIdx === idx ? ` ${styles.pipelineInspectHighlight}` : '');
 
   // Honest about disabled stages: "3 of 5" rather than a count that disagrees
   // with the numbered sections right below it.
@@ -252,10 +256,10 @@ export default function StagesView({
   let activeIdx = -1;
 
   return (
-    <div class="pipeline-inspect" ref={rootRef}>
-      <div class="pipeline-inspect-opts">
-        <div class="pipeline-inspect-opt">
-          <span class="pipeline-inspect-opt-label">Records per stage</span>
+    <div class={styles.pipelineInspect} ref={rootRef}>
+      <div class={styles.pipelineInspectOpts}>
+        <div class={styles.pipelineInspectOpt}>
+          <span class={styles.pipelineInspectOptLabel}>Records per stage</span>
           <div class={seg.root} role="group" aria-label="Records per stage">
             {STAGE_SAMPLE_SIZES.map((n) => (
               <button
@@ -276,7 +280,7 @@ export default function StagesView({
             pipeline editor to it. The editor never scrolls this view — see
             StageLinkOverlay. */}
         <label
-          class="pipeline-inspect-opt pipeline-inspect-autoscroll"
+          class={`${styles.pipelineInspectOpt} ${styles.pipelineInspectAutoscroll}`}
           title="Scroll the pipeline editor to the stage you hover here"
         >
           <input
@@ -289,7 +293,7 @@ export default function StagesView({
           <span>Auto-scroll</span>
         </label>
         <label
-          class="pipeline-inspect-opt pipeline-inspect-autoscroll"
+          class={`${styles.pipelineInspectOpt} ${styles.pipelineInspectAutoscroll}`}
           title="Show each stage's query with variables substituted (as sent to the Data Storage API)"
         >
           <input
@@ -302,7 +306,7 @@ export default function StagesView({
           <span>Definitions</span>
         </label>
       </div>
-      <div class="pipeline-inspect-scroll">
+      <div class={styles.pipelineInspectScroll}>
         {/* The SOURCE, not "stage 0". A MongoDB pipeline has no stage zero: this is
             the collection the pipeline reads FROM. It is deliberately a different
             kind of object from the numbered stages — dashed and unfilled rather
@@ -310,10 +314,10 @@ export default function StagesView({
             visibly starts at 1. Collapsed also means its sample is never fetched
             (see the preview effect); the doc COUNT still shows, because that comes
             from the $collStats probe, not the sample. */}
-        <section class={sectionCls(-1) + ' pipeline-inspect-source'} data-idx="-1">
+        <section class={sectionCls(-1) + ` ${styles.pipelineInspectSource}`} data-idx="-1">
           <button
             type="button"
-            class="pipeline-inspect-source-head"
+            class={styles.pipelineInspectSourceHead}
             aria-expanded={sourceOpen}
             onClick={() => {
               stagesSourceOpen.value = !sourceOpen;
@@ -324,15 +328,16 @@ export default function StagesView({
                 : 'Show what the collection looks like before the pipeline runs'
             }
           >
-            <span class="pipeline-inspect-source-chev" aria-hidden="true">
+            <span class={pd.pipelineInspectSourceChev} aria-hidden="true">
               {sourceOpen ? '▾' : '▸'}
             </span>
-            <span class="pipeline-inspect-source-cap">source</span>
-            <span class="pipeline-inspect-source-name">{collection || 'collection'}</span>
-            <span class="pipeline-inspect-hint">before the pipeline runs</span>
+            <span class={pd.pipelineInspectSourceCap}>source</span>
+            <span class={pd.pipelineInspectSourceName}>{collection || 'collection'}</span>
+            <span class={pd.pipelineInspectHint}>before the pipeline runs</span>
             <span
               class={
-                'pipeline-inspect-count' + (inputInfo?.count === 0 ? ' pipeline-inspect-zero' : '')
+                pd.pipelineInspectCount +
+                (inputInfo?.count === 0 ? ` ${pd.pipelineInspectZero}` : '')
               }
             >
               {typeof inputInfo?.count === 'number'
@@ -344,15 +349,15 @@ export default function StagesView({
             )}
           </button>
           {sourceOpen && (
-            <div class="pipeline-inspect-body">
-              <div class="pipeline-inspect-output">
+            <div class={pnl.pipelineInspectBody}>
+              <div class={pnl.pipelineInspectOutput}>
                 <StageOutput info={previews.input} />
               </div>
             </div>
           )}
         </section>
         {list.length > 0 && (
-          <div class="pipeline-inspect-start" aria-hidden="true">
+          <div class={pnl.pipelineInspectStart} aria-hidden="true">
             <span>pipeline starts here{stageCountLabel}</span>
           </div>
         )}
@@ -362,7 +367,7 @@ export default function StagesView({
           if (entry.disabled) {
             return (
               <section
-                class="pipeline-inspect-section pipeline-inspect-disabled"
+                class={`${styles.pipelineInspectSection} ${styles.pipelineInspectDisabled}`}
                 key={entryIndex}
                 data-entry={entryIndex}
                 onMouseEnter={(e) => {
@@ -372,11 +377,11 @@ export default function StagesView({
                   hoveredStage.value = null;
                 }}
               >
-                <div class="pipeline-inspect-section-head">
+                <div class={pd.pipelineInspectSectionHead}>
                   <StageToggle entryIndex={entryIndex} disabled onToggle={onToggleStage} />
-                  <span class="pipeline-inspect-num">{'–'}</span>
-                  <span class="pipeline-inspect-key">{stageKey}</span>
-                  <span class="pipeline-inspect-disabled-badge">disabled {'—'} not executed</span>
+                  <span class={pd.pipelineInspectNum}>{'–'}</span>
+                  <span class={pd.pipelineInspectKey}>{stageKey}</span>
+                  <span class={pd.pipelineInspectDisabledBadge}>disabled {'—'} not executed</span>
                 </div>
               </section>
             );
@@ -410,7 +415,7 @@ export default function StagesView({
                 ms={counts[myIdx]?.ms}
               />
               {showDef && (
-                <pre class="pipeline-inspect-stagedef">{JSON.stringify(stage, null, 2)}</pre>
+                <pre class={styles.pipelineInspectStagedef}>{JSON.stringify(stage, null, 2)}</pre>
               )}
               {/* An empty stage has no records to size, so the fixed 324px band
                   would be a wall of nothing with the message alone at the top —
@@ -418,10 +423,10 @@ export default function StagesView({
                   its content instead; the band exists to make RECORDS uniform. */}
               <div
                 class={
-                  'pipeline-inspect-body' + (isEmptyStage ? ' pipeline-inspect-body-empty' : '')
+                  pnl.pipelineInspectBody + (isEmptyStage ? ` ${pnl.pipelineInspectBodyEmpty}` : '')
                 }
               >
-                <div class="pipeline-inspect-output">
+                <div class={pnl.pipelineInspectOutput}>
                   <StageOutput info={previews[myIdx]} />
                 </div>
               </div>

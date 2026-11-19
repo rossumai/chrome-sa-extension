@@ -2,6 +2,8 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import StatsFieldCard from './StatsFieldCard.jsx';
 import seg from '../../ui/Segmented.module.css';
+import ssum from './StatsSummary.module.css';
+import styles from './StatsFieldGrid.module.css';
 
 const SORTS = [
   ['issues', 'Issues first'],
@@ -47,12 +49,12 @@ export default function StatsFieldGrid({
   const ordered = f ? [...sorted.filter(matches), ...sorted.filter((p) => !matches(p))] : sorted;
   return (
     <div>
-      <div class="stats-fgrid-head">
-        <span class="stats-band-label">
+      <div class={ssum.statsFgridHead}>
+        <span class={ssum.statsBandLabel}>
           Fields {'·'} {profiles.length}
         </span>
         <input
-          class="stats-fgrid-filter"
+          class={ssum.statsFgridFilter}
           placeholder={'filter fields…'}
           value={filter}
           onInput={(e: any) => setFilter(e.target.value)}
@@ -69,7 +71,7 @@ export default function StatsFieldGrid({
           ))}
         </span>
       </div>
-      <div class="stats-grid">
+      <div class={styles.statsGrid}>
         {ordered.map((p) => (
           <StatsFieldCard
             profile={p}

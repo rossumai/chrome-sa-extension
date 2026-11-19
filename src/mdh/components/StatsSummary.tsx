@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { healthLabel } from '../statsSummary.js';
 import { formatBytes } from './StatsBits.jsx';
 import Tip from '../../ui/Tip.jsx';
+import ssum from './StatsSummary.module.css';
 
 function healthColor(score: any) {
   if (score >= 90) return 'var(--success)';
@@ -44,7 +45,7 @@ function Ring({ health }: { health?: number | null }) {
   const circ = 2 * Math.PI * R; // 276.46
   const off = health != null ? circ * (1 - health / 100) : circ;
   return (
-    <div class="stats-ring">
+    <div class={ssum.statsRing}>
       <svg width="104" height="104" viewBox="0 0 104 104">
         <circle cx="52" cy="52" r={R} fill="none" stroke="var(--bg-hover)" stroke-width="11" />
         {health != null && (
@@ -62,7 +63,7 @@ function Ring({ health }: { health?: number | null }) {
           />
         )}
       </svg>
-      <div class="stats-ring-num">
+      <div class={ssum.statsRingNum}>
         <b style={{ color: tone }}>{health != null ? health : '?'}</b>
         <span>/ 100</span>
       </div>
@@ -95,83 +96,83 @@ export default function StatsSummary({
   const tone = health != null ? healthColor(health) : 'var(--text-secondary)';
   return (
     <div>
-      <div class="stats-band-label">Summary</div>
-      <div class="stats-dash">
+      <div class={ssum.statsBandLabel}>Summary</div>
+      <div class={ssum.statsDash}>
         <div
-          class="stats-health"
+          class={ssum.statsHealth}
           title={health != null ? healthLabel(health) : `calculating${'…'}`}
         >
           <Ring health={health} />
           {health != null && (
-            <div class="stats-health-label" style={{ color: tone }}>
+            <div class={ssum.statsHealthLabel} style={{ color: tone }}>
               {healthLabel(health)}
             </div>
           )}
         </div>
-        <div class="stats-dash-right">
-          <div class="stats-overview-grid">
-            <div class="stats-overview-card">
-              <div class="stats-metric-value">{total.toLocaleString()}</div>
-              <div class="stats-metric-label">Documents</div>
+        <div class={ssum.statsDashRight}>
+          <div class={ssum.statsOverviewGrid}>
+            <div class={ssum.statsOverviewCard}>
+              <div class={ssum.statsMetricValue}>{total.toLocaleString()}</div>
+              <div class={ssum.statsMetricLabel}>Documents</div>
             </div>
             <div
-              class="stats-overview-card"
+              class={ssum.statsOverviewCard}
               title={
                 fieldsTotal > fieldCount
                   ? `Analyzing the ${fieldCount} most common of ${fieldsTotal} fields found`
                   : undefined
               }
             >
-              <div class="stats-metric-value">{fieldCount}</div>
-              <div class="stats-metric-label">Fields</div>
+              <div class={ssum.statsMetricValue}>{fieldCount}</div>
+              <div class={ssum.statsMetricLabel}>Fields</div>
             </div>
             {storage && (
               <div
-                class="stats-overview-card"
+                class={ssum.statsOverviewCard}
                 title={`Logical: ${formatBytes(storage.size)} · Free: ${formatBytes(storage.freeStorageSize)}`}
               >
-                <div class="stats-metric-value">{formatBytes(storage.storageSize)}</div>
-                <div class="stats-metric-label">On disk</div>
+                <div class={ssum.statsMetricValue}>{formatBytes(storage.storageSize)}</div>
+                <div class={ssum.statsMetricLabel}>On disk</div>
               </div>
             )}
             {docSize && (
               <div
-                class="stats-overview-card"
+                class={ssum.statsOverviewCard}
                 title={
                   docSize.min != null && docSize.max != null
                     ? `Min: ${formatBytes(docSize.min)} · Max: ${formatBytes(docSize.max)}`
                     : undefined
                 }
               >
-                <div class="stats-metric-value">{formatBytes(docSize.avg)}</div>
-                <div class="stats-metric-label">Avg doc</div>
+                <div class={ssum.statsMetricValue}>{formatBytes(docSize.avg)}</div>
+                <div class={ssum.statsMetricLabel}>Avg doc</div>
               </div>
             )}
           </div>
           {fieldsTotal > fieldCount && (
-            <div class="stats-fields-note">
+            <div class={ssum.statsFieldsNote}>
               Analyzing the {fieldCount} most common of {fieldsTotal} fields found in the sample.
             </div>
           )}
           {components && (
-            <div class="stats-hcomp-wrap">
+            <div class={ssum.statsHcompWrap}>
               {[COMPONENT_LABELS.slice(0, 3), COMPONENT_LABELS.slice(3)].map((group) => (
-                <div class="stats-hcomp">
+                <div class={ssum.statsHcomp}>
                   {group.map(([key, label, tip]) => {
                     const v = Math.round(components[key]);
                     const c = healthColor(v);
                     return (
-                      <div class="stats-hcomp-row">
-                        <span class="stats-hcomp-label">
+                      <div class={ssum.statsHcompRow}>
+                        <span class={ssum.statsHcompLabel}>
                           {label}
                           <Tip text={tip}>
-                            <span class="stats-help">?</span>
+                            <span class={ssum.statsHelp}>?</span>
                           </Tip>
                         </span>
-                        <div class="stats-hbar">
+                        <div class={ssum.statsHbar}>
                           <i style={{ width: `${v}%`, background: c }} />
                         </div>
-                        <span class="stats-hcomp-val">{v}</span>
+                        <span class={ssum.statsHcompVal}>{v}</span>
                       </div>
                     );
                   })}
@@ -183,7 +184,7 @@ export default function StatsSummary({
       </div>
 
       {sampled != null && (
-        <div class="stats-note" style={{ marginTop: '10px' }}>
+        <div class={ssum.statsNote} style={{ marginTop: '10px' }}>
           Estimated from a random sample of <b>{sampled.toLocaleString()}</b> of{' '}
           {total.toLocaleString()} documents. Document count and storage are exact.
         </div>

@@ -87,6 +87,7 @@ vi.mock('../src/mdh/components/RecordList.jsx', () => ({
 import * as api from '../src/mdh/api.js';
 import DataPanel from '../src/mdh/components/DataPanel.jsx';
 import { selectedCollection, records, skip, limit, loading, error } from '../src/mdh/store.js';
+import pd from '../src/mdh/components/PipelineDebug.module.css';
 
 // Poll for the actual condition rather than guessing a fixed delay: the debug
 // appears only after the [collection] effect (50ms) and the snapshot debounce
@@ -131,14 +132,14 @@ describe('DataPanel — Aggregate Pipeline Debug visibility', () => {
 
     // No typing, sorting, filtering, or variable fill — just the default load.
     await waitFor(
-      () => root.querySelector('.pipeline-debug-input-row'),
+      () => root.querySelector(`.${pd.pipelineDebugInputRow}`),
       'the Aggregate Pipeline Debug to render its input row on the default load',
     );
 
-    expect(root.querySelector('.pipeline-debug-input-row')).not.toBeNull();
+    expect(root.querySelector(`.${pd.pipelineDebugInputRow}`)).not.toBeNull();
     // The default pipeline ($match/$sort/$skip/$limit) should yield per-stage rows too.
     expect(
-      root.querySelectorAll('.pipeline-debug-row:not(.pipeline-debug-input-row)').length,
+      root.querySelectorAll(`.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow})`).length,
       'the default pipeline stages should be listed in the debug',
     ).toBeGreaterThan(0);
   });

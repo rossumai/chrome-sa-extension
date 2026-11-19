@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { h, render } from 'preact';
 import FlashOnChange from '../src/mdh/components/FlashOnChange.jsx';
+import flashOnChangeCss from '../src/mdh/components/FlashOnChange.module.css';
 
 function flush() {
   // Microtasks + a macrotask so Preact's effect → setState → re-render chain
@@ -20,7 +21,7 @@ describe('FlashOnChange', () => {
     render(<FlashOnChange value="42" />, root);
     await flush();
     expect(root.textContent).toBe('42');
-    expect(root.querySelector('.flash-value')).toBeNull();
+    expect(root.querySelector(`.${flashOnChangeCss.flashValue}`)).toBeNull();
   });
 
   it('does not flash when re-rendering with the same value', async () => {
@@ -30,7 +31,7 @@ describe('FlashOnChange', () => {
     await flush();
     render(<FlashOnChange value="42" />, root);
     await flush();
-    expect(root.querySelector('.flash-value')).toBeNull();
+    expect(root.querySelector(`.${flashOnChangeCss.flashValue}`)).toBeNull();
   });
 
   it('applies the flash-value class when the value changes', async () => {
@@ -43,6 +44,6 @@ describe('FlashOnChange', () => {
     await flush();
     await flush();
     expect(root.textContent).toBe('99');
-    expect(root.querySelector('.flash-value')).not.toBeNull();
+    expect(root.querySelector(`.${flashOnChangeCss.flashValue}`)).not.toBeNull();
   });
 });

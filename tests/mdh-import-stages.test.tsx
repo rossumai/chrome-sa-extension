@@ -8,6 +8,7 @@ import {
   formatDuration,
 } from '../src/mdh/components/ImportStages.jsx';
 import mstyles from '../src/ui/Modal.module.css';
+import importStagesCss from '../src/mdh/components/ImportStages.module.css';
 
 function mount(node: any) {
   const r = document.createElement('div');
@@ -104,7 +105,7 @@ describe('ImportProgress indeterminate', () => {
   it('renders a processing message and no numeric counts when indeterminate', () => {
     const root = mount(<ImportProgress progress={{ phase: 'processing', indeterminate: true }} />);
     expect(root.textContent).toMatch(/processing/i);
-    expect(root.querySelector('.import-progress-counts')).toBeNull();
+    expect(root.querySelector(`.${importStagesCss.importProgressCounts}`)).toBeNull();
   });
 
   it('shows a live heartbeat (status, check count, elapsed, file) when the server poll info is present', () => {

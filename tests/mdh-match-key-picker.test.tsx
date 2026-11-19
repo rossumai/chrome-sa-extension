@@ -2,6 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { h, render } from 'preact';
 import MatchKeyPicker from '../src/mdh/components/MatchKeyPicker.jsx';
+import matchKeyPickerCss from '../src/mdh/components/MatchKeyPicker.module.css';
 
 function mount(node: any) {
   const r = document.createElement('div');
@@ -33,7 +34,9 @@ describe('MatchKeyPicker', () => {
     const root = mount(<MatchKeyPicker paths={PATHS} keys={['_id']} setKeys={() => {}} />);
     expect(root.querySelector('[data-testid="match-keys"]')).toBeTruthy();
     expect(
-      [...root.querySelectorAll('.match-key-chip')].some((c) => c.textContent.includes('_id')),
+      [...root.querySelectorAll(`.${matchKeyPickerCss.matchKeyChip}`)].some((c) =>
+        c.textContent.includes('_id'),
+      ),
     ).toBe(true);
   });
 
@@ -41,9 +44,11 @@ describe('MatchKeyPicker', () => {
     const root = mount(<MatchKeyPicker paths={PATHS} keys={[]} setKeys={() => {}} />);
     focus(root.querySelector('[data-testid="match-key-input"]'));
     await waitFor(() => root.querySelector('[data-testid="match-key-suggest"]'));
-    expect([...root.querySelectorAll('.match-key-suggest-item')].map((b) => b.textContent)).toEqual(
-      PATHS,
-    );
+    expect(
+      [...root.querySelectorAll(`.${matchKeyPickerCss.matchKeySuggestItem}`)].map(
+        (b) => b.textContent,
+      ),
+    ).toEqual(PATHS);
   });
 
   it('excludes already-selected paths', async () => {
@@ -51,7 +56,9 @@ describe('MatchKeyPicker', () => {
     focus(root.querySelector('[data-testid="match-key-input"]'));
     await waitFor(() => root.querySelector('[data-testid="match-key-suggest"]'));
     expect(
-      [...root.querySelectorAll('.match-key-suggest-item')].map((b) => b.textContent),
+      [...root.querySelectorAll(`.${matchKeyPickerCss.matchKeySuggestItem}`)].map(
+        (b) => b.textContent,
+      ),
     ).not.toContain('sku');
   });
 
@@ -60,11 +67,13 @@ describe('MatchKeyPicker', () => {
     const root = mount(<MatchKeyPicker paths={PATHS} keys={[]} setKeys={setKeys} />);
     const input = root.querySelector('[data-testid="match-key-input"]');
     focus(input);
-    await waitFor(() => root.querySelector('.match-key-suggest-item.active'));
+    await waitFor(() =>
+      root.querySelector(`.${matchKeyPickerCss.matchKeySuggestItem}.${matchKeyPickerCss.active}`),
+    );
     keydown(input, 'ArrowDown');
     await waitFor(() => {
-      const items = [...root.querySelectorAll('.match-key-suggest-item')];
-      return items[1]?.classList.contains('active');
+      const items = [...root.querySelectorAll(`.${matchKeyPickerCss.matchKeySuggestItem}`)];
+      return items[1]?.classList.contains(matchKeyPickerCss.active);
     });
     keydown(input, 'Enter');
     expect(setKeys).toHaveBeenCalledWith([PATHS[1]]); // 'sku'
@@ -86,8 +95,10 @@ describe('MatchKeyPicker', () => {
     const input = root.querySelector<HTMLInputElement>('[data-testid="match-key-input"]')!;
     input.value = 'address';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await waitFor(() => root.querySelectorAll('.match-key-suggest-item').length >= 2);
-    const first = root.querySelector<HTMLElement>('.match-key-suggest-item')!;
+    await waitFor(
+      () => root.querySelectorAll(`.${matchKeyPickerCss.matchKeySuggestItem}`).length >= 2,
+    );
+    const first = root.querySelector<HTMLElement>(`.${matchKeyPickerCss.matchKeySuggestItem}`)!;
     first.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
     first.click();
     expect(setKeys).toHaveBeenCalledWith(['_id', 'address.zip']);
@@ -120,9 +131,9 @@ describe('MatchKeyPicker', () => {
     );
     focus(root.querySelector('[data-testid="match-key-input"]'));
     await waitFor(() => root.querySelector('[data-testid="match-key-suggest"]'));
-    const item = [...root.querySelectorAll<HTMLElement>('.match-key-suggest-item')].find(
-      (b) => b.textContent === '_id',
-    )!;
+    const item = [
+      ...root.querySelectorAll<HTMLElement>(`.${matchKeyPickerCss.matchKeySuggestItem}`),
+    ].find((b) => b.textContent === '_id')!;
     item.click();
     expect(setKeys).toHaveBeenCalledWith(['_id']);
   });
@@ -133,9 +144,11 @@ describe('MatchKeyPicker', () => {
     );
     focus(root.querySelector('[data-testid="match-key-input"]'));
     await waitFor(() => root.querySelector('[data-testid="match-key-suggest"]'));
-    expect([...root.querySelectorAll('.match-key-suggest-item')].map((b) => b.textContent)).toEqual(
-      PATHS,
-    );
+    expect(
+      [...root.querySelectorAll(`.${matchKeyPickerCss.matchKeySuggestItem}`)].map(
+        (b) => b.textContent,
+      ),
+    ).toEqual(PATHS);
   });
 
   it('asks for one field rather than another one when single', async () => {

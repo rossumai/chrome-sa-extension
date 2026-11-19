@@ -20,6 +20,8 @@ import * as api from '../src/mdh/api.js';
 import * as store from '../src/mdh/store.js';
 import { openCollectionTab } from '../src/mdh/openCollectionTab.js';
 import Sidebar from '../src/mdh/components/Sidebar.jsx';
+import sb from '../src/mdh/components/Sidebar.module.css';
+import menuCss from '../src/mdh/components/toolbarMenu.module.css';
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
@@ -31,8 +33,8 @@ async function mount() {
 }
 
 function rowFor(root: any, name: any) {
-  return Array.from(root.querySelectorAll('.collection-item')).find(
-    (el: any) => el.querySelector('.collection-item-name')?.textContent === name,
+  return Array.from(root.querySelectorAll(`.${sb.collectionItem}`)).find(
+    (el: any) => el.querySelector(`.${sb.collectionItemName}`)?.textContent === name,
   );
 }
 
@@ -79,7 +81,7 @@ describe('Sidebar open-in-new-tab', () => {
       .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     await tick();
     const item = Array.from(
-      root.querySelectorAll('.collection-action-menu .toolbar-menu-item'),
+      root.querySelectorAll(`.${sb.collectionActionMenu} .${menuCss.toolbarMenuItem}`),
     ).find((b) => b.textContent.includes('Open in new tab'));
     expect(item).toBeTruthy();
     item!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
@@ -99,9 +101,9 @@ describe('Sidebar right-click context menu', () => {
     (rowFor(root, 'vendors') as any).dispatchEvent(evt);
     expect(evt.defaultPrevented).toBe(true);
     await tick();
-    const menu = root.querySelector('.collection-action-menu');
+    const menu = root.querySelector(`.${sb.collectionActionMenu}`);
     expect(menu).not.toBeNull();
-    const item = Array.from(menu!.querySelectorAll('.toolbar-menu-item')).find((b) =>
+    const item = Array.from(menu!.querySelectorAll(`.${menuCss.toolbarMenuItem}`)).find((b) =>
       b.textContent.includes('Open in new tab'),
     );
     expect(item).toBeTruthy();
@@ -114,7 +116,7 @@ describe('Sidebar right-click context menu', () => {
     );
     await tick();
     const item = Array.from(
-      root.querySelectorAll('.collection-action-menu .toolbar-menu-item'),
+      root.querySelectorAll(`.${sb.collectionActionMenu} .${menuCss.toolbarMenuItem}`),
     ).find((b) => b.textContent.includes('Open in new tab'));
     item!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     expect(openCollectionTab).toHaveBeenCalledWith('items');

@@ -9,6 +9,7 @@ import {
 } from './StatsBits.jsx';
 import { selectedCollection, activePanel, pendingPipelineLoad, limit } from '../store.js';
 import Tip from '../../ui/Tip.jsx';
+import sfc from './StatsFieldCard.module.css';
 
 function humanSpan(ms: any) {
   const day = 86400000;
@@ -36,25 +37,25 @@ function TypeChip({ profile }: { profile: any }) {
         .slice(0, 2)
         .map((t: any) => friendlyType(t.type))
         .join(' + ') + (profile.types.length > 2 ? ` +${profile.types.length - 2}` : '');
-    return <span class="stats-tchip is-mix">{label}</span>;
+    return <span class={`${sfc.statsTchip} ${sfc.isMix}`}>{label}</span>;
   }
   const f = friendlyType(profile.primaryType);
-  const cls = f === 'number' ? ' is-num' : f === 'date' ? ' is-date' : '';
-  return <span class={`stats-tchip${cls}`}>{f}</span>;
+  const cls = f === 'number' ? ` ${sfc.isNum}` : f === 'date' ? ` ${sfc.isDate}` : '';
+  return <span class={`${sfc.statsTchip}${cls}`}>{f}</span>;
 }
 
 // Numeric min–max range bar with an avg tick (a mini chart, no detailed text).
 function NumericRange({ n }: { n: any }) {
   const rb = rangeBar({ min: n.min, max: n.max, value: n.avg });
   return (
-    <div class="stats-rangebar">
-      <div class="stats-rangebar-track">
-        <div class="stats-rangebar-seg" />
+    <div class={sfc.statsRangebar}>
+      <div class={sfc.statsRangebarTrack}>
+        <div class={sfc.statsRangebarSeg} />
         {rb && rb.avgPct != null && (
-          <div class="stats-rangebar-avg" style={{ left: `${rb.avgPct}%` }} />
+          <div class={sfc.statsRangebarAvg} style={{ left: `${rb.avgPct}%` }} />
         )}
       </div>
-      <div class="stats-rangebar-ends">
+      <div class={sfc.statsRangebarEnds}>
         <span>min {n.min.toLocaleString()}</span>
         <span>max {n.max.toLocaleString()}</span>
       </div>
@@ -65,11 +66,11 @@ function NumericRange({ n }: { n: any }) {
 // Date earliest–latest span bar (a mini chart).
 function DateRange({ d }: { d: any }) {
   return (
-    <div class="stats-rangebar">
-      <div class="stats-rangebar-track">
-        <div class="stats-rangebar-seg" />
+    <div class={sfc.statsRangebar}>
+      <div class={sfc.statsRangebarTrack}>
+        <div class={sfc.statsRangebarSeg} />
       </div>
-      <div class="stats-rangebar-ends">
+      <div class={sfc.statsRangebarEnds}>
         <span>{formatDate(d.earliest)}</span>
         <span>{formatDate(d.latest)}</span>
       </div>
@@ -99,20 +100,25 @@ function TopValues({ profile, limit }: { profile: any; limit?: number }) {
   if (rows.length === 0) return null;
   const max = rows.reduce((m, r) => Math.max(m, r.count), 1);
   return (
-    <div class="stats-tv">
+    <div class={sfc.statsTv}>
       {rows.map((v) => {
         const display = isDate ? formatDate(v.value) : formatValue(v.value);
         return (
           <div
-            class={`stats-tv-row is-clickable${v.placeholder ? ' is-placeholder' : ''}`}
+            class={`${sfc.statsTvRow} ${sfc.isClickable}${v.placeholder ? ` ${sfc.isPlaceholder}` : ''}`}
             title={`Show records where ${profile.field} = ${display}`}
             onClick={() => filterToRecords(profile.field, v.value, v.placeholder)}
           >
-            <div class="stats-tv-bar" style={{ width: `${Math.round((v.count / max) * 100)}%` }} />
-            <span class={`stats-tv-val${isSpecialValue(v.value) ? ' stats-dist-special' : ''}`}>
+            <div
+              class={sfc.statsTvBar}
+              style={{ width: `${Math.round((v.count / max) * 100)}%` }}
+            />
+            <span
+              class={`${sfc.statsTvVal}${isSpecialValue(v.value) ? ` ${sfc.statsDistSpecial}` : ''}`}
+            >
               {isDate ? display : <FormattedValue value={v.value} />}
             </span>
-            <span class="stats-tv-count">{v.count.toLocaleString()}</span>
+            <span class={sfc.statsTvCount}>{v.count.toLocaleString()}</span>
           </div>
         );
       })}
@@ -161,20 +167,20 @@ export default function StatsFieldCard({
   const topLimit = Math.max(3, 8 - (hasMiniChart ? 2 : 0) - Math.round(messageCount * 1.5));
   return (
     <div
-      class={`stats-fcard${flagged ? ' is-flagged' : ''}${dimmed ? ' is-dimmed' : ''}`}
+      class={`${sfc.statsFcard}${flagged ? ` ${sfc.isFlagged}` : ''}${dimmed ? ` ${sfc.isDimmed}` : ''}`}
       id={`stats-field-${profile.field}`}
     >
-      <div class="stats-fcard-h">
+      <div class={sfc.statsFcardH}>
         <FieldName path={profile.field} />
         {indexed && (
           <Tip text={`Indexed — leading key of: ${indexedBy.join(', ')}`}>
-            <span class="stats-idx-chip">indexed</span>
+            <span class={sfc.statsIdxChip}>indexed</span>
           </Tip>
         )}
         <TypeChip profile={profile} />
       </div>
       {profile.distinct > 0 && (
-        <div class="stats-fcard-meta">
+        <div class={sfc.statsFcardMeta}>
           <span>
             {sampled != null ? '≥ ' : ''}
             <b>{profile.distinct.toLocaleString()}</b> distinct
@@ -197,9 +203,9 @@ export default function StatsFieldCard({
       )}
       <TopValues profile={profile} limit={topLimit} />
       {hasMsgs && (
-        <div class="stats-msgs">
+        <div class={sfc.statsMsgs}>
           {hasSentinel && (
-            <div class="stats-msg is-error">
+            <div class={`${sfc.statsMsg} ${sfc.isError}`}>
               <b>Placeholder</b>{' '}
               {profile.sentinel.values
                 .slice(0, 2)
@@ -209,12 +215,12 @@ export default function StatsFieldCard({
             </div>
           )}
           {gapBits.length > 0 && (
-            <div class="stats-msg is-warn">
+            <div class={`${sfc.statsMsg} ${sfc.isWarn}`}>
               <b>Incomplete</b> {gapBits.join(' · ')}
             </div>
           )}
           {wsBits.length > 0 && (
-            <div class="stats-msg is-warn">
+            <div class={`${sfc.statsMsg} ${sfc.isWarn}`}>
               <b>Whitespace</b> {wsBits.join(' · ')}
             </div>
           )}

@@ -1,5 +1,6 @@
 import { h, type ComponentChildren } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
+import styles from './FlashOnChange.module.css';
 
 // Renders `value` and briefly highlights it when it changes between renders.
 // First mount never flashes, so static initial values stay visually quiet.
@@ -20,7 +21,7 @@ export default function FlashOnChange({ value }: { value: ComponentChildren }) {
   }, [value]);
   if (tick === 0) return <span>{value}</span>;
   return (
-    <span key={tick} class="flash-value">
+    <span key={tick} class={styles.flashValue}>
       {value}
     </span>
   );

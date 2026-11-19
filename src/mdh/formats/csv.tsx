@@ -2,6 +2,8 @@ import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
 import { parseCsv, detectDelimiter } from '../csv.js';
 import { Segmented, Toggle } from '../components/ImportControls.jsx';
+import fmtCss from './formats.module.css';
+import styles from './csv.module.css';
 
 // The options bag every format's Configure controls edit, plus its setter.
 type ControlsProps = { opts: Record<string, any>; setOpt: (key: string, value: any) => void };
@@ -45,9 +47,9 @@ function ConfigureControls({ opts, setOpt }: ControlsProps) {
 
   return (
     <div data-testid="csv-options">
-      <div class="csv-toolbar">
-        <span class="csv-tb-item">
-          <span class="csv-tb-k" title="Character between fields.">
+      <div class={fmtCss.csvToolbar}>
+        <span class={fmtCss.csvTbItem}>
+          <span class={fmtCss.csvTbK} title="Character between fields.">
             Delimiter
           </span>
           <Segmented
@@ -58,9 +60,9 @@ function ConfigureControls({ opts, setOpt }: ControlsProps) {
           />
         </span>
 
-        <span class="csv-tb-item">
+        <span class={fmtCss.csvTbItem}>
           <span
-            class="csv-tb-k"
+            class={fmtCss.csvTbK}
             title="Use row 1 as field names. Off → fields named column_1, column_2, …"
           >
             First row is a header
@@ -73,9 +75,9 @@ function ConfigureControls({ opts, setOpt }: ControlsProps) {
           />
         </span>
 
-        <span class="csv-tb-item">
+        <span class={fmtCss.csvTbItem}>
           <span
-            class="csv-tb-k"
+            class={fmtCss.csvTbK}
             title="Rebuild objects and arrays the export flattened, and match values to the types this collection already uses."
           >
             Restore structure {'&'} types
@@ -88,9 +90,9 @@ function ConfigureControls({ opts, setOpt }: ControlsProps) {
           />
         </span>
 
-        <span class="csv-tb-item">
+        <span class={fmtCss.csvTbItem}>
           <span
-            class="csv-tb-k"
+            class={fmtCss.csvTbK}
             title="Read numbers and true/false out of text, for columns the collection has no type for."
           >
             Detect numbers {'&'} booleans
@@ -105,7 +107,7 @@ function ConfigureControls({ opts, setOpt }: ControlsProps) {
 
         <button
           type="button"
-          class="csv-adv-toggle"
+          class={styles.csvAdvToggle}
           data-testid="csv-advanced-toggle"
           aria-expanded={advancedOpen}
           onClick={() => setAdvancedOpen(!advancedOpen)}
@@ -115,10 +117,10 @@ function ConfigureControls({ opts, setOpt }: ControlsProps) {
       </div>
 
       {advancedOpen && (
-        <div class="csv-advanced" data-testid="csv-advanced">
-          <div class="csv-adv-item">
-            <span class="csv-tb-item">
-              <span class="csv-tb-k">Encoding</span>
+        <div class={styles.csvAdvanced} data-testid="csv-advanced">
+          <div class={fmtCss.csvAdvItem}>
+            <span class={fmtCss.csvTbItem}>
+              <span class={fmtCss.csvTbK}>Encoding</span>
               <Segmented
                 value={opts.encoding}
                 options={ENCODING_SEG}
@@ -127,14 +129,14 @@ function ConfigureControls({ opts, setOpt }: ControlsProps) {
                 onChange={(v) => setOpt('encoding', v)}
               />
             </span>
-            <div class="csv-opt-hint">
+            <div class={fmtCss.csvOptHint}>
               Pick a legacy encoding if accented characters look garbled.
             </div>
           </div>
 
-          <div class="csv-adv-item">
-            <span class="csv-tb-item">
-              <span class="csv-tb-k">Empty cell {'→'}</span>
+          <div class={fmtCss.csvAdvItem}>
+            <span class={fmtCss.csvTbItem}>
+              <span class={fmtCss.csvTbK}>Empty cell {'→'}</span>
               <Segmented
                 value={opts.emptyMode}
                 options={EMPTY_SEG}
@@ -143,15 +145,17 @@ function ConfigureControls({ opts, setOpt }: ControlsProps) {
                 onChange={(v) => setOpt('emptyMode', v)}
               />
             </span>
-            <div class="csv-opt-hint">What an empty cell becomes in the document.</div>
+            <div class={fmtCss.csvOptHint}>What an empty cell becomes in the document.</div>
           </div>
 
-          <div class="csv-adv-item">
-            <span class="csv-tb-item">
-              <span class="csv-tb-k">Trim values</span>
+          <div class={fmtCss.csvAdvItem}>
+            <span class={fmtCss.csvTbItem}>
+              <span class={fmtCss.csvTbK}>Trim values</span>
               <Toggle checked={opts.trim} onChange={(v) => setOpt('trim', v)} testid="csv-trim" />
             </span>
-            <div class="csv-opt-hint">Strip leading/trailing whitespace around each value.</div>
+            <div class={fmtCss.csvOptHint}>
+              Strip leading/trailing whitespace around each value.
+            </div>
           </div>
         </div>
       )}

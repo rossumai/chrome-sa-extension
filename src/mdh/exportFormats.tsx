@@ -10,6 +10,7 @@ import {
 import { csvHeader, csvRow } from './csv.js';
 import { docToXml, toXmlName } from './xml.js';
 import * as api from './api.js';
+import fmtCss from './formats/formats.module.css';
 
 // The options bag every format's Configure controls edit, plus its setter.
 type ControlsProps = { opts: Record<string, any>; setOpt: (key: string, value: any) => void };
@@ -33,8 +34,8 @@ const DELIM_SEG = [
 function CsvControls({ opts, setOpt }: ControlsProps) {
   return (
     <Fragment>
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="Character between fields.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="Character between fields.">
           Delimiter
         </span>
         <Segmented
@@ -44,8 +45,8 @@ function CsvControls({ opts, setOpt }: ControlsProps) {
           ariaLabel="Delimiter"
         />
       </span>
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="Write a first row with the field names.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="Write a first row with the field names.">
           Header row
         </span>
         <Toggle
@@ -55,8 +56,8 @@ function CsvControls({ opts, setOpt }: ControlsProps) {
           title="Write a header row."
         />
       </span>
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="Byte-order mark; helps Excel open UTF-8 CSVs.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="Byte-order mark; helps Excel open UTF-8 CSVs.">
           Excel-compatible (BOM)
         </span>
         <Toggle
@@ -73,19 +74,19 @@ function CsvControls({ opts, setOpt }: ControlsProps) {
 function XlsxControls({ opts, setOpt }: ControlsProps) {
   return (
     <Fragment>
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="Worksheet tab name.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="Worksheet tab name.">
           Sheet name
         </span>
         <input
-          class="xlsx-sheet-select"
+          class={fmtCss.xlsxSheetSelect}
           data-testid="export-xlsx-sheet"
           value={opts.sheetName}
           onInput={(e: any) => setOpt('sheetName', e.target.value)}
         />
       </span>
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="Write a first row with the field names.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="Write a first row with the field names.">
           Header row
         </span>
         <Toggle
@@ -102,23 +103,23 @@ function XlsxControls({ opts, setOpt }: ControlsProps) {
 function XmlControls({ opts, setOpt }: ControlsProps) {
   return (
     <Fragment>
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="Top-level wrapper element.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="Top-level wrapper element.">
           Root element
         </span>
         <input
-          class="xlsx-sheet-select"
+          class={fmtCss.xlsxSheetSelect}
           data-testid="export-xml-root"
           value={opts.rootName}
           onInput={(e: any) => setOpt('rootName', e.target.value)}
         />
       </span>
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="Element wrapping each document.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="Element wrapping each document.">
           Record element
         </span>
         <input
-          class="xlsx-sheet-select"
+          class={fmtCss.xlsxSheetSelect}
           data-testid="export-xml-record"
           value={opts.recordName}
           onInput={(e: any) => setOpt('recordName', e.target.value)}

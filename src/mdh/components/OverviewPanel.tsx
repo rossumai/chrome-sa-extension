@@ -8,6 +8,8 @@ import FlashOnChange from './FlashOnChange.jsx';
 import OverviewCharts from './OverviewCharts.jsx';
 import CollectionEmptyState from './CollectionEmptyState.jsx';
 import ctl from '../../ui/controls.module.css';
+import ov from './OverviewPanel.module.css';
+import pnl from './panel.module.css';
 
 const BATCH_SIZE = 50;
 const BATCH_CONCURRENCY = 3;
@@ -254,7 +256,7 @@ export default function OverviewPanel() {
 
   function sortIndicator(key: any) {
     if (sortKey !== key) return null;
-    return <span class="stats-sort-arrow">{sortDir === 'desc' ? '\u25be' : '\u25b4'}</span>;
+    return <span class={ov.statsSortArrow}>{sortDir === 'desc' ? '\u25be' : '\u25b4'}</span>;
   }
 
   const rows = cols.map((name) => ({ name, ...(data[name] || {}) }));
@@ -310,12 +312,12 @@ export default function OverviewPanel() {
   }
 
   return (
-    <div class="panel stats-panel">
-      <div class="toolbar">
+    <div class={`${pnl.panel} stats-panel`}>
+      <div class={pnl.toolbar}>
         <span style="flex:1;font-weight:500">All Collections</span>
         {loadingCount > 0 && (
-          <span class="stats-progress">
-            <span class="stats-progress-spinner" />
+          <span class={pnl.statsProgress}>
+            <span class={pnl.statsProgressSpinner} />
             {doneCount} / {totalCount}
           </span>
         )}
@@ -329,19 +331,19 @@ export default function OverviewPanel() {
       )}
 
       {loadingCount > 0 && totalCount > 0 && (
-        <div class="stats-progress-track">
+        <div class={ov.statsProgressTrack}>
           <div
-            class="stats-progress-fill"
+            class={ov.statsProgressFill}
             style={{ width: `${Math.round((doneCount / totalCount) * 100)}%` }}
           />
         </div>
       )}
 
-      <div class="stats-scroll">
+      <div class={ov.statsScroll}>
         {totalCount === 0 ? (
           <CollectionEmptyState connected={connected.value} />
         ) : (
-          <table class="stats-table stats-overview-table">
+          <table class={`${ov.statsTable} ${ov.statsOverviewTable}`}>
             <colgroup>
               <col />
               <col style="width:120px" />
@@ -353,25 +355,34 @@ export default function OverviewPanel() {
             </colgroup>
             <thead>
               <tr>
-                <th class="stats-sortable" onClick={() => onSort('name')}>
+                <th class={ov.statsSortable} onClick={() => onSort('name')}>
                   Collection{sortIndicator('name')}
                 </th>
-                <th class="stats-sortable stats-num" onClick={() => onSort('count')}>
+                <th class={`${ov.statsSortable} ${ov.statsNum}`} onClick={() => onSort('count')}>
                   Documents{sortIndicator('count')}
                 </th>
-                <th class="stats-sortable stats-num" onClick={() => onSort('storageSize')}>
+                <th
+                  class={`${ov.statsSortable} ${ov.statsNum}`}
+                  onClick={() => onSort('storageSize')}
+                >
                   On disk{sortIndicator('storageSize')}
                 </th>
-                <th class="stats-sortable stats-num" onClick={() => onSort('size')}>
+                <th class={`${ov.statsSortable} ${ov.statsNum}`} onClick={() => onSort('size')}>
                   Logical{sortIndicator('size')}
                 </th>
-                <th class="stats-sortable stats-num" onClick={() => onSort('avgObjSize')}>
+                <th
+                  class={`${ov.statsSortable} ${ov.statsNum}`}
+                  onClick={() => onSort('avgObjSize')}
+                >
                   Avg doc{sortIndicator('avgObjSize')}
                 </th>
-                <th class="stats-sortable stats-num" onClick={() => onSort('nindexes')}>
+                <th class={`${ov.statsSortable} ${ov.statsNum}`} onClick={() => onSort('nindexes')}>
                   Indexes{sortIndicator('nindexes')}
                 </th>
-                <th class="stats-sortable stats-num" onClick={() => onSort('totalIndexSize')}>
+                <th
+                  class={`${ov.statsSortable} ${ov.statsNum}`}
+                  onClick={() => onSort('totalIndexSize')}
+                >
                   Index size{sortIndicator('totalIndexSize')}
                 </th>
               </tr>
@@ -382,73 +393,73 @@ export default function OverviewPanel() {
                 const err = r.error;
                 return (
                   <tr
-                    class="stats-clickable"
+                    class={ov.statsClickable}
                     onClick={() => openCollection(r.name)}
                     title={`Open "${r.name}"`}
                   >
                     <td>{r.name}</td>
                     {err ? (
-                      <td colspan={'6' as any} class="stats-row-error">
+                      <td colspan={'6' as any} class={ov.statsRowError}>
                         {err}
                       </td>
                     ) : isLoading ? (
                       <Fragment>
-                        <td class="stats-num">
-                          <span class="stats-skeleton" style="width:90px" />
+                        <td class={ov.statsNum}>
+                          <span class={ov.statsSkeleton} style="width:90px" />
                         </td>
-                        <td class="stats-num">
-                          <span class="stats-skeleton" style="width:72px" />
+                        <td class={ov.statsNum}>
+                          <span class={ov.statsSkeleton} style="width:72px" />
                         </td>
-                        <td class="stats-num">
-                          <span class="stats-skeleton" style="width:72px" />
+                        <td class={ov.statsNum}>
+                          <span class={ov.statsSkeleton} style="width:72px" />
                         </td>
-                        <td class="stats-num">
-                          <span class="stats-skeleton" style="width:60px" />
+                        <td class={ov.statsNum}>
+                          <span class={ov.statsSkeleton} style="width:60px" />
                         </td>
-                        <td class="stats-num">
-                          <span class="stats-skeleton" style="width:32px" />
+                        <td class={ov.statsNum}>
+                          <span class={ov.statsSkeleton} style="width:32px" />
                         </td>
-                        <td class="stats-num">
-                          <span class="stats-skeleton" style="width:70px" />
+                        <td class={ov.statsNum}>
+                          <span class={ov.statsSkeleton} style="width:70px" />
                         </td>
                       </Fragment>
                     ) : (
                       <Fragment>
-                        <td class="stats-mono stats-num stats-coverage-cell">
+                        <td class={`${ov.statsMono} ${ov.statsNum} ${ov.statsCoverageCell}`}>
                           <div
-                            class="stats-coverage-bar"
+                            class={ov.statsCoverageBar}
                             style={{ width: `${barPct(r.count, maxCount)}%` }}
                           />
-                          <span class="stats-coverage-text">
+                          <span class={ov.statsCoverageText}>
                             <FlashOnChange
                               value={r.count != null ? r.count.toLocaleString() : '\u2014'}
                             />
                           </span>
                         </td>
-                        <td class="stats-mono stats-num stats-coverage-cell">
+                        <td class={`${ov.statsMono} ${ov.statsNum} ${ov.statsCoverageCell}`}>
                           <div
-                            class="stats-coverage-bar"
+                            class={ov.statsCoverageBar}
                             style={{ width: `${barPct(r.storageSize, maxStorageSize)}%` }}
                           />
-                          <span class="stats-coverage-text">
+                          <span class={ov.statsCoverageText}>
                             <FlashOnChange value={formatBytes(r.storageSize)} />
                           </span>
                         </td>
-                        <td class="stats-mono stats-num">
+                        <td class={`${ov.statsMono} ${ov.statsNum}`}>
                           <FlashOnChange value={formatBytes(r.size)} />
                         </td>
-                        <td class="stats-mono stats-num">
+                        <td class={`${ov.statsMono} ${ov.statsNum}`}>
                           <FlashOnChange value={formatBytes(r.avgObjSize)} />
                         </td>
-                        <td class="stats-mono stats-num">
+                        <td class={`${ov.statsMono} ${ov.statsNum}`}>
                           <FlashOnChange value={r.nindexes ?? '\u2014'} />
                         </td>
-                        <td class="stats-mono stats-num stats-coverage-cell">
+                        <td class={`${ov.statsMono} ${ov.statsNum} ${ov.statsCoverageCell}`}>
                           <div
-                            class="stats-coverage-bar"
+                            class={ov.statsCoverageBar}
                             style={{ width: `${barPct(r.totalIndexSize, maxIndexSize)}%` }}
                           />
-                          <span class="stats-coverage-text">
+                          <span class={ov.statsCoverageText}>
                             <FlashOnChange value={formatBytes(r.totalIndexSize)} />
                           </span>
                         </td>
@@ -464,28 +475,28 @@ export default function OverviewPanel() {
                   <td>
                     <strong>Total ({totalCount})</strong>
                   </td>
-                  <td class="stats-mono stats-num">
+                  <td class={`${ov.statsMono} ${ov.statsNum}`}>
                     <strong>
                       <FlashOnChange value={totals.count.toLocaleString()} />
                     </strong>
                   </td>
-                  <td class="stats-mono stats-num">
+                  <td class={`${ov.statsMono} ${ov.statsNum}`}>
                     <strong>
                       <FlashOnChange value={formatBytes(totals.storageSize)} />
                     </strong>
                   </td>
-                  <td class="stats-mono stats-num">
+                  <td class={`${ov.statsMono} ${ov.statsNum}`}>
                     <strong>
                       <FlashOnChange value={formatBytes(totals.size)} />
                     </strong>
                   </td>
-                  <td class="stats-mono stats-num">{'\u2014'}</td>
-                  <td class="stats-mono stats-num">
+                  <td class={`${ov.statsMono} ${ov.statsNum}`}>{'\u2014'}</td>
+                  <td class={`${ov.statsMono} ${ov.statsNum}`}>
                     <strong>
                       <FlashOnChange value={totals.nindexes.toLocaleString()} />
                     </strong>
                   </td>
-                  <td class="stats-mono stats-num">
+                  <td class={`${ov.statsMono} ${ov.statsNum}`}>
                     <strong>
                       <FlashOnChange value={formatBytes(totals.totalIndexSize)} />
                     </strong>

@@ -2,6 +2,14 @@ import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { undoToast } from '../store.js';
 import { triggerUndo, dismissUndo } from '../undo.js';
+import styles from './UndoToast.module.css';
+
+// The status modifiers that carry a rule; 'pending' has none.
+const STATUS_CLASS: Record<string, string> = {
+  running: styles.undoToastRunning,
+  done: styles.undoToastDone,
+  error: styles.undoToastError,
+};
 
 export default function UndoToast() {
   const u = undoToast.value;
@@ -21,13 +29,13 @@ export default function UndoToast() {
 
   return (
     <div
-      class={'undo-toast undo-toast-' + u.status}
+      class={`${styles.undoToast} ${STATUS_CLASS[u.status] ?? ''}`}
       role="status"
       aria-live="polite"
       data-testid="undo-toast"
     >
-      <div class="undo-toast-row">
-        <span class="undo-toast-message">
+      <div class={styles.undoToastRow}>
+        <span class={styles.undoToastMessage}>
           {u.status === 'error'
             ? `Undo failed: ${u.error}`
             : u.status === 'done'
@@ -37,12 +45,12 @@ export default function UndoToast() {
                 : u.message}
         </span>
         {u.status === 'pending' && (
-          <button class="undo-toast-action" onClick={triggerUndo}>
-            Undo <span class="undo-toast-countdown">({remainingS}s)</span>
+          <button class={styles.undoToastAction} onClick={triggerUndo}>
+            Undo <span class={styles.undoToastCountdown}>({remainingS}s)</span>
           </button>
         )}
         <button
-          class="undo-toast-dismiss"
+          class={styles.undoToastDismiss}
           title="Dismiss"
           onClick={dismissUndo}
           aria-label="Dismiss"
@@ -51,7 +59,7 @@ export default function UndoToast() {
         </button>
       </div>
       {u.status === 'pending' && (
-        <div class="undo-toast-progress" style={`transform: scaleX(${progress})`} />
+        <div class={styles.undoToastProgress} style={`transform: scaleX(${progress})`} />
       )}
     </div>
   );

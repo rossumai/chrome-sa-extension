@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { opNotice } from '../store.js';
+import styles from './OpNoticeBanner.module.css';
 
 // Non-error operation notice shown as a full-width top stripe (sibling to
 // ErrorBanner): info while an async op runs, warning when its outcome is
@@ -9,10 +10,12 @@ export default function OpNoticeBanner() {
   if (!notice) return null;
 
   return (
-    <div class={'op-notice-banner ' + (notice.kind || 'info')}>
+    <div
+      class={`${styles.opNoticeBanner} ${notice.kind === 'warning' ? styles.warning : styles.info}`}
+    >
       <span>{notice.message}</span>
       <button
-        class="dismiss"
+        class={styles.dismiss}
         onClick={() => {
           opNotice.value = null;
         }}

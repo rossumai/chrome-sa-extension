@@ -40,6 +40,8 @@ import { discoverLeafPaths } from '../columnDiscovery.js';
 import styles from './SearchIndexBuilder.module.css';
 import ctl from '../../ui/controls.module.css';
 import inp from '../../ui/Input.module.css';
+import own from './SearchIndexPanel.module.css';
+import pnl from './panel.module.css';
 
 export default function SearchIndexPanel() {
   const [indexes, setIndexes] = useState<any[]>([]);
@@ -269,7 +271,7 @@ export default function SearchIndexPanel() {
             <ModalField label={isEdit ? 'Name (cannot be changed)' : 'Name'}>
               <input
                 ref={nameRef}
-                class={inp.input + (isEdit ? ' input-locked' : '')}
+                class={inp.input + (isEdit ? ` ${own.inputLocked}` : '')}
                 style="width:100%"
                 placeholder="my_search_index"
                 defaultValue={initialName}
@@ -383,7 +385,7 @@ export default function SearchIndexPanel() {
 
   if (((selectedCollection.value as string) || '').includes('/')) {
     return (
-      <div class="panel">
+      <div class={pnl.panel}>
         <div style="padding:16px;color:var(--text-secondary);font-size:12px">
           Search indexes cannot be managed for a collection whose name contains a slash {'\u2014'}{' '}
           Master Data Hub addresses the collection in the URL path.
@@ -393,12 +395,12 @@ export default function SearchIndexPanel() {
   }
 
   return (
-    <div class="panel">
-      <div class="toolbar">
-        <span class="toolbar-stack">
+    <div class={pnl.panel}>
+      <div class={pnl.toolbar}>
+        <span class={pnl.toolbarStack}>
           <span style="font-weight:500">Search Indexes (Atlas Search)</span>
-          <span class="toolbar-sync">
-            {sync.working ? <span class="spin" /> : <span class="dot" />}
+          <span class={pnl.toolbarSync}>
+            {sync.working ? <span class={pnl.spin} /> : <span class={pnl.dot} />}
             {sync.text}
           </span>
         </span>
@@ -419,7 +421,7 @@ export default function SearchIndexPanel() {
           {'\u21bb'}
         </button>
       </div>
-      <div class="index-list">
+      <div class={pnl.indexList}>
         {indexes.length === 0 ? (
           <div style="padding:16px;color:var(--text-secondary);font-size:12px">
             No search indexes
@@ -430,10 +432,10 @@ export default function SearchIndexPanel() {
             const name = isObj ? idx.name || '(unnamed)' : String(idx);
             const badges = [];
             const badge = isObj ? statusBadge(idx.status) : null;
-            const isFailed = badge?.cls === 'index-badge-failed';
+            const isFailed = badge?.cls === pnl.indexBadgeFailed;
             if (badge) badges.push(badge);
             if (isObj && idx.queryable === false)
-              badges.push({ text: 'not queryable', cls: 'index-badge-warning' });
+              badges.push({ text: 'not queryable', cls: pnl.indexBadgeWarning });
 
             const definition = isObj ? toSearchIndexDefinition(idx) : null;
             const ver = isObj ? idx.latest_definition_version : null;
@@ -468,7 +470,7 @@ export default function SearchIndexPanel() {
               openIndexModal({ mode: 'edit', name, definition: definition || undefined });
             const notice = stillServing ? (
               <>
-                <span class="record-card-notice-text">
+                <span class={own.recordCardNoticeText}>
                   The engine rejected v{ver ? ver.version : '?'}. The previous version is still
                   serving.
                 </span>
@@ -489,7 +491,7 @@ export default function SearchIndexPanel() {
                 onEdit={openEdit}
                 canDrop
                 onDrop={() => doDropSearchIndex(name)}
-                cardClass={(isFailed ? 'record-card-failed' : null) as string | undefined}
+                cardClass={(isFailed ? pnl.recordCardFailed : null) as string | undefined}
                 onCheck={onCheck}
                 checkUnavailable={
                   isObj && !checkable ? 'Testing opens once the index is READY.' : undefined

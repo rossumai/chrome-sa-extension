@@ -1,0 +1,49 @@
+.placeholderAnnotationStatus {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.placeholderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placeholderName {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+:where(.placeholderInput) {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.placeholderTypeSelect {
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.placeholderWarn {
+  flex-shrink: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--warning-fg);
+  cursor: help;
+}

@@ -8,6 +8,7 @@ vi.mock('../src/mdh/components/Sidebar.jsx', () => ({ showCreateModal: vi.fn() }
 import OverviewPanel from '../src/mdh/components/OverviewPanel.jsx';
 import { collections, connected, loading, error } from '../src/mdh/store.js';
 import ctl from '../src/ui/controls.module.css';
+import ov from '../src/mdh/components/OverviewPanel.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -28,9 +29,9 @@ describe('OverviewPanel empty state', () => {
     expect(root.textContent).toContain('No collections yet');
     expect(root.querySelector('button.' + ctl.btnSuccess)).toBeTruthy();
     // the old bare "No collections" .stats-empty div is gone
-    expect(root.querySelector('.stats-empty')).toBeNull();
+    expect(root.querySelector(`.${ov.statsEmpty}`)).toBeNull();
     // no stats table when empty
-    expect(root.querySelector('table.stats-table')).toBeNull();
+    expect(root.querySelector(`table.${ov.statsTable}`)).toBeNull();
   });
 
   it('shows nothing (not the old "No collections") when empty and disconnected', () => {
@@ -42,6 +43,6 @@ describe('OverviewPanel empty state', () => {
     expect(root.textContent).not.toContain('No collections yet');
     expect(root.textContent).not.toContain('No collections');
     expect(root.querySelector('button.' + ctl.btnSuccess)).toBeNull();
-    expect(root.querySelector('.stats-empty')).toBeNull();
+    expect(root.querySelector(`.${ov.statsEmpty}`)).toBeNull();
   });
 });

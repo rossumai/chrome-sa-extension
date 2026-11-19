@@ -12,6 +12,7 @@ import {
 import FabryMarkdown from '../../ui/fabry/FabryMarkdown.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './EmptyStageExplain.module.css';
 
 const GERUNDS = [
   'Summoning Mr. Fabry',
@@ -130,7 +131,7 @@ export default function EmptyStageExplain({
 
   if (state === 'error') {
     return (
-      <div class="stage-explain stage-explain-quiet">
+      <div class={`${styles.stageExplain} ${styles.stageExplainQuiet}`}>
         <FabryMark size={13} />
         <span>Mr. Fabry couldn{'’'}t explain this one.</span>
       </div>
@@ -138,12 +139,12 @@ export default function EmptyStageExplain({
   }
 
   return (
-    <div class="stage-explain">
-      <div class="stage-explain-hd">
+    <div class={styles.stageExplain}>
+      <div class={styles.stageExplainHd}>
         <FabryMark size={13} />
         <span>Why this stage is empty</span>
         {waiting && (
-          <span class="stage-explain-load">
+          <span class={styles.stageExplainLoad}>
             {GERUNDS[gerund]}
             {'…'}
           </span>
@@ -159,7 +160,7 @@ export default function EmptyStageExplain({
       ) : (
         <FabryMarkdown text={text} streaming={state === 'running'} />
       )}
-      <div class="stage-explain-ft">by Mr. Fabry {'·'} check it before trusting it</div>
+      <div class={styles.stageExplainFt}>by Mr. Fabry {'·'} check it before trusting it</div>
     </div>
   );
 }

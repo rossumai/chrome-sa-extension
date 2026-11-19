@@ -1,0 +1,208 @@
+.statsScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statsEmpty {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* Tables */
+
+.statsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.statsTable th,
+.statsTable td {
+  padding: 4px 8px;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.statsTable th {
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.statsTable td {
+  border-bottom: 1px solid var(--border);
+}
+
+.statsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.statsMono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* Zebra striping & hover */
+
+.statsTable tbody tr:nth-child(even) td {
+  background: rgba(128, 128, 128, 0.03);
+}
+
+.statsTable tbody tr:hover td {
+  background: rgba(128, 128, 128, 0.07);
+}
+
+@media (prefers-color-scheme: dark) {
+  .statsTable tbody tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .statsTable tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Health ring */
+
+/* Coverage bars */
+
+.statsCoverageCell {
+  position: relative;
+}
+
+.statsCoverageBar {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  bottom: 1px;
+  background: var(--accent);
+  opacity: 0.12;
+  border-radius: 2px;
+}
+
+.statsCoverageText {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sticky progress bar */
+
+.statsProgressTrack {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin: 0 16px 4px;
+}
+
+.statsProgressFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease-out;
+}
+
+/* Overview (All Collections) panel */
+
+.statsOverviewTable {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.statsOverviewTable td:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statsOverviewTable th.statsSortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.statsOverviewTable th.statsSortable:hover {
+  color: var(--text-primary);
+}
+
+.statsOverviewTable th.statsNum,
+.statsOverviewTable td.statsNum {
+  text-align: right;
+}
+
+.statsSortArrow {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--accent);
+  vertical-align: middle;
+  transform: translateY(-1px);
+}
+
+.statsOverviewTable tr.statsClickable {
+  cursor: pointer;
+}
+
+.statsOverviewTable tr.statsClickable:hover td {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.statsSkeleton {
+  display: inline-block;
+  height: 10px;
+  border-radius: 3px;
+  vertical-align: middle;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--text-secondary) 12%, transparent) 0%,
+    color-mix(in srgb, var(--text-secondary) 28%, transparent) 50%,
+    color-mix(in srgb, var(--text-secondary) 12%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: stats-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes stats-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.statsRowError {
+  color: var(--danger);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+
+.statsOverviewTable tfoot td {
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+  background: var(--bg-hover);
+  font-size: 11px;
+}
+
+/* Right-aligned numeric cells: bar grows from the right so it "points" at
+   the value rather than being disconnected on the opposite side. */
+
+.statsOverviewTable td.statsNum.statsCoverageCell .statsCoverageBar {
+  left: auto;
+  right: 0;
+}
+
+.statsOverviewTable td.statsNum.statsCoverageCell .statsCoverageBar {
+  opacity: 0.18;
+}

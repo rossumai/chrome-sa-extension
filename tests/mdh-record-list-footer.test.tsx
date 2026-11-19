@@ -39,6 +39,8 @@ import {
 } from '../src/mdh/store.js';
 import seg from '../src/ui/Segmented.module.css';
 import pg from '../src/ui/Pagination.module.css';
+import recordListCss from '../src/mdh/components/RecordList.module.css';
+import jv from '../src/mdh/components/jsonValues.module.css';
 
 const pagination = { hasPrev: () => false, hasNext: () => false, page: () => 1 };
 
@@ -102,7 +104,7 @@ describe('RecordList view switch', () => {
     await act(() => {
       tableOpt!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    expect(root.querySelector('table.record-table')).not.toBeNull();
+    expect(root.querySelector(`table.${jv.recordTable}`)).not.toBeNull();
   });
 
   it('offers exactly List / Table / Stages (no JSON)', () => {
@@ -119,7 +121,7 @@ describe('RecordList view switch', () => {
     const active = root.querySelector('.' + seg.opt + '.' + seg.on);
     expect(active).toBeTruthy();
     expect(active!.textContent.trim()).toBe('List');
-    expect(root.querySelector('table.record-table')).toBeNull();
+    expect(root.querySelector(`table.${jv.recordTable}`)).toBeNull();
     globalThis.chrome.storage.local.get = ((k: any, cb: any) =>
       cb && (cb({}) as any as any)) as any;
   });
@@ -133,7 +135,7 @@ describe('RecordList — stages view', () => {
       onToggleStage() {},
     });
     expect(root.querySelector('.stages-view-stub')).not.toBeNull();
-    expect(root.querySelector('.record-list')).toBeNull();
+    expect(root.querySelector(`.${recordListCss.recordList}`)).toBeNull();
     expect(root.querySelector('.' + pg.root)).toBeNull();
   });
 
@@ -161,14 +163,14 @@ describe('RecordList — stages view', () => {
       (b) => b.textContent.trim() === 'Select',
     );
     expect(selectBtn).toBeTruthy();
-    expect(selectBtn!.closest('.toolbar-group-disabled')).not.toBeNull();
+    expect(selectBtn!.closest(`.${recordListCss.toolbarGroupDisabled}`)).not.toBeNull();
     const expandBtn = [...root.querySelectorAll('button')].find((b) =>
       /Expand All|Collapse All/.test(b.textContent),
     );
     expect(expandBtn).toBeTruthy();
-    expect(expandBtn!.closest('.toolbar-group-disabled')).not.toBeNull();
+    expect(expandBtn!.closest(`.${recordListCss.toolbarGroupDisabled}`)).not.toBeNull();
     // Every disabled group carries a tooltip (title) explaining why it's disabled.
-    const disabledGroups = [...root.querySelectorAll('.toolbar-group-disabled')];
+    const disabledGroups = [...root.querySelectorAll(`.${recordListCss.toolbarGroupDisabled}`)];
     expect(disabledGroups.length).toBeGreaterThanOrEqual(2); // Select/Expand group + Download/Bulk/Insert group
     for (const g of disabledGroups) {
       expect((g.getAttribute('title') || '').toLowerCase()).toContain('stages view');
@@ -178,7 +180,7 @@ describe('RecordList — stages view', () => {
       (b) => b.textContent.trim() === 'Stages',
     );
     expect(stagesOpt).toBeTruthy();
-    expect(stagesOpt!.closest('.toolbar-group-disabled')).toBeNull();
+    expect(stagesOpt!.closest(`.${recordListCss.toolbarGroupDisabled}`)).toBeNull();
   });
 });
 

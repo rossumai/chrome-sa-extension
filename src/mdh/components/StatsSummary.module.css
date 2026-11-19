@@ -1,0 +1,244 @@
+/* States what happened rather than warning about it, so it carries the info
+   token family: 7.5:1 in both themes, where --text-secondary on --bg-card
+   measures 4.21:1 at this size. */
+
+.statsNote {
+  font-size: 11px;
+  color: var(--info-fg);
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+/* Overview */
+
+.statsOverviewGrid {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.statsOverviewCard {
+  flex: 1;
+  text-align: center;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.statsMetricValue {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.statsMetricLabel {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* input sizing now via <FabryInput size="sm"> */
+
+/* ── Stats panel: summary dashboard ───────────────────────────── */
+
+.statsBandLabel {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin: 0 2px 4px;
+}
+
+.statsDash {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+@media (max-width: 620px) {
+  .statsDash {
+    grid-template-columns: 1fr;
+  }
+}
+
+.statsHealth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-right: 20px;
+  border-right: 1px solid var(--border);
+}
+
+@media (max-width: 620px) {
+  .statsHealth {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 0 14px;
+  }
+}
+
+.statsRing {
+  position: relative;
+  width: 104px;
+  height: 104px;
+}
+
+.statsRing .statsRingNum {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.statsRing .statsRingNum b {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.statsRing .statsRingNum span {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.statsHealthLabel {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statsDashRight {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.statsFieldsNote {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: -6px;
+}
+
+.statsHcompWrap {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.statsHcomp {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 210px;
+}
+
+.statsHcompRow {
+  display: grid;
+  grid-template-columns: 134px 1fr 26px;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.statsHcompLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.statsHcompVal {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.statsHelp {
+  display: inline-grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 9px;
+  line-height: 1;
+  cursor: help;
+  flex: none;
+}
+
+.statsHelp:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.statsHbar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--bg-hover);
+  overflow: hidden;
+}
+
+.statsHbar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* ── collection band ── */
+
+.statsSchemaLine {
+  font-size: 12px;
+  /* --text-primary, not --text-secondary: this line carries the section's verdict
+     and is now always visible, and --text-secondary measures 3.74:1 here, under
+     the 4.5:1 floor. Same fix as .stats-fcard-meta and ModalFieldLabel (a9ed60a).
+     The mono face and size keep it subordinate to the band label without
+     relying on colour to do it. */
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+/* ── field grid ── */
+
+.statsFgridHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.statsFgridHead .statsBandLabel {
+  flex: 1;
+  margin: 0 2px;
+}
+
+.statsFgridFilter {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 3px 8px;
+  width: 140px;
+}

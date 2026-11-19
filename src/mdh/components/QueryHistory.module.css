@@ -1,0 +1,154 @@
+/* ── Query history panel ─────────────────────── */
+
+.queryHistoryPanel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow:
+    var(--shadow),
+    0 8px 24px rgba(0, 0, 0, 0.12);
+  width: 480px;
+  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.libraryTabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.libraryTab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  margin-bottom: -1px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  transition:
+    color 0.1s,
+    border-color 0.1s;
+}
+
+.libraryTab:hover {
+  color: var(--text-primary);
+}
+
+.libraryTabActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.queryHistoryList {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.queryHistoryEmpty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.queryHistoryItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.queryHistoryItem:last-child {
+  border-bottom: none;
+}
+
+.queryHistoryItem:hover {
+  background: var(--bg-hover);
+}
+
+.queryHistoryItemInfo {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.queryHistoryCollection {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-bottom: 2px;
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
+.queryHistoryName {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.queryHistoryPreview {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queryHistoryTime {
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.queryHistoryUnsaveBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--warning);
+  font-size: 14px;
+  padding: 0 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.1s;
+}
+
+.queryHistoryUnsaveBtn:hover {
+  color: var(--danger);
+}
+
+.queryHistoryVariables {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queryHistoryItemCurrent {
+  border-left: 2px solid var(--accent);
+}
+
+.queryHistoryItemInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}

@@ -2,6 +2,7 @@
 import { gutter, GutterMarker, EditorView, Decoration } from '@codemirror/view';
 import { StateField, RangeSetBuilder } from '@codemirror/state';
 import { stageLineRanges } from './pipelineComments.js';
+import pd from './components/PipelineDebug.module.css';
 
 // Recomputed stage line ranges, shared by the gutter and the greying decoration.
 const stageRangesField = StateField.define({
@@ -29,7 +30,7 @@ class ToggleMarker extends GutterMarker {
     // pointer-events:none), which resolves the clicked line and toggles.
     const box = document.createElement('input');
     box.type = 'checkbox';
-    box.className = 'pipeline-stage-toggle' + (this.disabled ? ' pipeline-stage-toggle-off' : '');
+    box.className = pd.pipelineStageToggle + (this.disabled ? ' pipeline-stage-toggle-off' : '');
     box.checked = !this.disabled;
     box.tabIndex = -1;
     box.title = this.disabled ? 'Enable stage' : 'Disable stage';
@@ -43,7 +44,7 @@ function rangeForLine(view: any, lineFrom: number) {
   return ranges.find((r: any) => r.lineStart === lineNo) || null;
 }
 
-const disabledLineDeco = Decoration.line({ class: 'pipeline-stage-disabled-line' });
+const disabledLineDeco = Decoration.line({ class: pd.pipelineStageDisabledLine });
 
 const disabledDecoField = StateField.define({
   create(state) {
@@ -75,7 +76,7 @@ export function stageToggleGutter(onToggle: (entryIndex: number) => void) {
     stageRangesField,
     disabledDecoField,
     gutter({
-      class: 'cm-stage-gutter',
+      class: pd.cmStageGutter,
       lineMarker(view, line) {
         const r = rangeForLine(view, line.from);
         return r ? new ToggleMarker(r.disabled) : null;

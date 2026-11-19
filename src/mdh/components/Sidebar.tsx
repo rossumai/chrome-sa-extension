@@ -29,6 +29,8 @@ import { filterCollections, splitByMatch } from '../collectionFilter.js';
 import FilterInput from '../../ui/FilterInput.jsx';
 import ctl from '../../ui/controls.module.css';
 import inp from '../../ui/Input.module.css';
+import sb from './Sidebar.module.css';
+import menuCss from './toolbarMenu.module.css';
 
 async function loadCollections() {
   try {
@@ -401,9 +403,9 @@ export default function Sidebar() {
     return (
       <div
         class={
-          'collection-item' +
-          (name === selected && activeView.value === 'collection' ? ' active' : '') +
-          (menuOpenFor === name ? ' menu-open' : '')
+          sb.collectionItem +
+          (name === selected && activeView.value === 'collection' ? ` ${sb.active}` : '') +
+          (menuOpenFor === name ? ` ${sb.menuOpen}` : '')
         }
         onClick={(e) => {
           if (e.metaKey || e.ctrlKey) {
@@ -426,14 +428,14 @@ export default function Sidebar() {
           setMenuOpenFor(name);
         }}
       >
-        <span class="collection-item-name" title={name}>
+        <span class={sb.collectionItemName} title={name}>
           {splitByMatch(name, nameFilter).map((seg) =>
-            seg.hit ? <b class="collection-item-hit">{seg.text}</b> : seg.text,
+            seg.hit ? <b class={sb.collectionItemHit}>{seg.text}</b> : seg.text,
           )}
         </span>
-        <span class="collection-item-actions">
+        <span class={sb.collectionItemActions}>
           <button
-            class="collection-action-btn collection-action-menu-btn"
+            class={`${sb.collectionActionBtn} collection-action-menu-btn`}
             title="Collection actions"
             onClick={(e) => toggleMenu(name, e)}
             dangerouslySetInnerHTML={{
@@ -447,15 +449,15 @@ export default function Sidebar() {
   }
 
   return (
-    <aside id="sidebar" class={'sidebar' + (filtering ? ' sidebar-filtering' : '')}>
-      <div class="sidebar-header">
-        <div class="sidebar-title-group">
-          <span class="sidebar-title">Collections</span>
-          <span class="sidebar-count">
+    <aside id="sidebar" class={sb.sidebar + (filtering ? ` ${sb.sidebarFiltering}` : '')}>
+      <div class={sb.sidebarHeader}>
+        <div class={sb.sidebarTitleGroup}>
+          <span class={sb.sidebarTitle}>Collections</span>
+          <span class={sb.sidebarCount}>
             ({filtering ? `${shownCols.length} / ${cols.length}` : cols.length})
           </span>
         </div>
-        <div class="sidebar-header-actions">
+        <div class={sb.sidebarHeaderActions}>
           <button
             class={ctl.iconBtn}
             title="New collection"
@@ -476,7 +478,7 @@ export default function Sidebar() {
         </div>
       </div>
       {(cols.length > 0 || hiddenCols.length > 0) && (
-        <div class="collection-filter">
+        <div class={sb.collectionFilter}>
           {/* `active={filtering}` rather than letting the primitive derive it from the value:
               whitespace-only is not filtering here, because filterCollections trims. */}
           <FilterInput
@@ -500,16 +502,16 @@ export default function Sidebar() {
       {/* Above the list, not after it: `.collection-list` is `flex: 1`, so a sibling below it
           is pushed to the bottom of the sidebar, away from the box that caused it. */}
       {filtering && shownCols.length === 0 && shownHiddenCols.length === 0 && (
-        <div class="collection-filter-empty">No collection matches "{nameFilter.trim()}".</div>
+        <div class={sb.collectionFilterEmpty}>No collection matches "{nameFilter.trim()}".</div>
       )}
-      <div class={'collection-list' + (shownCols.length === 0 ? ' is-empty' : '')}>
+      <div class={sb.collectionList + (shownCols.length === 0 ? ` ${sb.isEmpty}` : '')}>
         {shownCols.map((name) => collectionRow(name))}
       </div>
       {shownHiddenCols.length > 0 && (
-        <div class={'collection-hidden-group' + (groupOpen ? ' open' : '')}>
+        <div class={sb.collectionHiddenGroup + (groupOpen ? ` ${sb.open}` : '')}>
           <button
             type="button"
-            class="collection-hidden-toggle"
+            class={sb.collectionHiddenToggle}
             aria-expanded={groupOpen}
             disabled={filtering}
             title={
@@ -519,28 +521,30 @@ export default function Sidebar() {
             }
             onClick={toggleHidden}
           >
-            <span class="collection-hidden-caret">{groupOpen ? '\u25be' : '\u25b8'}</span>
-            <span class="collection-hidden-label">Extension collections</span>
-            <span class="sidebar-count">
+            <span class={sb.collectionHiddenCaret}>{groupOpen ? '\u25be' : '\u25b8'}</span>
+            <span class={sb.collectionHiddenLabel}>Extension collections</span>
+            <span class={sb.sidebarCount}>
               ({filtering ? `${shownHiddenCols.length} / ${hiddenCols.length}` : hiddenCols.length})
             </span>
           </button>
           {groupOpen && (
-            <div class="collection-list">{shownHiddenCols.map((name) => collectionRow(name))}</div>
+            <div class={sb.collectionList}>
+              {shownHiddenCols.map((name) => collectionRow(name))}
+            </div>
           )}
         </div>
       )}
       {menuOpenFor && menuPos && (
         <div
           ref={menuRef}
-          class="collection-action-menu"
+          class={sb.collectionActionMenu}
           style={
             `position:fixed;top:${menuPos.top}px;` +
             (menuPos.left != null ? `left:${menuPos.left}px` : `right:${menuPos.right}px`)
           }
         >
           <button
-            class="toolbar-menu-item"
+            class={menuCss.toolbarMenuItem}
             onClick={() => {
               const n = menuOpenFor;
               setMenuOpenFor(null);
@@ -550,7 +554,7 @@ export default function Sidebar() {
             Open in new tab {'↗'}
           </button>
           <button
-            class="toolbar-menu-item"
+            class={menuCss.toolbarMenuItem}
             onClick={() => {
               const n = menuOpenFor;
               setMenuOpenFor(null);
@@ -560,7 +564,7 @@ export default function Sidebar() {
             Copy name
           </button>
           <button
-            class="toolbar-menu-item"
+            class={menuCss.toolbarMenuItem}
             onClick={() => {
               const n = menuOpenFor;
               setMenuOpenFor(null);
@@ -570,7 +574,7 @@ export default function Sidebar() {
             Rename
           </button>
           <button
-            class="toolbar-menu-item toolbar-menu-danger"
+            class={`${menuCss.toolbarMenuItem} ${menuCss.toolbarMenuDanger}`}
             onClick={() => {
               const n = menuOpenFor;
               setMenuOpenFor(null);
@@ -581,9 +585,9 @@ export default function Sidebar() {
           </button>
         </div>
       )}
-      <div class="sidebar-footer">
+      <div class={sb.sidebarFooter}>
         <div
-          class={'sidebar-nav-item' + (activeView.value === 'overview' ? ' active' : '')}
+          class={sb.sidebarNavItem + (activeView.value === 'overview' ? ` ${sb.active}` : '')}
           onClick={showOverview}
           title="High-level overview of all collections"
         >
@@ -605,7 +609,7 @@ export default function Sidebar() {
           <span>Overview</span>
         </div>
         <div
-          class={'sidebar-nav-item' + (activeView.value === 'operations' ? ' active' : '')}
+          class={sb.sidebarNavItem + (activeView.value === 'operations' ? ` ${sb.active}` : '')}
           onClick={showOperationLogs}
         >
           <svg

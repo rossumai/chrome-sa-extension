@@ -1,0 +1,257 @@
+/* CSV import — Configure stage */
+
+/* (The wider-card overrides for .import-wizard/.export-wizard/.agent-chat moved
+   into src/ui/Modal.module.css as .card:has(:global(...)).) */
+
+/* AI run-trace detail modal — a touch wider so candidate pipelines breathe. */
+
+/* ── In-view "Stages" debug view (a RecordList results-view mode) ──────────── */
+
+/* Fills the right results pane; the editor stays visible (no modal/overlay).
+   overscroll-behavior: none prevents BOTH the rubber-band bounce and scroll-
+   chaining on the nested scroll regions (contain only stops chaining, not the
+   local bounce). */
+
+.pipelineInspect {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  /* Shared width for the stage-definition column AND each record card, so the
+     query box lines up with the records below/beside it. */
+  --stage-card-w: 300px;
+  /* Height of the records band inside every stage — the ONE fixed dimension in a
+     stage section (the section itself is content-sized, see below). Records get
+     this much room whether or not "Definitions" is on. */
+  --stage-records-h: 324px;
+}
+
+/* Options strip pinned at the top of the Stages pane (records-per-stage + auto-scroll). */
+
+.pipelineInspectOpts {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 12px;
+}
+
+.pipelineInspectOpt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pipelineInspectOptLabel {
+  color: var(--text-secondary);
+}
+
+.pipelineInspectAutoscroll {
+  cursor: pointer;
+  user-select: none;
+}
+
+.pipelineInspectAutoscroll input {
+  cursor: pointer;
+  margin: 0;
+}
+
+.pipelineInspectScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* A stage section is CONTENT-SIZED, deliberately not a fixed height: the records
+   band below is what's pinned (--stage-records-h), so an opt-in stage-definition
+   block ADDS its own height on top instead of stealing from the records. (It was
+   a flat 360px, which left a capped 160px definition just 108px of card JSON —
+   measured — with the records rendered uselessly small.) A section is therefore
+   360px with no definition, ~427px with a 3-line one, 520px with a capped one, and
+   a header-only 36px when the stage is disabled. flex-shrink: 0 keeps the sections
+   at their natural height inside the scrolling column. */
+
+.pipelineInspectSection {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.12s;
+}
+
+/* ── The SOURCE card (was "stage 0 / input") ─────────────────────────────────
+   A MongoDB pipeline has no stage zero, but the old rendering gave the input the
+   same numbered badge, the same solid card and the same rhythm as stages 1…N, so
+   it read as one of them. Three cues now say otherwise, and they are meant to be
+   read together: DASHED and unfilled (a different class of object, legible before
+   any word is), UNNUMBERED (the numbered list starts at 1), and COLLAPSED by
+   default with an explicit divider beneath it (spatially outside the pipeline).
+   Deliberately NOT dimmed with opacity the way .pipeline-inspect-disabled is —
+   that means "did not run", which is the wrong idea entirely. */
+
+.pipelineInspectSource {
+  border-style: dashed;
+  background: transparent;
+}
+
+.pipelineInspectSourceHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pipelineInspectSourceHead:hover {
+  background: var(--bg-hover);
+}
+
+.pipelineInspectSourceHead:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.pipelineInspectTime {
+  color: var(--text-secondary);
+  opacity: 0.7;
+  min-width: 46px;
+  text-align: right;
+}
+
+.pipelineInspectTimeSlow {
+  color: var(--warning);
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* Opt-in read-only block under an active stage's header: the stage's own
+   definition with variables substituted (as sent to the DS API). Mono code
+   block mirroring .inspector-code-block; capped + scrollable — the cap is what
+   bounds how far a huge stage can grow its section (a 40-line $lookup would
+   otherwise leave one stage filling the pane), never what shrinks the records.
+   overscroll-behavior-x: none (NOT the all-axes shorthand) stops the horizontal
+   rubber-band on long lines without blocking vertical scroll-chaining — once the
+   block reaches its top/bottom the wheel chains up to the stage list, so the page
+   keeps scrolling when the mouse is over the block. */
+
+.pipelineInspectStagedef {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  background: var(--bg-code);
+  color: var(--text-code);
+  border-bottom: 1px solid var(--border);
+  max-height: 160px;
+  overflow: auto;
+  overscroll-behavior-x: none;
+  white-space: pre;
+}
+
+/* Header-only (no body, no definition) — it needs no height override now that a
+   section is content-sized. */
+
+.pipelineInspectDisabled {
+  opacity: 0.55;
+}
+
+.pipelineInspectError {
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.pipelineInspectLoading {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* An empty stage is the single most important thing this view can tell you, and
+   since the records band now collapses for it there is no longer a wall of
+   whitespace making it obvious — muted grey italic was easy to scroll straight
+   past. WARNING, not danger: --danger is this pane's colour for a request that
+   FAILED (.pipeline-inspect-error), whereas this query ran fine and matched
+   nothing. Keeping them apart is what lets a real error still stand out.
+   `flex: 1` because the parent is a horizontal flex row of record cards, so
+   without it the band would hug its text instead of spanning the stage. */
+
+.pipelineInspectEmpty {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border: 1px solid var(--warning-border);
+  font-size: 12px;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.pipelineInspectEmptyIcon {
+  flex-shrink: 0;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.pipelineInspectHighlight {
+  animation: pipeline-inspect-flash 1.5s ease-out;
+}
+
+/* Tint the body + turn the section's own border accent (not an inset shadow,
+   which the header's opaque background would paint over) so the highlight wraps
+   the header too. */
+
+@keyframes pipeline-inspect-flash {
+  0%,
+  55% {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  100% {
+    border-color: var(--border);
+    background: transparent;
+  }
+}
+
+/* Hovering a stage in the Stages view draws a connector to its code in the editor;
+   the section's border turns accent (wraps the header, unlike an inset shadow). */
+
+.pipelineInspectSection:hover {
+  border-color: var(--accent);
+}
+
+/* The same marking, for when the pointer is in the EDITOR rather than on the
+   section — :hover cannot fire in that direction, so StageLinkOverlay sets this
+   attribute on the link's target instead. Identical treatment on purpose: it is
+   the same "this is the linked stage" state, reached from the other end. */
+
+.pipelineInspectSection[data-linked] {
+  border-color: var(--accent);
+}

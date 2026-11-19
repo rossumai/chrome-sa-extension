@@ -2,6 +2,8 @@ import { h, Fragment } from 'preact';
 import { getEjsonType, formatEjsonValue } from '../displayValue.js';
 import { getByPath, hasByPath } from '../flatten.js';
 import seg from '../../ui/Segmented.module.css';
+import styles from './ImportControls.module.css';
+import fmtCss from '../formats/formats.module.css';
 
 // Shared presentational controls for the MDH import/export wizards (Segmented
 // pill group, Toggle switch, CsvPreview table). Extracted from the former
@@ -73,10 +75,10 @@ export function Toggle({
       aria-checked={checked}
       title={title}
       data-testid={testid}
-      class={`csv-switch${checked ? ' is-on' : ''}`}
+      class={`${styles.csvSwitch}${checked ? ` ${styles.isOn}` : ''}`}
       onClick={() => onChange(!checked)}
     >
-      <span class="csv-switch-knob"></span>
+      <span class={styles.csvSwitchKnob}></span>
     </button>
   );
 }
@@ -94,32 +96,33 @@ export function CsvPreview({
   const { columns = [], docs = [], warnings = [], error } = parsed;
   if (error) {
     return (
-      <div class="csv-error" data-testid="csv-error">
+      <div class={styles.csvError} data-testid="csv-error">
         Parse error{error.line ? ` (line ${error.line})` : ''}: {error.message}
       </div>
     );
   }
   const shown = docs.slice(0, limit);
   return (
-    <div class="csv-preview" data-testid="csv-preview">
+    <div class={styles.csvPreview} data-testid="csv-preview">
       {docs.length > 0 && (
-        <div class="csv-preview-caption">
+        <div class={styles.csvPreviewCaption}>
           <span>
             Preview {'·'} first {Math.min(limit, docs.length)} of {docs.length.toLocaleString()} row
             {docs.length === 1 ? '' : 's'} {'·'} {columns.length} column
             {columns.length === 1 ? '' : 's'}
           </span>
-          <span class="csv-preview-legend">
-            <span class="csv-legend-num">123</span> number {'·'}{' '}
-            <span class="csv-legend-str">text</span> {'·'} <span class="csv-legend-null">null</span>
+          <span class={fmtCss.csvPreviewLegend}>
+            <span class={fmtCss.csvLegendNum}>123</span> number {'·'}{' '}
+            <span class={fmtCss.csvLegendStr}>text</span> {'·'}{' '}
+            <span class={fmtCss.csvLegendNull}>null</span>
           </span>
         </div>
       )}
       {docs.length === 0 ? (
-        <div class="csv-preview-empty">No data rows found.</div>
+        <div class={fmtCss.csvPreviewEmpty}>No data rows found.</div>
       ) : (
-        <div class="csv-preview-scroll">
-          <table class="csv-preview-table">
+        <div class={fmtCss.csvPreviewScroll}>
+          <table class={fmtCss.csvPreviewTable}>
             <thead>
               <tr>
                 {columns.map((c: any) => (
@@ -150,7 +153,7 @@ export function CsvPreview({
         </div>
       )}
       {warnings.map((w: any, i: any) => (
-        <div key={i} class="csv-warning" data-testid="csv-warning">
+        <div key={i} class={styles.csvWarning} data-testid="csv-warning">
           {'⚠'} {w}
         </div>
       ))}
@@ -166,12 +169,14 @@ export function JsonPreview({ docs }: { docs: any[] }) {
   if (!docs.length) return null;
   const shown = docs.slice(0, JSON_PREVIEW_ROWS);
   return (
-    <div class="csv-export-preview" data-testid="json-preview">
-      <div class="csv-export-preview-caption">
+    <div class={fmtCss.csvExportPreview} data-testid="json-preview">
+      <div class={fmtCss.csvExportPreviewCaption}>
         Preview {'·'} first {shown.length} of {docs.length.toLocaleString()} row
         {docs.length === 1 ? '' : 's'}
       </div>
-      <pre class="csv-export-preview-text">{shown.map((d) => JSON.stringify(d)).join('\n')}</pre>
+      <pre class={fmtCss.csvExportPreviewText}>
+        {shown.map((d) => JSON.stringify(d)).join('\n')}
+      </pre>
     </div>
   );
 }
@@ -185,19 +190,19 @@ export function JsonPreview({ docs }: { docs: any[] }) {
 // Exported so ImportConfirm's ledger and ExportWizard's preview grid use the
 // exact same three words instead of inventing their own.
 export function AbsentValue() {
-  return <span class="csv-cell-missing">(absent)</span>;
+  return <span class={styles.csvCellMissing}>(absent)</span>;
 }
 
 export function EmptyValue() {
   return (
-    <span class="csv-cell-empty" title="empty string">
+    <span class={styles.csvCellEmpty} title="empty string">
       (empty)
     </span>
   );
 }
 
 export function NullValue() {
-  return <span class="csv-cell-null">null</span>;
+  return <span class={styles.csvCellNull}>null</span>;
 }
 
 // A present, non-object scalar — the one rendering PreviewValue and
@@ -206,9 +211,9 @@ export function NullValue() {
 // cellPreview uses displayValue's truncated/collapsed form — merging those
 // would regress one of them.
 export function ScalarValue({ value }: { value: string | number | boolean }) {
-  if (typeof value === 'number') return <span class="csv-cell-number">{String(value)}</span>;
-  if (typeof value === 'boolean') return <span class="csv-cell-bool">{String(value)}</span>;
-  return <span class="csv-cell-string">{value}</span>;
+  if (typeof value === 'number') return <span class={fmtCss.csvCellNumber}>{String(value)}</span>;
+  if (typeof value === 'boolean') return <span class={fmtCss.csvCellBool}>{String(value)}</span>;
+  return <span class={fmtCss.csvCellString}>{value}</span>;
 }
 
 function PreviewValue({ value, present }: { value: any; present?: boolean }) {
@@ -220,7 +225,7 @@ function PreviewValue({ value, present }: { value: any; present?: boolean }) {
   if (typeof value === 'object') {
     const ejson = getEjsonType(value);
     return (
-      <span class="csv-cell-string">
+      <span class={fmtCss.csvCellString}>
         {ejson ? formatEjsonValue(value, ejson) : JSON.stringify(value)}
       </span>
     );

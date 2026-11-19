@@ -4,6 +4,7 @@ import JSON5 from 'json5';
 import { selectedCollection, scopeSuffix } from '../store.js';
 import { parseEntries } from '../pipelineComments.js';
 import { formatTime } from '../relativeTime.js';
+import styles from './QueryHistory.module.css';
 
 const MAX_HISTORY = 30;
 
@@ -123,27 +124,27 @@ function QueryRow({
   return (
     <div
       class={
-        'query-history-item' +
-        (item.collection === currentCollection ? ' query-history-item-current' : '')
+        styles.queryHistoryItem +
+        (item.collection === currentCollection ? ` ${styles.queryHistoryItemCurrent}` : '')
       }
     >
       <div
-        class="query-history-item-info"
+        class={styles.queryHistoryItemInfo}
         onClick={() => {
           onLoad(item.pipeline, item.collection, item.variables, item.placeholderTypes);
           onDismiss();
         }}
       >
-        <span class="query-history-collection">{item.collection}</span>
-        {savedName && <span class="query-history-name">{savedName}</span>}
-        <span class="query-history-time">{formatTime(item.ts)}</span>
-        <div class="query-history-preview">
+        <span class={styles.queryHistoryCollection}>{item.collection}</span>
+        {savedName && <span class={styles.queryHistoryName}>{savedName}</span>}
+        <span class={styles.queryHistoryTime}>{formatTime(item.ts)}</span>
+        <div class={styles.queryHistoryPreview}>
           {item.pipeline && item.pipeline.length > 150
             ? item.pipeline.slice(0, 150) + '...'
             : item.pipeline}
         </div>
         {item.variables && Object.keys(item.variables).length > 0 && (
-          <div class="query-history-variables">
+          <div class={styles.queryHistoryVariables}>
             {Object.entries(item.variables)
               .filter(([, v]) => v !== '')
               .map(([k, v]) => `{${k}}=${v}`)
@@ -153,7 +154,7 @@ function QueryRow({
       </div>
       {showUnsave && (
         <button
-          class="query-history-unsave-btn"
+          class={styles.queryHistoryUnsaveBtn}
           title="Remove from saved"
           onClick={(e) => {
             e.stopPropagation();
@@ -182,14 +183,14 @@ function HistoryList({ onLoad, onDismiss }: ListProps) {
 
   if (items.length === 0) {
     return (
-      <div class="query-history-list">
-        <div class="query-history-empty">No query history yet</div>
+      <div class={styles.queryHistoryList}>
+        <div class={styles.queryHistoryEmpty}>No query history yet</div>
       </div>
     );
   }
 
   return (
-    <div class="query-history-list">
+    <div class={styles.queryHistoryList}>
       {items.map((item) => (
         <QueryRow
           item={item}
@@ -221,14 +222,14 @@ function SavedList({ onLoad, onDismiss }: ListProps) {
 
   if (items.length === 0) {
     return (
-      <div class="query-history-list">
-        <div class="query-history-empty">No saved queries</div>
+      <div class={styles.queryHistoryList}>
+        <div class={styles.queryHistoryEmpty}>No saved queries</div>
       </div>
     );
   }
 
   return (
-    <div class="query-history-list">
+    <div class={styles.queryHistoryList}>
       {items.map((item) => (
         <QueryRow
           item={item}
@@ -251,16 +252,16 @@ export function LibraryPanel({
   onDismiss,
 }: { tab?: string; onTabChange: (t: string) => void } & ListProps) {
   return (
-    <div class="query-history-panel">
-      <div class="library-tabs">
+    <div class={styles.queryHistoryPanel}>
+      <div class={styles.libraryTabs}>
         <button
-          class={'library-tab' + (tab === 'saved' ? ' library-tab-active' : '')}
+          class={styles.libraryTab + (tab === 'saved' ? ` ${styles.libraryTabActive}` : '')}
           onClick={() => onTabChange('saved')}
         >
           Saved
         </button>
         <button
-          class={'library-tab' + (tab === 'recent' ? ' library-tab-active' : '')}
+          class={styles.libraryTab + (tab === 'recent' ? ` ${styles.libraryTabActive}` : '')}
           onClick={() => onTabChange('recent')}
         >
           Recent

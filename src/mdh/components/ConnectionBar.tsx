@@ -4,6 +4,7 @@ import { domain, selectedCollection } from '../store.js';
 import { connectedOrg } from '../../console/store.js';
 import * as cache from '../cache.js';
 import cb from '../../ui/ConnectionBar.module.css';
+import styles from './ConnectionBar.module.css';
 
 export default function ConnectionBar({ connected }: { connected: boolean | null }) {
   const [cacheText, setCacheText] = useState('cache: empty');
@@ -46,7 +47,7 @@ export default function ConnectionBar({ connected }: { connected: boolean | null
     <div class={cb.bar}>
       <span class={cb.dot}></span> Connected to {domain.value}
       {connectedOrg.value ? ` \u00b7 ${connectedOrg.value}` : ''}
-      <span class="cache-indicator">{cacheText}</span>
+      <span class={styles.cacheIndicator}>{cacheText}</span>
     </div>
   );
 }

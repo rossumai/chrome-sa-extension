@@ -5,6 +5,7 @@ import { ALT_KEY } from '../platform.js';
 import SpecialText from './SpecialText.jsx';
 import type { SortFilterControls } from '../hooks/usePipeline.js';
 import jt from '../../ui/JsonTree.module.css';
+import jv from './jsonValues.module.css';
 
 export const AUTO_COLLAPSE_FIELD_THRESHOLD = 50;
 
@@ -54,7 +55,7 @@ export function CopyButton({ getText, kind = 'value' }: { getText: () => string;
   return (
     <button
       type="button"
-      class={'json-tree-copy-btn' + (copied ? ' json-tree-copy-btn-success' : '')}
+      class={jv.jsonTreeCopyBtn + (copied ? ` ${jv.jsonTreeCopyBtnSuccess}` : '')}
       title={title}
       aria-label={title}
       onClick={handleClick}
@@ -159,9 +160,9 @@ function JsonTreeRow({
   const sortDir = sortState![fullPath];
   const sortInd = sortDir === 1 ? ' ↑' : sortDir === -1 ? ' ↓' : '';
   const keyCls =
-    'json-tree-key' +
-    (sortDir === 1 ? ' json-tree-key-asc' : sortDir === -1 ? ' json-tree-key-desc' : '') +
-    (flash === 'key' ? ' json-tree-flash' : '');
+    jv.jsonTreeKey +
+    (sortDir === 1 ? ` ${jv.jsonTreeKeyAsc}` : sortDir === -1 ? ` ${jv.jsonTreeKeyDesc}` : '') +
+    (flash === 'key' ? ` ${jv.jsonTreeFlash}` : '');
   const keyTitle =
     sortDir === 1
       ? `Sorted ascending — click to sort descending (${ALT_KEY}+click to copy path)`
@@ -173,7 +174,7 @@ function JsonTreeRow({
   // Read-only (e.g. the Stages debug view): keys/values are plain, non-interactive
   // text — no sort/filter, no pointer/hover. Collapse toggles + copy stay active.
   const keyEl = readOnly ? (
-    <span class="json-tree-key json-tree-key-static">{fieldKey}</span>
+    <span class={`${jv.jsonTreeKey} ${jv.jsonTreeKeyStatic}`}>{fieldKey}</span>
   ) : (
     <button class={keyCls} title={keyTitle} onClick={handleKeyClick}>
       {fieldKey}
@@ -186,18 +187,18 @@ function JsonTreeRow({
     const info = EJSON_TYPES[ejsonType];
     const copyText = formatted;
     return (
-      <div class="json-tree-row">
+      <div class={jv.jsonTreeRow}>
         {keyEl}
-        <span class="json-tree-sep">: </span>
+        <span class={jv.jsonTreeSep}>: </span>
         {readOnly ? (
-          <span class={'json-tree-value ' + info.css}>{formatted}</span>
+          <span class={`${jv.jsonTreeValue} ` + info.css}>{formatted}</span>
         ) : (
           <button
             class={
-              'json-tree-value json-tree-value-clickable ' +
+              `${jv.jsonTreeValue} ${jv.jsonTreeValueClickable} ` +
               info.css +
-              (filtered ? ' json-tree-value-filtered' : '') +
-              (flash === 'value' ? ' json-tree-flash' : '')
+              (filtered ? ` ${jv.jsonTreeValueFiltered}` : '') +
+              (flash === 'value' ? ` ${jv.jsonTreeFlash}` : '')
             }
             title={
               filtered
@@ -209,7 +210,7 @@ function JsonTreeRow({
             {formatted}
           </button>
         )}
-        <span class={'value-type-tag ' + info.css} title={info.label}>
+        <span class={`${jv.valueTypeTag} ` + info.css} title={info.label}>
           {info.short}
         </span>
         <CopyButton getText={() => copyText} kind="value" />
@@ -221,11 +222,11 @@ function JsonTreeRow({
     const fieldCount = Object.keys(value).length;
     return (
       <div>
-        <div class="json-tree-row">
+        <div class={jv.jsonTreeRow}>
           {keyEl}
-          <span class="json-tree-sep">: </span>
+          <span class={jv.jsonTreeSep}>: </span>
           <span
-            class="json-tree-toggle"
+            class={jv.jsonTreeToggle}
             style="cursor:pointer"
             onClick={(e) => {
               e.stopPropagation();
@@ -237,7 +238,7 @@ function JsonTreeRow({
           <CopyButton getText={() => JSON.stringify(value, null, 2)} kind="json" />
         </div>
         {!collapsed && (
-          <div class="json-tree-nested">
+          <div class={jv.jsonTreeNested}>
             <JsonTree
               data={value}
               prefix={fullPath}
@@ -258,11 +259,11 @@ function JsonTreeRow({
   if (isArr) {
     return (
       <div>
-        <div class="json-tree-row">
+        <div class={jv.jsonTreeRow}>
           {keyEl}
-          <span class="json-tree-sep">: </span>
+          <span class={jv.jsonTreeSep}>: </span>
           <span
-            class="json-tree-toggle"
+            class={jv.jsonTreeToggle}
             style="cursor:pointer"
             onClick={(e) => {
               e.stopPropagation();
@@ -274,7 +275,7 @@ function JsonTreeRow({
           <CopyButton getText={() => JSON.stringify(value, null, 2)} kind="json" />
         </div>
         {!collapsed && (
-          <div class="json-tree-nested">
+          <div class={jv.jsonTreeNested}>
             {value.map((item, ai) => {
               const itemPath = `${fullPath}.${ai}`;
               if (
@@ -284,9 +285,9 @@ function JsonTreeRow({
                 !getEjsonType(item)
               ) {
                 return (
-                  <div class="json-tree-array-item">
-                    <div class="json-tree-row">
-                      <span class="json-tree-array-index">[{ai}]</span>
+                  <div class={jv.jsonTreeArrayItem}>
+                    <div class={jv.jsonTreeRow}>
+                      <span class={jv.jsonTreeArrayIndex}>[{ai}]</span>
                       <CopyButton getText={() => JSON.stringify(item, null, 2)} kind="json" />
                     </div>
                     <JsonTree
@@ -304,9 +305,9 @@ function JsonTreeRow({
                 );
               }
               return (
-                <div class="json-tree-row">
-                  <span class="json-tree-array-index">[{ai}]</span>
-                  <span class="json-tree-value">
+                <div class={jv.jsonTreeRow}>
+                  <span class={jv.jsonTreeArrayIndex}>[{ai}]</span>
+                  <span class={jv.jsonTreeValue}>
                     {typeof item === 'string' ? (
                       <SpecialText value={item} quote />
                     ) : (
@@ -324,13 +325,13 @@ function JsonTreeRow({
   }
 
   let colorCls = '';
-  if (typeof value === 'string') colorCls = ' json-tree-value-string';
-  else if (typeof value === 'number') colorCls = ' json-tree-value-number';
-  else if (typeof value === 'boolean') colorCls = ' json-tree-value-bool';
-  else if (value === null) colorCls = ' json-tree-value-null';
-  let valCls = 'json-tree-value json-tree-value-clickable' + colorCls;
-  if (filtered) valCls += ' json-tree-value-filtered';
-  if (flash === 'value') valCls += ' json-tree-flash';
+  if (typeof value === 'string') colorCls = ` ${jv.jsonTreeValueString}`;
+  else if (typeof value === 'number') colorCls = ` ${jv.jsonTreeValueNumber}`;
+  else if (typeof value === 'boolean') colorCls = ` ${jv.jsonTreeValueBool}`;
+  else if (value === null) colorCls = ` ${jv.jsonTreeValueNull}`;
+  let valCls = `${jv.jsonTreeValue} ${jv.jsonTreeValueClickable}` + colorCls;
+  if (filtered) valCls += ` ${jv.jsonTreeValueFiltered}`;
+  if (flash === 'value') valCls += ` ${jv.jsonTreeFlash}`;
 
   const isString = typeof value === 'string';
   const display = value === null ? 'null' : isString ? null : String(value);
@@ -338,11 +339,11 @@ function JsonTreeRow({
   const copyText = copyTextFor(value);
 
   return (
-    <div class="json-tree-row">
+    <div class={jv.jsonTreeRow}>
       {keyEl}
-      <span class="json-tree-sep">: </span>
+      <span class={jv.jsonTreeSep}>: </span>
       {readOnly ? (
-        <span class={'json-tree-value' + colorCls}>{valueContent}</span>
+        <span class={jv.jsonTreeValue + colorCls}>{valueContent}</span>
       ) : (
         <button
           class={valCls}

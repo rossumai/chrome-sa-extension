@@ -8,6 +8,7 @@ import * as api from '../src/mdh/api.js';
 import Modal from '../src/mdh/components/Modal.jsx';
 import { modalContent, selectedCollection } from '../src/mdh/store.js';
 import { openBulkUpdate, diffJsonContent } from '../src/mdh/components/BulkUpdate.jsx';
+import bulkUpdateCss from '../src/mdh/components/BulkUpdate.module.css';
 
 // `activeRoot` tracks the currently-mounted modal so afterEach can call
 // render(null, root) to actually unmount it. Without that, every test leaks
@@ -208,7 +209,7 @@ describe('diffJsonContent', () => {
     const diff = { legacy: { from: true, removed: true } };
     const root = renderDiff(doc, diff);
 
-    const removed = root.querySelector('.sample-card-line-removed')!;
+    const removed = root.querySelector(`.${bulkUpdateCss.sampleCardLineRemoved}`)!;
     expect(removed).toBeTruthy();
     // Original value is shown so the user sees what's being dropped.
     expect(removed.textContent).toContain('legacy');
@@ -225,7 +226,7 @@ describe('diffJsonContent', () => {
     };
     const root = renderDiff(doc, diff);
 
-    expect(root.querySelector('.sample-card-line-changed')).toBeTruthy();
-    expect(root.querySelector('.sample-card-line-removed')).toBeTruthy();
+    expect(root.querySelector(`.${bulkUpdateCss.sampleCardLineChanged}`)).toBeTruthy();
+    expect(root.querySelector(`.${bulkUpdateCss.sampleCardLineRemoved}`)).toBeTruthy();
   });
 });

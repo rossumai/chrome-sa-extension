@@ -78,6 +78,7 @@ import * as api from '../src/mdh/api.js';
 import * as cache from '../src/mdh/cache.js';
 import DataPanel from '../src/mdh/components/DataPanel.jsx';
 import { selectedCollection, records } from '../src/mdh/store.js';
+import dataPanelCss from '../src/mdh/components/DataPanel.module.css';
 
 async function waitFor(condition: any, description = 'condition', timeoutMs = 3000) {
   const start = Date.now();
@@ -153,10 +154,10 @@ describe('DataPanel — write-stage suppression', () => {
     mock.onValidChange();
 
     await waitFor(
-      () => root.querySelector('.pipeline-write-banner') !== null,
-      '.pipeline-write-banner to appear',
+      () => root.querySelector(`.${dataPanelCss.pipelineWriteBanner}`) !== null,
+      `.${dataPanelCss.pipelineWriteBanner} to appear`,
     );
-    expect(root.querySelector('.pipeline-write-banner')).not.toBeNull();
+    expect(root.querySelector(`.${dataPanelCss.pipelineWriteBanner}`)).not.toBeNull();
 
     document.body.removeChild(root);
   });

@@ -36,6 +36,7 @@ vi.mock('../src/mdh/agent/aiContext.js', () => ({
 
 import AgentBox, { TranscriptModal, outcomeFor } from '../src/mdh/components/AgentBox.jsx';
 import * as store from '../src/mdh/store.js';
+import agentBoxCss from '../src/mdh/components/AgentBox.module.css';
 
 function waitFor(fn: any, { timeout = 1000, step = 10 } = {}) {
   return new Promise<void>((resolve, reject) => {
@@ -93,7 +94,7 @@ describe('AgentBox (drop-in)', () => {
     const setValue = vi.fn();
     render(<AgentBox editorRef={editorRef(setValue)} />, root);
     // idle: the footer lifecycle slot is not rendered at all (and no attribution line)
-    expect(root.querySelector('.agent-footer')).toBeNull();
+    expect(root.querySelector(`.${agentBoxCss.agentFooter}`)).toBeNull();
     expect(root.textContent).not.toMatch(/Powered by/);
     const input: any = root.querySelector('input');
     fireInput(input, 'amounts over 10');
@@ -112,12 +113,14 @@ describe('AgentBox (drop-in)', () => {
       }),
     );
     // done: the footer slot shows the compact result line (request + rows + verified)
-    await waitFor(() => root.querySelector('.agent-result'));
-    expect(root.querySelector('.agent-result-sum').textContent).toBe('amounts over 10');
+    await waitFor(() => root.querySelector(`.${agentBoxCss.agentResult}`));
+    expect(root.querySelector(`.${agentBoxCss.agentResultSum}`).textContent).toBe(
+      'amounts over 10',
+    );
     expect(root.textContent).toMatch(/3 rows · verified/);
-    expect(root.querySelector('.agent-result-ok')).toBeTruthy();
+    expect(root.querySelector(`.${agentBoxCss.agentResultOk}`)).toBeTruthy();
     // conversation link opens the modal
-    root.querySelector('.agent-transcript-link').click();
+    root.querySelector(`.${agentBoxCss.agentTranscriptLink}`).click();
     expect(openModal).toHaveBeenCalledWith('Mr. Fabry — conversation', expect.any(Function));
   });
 
@@ -129,7 +132,7 @@ describe('AgentBox (drop-in)', () => {
     fireInput(input, 'tell me a joke');
     fireEnter(input);
 
-    await waitFor(() => root.querySelector('.agent-result-err'));
+    await waitFor(() => root.querySelector(`.${agentBoxCss.agentResultErr}`));
     expect(root.textContent).toMatch(/Couldn.t build a query/);
     expect(store.error.value).toBeNull(); // AI failures stay in the slot, not the global banner
     expect(setValue).not.toHaveBeenCalled();
@@ -143,7 +146,7 @@ describe('AgentBox (drop-in)', () => {
     fireInput(input, 'delete all rows');
     fireEnter(input);
 
-    await waitFor(() => root.querySelector('.agent-result-err'));
+    await waitFor(() => root.querySelector(`.${agentBoxCss.agentResultErr}`));
     expect(root.textContent).toMatch(/modify data|read-only/i);
     expect(store.error.value).toBeNull();
     expect(setValue).not.toHaveBeenCalled();
@@ -160,7 +163,7 @@ describe('AgentBox (drop-in)', () => {
     fireEnter(input);
 
     await waitFor(() => store.error.value && /Session expired/.test(store.error.value.message));
-    expect(root.querySelector('.agent-result')).toBeNull(); // no result line for a session-wide failure
+    expect(root.querySelector(`.${agentBoxCss.agentResult}`)).toBeNull(); // no result line for a session-wide failure
     expect(setValue).not.toHaveBeenCalled();
   });
 
@@ -186,24 +189,34 @@ describe('AgentBox (drop-in)', () => {
     // sparkle twinkles during the run
     expect(root.querySelector('.' + aiStyles.spark + '.' + aiStyles.loading)).toBeTruthy();
     // phase tracker starts with the 3 base steps (no Refine until one happens)
-    await waitFor(() => root.querySelectorAll('.agent-phase').length === 3);
+    await waitFor(() => root.querySelectorAll(`.${agentBoxCss.agentPhase}`).length === 3);
     await waitFor(() => typeof emitPhase === 'function'); // schema hints resolve before the loop starts
     emitPhase('generate');
-    await waitFor(() => root.querySelector('.agent-phase.active')?.textContent === 'Generate');
+    await waitFor(
+      () =>
+        root.querySelector(`.${agentBoxCss.agentPhase}.${agentBoxCss.active}`)?.textContent ===
+        'Generate',
+    );
     emitPhase('run');
-    await waitFor(() => root.querySelector('.agent-phase.active')?.textContent === 'Run');
+    await waitFor(
+      () =>
+        root.querySelector(`.${agentBoxCss.agentPhase}.${agentBoxCss.active}`)?.textContent ===
+        'Run',
+    );
     // earlier steps read as done
-    expect(root.querySelectorAll('.agent-phase.done').length).toBe(1);
+    expect(root.querySelectorAll(`.${agentBoxCss.agentPhase}.${agentBoxCss.done}`).length).toBe(1);
     // a correction turn appends the honest 4th step
     emitPhase('refine');
-    await waitFor(() => root.querySelectorAll('.agent-phase').length === 4);
-    expect(root.querySelector('.agent-phase.active')?.textContent).toBe('Refine');
+    await waitFor(() => root.querySelectorAll(`.${agentBoxCss.agentPhase}`).length === 4);
+    expect(
+      root.querySelector(`.${agentBoxCss.agentPhase}.${agentBoxCss.active}`)?.textContent,
+    ).toBe('Refine');
 
     resolveRun({ pipelineText: null, note: { kind: 'declined' } });
     await waitFor(() => !root.querySelector('input.' + aiStyles.loading));
     // tracker is replaced by the result line
-    expect(root.querySelector('.agent-phases')).toBeNull();
-    expect(root.querySelector('.agent-result')).toBeTruthy();
+    expect(root.querySelector(`.${agentBoxCss.agentPhases}`)).toBeNull();
+    expect(root.querySelector(`.${agentBoxCss.agentResult}`)).toBeTruthy();
   });
 });
 
