@@ -11,6 +11,7 @@ import {
 } from '../agent/explainEmpty.js';
 import FabryMarkdown from '../../ui/fabry/FabryMarkdown.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 const GERUNDS = [
   'Summoning Mr. Fabry',
@@ -152,8 +153,8 @@ export default function EmptyStageExplain({
           works, replaced in place by the streaming narrative. */}
       {waiting ? (
         <Fragment>
-          <div class="inspector-esec-skel" style="width:92%" />
-          <div class="inspector-esec-skel" style="width:78%" />
+          <div class={dg.skel} style="width:92%" />
+          <div class={dg.skel} style="width:78%" />
         </Fragment>
       ) : (
         <FabryMarkdown text={text} streaming={state === 'running'} />

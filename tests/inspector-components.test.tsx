@@ -10,6 +10,8 @@ import PipelinePanel from '../src/inspector/components/PipelinePanel.jsx';
 import FoldableCode from '../src/inspector/components/FoldableCode.jsx';
 import App from '../src/inspector/components/App.jsx';
 import * as store from '../src/inspector/store.js';
+import shell from '../src/ui/AppShell.module.css';
+import dg from '../src/ui/fabry/Diagnosis.module.css';
 
 let root: any;
 beforeEach(() => {
@@ -124,7 +126,7 @@ describe('inspector components', () => {
   it('FoldableCode shows short code inline, folds long code behind a toggle', () => {
     render(<FoldableCode code={'field.x > 1'} />, root);
     expect(root.querySelector('.inspector-code')).toBeTruthy();
-    expect(root.querySelector('.inspector-fold-btn')).toBe(null);
+    expect(root.querySelector('.' + dg.foldBtn)).toBe(null);
     render(null, root);
     render(
       <FoldableCode
@@ -134,7 +136,7 @@ describe('inspector components', () => {
       />,
       root,
     );
-    expect(root.querySelector('.inspector-fold-btn')).toBeTruthy();
+    expect(root.querySelector('.' + dg.foldBtn)).toBeTruthy();
     expect(root.querySelector('.inspector-code-block')).toBe(null); // collapsed by default
   });
 
@@ -298,9 +300,11 @@ describe('inspector components', () => {
     // stacked report content directly on .app-root laid IdInput + report out
     // side-by-side. The content must live inside a nested column container.
     render(<App connected />, root);
-    const nested: any = root.querySelector('.app-root > main.main > .inspector-root');
+    const nested: any = root.querySelector(
+      '.' + shell.root + ' > main.' + shell.main + ' > .inspector-root',
+    );
     expect(nested).toBeTruthy();
-    expect(nested.classList.contains('app-root')).toBe(false);
+    expect(nested.classList.contains(shell.root)).toBe(false);
   });
 
   it('App renders the culprit of a hook message once data is loaded', () => {

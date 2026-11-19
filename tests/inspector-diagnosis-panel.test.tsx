@@ -6,6 +6,7 @@ import * as store from '../src/inspector/store.js';
 import DiagnosisPanel from '../src/inspector/components/DiagnosisPanel.jsx';
 import narrativeStyles from '../src/ui/fabry/FabryNarrative.module.css';
 import aiStyles from '../src/ui/aiInput.module.css';
+import dg from '../src/ui/fabry/Diagnosis.module.css';
 
 function mount() {
   const el = document.createElement('div');
@@ -31,13 +32,13 @@ describe('DiagnosisPanel', () => {
       sourcesTotal: 9,
       activity: '',
     };
-    expect(mount().querySelector('.inspector-esec-skel')).toBeTruthy();
+    expect(mount().querySelector('.' + dg.skel)).toBeTruthy();
   });
   it('null synthesis never leaves the panel blank, whatever the stage', () => {
     store.synthesis.value = null;
     for (const stage of ['idle', 'gathering', 'synthesizing', 'complete', 'agent-offline']) {
       store.investigation.value = { stage, sourcesDone: 0, sourcesTotal: 0, activity: '' };
-      expect(mount().querySelector('.inspector-esec-skel')).toBeTruthy();
+      expect(mount().querySelector('.' + dg.skel)).toBeTruthy();
     }
   });
   it('streaming text renders resolvable citation chips, unresolvable struck', () => {
@@ -67,7 +68,7 @@ describe('DiagnosisPanel', () => {
     expect(items.length).toBe(2);
     expect(items[0].querySelector('.' + narrativeStyles.cite)).toBeTruthy();
     expect(el.querySelectorAll('.' + narrativeStyles.body + ' p').length).toBe(2); // takeaway + next step
-    expect(el.querySelector('.inspector-diag-credit')!.textContent).toContain('Mr. Fabry');
+    expect(el.querySelector('.' + dg.credit)!.textContent).toContain('Mr. Fabry');
   });
   it('offline / error states render honest notes', () => {
     store.synthesis.value = { status: 'offline', text: '', reasoning: '', tools: [], error: null };
@@ -129,7 +130,7 @@ describe('FollowupThread', () => {
       ],
     };
     const el = mount();
-    const qs = el.querySelectorAll('.inspector-followup-q');
+    const qs = el.querySelectorAll('.' + dg.followupQ);
     expect(qs.length).toBe(2);
     expect(qs[0].textContent).toContain('why empty?');
     expect(el.querySelector('.inspector-followup .' + narrativeStyles.cite)).toBeTruthy();

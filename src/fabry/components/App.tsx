@@ -11,6 +11,7 @@ import Welcome from './Welcome.jsx';
 import ArchitectApp from '../architect/components/ArchitectApp.jsx';
 import Modal from '../../ui/Modal.jsx';
 import es from '../../ui/EmptyState.module.css';
+import shell from '../../ui/AppShell.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   // Switching Console apps unmounts/remounts this component, so a mount is
@@ -27,20 +28,20 @@ export default function App({ connected }: { connected: boolean | null }) {
 
   if (!connected) {
     return (
-      <div class="app-root">
+      <div class={shell.root}>
         <div class={es.root}>Not connected. Open a Rossum page and launch the Console again.</div>
       </div>
     );
   }
   if (store.agentAvailable.value === false) {
     return (
-      <div class="app-root">
+      <div class={shell.root}>
         <div class={es.root}>Mr. Fabry is offline (agent unreachable). Try again later.</div>
       </div>
     );
   }
   return (
-    <div class="app-root fabry-root">
+    <div class={`${shell.root} fabry-root`}>
       {store.error.value && <div class="fabry-error">{store.error.value}</div>}
       <div
         class="fabry-layout"

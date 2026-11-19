@@ -6,6 +6,7 @@ import FabryInput from '../../ui/fabry/FabryInput.jsx';
 import FabryNarrative from '../../ui/fabry/FabryNarrative.jsx';
 import FabryTranscript from '../../ui/fabry/FabryTranscript.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 function flashEvidence(id: any, section: any) {
   const el =
@@ -52,11 +53,11 @@ function FollowupThread({ syn }: { syn: any }) {
     <div class="inspector-followups">
       {followups.map((f: any) => (
         <div class="inspector-followup">
-          <div class="inspector-followup-q">
-            <span class="inspector-followup-role">You</span> {f.q}
+          <div class={dg.followupQ}>
+            <span class={dg.followupRole}>You</span> {f.q}
           </div>
           {f.status === 'error' ? (
-            <div class="inspector-empty">Mr. Fabry could not answer that one.</div>
+            <div class={dg.empty}>Mr. Fabry could not answer that one.</div>
           ) : (
             <FabryNarrative
               text={f.text}
@@ -92,7 +93,7 @@ export default function DiagnosisPanel() {
   return (
     <div class="inspector-diag">
       <div class="inspector-diag-hd">
-        <FabryMark /> Diagnosis <span class="inspector-diag-credit">by Mr. Fabry</span>
+        <FabryMark /> Diagnosis <span class={dg.credit}>by Mr. Fabry</span>
         {waiting ? (
           <span class="inspector-diag-phase">starts after attribution finishes{'…'}</span>
         ) : null}
@@ -101,11 +102,7 @@ export default function DiagnosisPanel() {
         ) : null}
         {syn?.status === 'done' ? (
           <span class="inspector-diag-phase">
-            <button
-              type="button"
-              class="inspector-fold-btn"
-              onClick={() => setShowTranscript(true)}
-            >
+            <button type="button" class={dg.foldBtn} onClick={() => setShowTranscript(true)}>
               View investigation
             </button>
           </span>
@@ -113,17 +110,17 @@ export default function DiagnosisPanel() {
       </div>
       {waiting && (
         <Fragment>
-          <div class="inspector-esec-skel" style="width:92%" />
-          <div class="inspector-esec-skel" style="width:78%" />
+          <div class={dg.skel} style="width:92%" />
+          <div class={dg.skel} style="width:78%" />
         </Fragment>
       )}
       {syn?.status === 'offline' && (
-        <div class="inspector-empty">
+        <div class={dg.empty}>
           AI synthesis unavailable (agent offline) — the verified evidence below is complete.
         </div>
       )}
       {syn?.status === 'error' && (
-        <div class="inspector-empty">
+        <div class={dg.empty}>
           AI synthesis failed{syn.error ? ` (${syn.error})` : ''} — the verified evidence below is
           complete.
         </div>

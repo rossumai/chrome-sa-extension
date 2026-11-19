@@ -6,6 +6,7 @@ import { labelAttribution, contrastText } from '../culprit.js';
 import CulpritChip from './CulpritChip.jsx';
 import ReliabilityBadge from './ReliabilityBadge.jsx';
 import FoldableCode from './FoldableCode.jsx';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 // Render a label with its real color, as a tag (Rossum labels carry only a
 // color hex — no shape attribute — so this is the conventional label shape).
@@ -66,9 +67,7 @@ export default function LabelsPanel() {
   return (
     <div class="inspector-panel">
       <div class="inspector-sect">Applied labels ({applied.length})</div>
-      {applied.length === 0 && (
-        <div class="inspector-empty">No labels applied to this annotation.</div>
-      )}
+      {applied.length === 0 && <div class={dg.empty}>No labels applied to this annotation.</div>}
       {applied.map((l: any) => {
         if (l.rule) {
           return (

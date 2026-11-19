@@ -977,6 +977,17 @@
   padding: 12px 16px;
 }
 
+/* @order 43 */
+
+/* Moved from src/console/legacy/shared.css with the skeleton line (now
+   src/ui/fabry/Diagnosis.module.css, which keeps its own copy); the Inspector's loading
+   rows still use it. */
+@keyframes inspector-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 /* @order 44 */
 
 .inspector-sst {

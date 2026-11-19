@@ -1,5 +1,6 @@
 import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 // Inline code for short snippets; collapsible block for long/multi-line ones
 // (some rule trigger_conditions are long, multi-line scripts).
@@ -19,7 +20,7 @@ export default function FoldableCode({ code }: { code?: string | null }) {
           {firstLine.length > 90 || s.includes('\n') ? '…' : ''}
         </code>
       )}{' '}
-      <button class="inspector-fold-btn" type="button" onClick={() => setOpen(!open)}>
+      <button class={dg.foldBtn} type="button" onClick={() => setOpen(!open)}>
         {open ? 'Show less' : 'Show more'}
       </button>
     </Fragment>

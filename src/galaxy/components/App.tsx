@@ -17,6 +17,7 @@ import NavGuide from './NavGuide.jsx';
 import DetailCard from './DetailCard.jsx';
 import ctl from '../../ui/controls.module.css';
 import es from '../../ui/EmptyState.module.css';
+import shell from '../../ui/AppShell.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -53,7 +54,7 @@ export default function App({ connected }: { connected: boolean | null }) {
 
   if (!connected) {
     return (
-      <div class="app-root">
+      <div class={shell.root}>
         <div class={es.root} style="gap:12px">
           {error.value ||
             'Not connected — open a Rossum page and click Galaxy in the extension popup.'}
@@ -68,7 +69,7 @@ export default function App({ connected }: { connected: boolean | null }) {
   }
 
   return (
-    <div class="app-root">
+    <div class={shell.root}>
       <div class="galaxy-stage">
         <div class="galaxy-canvas" ref={hostRef}></div>
         <Legend />

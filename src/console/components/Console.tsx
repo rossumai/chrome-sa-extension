@@ -21,10 +21,11 @@ import * as builderStore from '../../builder/store.js';
 import * as cibStore from '../../cib/store.js';
 import * as rdcStore from '../../rdc/store.js';
 import es from '../../ui/EmptyState.module.css';
+import shell from '../../ui/AppShell.module.css';
 
 function Connecting() {
   return (
-    <div class="app-root">
+    <div class={shell.root}>
       <div class={es.root}>Connecting{'…'}</div>
     </div>
   );

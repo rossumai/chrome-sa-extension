@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import JsonTree from '../components/JsonTree.jsx';
 import ctl from '../../ui/controls.module.css';
+import txt from '../../ui/text.module.css';
 
 const ACTIONS_BY_TYPE: Record<string, string[]> = {
   document: ['create'],
@@ -128,7 +129,7 @@ export function fmtTime(ts: any) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 export function dash() {
-  return <span class="muted">—</span>;
+  return <span class={txt.muted}>—</span>;
 }
 export function CopyBtn({ text, label }: { text: string; label?: string }) {
   if (!text) return null;

@@ -23,6 +23,7 @@ vi.mock('../src/audit/index.jsx', () => ({
 
 import FabryPanel, { previewText } from '../src/audit/components/FabryPanel.jsx';
 import * as store from '../src/audit/store.js';
+import dg from '../src/ui/fabry/Diagnosis.module.css';
 
 const fireInput = (el: any, v: any) => {
   el.value = v;
@@ -174,11 +175,11 @@ describe('FabryPanel', () => {
     const el = mount();
     expandToggle(el);
     expect(el.querySelectorAll('.' + narrativeStyles.list + ' li').length).toBe(2);
-    const roles = [...el.querySelectorAll('.inspector-followup-role')].map((n) => n.textContent);
+    const roles = [...el.querySelectorAll('.' + dg.followupRole)].map((n) => n.textContent);
     expect(roles[0]).toContain('Latest activity');
     expect(roles[1]).toContain('You');
     expect(el.textContent).toContain('why?');
-    expect(el.querySelector('.inspector-diag-credit').textContent).toContain('Mr. Fabry');
+    expect(el.querySelector('.' + dg.credit).textContent).toContain('Mr. Fabry');
   });
 
   it('chat order: the thread reads top-down with the ask input last', () => {

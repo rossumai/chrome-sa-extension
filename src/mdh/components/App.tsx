@@ -16,13 +16,14 @@ import UploadsPanel from './UploadsPanel.jsx';
 import OverviewPanel from './OverviewPanel.jsx';
 import UndoToast from './UndoToast.jsx';
 import CollectionEmptyState from './CollectionEmptyState.jsx';
+import shell from '../../ui/AppShell.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   return (
-    <div class="app-root">
+    <div class={shell.root}>
       <Sidebar />
       <SidebarResizer />
-      <main class="main">
+      <main class={shell.main}>
         <ConnectionBar connected={connected} />
         <ErrorBanner />
         <OpNoticeBanner />

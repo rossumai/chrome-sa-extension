@@ -6,6 +6,8 @@ import RecentAnnotations from './RecentAnnotations.jsx';
 import Report from './Report.jsx';
 import PageRail from './PageRail.jsx';
 import eb from '../../ui/ErrorBanner.module.css';
+import shell from '../../ui/AppShell.module.css';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   const inspect = (id: any) => {
@@ -15,10 +17,10 @@ export default function App({ connected }: { connected: boolean | null }) {
 
   if (connected === false) {
     return (
-      <div class="app-root">
-        <main class="main">
+      <div class={shell.root}>
+        <main class={shell.main}>
           <div class="inspector-root">
-            <div class="inspector-empty">
+            <div class={dg.empty}>
               {store.error.value || (
                 <Fragment>
                   Not connected. Open a Rossum annotation and click <b>Inspect this annotation</b>,
@@ -38,8 +40,8 @@ export default function App({ connected }: { connected: boolean | null }) {
 
   const d = store.data.value;
   return (
-    <div class="app-root">
-      <main class="main">
+    <div class={shell.root}>
+      <main class={shell.main}>
         <div class="inspector-root">
           <IdInput onSubmit={inspect} />
           {store.loading.value && <div class="inspector-loading">Loading…</div>}

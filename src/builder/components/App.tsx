@@ -42,6 +42,7 @@ import { navDrawer, panelOpen, panelWide, loadPanelWide } from './panels.js';
 import s from './Builder.module.css';
 import ctl from '../../ui/controls.module.css';
 import es from '../../ui/EmptyState.module.css';
+import shell from '../../ui/AppShell.module.css';
 
 // The component for each right panel (store.RightPanel); with none, the field inspector.
 const PANELS: Record<RightPanel['kind'], ComponentType> = {
@@ -90,7 +91,7 @@ export default function App({ connected }: { connected: boolean | null }) {
 
   if (!connected) {
     return (
-      <div class="app-root">
+      <div class={shell.root}>
         <div class={es.root}>{error.value || 'Open the Console from a Rossum tab to connect.'}</div>
       </div>
     );
@@ -109,7 +110,7 @@ export default function App({ connected }: { connected: boolean | null }) {
   };
 
   return (
-    <div class={'app-root ' + s.root}>
+    <div class={`${shell.root} ` + s.root}>
       <Navigator />
       <main class={s.main}>
         {error.value && (

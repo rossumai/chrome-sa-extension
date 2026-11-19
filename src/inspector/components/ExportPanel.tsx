@@ -5,6 +5,7 @@ import { loadEnrichment, loadQueueHooks } from '../index.jsx';
 import { exportHookCandidates } from '../culprit.js';
 import ReliabilityBadge from './ReliabilityBadge.jsx';
 import CulpritChip from './CulpritChip.jsx';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 export default function ExportPanel() {
   const d = store.data.value;
@@ -19,7 +20,7 @@ export default function ExportPanel() {
   }, [failed, store.annotationId.value]);
 
   if (!d) return null;
-  if (!failed) return <div class="inspector-empty">No export failure recorded.</div>;
+  if (!failed) return <div class={dg.empty}>No export failure recorded.</div>;
 
   const logs = store.enrichment.value.hookLogs;
   const logArr = Array.isArray(logs) ? logs : [];
@@ -87,7 +88,7 @@ export default function ExportPanel() {
           {attr.status === 'loading' && (
             <div class="inspector-loading inspector-ai-phase">{attr.phase || 'thinking'}…</div>
           )}
-          {attr.status === 'error' && <div class="inspector-empty">AI attribution failed.</div>}
+          {attr.status === 'error' && <div class={dg.empty}>AI attribution failed.</div>}
           {attr.status === 'done' && attr.verdict && (
             <div class="inspector-ai-verdict">
               <div class="ttl">

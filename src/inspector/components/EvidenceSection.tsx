@@ -1,5 +1,6 @@
 import { h, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 const STATUS_LABEL: Record<string, string> = {
   loaded: 'loaded',
@@ -54,8 +55,8 @@ export default function EvidenceSection({
       </div>
       {open && status === 'pending' && (
         <div class="inspector-esec-bd">
-          <div class="inspector-esec-skel" />
-          <div class="inspector-esec-skel" style="width:70%" />
+          <div class={dg.skel} />
+          <div class={dg.skel} style="width:70%" />
         </div>
       )}
       {showBody && <div class="inspector-esec-bd">{children}</div>}

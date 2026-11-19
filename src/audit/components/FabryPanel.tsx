@@ -8,6 +8,7 @@ import FabryNarrative from '../../ui/fabry/FabryNarrative.jsx';
 import FabryTranscript from '../../ui/fabry/FabryTranscript.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
 import type { FabryTurn } from '../store.js';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 const GERUNDS = [
   'Summoning Mr. Fabry',
@@ -20,18 +21,16 @@ const GERUNDS = [
 function Turn({ turn }: { turn: FabryTurn }) {
   return (
     <div class="audit-fabry-turn">
-      <div class="inspector-followup-q">
-        <span class="inspector-followup-role">
-          {turn.question == null ? 'Latest activity' : 'You'}
-        </span>
+      <div class={dg.followupQ}>
+        <span class={dg.followupRole}>{turn.question == null ? 'Latest activity' : 'You'}</span>
         {turn.question == null ? null : ' ' + turn.question}
       </div>
       {turn.state === 'error' ? (
-        <div class="inspector-empty">Mr. Fabry could not answer that one.</div>
+        <div class={dg.empty}>Mr. Fabry could not answer that one.</div>
       ) : turn.text ? (
         <FabryNarrative text={turn.text} streaming={turn.state === 'streaming'} />
       ) : (
-        <div class="inspector-esec-skel" style="width:88%" />
+        <div class={dg.skel} style="width:88%" />
       )}
     </div>
   );
@@ -138,7 +137,7 @@ export default function FabryPanel() {
             </span>{' '}
             Audit insights
           </span>
-          <span class="inspector-diag-credit">by Mr. Fabry</span>
+          <span class={dg.credit}>by Mr. Fabry</span>
           {!open && preview ? <span class="audit-fabry-preview">{'— ' + preview}</span> : null}
           {!open && preview && stale ? (
             <span class="audit-fabry-stale">{'· view changed'}</span>
@@ -150,7 +149,7 @@ export default function FabryPanel() {
         {open && lastDone ? (
           <button
             type="button"
-            class="inspector-fold-btn audit-fabry-tx"
+            class={`${dg.foldBtn} audit-fabry-tx`}
             onClick={() => setShowTx(true)}
           >
             View investigation

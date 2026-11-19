@@ -1,0 +1,68 @@
+/* The pieces of a Mr. Fabry answer that the Inspector's Diagnosis Report, the Audit Log's
+   Fabry panel and Dataset Management's empty-stage explanation share: a dashed .empty
+   placeholder, a .foldBtn link button, a shimmering .skel line while an answer loads, a
+   follow-up's .followupQ with its .followupRole chip, and the "by Mr. Fabry" .credit.
+   Moved from the global src/console/legacy/shared.css (they were `inspector-*` classes),
+   rules in their original order. */
+
+.empty {
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 26px 20px;
+  text-align: center;
+}
+
+.foldBtn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.foldBtn:hover {
+  text-decoration: underline;
+}
+
+.skel {
+  height: 11px;
+  border-radius: 4px;
+  margin: 7px 0;
+  background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-code) 50%, var(--bg-hover) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.followupQ {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.followupRole {
+  display: inline-block;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-right: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.credit {
+  font-weight: 500;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}

@@ -6,6 +6,7 @@ import { fieldProvenance, matchingExtensions, matchConfigsForField } from '../cu
 import { fieldKey } from '../orchestrate.js';
 import { fieldThresholds } from '../evidence.js';
 import CulpritChip from './CulpritChip.jsx';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 // Clamp to the track: rir_confidence/threshold are documented in [0,1], but a
 // malformed value must not paint outside the 64px bar (the tick overhangs by design).
@@ -45,7 +46,7 @@ export default function ProvenancePanel() {
   }, [hasDataMatching, store.annotationId.value]);
 
   if (!d) return null;
-  if (!rows.length) return <div class="inspector-empty">No field content available.</div>;
+  if (!rows.length) return <div class={dg.empty}>No field content available.</div>;
 
   const hooks = Object.values(d.resolved.hooksById || {});
   const allMatchers = matchingExtensions(hooks)

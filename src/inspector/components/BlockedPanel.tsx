@@ -5,6 +5,7 @@ import { messageKey, blockerKey } from '../orchestrate.js';
 import { schemaIdForDatapoint } from '../evidence.js';
 import ReliabilityBadge from './ReliabilityBadge.jsx';
 import CulpritChip from './CulpritChip.jsx';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 function AttrLine({ entry }: { entry: any }) {
   if (!entry) return null;
@@ -77,7 +78,7 @@ export default function BlockedPanel() {
     <div class="inspector-panel">
       <div class="inspector-sect">Automation blockers</div>
       {(d.blocker?.content || []).length === 0 && (
-        <div class="inspector-empty">No automation blockers.</div>
+        <div class={dg.empty}>No automation blockers.</div>
       )}
       {(d.blocker?.content || []).map((raw: any, i: any) => {
         const b = explainBlocker(raw, ctx);
@@ -98,7 +99,7 @@ export default function BlockedPanel() {
         Error messages ({errorMsgs.length}){' '}
         <span class="inspector-sect-note">block automation</span>
       </div>
-      {errorMsgs.length === 0 && <div class="inspector-empty">No error messages.</div>}
+      {errorMsgs.length === 0 && <div class={dg.empty}>No error messages.</div>}
       {errorMsgs.map((m: any) => (
         <MsgRow m={m} idx={m.idx} />
       ))}

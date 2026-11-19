@@ -5,6 +5,7 @@ import { loadEnrichment } from '../index.jsx';
 import { classifyRejection, type RejectionVerdict } from '../culprit.js';
 import ReliabilityBadge from './ReliabilityBadge.jsx';
 import CulpritChip from './CulpritChip.jsx';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 export default function RejectedPanel() {
   const d = store.data.value;
@@ -26,7 +27,7 @@ export default function RejectedPanel() {
 
   if (!d) return null;
   if (rej.type === 'none')
-    return <div class="inspector-empty">This annotation has not been rejected.</div>;
+    return <div class={dg.empty}>This annotation has not been rejected.</div>;
 
   const attr = store.attributions.value.reject;
   return (
@@ -57,12 +58,12 @@ export default function RejectedPanel() {
             logs.
           </div>
           {!store.aiAvailable.value && (
-            <div class="inspector-empty">AI attribution unavailable (agent offline).</div>
+            <div class={dg.empty}>AI attribution unavailable (agent offline).</div>
           )}
           {attr?.status === 'loading' && (
             <div class="inspector-loading inspector-ai-phase">{attr.phase || 'thinking'}…</div>
           )}
-          {attr?.status === 'error' && <div class="inspector-empty">AI attribution failed.</div>}
+          {attr?.status === 'error' && <div class={dg.empty}>AI attribution failed.</div>}
           {attr?.status === 'done' && (
             <div class="inspector-ai-verdict">
               <div class="ttl">

@@ -11,6 +11,7 @@ globalThis.requestAnimationFrame =
   });
 
 import EvidenceSection from '../src/inspector/components/EvidenceSection.jsx';
+import dg from '../src/ui/fabry/Diagnosis.module.css';
 
 function mount(vnode: any) {
   const el = document.createElement('div');
@@ -50,7 +51,7 @@ describe('EvidenceSection', () => {
         <div class="kid" />
       </EvidenceSection>,
     );
-    expect(el.querySelector('.inspector-esec-skel')).toBeTruthy();
+    expect(el.querySelector('.' + dg.skel)).toBeTruthy();
     expect(el.querySelector('.kid')).toBeFalsy();
   });
   it('header is keyboard-operable (role/tabindex/aria-expanded, toggles on Enter and Space)', () => {

@@ -9,11 +9,12 @@ import Pagination from './Pagination.jsx';
 import UnavailablePanel from './UnavailablePanel.jsx';
 import FabryPanel from './FabryPanel.jsx';
 import es from '../../ui/EmptyState.module.css';
+import shell from '../../ui/AppShell.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   return (
-    <div class="app-root">
-      <main class="main">
+    <div class={shell.root}>
+      <main class={shell.main}>
         <ConnectionBar connected={connected} />
         <ErrorBanner />
         {!connected ? (

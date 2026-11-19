@@ -5,6 +5,7 @@ import { runRevalidate } from '../index.jsx';
 import { driftDiff } from '../driftDiff.js';
 import EvidenceSection from './EvidenceSection.jsx';
 import ctl from '../../ui/controls.module.css';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 // Opt-in config-drift check (spec §4.5): live validate vs the persisted messages.
 export default function DriftSection() {
@@ -48,7 +49,7 @@ export default function DriftSection() {
             Runs a live <code class="inspector-code">validate</code> (start {'→'} validate {'→'}{' '}
             cancel). Takes a brief reviewing lock on the annotation.
           </div>
-          {err && <div class="inspector-empty">{err}</div>}
+          {err && <div class={dg.empty}>{err}</div>}
         </Fragment>
       )}
       {diff && (
@@ -65,7 +66,7 @@ export default function DriftSection() {
             </div>
           ))}
           {!diff.added.length && !diff.removed.length && (
-            <div class="inspector-empty">
+            <div class={dg.empty}>
               No drift {'—'} today{'’'}s config produces the same messages.
             </div>
           )}

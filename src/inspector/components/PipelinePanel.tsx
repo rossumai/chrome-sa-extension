@@ -3,6 +3,7 @@ import { useEffect } from 'preact/hooks';
 import * as store from '../store.js';
 import { loadQueueHooks, loadEnrichment } from '../index.jsx';
 import { buildPipeline } from '../culprit.js';
+import dg from '../../ui/fabry/Diagnosis.module.css';
 
 export default function PipelinePanel() {
   const d = store.data.value;
@@ -22,9 +23,7 @@ export default function PipelinePanel() {
 
   return (
     <div class="inspector-panel">
-      {phases.length === 0 && (
-        <div class="inspector-empty">No active extensions on this queue.</div>
-      )}
+      {phases.length === 0 && <div class={dg.empty}>No active extensions on this queue.</div>}
       {phases.map((p) => (
         <div class="inspector-phase">
           <div class="inspector-sect">

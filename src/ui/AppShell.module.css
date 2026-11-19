@@ -1,0 +1,31 @@
+/* The layout every Console app sits in: .root, a flex row filling #app beside the rail, and
+   .main, the app's column (connection bar, banners, content). Moved from the global
+   src/console/legacy/shared.css, with .root's line from the Architect print block; the
+   reset and #app stay global there. */
+
+.root {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Printing an Architect specification unwinds the fixed-height column so the document can
+   flow across pages (see the print block in src/console/legacy/shared.css). */
+@media print {
+  :global(body:has(.docs-pane)) .root {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+}

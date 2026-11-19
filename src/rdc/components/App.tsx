@@ -35,6 +35,7 @@ import styles from './App.module.css';
 import es from '../../ui/EmptyState.module.css';
 import cb from '../../ui/ConnectionBar.module.css';
 import eb from '../../ui/ErrorBanner.module.css';
+import shell from '../../ui/AppShell.module.css';
 
 type Screen =
   'overview' | 'choose' | 'connect' | 'read' | 'plan' | 'review' | 'write' | 'done' | 'own';
@@ -164,8 +165,8 @@ export default function App({
 
   if (!connected)
     return (
-      <div class="app-root">
-        <main class="main">
+      <div class={shell.root}>
+        <main class={shell.main}>
           <div class={cb.bar}>
             <span class={`${cb.dot} ${cb.error}`}></span>
             Not connected — open a Rossum page and click Rossum Console in the extension popup
@@ -185,8 +186,8 @@ export default function App({
 
   if (!target)
     return (
-      <div class="app-root">
-        <main class="main">
+      <div class={shell.root}>
+        <main class={shell.main}>
           {bar}
           {target === undefined ? (
             <div class={es.root}>Loading{'…'}</div>
@@ -371,8 +372,8 @@ export default function App({
     );
 
   return (
-    <div class="app-root">
-      <main class="main">
+    <div class={shell.root}>
+      <main class={shell.main}>
         {bar}
         <div class={styles.body}>
           <Band

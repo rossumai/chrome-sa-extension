@@ -11,6 +11,7 @@ import Modal from '../../ui/Modal.jsx';
 import css from '../Academy.module.css';
 import ctl from '../../ui/controls.module.css';
 import es from '../../ui/EmptyState.module.css';
+import shell from '../../ui/AppShell.module.css';
 
 // store.error is set by start, restart and init; a failed write must say so.
 function ErrorStrip() {
@@ -137,7 +138,7 @@ export default function AcademyApp({ connected }: { connected: boolean | null })
   const progress = store.progress.value;
   if (!connected) {
     return (
-      <div class="app-root">
+      <div class={shell.root}>
         <div class={css.entry}>
           <div class={es.root}>
             <div class={es.card}>

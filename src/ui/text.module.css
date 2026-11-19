@@ -1,0 +1,8 @@
+/* Text utilities. .muted dims secondary text (the Audit Log's empty cell). Moved from the
+   global src/console/legacy/shared.css. The Console rail's `.app-rail-item.muted` is the
+   rail's own modifier and stays global (src/console/legacy.css). */
+
+.muted {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
