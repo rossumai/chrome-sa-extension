@@ -356,7 +356,7 @@ describe('the caret drives the same link, from the other end', () => {
 // under that layer. Verified in Chrome by pixel sampling; asserted here so the
 // rule cannot quietly regress to a plain background.
 describe('linked-stage band paints below the selection layer', () => {
-  const css = readFileSync('src/console/console.css', 'utf8');
+  const css = readFileSync('src/mdh/legacy.css', 'utf8');
   // The declaration block for a selector, comments already stripped.
   const blockFor = (selector: any) => {
     const body = css.replace(/\/\*[\s\S]*?\*\//g, '');

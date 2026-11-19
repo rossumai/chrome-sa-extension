@@ -1,0 +1,142 @@
+/* GLOBAL STYLESHEET: the Console's design tokens — every :root variable, its dark-mode
+   override, and the body base. The first part of dist/console/console.base.css.
+
+   Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
+   :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
+   their component. Any class added here must contain a hyphen — esbuild's minified CSS Module
+   names never do, so a hyphenated class can never collide with one
+   (tests/css-class-collision-boundary.test.ts).
+
+   build.js concatenates the Console's partials (CONSOLE_GLOBAL_PARTS) into
+   dist/console/console.base.css in a fixed order, so moving a rule to another partial moves it
+   in the cascade. */
+
+:root {
+  --bg-base: #f1f1f5;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --bg-hover: #e8e8ee;
+  --bg-sidebar: #f8f8fb;
+  --bg-code: #f5f5f8;
+  --text-primary: #1a1a24;
+  --text-secondary: #7a7a8c;
+  --text-code: #333;
+  --border: #dcdce4;
+  --accent: #4270db;
+  --accent-hover: #3560c5;
+  --danger: #cc3333;
+  --danger-hover: #aa2222;
+  --success: #22883e;
+  --warning: #b45309;
+  --mdh-special-bidi: #7c3aed;
+  /* The Builder's native Rules: the same violet as above, under its own name. */
+  --rule-violet: #7c3aed;
+  --success-hover: #1a6e32;
+  --success-bg: #d1fae5;
+  --success-fg: #065f46;
+  --warning-bg: #fef3c7;
+  --warning-fg: #92400e;
+  --danger-bg: #fef2f2;
+  --danger-fg: #991b1b;
+  --danger-border: #fecaca;
+  --warning-border: #fde68a;
+  --success-border: #a7f3d0;
+  --info-bg: #eaf1fd;
+  --info-fg: #1e40af;
+  --info-border: #c7daf8;
+  /* EXP badge: a FILLED pill, unlike every -bg/-fg pair above (which are tints
+     meant to sit on a card). Violet, not --accent — the rail paints the active
+     app's icon in --accent, so an accent badge reads as a second selection
+     marker. See .app-rail-exp for the measured contrast. */
+  --exp-bg: #7c3aed;
+  --exp-fg: #ffffff;
+  --type-doc-bg: #e0f2fe;
+  --type-doc-fg: #075985;
+  --type-ann-bg: #fef3c7;
+  --type-ann-fg: #92400e;
+  --type-user-bg: #ede9fe;
+  --type-user-fg: #5b21b6;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-shadow: 0 8px 30px rgba(20, 32, 54, 0.16);
+  --diag-grad-a: #fdfcff;
+  --diag-grad-b: #faf7ff;
+  --diag-border: #ddd0fb;
+  --diag-fg: #5b21b6;
+  --inv-grad-b: #f6effd;
+  --help-pin: #db2777;
+  --help-pin-on: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-base: #12121e;
+    --bg-card: #1a1a2e;
+    --bg-input: #0d0d18;
+    --bg-hover: #2a2a3e;
+    --bg-sidebar: #1a1a2e;
+    --bg-code: #0d0d18;
+    --text-primary: #dddde8;
+    --text-secondary: #8888a0;
+    --text-code: #bbbbcc;
+    --border: #333348;
+    --accent: #5b8af0;
+    --accent-hover: #6d9aff;
+    --danger: #ef5555;
+    --danger-hover: #ff6666;
+    --success: #34d058;
+    --warning: #f59e0b;
+    --mdh-special-bidi: #a78bfa;
+    --rule-violet: #a78bfa;
+    --success-hover: #2ea44f;
+    --success-bg: #0a3020;
+    --success-fg: #34d058;
+    --warning-bg: #3a2f10;
+    --warning-fg: #f59e0b;
+    --danger-bg: #2a1515;
+    --danger-fg: #fca5a5;
+    --danger-border: #4a2020;
+    --warning-border: #4a3a10;
+    --success-border: #1a4a30;
+    --info-bg: #15233f;
+    --info-fg: #93b4f5;
+    --info-border: #294063;
+    /* Inverted against the light theme and against the tints beside it: a light
+       violet fill with dark text. A dark fill would sink into --bg-sidebar,
+       which is the exact failure this pair replaced. */
+    --exp-bg: #a78bfa;
+    --exp-fg: #1e1233;
+    --type-doc-bg: #0c2535;
+    --type-doc-fg: #7dd3fc;
+    --type-ann-bg: #3a2f10;
+    --type-ann-fg: #fcd34d;
+    --type-user-bg: #2a1f4a;
+    --type-user-fg: #c4b5fd;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --glass-bg: rgba(26, 26, 46, 0.62);
+    --glass-border: rgba(255, 255, 255, 0.14);
+    --glass-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    --diag-grad-a: #1c1a2e;
+    --diag-grad-b: #221c38;
+    --diag-border: #3a3060;
+    --diag-fg: #b4a0f2;
+    --inv-grad-b: #241d3a;
+    --help-pin: #f472b6;
+    --help-pin-on: var(--bg-card);
+  }
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  height: 100vh;
+  overflow: hidden;
+}

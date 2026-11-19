@@ -1,3 +1,12 @@
+/* GLOBAL STYLESHEET: the print page's own rules (shipped as dist/console/print.css). It styles
+   the rendered documents of the print page, not JSX, so it stays global.
+
+   Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
+   :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
+   their component. Any class added here must contain a hyphen — esbuild's minified CSS Module
+   names never do, so a hyphenated class can never collide with one
+   (tests/css-class-collision-boundary.test.ts). */
+
 /* Print-page-only rules. The three document stylesheets do the rendering; this adds what a
    multi-document paper artifact needs and the single-page export does not. */
 .print-doc {

@@ -1,3 +1,12 @@
+/* GLOBAL STYLESHEET: the document theme (shipped as dist/console/doc-theme.css). It styles
+   the markdown-it / highlight.js output of the document renderer, not JSX, so it stays global.
+
+   Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
+   :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
+   their component. Any class added here must contain a hyphen — esbuild's minified CSS Module
+   names never do, so a hyphenated class can never collide with one
+   (tests/css-class-collision-boundary.test.ts). */
+
 /* DELTA H (2026-08-20): DEAD RULES PRUNED. 39 rules were removed because the features
    that produced their classes are gone from this port, so the selectors could never
    match. Three groups, each traceable to a decision already recorded elsewhere:

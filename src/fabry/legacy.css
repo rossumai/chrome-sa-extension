@@ -1,0 +1,2573 @@
+/* GLOBAL STYLESHEET, TEMPORARY: Fabry Chat and the Architect's rules (src/fabry/), split out of the former
+   src/console/console.css. Deleted by its Phase 2 task of the CSS Modules migration, which moves
+   every rule into a *.module.css beside the component that uses it.
+
+   Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
+   :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
+   their component. Any class added here must contain a hyphen — esbuild's minified CSS Module
+   names never do, so a hyphenated class can never collide with one
+   (tests/css-class-collision-boundary.test.ts).
+
+   build.js concatenates the Console's partials (CONSOLE_GLOBAL_PARTS) into
+   dist/console/console.base.css in a fixed order, so moving a rule to another partial moves it
+   in the cascade. */
+
+/* Audit ask-input sizing is now <FabryInput size="sm">; the .audit-fabry-body margin
+   moved into aiInput.module.css as :global(.audit-fabry-body) .row. */
+/* .audit-fabry .inspector-diag-body* overrides moved into FabryNarrative.module.css
+   as :global(.audit-fabry) .body (co-located with the component they style). */
+
+/* ==== Fabry chat app ==== */
+.fabry-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.fabry-error {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin: 8px;
+  font-size: 12px;
+}
+
+.fabry-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  flex: 1;
+  min-height: 0;
+}
+
+/* No divider: the active row's --bg-card surface blends into the content pane. */
+.fabry-sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 10px;
+  gap: 8px;
+}
+
+.fabry-side-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+}
+
+.fabry-side-resizer:hover,
+.fabry-side-resizer.dragging {
+  background: var(--info-border);
+}
+
+/* Sidebar (final: F1 search-first over N3 two-line rows, blue scheme):
+   full-width regular-weight title + tiny time; active chat = soft info fill
+   + accent title; ghost New chat. */
+.fabry-newchat {
+  border: 1px solid var(--border);
+  color: var(--accent);
+  background: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.fabry-newchat:hover {
+  background: var(--bg-hover);
+  border-color: var(--info-border);
+}
+
+/* Break out of the sidebar's right padding + hide the scrollbar so the active
+   row runs flush into the content pane (same blend as Architect). */
+.fabry-chatlist {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overscroll-behavior: contain;
+  margin-right: -10px;
+  scrollbar-width: none;
+}
+
+.fabry-chat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  border: 0;
+  background: none;
+  border-radius: 10px 0 0 10px;
+  padding: 8px 16px 8px 11px;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.fabry-chat-row:hover {
+  background: var(--bg-hover);
+}
+
+.fabry-chat-row.active {
+  background: var(--bg-card);
+}
+
+.fabry-chat-row.active .fabry-chat-title {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.fabry-chat-title {
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fabry-chat-empty {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 12px;
+  text-align: center;
+}
+
+.fabry-chat-loadingrow {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 6px;
+}
+
+.fabry-working {
+  position: relative;
+  height: 22px;
+  min-width: 132px;
+}
+
+/* inline streaming gerund in the composer bar */
+.fabry-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg-card);
+}
+
+.fabry-thread {
+  flex: 1 0 auto;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  overflow-wrap: break-word;
+}
+
+.fabry-turn-chip {
+  align-self: center;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-family: var(--font-mono, monospace);
+}
+
+.fabry-turn-user {
+  align-self: flex-end;
+  max-width: 78%;
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: 12px 12px 4px 12px;
+  padding: 9px 12px;
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.fabry-turn-img {
+  max-width: 220px;
+  max-height: 160px;
+  border-radius: 8px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.fabry-turn-assistant {
+  align-self: stretch;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.fabry-thinking-toggle {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.fabry-thinking-body {
+  font-size: 11px;
+  color: var(--text-secondary);
+  border-left: 2px solid var(--info-border);
+  padding: 4px 10px;
+  margin: 6px 0;
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.fabry-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.fabry-tool-chip {
+  font-size: 10px;
+  color: var(--accent);
+  border: 1px solid var(--info-border);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+/* R1 "Aligned" markdown + code highlighting + mermaid + streaming caret migrated
+   to the self-contained CSS Module src/ui/fabry/FabryMarkdown.module.css (shared by
+   FabryMarkdown + MermaidBlock). The .fabry-main chat scrollbar rule below keeps its
+   own declaration; the .fabry-md-* scrollbars moved into the module. */
+.fabry-turn-foot {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.fabry-turn-foot button {
+  border: 1px solid var(--border);
+  background: none;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.fabry-turn-foot button:hover,
+.fabry-turn-foot button.is-on {
+  opacity: 1;
+  border-color: var(--info-border);
+  color: var(--accent);
+}
+
+.fabry-interrupted {
+  font-size: 11px;
+  color: var(--warning-fg, #92600a);
+  margin-top: 6px;
+}
+
+.fabry-refresh {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 11px;
+}
+
+/* .fabry-greeting* removed — the empty state is now the centered .fabry-welcome (below). */
+.fabry-thread-loading {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.fabry-composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--bg-card);
+  padding: 10px 22px 14px;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.fabry-senderr {
+  color: var(--danger-fg);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+/* Attachment thumbnails now sit INSIDE the box, above the textarea. */
+.fabry-attach-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.fabry-attach {
+  position: relative;
+}
+
+.fabry-attach img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.fabry-attach button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Claude-style single rounded box: textarea on top, all controls in a bar below, inside. */
+.fabry-composer-box {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 10px 12px 8px;
+  box-shadow: var(--shadow);
+}
+
+.fabry-composer-box:focus-within {
+  border-color: var(--info-border);
+}
+
+.fabry-input-wrap {
+  position: relative;
+}
+
+.fabry-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  border: 0;
+  padding: 4px 4px 2px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  background: none;
+  color: var(--text-primary);
+  min-height: 46px;
+  max-height: 180px;
+}
+
+.fabry-input:focus {
+  outline: none;
+}
+
+.fabry-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.fabry-bar-spacer {
+  flex: 1;
+}
+
+.fabry-bar-ico {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
+}
+
+/* + attach icon button */
+.fabry-attach-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex: none;
+}
+
+.fabry-attach-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* send (accent square, up-arrow) / stop (square) */
+.fabry-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  color: #fff;
+  background: var(--accent);
+  flex: none;
+}
+
+.fabry-send:hover:not(:disabled) {
+  background: var(--accent-hover, #3560c5);
+}
+
+.fabry-send:disabled {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.fabry-stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  flex: none;
+}
+
+.fabry-stop:hover {
+  background: var(--bg-hover);
+}
+
+.fabry-stop-sq {
+  width: 11px;
+  height: 11px;
+  background: currentColor;
+  border-radius: 2.5px;
+}
+
+.fabry-cmdmenu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 5;
+}
+
+.fabry-cmd-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fabry-cmd-row:hover {
+  background: var(--bg-hover);
+}
+
+.fabry-cmd-name {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.fabry-cmd-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.fabry-cmd-arg {
+  border: 1px solid var(--info-border);
+  background: none;
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 10px;
+  padding: 1px 8px;
+  margin: 0 0 4px 26px;
+  cursor: pointer;
+}
+
+.fabry-notice {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  text-align: center;
+}
+
+.fabry-hd {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 22px;
+  border-bottom: 1px solid var(--info-border);
+  background: linear-gradient(135deg, var(--bg-card), var(--info-bg));
+  width: 100%;
+}
+
+.fabry-hd-mark {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.fabry-hd-title {
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.fabry-hd-tokens {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.fabry-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 22px;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.fabry-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+}
+
+.fabry-file-size {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.fabry-file-dl {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.fabry-sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 4px 2px;
+}
+
+.fabry-sidebar-mark {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.fabry-sidebar-name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Centered "welcome" empty state (new chat): the composer is the hero, centered
+   under a greeting, with starter prompts as pills below. Replaces the old
+   .fabry-greeting / .fabry-starters block. */
+.fabry-welcome {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.fabry-welcome-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 680px;
+  width: 100%;
+}
+
+.fabry-welcome-mark {
+  color: var(--accent);
+  line-height: 0;
+}
+
+.fabry-welcome-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+/* the composer is a normal centered block here — undo its sticky-bottom layout */
+.fabry-welcome .fabry-composer {
+  position: static;
+  padding: 0;
+  max-width: 640px;
+}
+
+.fabry-welcome-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.fabry-welcome-pill {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.fabry-welcome-pill:hover {
+  border-color: var(--info-border);
+  background: var(--info-bg);
+  color: var(--accent);
+}
+
+.fabry-main::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+/* .fabry-md-* scrollbars moved to FabryMarkdown.module.css */
+.fabry-main::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.fabry-main::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.fabry-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Chat list scrollbar fully hidden so the active row runs flush into the pane. */
+.fabry-chatlist::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Deep verify: composer toggle, live-phase chip, per-turn verdict chip + critic strip. */
+/* Deep verify: an in-bar icon toggle (the ✦ FabryMark, static). Dim when off,
+   accent-filled when on — the star's fill inherits this button's color. */
+.fabry-deep-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: #a9afb9;
+  cursor: pointer;
+  flex: none;
+}
+
+.fabry-deep-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.fabry-deep-toggle.is-on {
+  color: var(--accent);
+  background: var(--info-bg);
+}
+
+.fabry-deep-phase {
+  align-self: flex-start;
+  font-size: 10.5px;
+  color: var(--accent);
+  border: 1px dashed var(--info-border);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.fabry-deep-chip {
+  border: 1px solid var(--border);
+  background: none;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.fabry-deep-chip.pass {
+  color: var(--success-fg);
+  border-color: var(--success-border);
+  background: var(--success-bg);
+}
+
+.fabry-deep-chip.fail {
+  color: var(--warning-fg);
+  border-color: var(--warning-border);
+  background: var(--warning-bg);
+}
+
+.fabry-deep-chip.inconclusive {
+  color: var(--text-secondary);
+}
+
+.fabry-deep-strip {
+  border: 1px solid var(--info-border);
+  border-radius: 8px;
+  background: var(--info-bg);
+  padding: 8px 12px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+/* Agent clarifying-question form + fallback notice (spec §1/§6). */
+.fabry-q {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--info-border);
+  border-radius: 10px;
+  background: var(--info-bg);
+}
+
+.fabry-q-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fabry-q-text {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fabry-q-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fabry-q-opt {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.fabry-q-opt.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-hover);
+  font-weight: 600;
+}
+
+.fabry-q-input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.fabry-q-input:focus {
+  outline: 2px solid var(--info-border);
+}
+
+.fabry-q-submit {
+  align-self: flex-start;
+  border: 0;
+  background: var(--accent);
+  color: var(--bg-card);
+  font-weight: 650;
+  border-radius: 8px;
+  padding: 7px 16px;
+  cursor: pointer;
+}
+
+.fabry-q-submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fabry-q-done .fabry-q-answer {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+/* Fabry fallback-notice styles migrated to the self-contained CSS Module
+   src/ui/fabry/FabryNotice.module.css. */
+
+/* ── Fabry Architect (v2) ─────────────────────────────────────────────── */
+/* Sidebar deliverable list */
+.fabry-arch-side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+/* Bottom panel (B2): full-width Run (same width as Stop — no jump), results
+   summary, then New at the very bottom. */
+.fabry-arch-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  padding-top: 9px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.fabry-arch-runall {
+  width: 100%;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.fabry-arch-runall:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.fabry-arch-runall:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fabry-arch-filter {
+  display: flex;
+  gap: 4px;
+}
+
+.fabry-arch-filter-chip {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 3px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fabry-arch-filter-chip:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.fabry-arch-filter-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fabry-arch-filter-chip.pass[aria-pressed='true'] {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.fabry-arch-filter-chip.fail[aria-pressed='true'] {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.fabry-arch-filter-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fabry-arch-item.skipped .fabry-arch-item-title {
+  color: var(--text-secondary);
+}
+
+.fabry-arch-skip {
+  flex: none;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.fabry-arch-summary {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.fabry-arch-summary .ok {
+  color: var(--success-fg);
+  font-weight: 600;
+}
+
+.fabry-arch-summary .bad {
+  color: var(--danger-fg);
+  font-weight: 600;
+}
+
+.fabry-arch-summary .warn {
+  color: var(--warning-fg);
+  font-weight: 600;
+}
+
+.fabry-arch-new {
+  width: 100%;
+  text-align: center;
+  border: 1px dashed var(--border);
+  color: var(--accent);
+  background: none;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.fabry-arch-new:hover {
+  background: var(--bg-hover);
+  border-style: solid;
+}
+
+/* Implement loop (ralph-style, write-enabled): the per-deliverable panel + arm dialog.
+   Danger-tinted to signal it WRITES to the live org (distinct from the accent check button).
+   There is deliberately no "Implement all" — implement is per deliverable. */
+.fabry-arch-implement-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fabry-arch-implement-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.fabry-arch-implement-run {
+  border: 1px solid var(--danger);
+  background: none;
+  color: var(--danger-fg);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.fabry-arch-implement-run:hover:not(:disabled) {
+  background: var(--danger-bg);
+}
+
+.fabry-arch-implement-run:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fabry-arch-implement-body {
+  font-size: 12px;
+  color: var(--text-primary);
+  border-left: 3px solid var(--border);
+  padding-left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fabry-arch-implement-body.status-passing {
+  border-left-color: var(--success);
+}
+
+.fabry-arch-implement-body.status-failed {
+  border-left-color: var(--danger);
+}
+
+.fabry-arch-implement-body.status-blocked {
+  border-left-color: var(--warning);
+}
+
+.fabry-arch-implement-body.status-uncertain {
+  border-left-color: var(--warning);
+}
+
+.fabry-arch-implement-status {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.fabry-arch-implement-err {
+  color: var(--danger-fg);
+  font-weight: 400;
+}
+
+.fabry-arch-implement-summary {
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.fabry-arch-implement-audit {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11.5px;
+}
+
+.fabry-arch-implement-audit li {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fabry-arch-implement-audit li.pending {
+  opacity: 0.6;
+}
+
+.fabry-arch-implement-audit li code {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 11px;
+}
+
+/* Task decomposition (fix_plan) list in the Implement panel. */
+.fabry-arch-implement-body.status-planning,
+.fabry-arch-implement-body.status-running {
+  border-left-color: var(--accent);
+}
+
+.fabry-arch-implement-note {
+  font-size: 11px;
+  color: var(--warning-fg);
+}
+
+.fabry-arch-tasklist {
+  list-style: none;
+  margin: 6px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fabry-arch-task {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.fabry-arch-task-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 3px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+}
+
+.fabry-arch-task.task-doing .fabry-arch-task-dot {
+  border-color: var(--border);
+  border-top-color: var(--accent);
+  background: transparent;
+  animation: spin 0.7s linear infinite;
+}
+
+.fabry-arch-task.task-done .fabry-arch-task-dot {
+  border-color: var(--success);
+  background: var(--success);
+}
+
+.fabry-arch-task.task-failed .fabry-arch-task-dot {
+  border-color: var(--danger);
+  background: var(--danger);
+}
+
+.fabry-arch-task.task-done .fabry-arch-task-text {
+  color: var(--text-secondary);
+}
+
+.fabry-arch-task-text {
+  flex: 1 1 auto;
+}
+
+.fabry-arch-task-origin {
+  flex: 0 0 auto;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+/* flex:1 pushes the footer down; the list breaks out of the sidebar's right
+   padding (margin-right:-10px) and hides its scrollbar so the active row's
+   surface runs flush into the editor with no seam. */
+.fabry-arch-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: none;
+  margin-right: -10px;
+  scrollbar-width: none;
+}
+
+.fabry-arch-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.fabry-arch-empty {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  padding: 8px 6px;
+}
+
+.fabry-arch-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  padding: 7px 6px 7px 10px;
+  border-radius: 10px 0 0 10px;
+  cursor: pointer;
+}
+
+.fabry-arch-item:hover {
+  background: var(--bg-hover);
+}
+
+/* Active row blends into the editor: same --bg-card surface, no right seam. */
+.fabry-arch-item.active {
+  background: var(--bg-card);
+}
+
+.fabry-arch-item.active:hover {
+  background: var(--bg-card);
+}
+
+.fabry-arch-item.dragging {
+  opacity: 0.45;
+}
+
+/* Indicator edge matches where the row will land (see ArchitectSidebar). */
+.fabry-arch-item.dragover-before {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.fabry-arch-item.dragover-after {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.fabry-arch-item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fabry-arch-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.fabry-arch-dot.pass {
+  background: var(--success);
+}
+
+.fabry-arch-dot.fail {
+  background: var(--danger);
+}
+
+.fabry-arch-dot.uncertain {
+  background: var(--warning);
+}
+
+.fabry-arch-dot.stale {
+  box-shadow: inset 0 0 0 2px var(--bg-card);
+  opacity: 0.75;
+}
+
+/* hollow = outdated */
+/* Visible ring spinner (a solid rotating circle shows no motion). */
+.fabry-arch-dot.running {
+  box-sizing: border-box;
+  background: transparent;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+}
+
+/* Per-row kebab (⋮) menu holding Re-run + Delete (Delete confirms inline). */
+.fabry-arch-kebab {
+  flex: none;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 6px;
+  opacity: 0;
+}
+
+.fabry-arch-item:hover .fabry-arch-kebab,
+.fabry-arch-item.active .fabry-arch-kebab,
+.fabry-arch-item.menuopen .fabry-arch-kebab {
+  opacity: 0.55;
+}
+
+.fabry-arch-kebab:hover {
+  opacity: 1;
+  background: var(--bg-hover);
+}
+
+.fabry-arch-menu {
+  position: absolute;
+  right: 6px;
+  top: 30px;
+  z-index: 20;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+  padding: 4px;
+  min-width: 132px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fabry-arch-menu.is-up {
+  top: auto;
+  bottom: 30px;
+}
+
+.fabry-arch-menu-item {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.fabry-arch-menu-item:hover {
+  background: var(--bg-hover);
+}
+
+.fabry-arch-menu-item:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fabry-arch-menu-item.danger {
+  color: var(--danger-fg);
+}
+
+.fabry-arch-menu-item.danger:hover {
+  background: var(--danger-bg);
+}
+
+/* Main pane: editor blends from the active sidebar row (shared --bg-card) */
+.fabry-arch {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg-card);
+}
+
+/* ── Unified specification view (2026-08-19) ─────────────────────────────────
+   The document column and the inspector rail sit side by side; the legacy notice spans both, so
+   the row lives one level in. Both side columns collapse (measured: 664 / 908 / 1230px at a
+   1280px window), which is what keeps the reading column honest. */
+.fabry-arch-unified {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-auto-rows: auto minmax(0, 1fr);
+}
+
+.fabry-arch-unified > .fabry-arch-legacy {
+  grid-column: 1 / -1;
+}
+
+.fabry-arch-unified > .fabry-spec {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.fabry-arch-unified > .fabry-rail {
+  grid-column: 2;
+}
+
+.fabry-arch-unified > .fabry-arch-placeholder {
+  grid-column: 1 / -1;
+}
+
+.fabry-spec {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.fabry-spec-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.fabry-spec-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.fabry-spec-sp {
+  margin-left: auto;
+}
+
+.fabry-spec-btn {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fabry-spec-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fabry-spec .docs-pane {
+  flex: 1;
+  min-height: 0;
+}
+
+.fabry-spec-sec-hd {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 26px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.fabry-spec-sec-n {
+  font-size: 12.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fabry-spec-pill {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.fabry-spec-pill.pass {
+  background: var(--success-bg);
+  color: var(--success-fg);
+  border-color: var(--success-border);
+}
+
+.fabry-spec-pill.fail {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border-color: var(--danger-border);
+}
+
+.fabry-spec-pill.uncertain {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border-color: var(--warning-border);
+}
+
+.fabry-spec-pill.run {
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border-color: var(--info-border);
+}
+
+/* Stale = the SAME verdict on less solid ground: the fill drops away and the pill says so. One badge,
+   two facts — the separate "stale" word beside it is gone (2026-08-19), as is the manual state pill. */
+.fabry-spec-pill.pass.stale,
+.fabry-spec-pill.fail.stale,
+.fabry-spec-pill.uncertain.stale {
+  background: none;
+}
+
+/* Edit mode: EVERY deliverable is an editor, visible immediately (owner, 2026-08-19), with Markdown
+   highlighting. `.markdown-body` is carried on the HOST for its box — max-width, centring, and
+   upstream's own @container branch that drops the padding on a narrow column (measured: 15px at a
+   646px column, not the 45px the wide rule states) — so switching mode does not move the text
+   sideways. Restating those numbers here is what made Edit sit wider than Preview. */
+.fabry-spec-cm {
+  min-height: 1.6em;
+}
+
+/* Content height, page scrolling: the specification is ONE scroller, so no editor may own a viewport
+   of its own (measured: inner scroll range 0, and CodeMirror still renders only the visible lines). */
+.fabry-spec-cm .cm-editor {
+  height: auto;
+}
+
+.fabry-spec-cm .cm-scroller {
+  overflow: visible;
+}
+
+.fabry-spec-cm .cm-content {
+  min-height: 0 !important;
+}
+
+/* A file dragged over an editor: the same outline the Assets tab paints, so the two drop targets
+   read as one gesture (they share useFileDrop). */
+.fabry-spec-cm.dragging {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+  background: var(--info-bg);
+}
+
+/* A diff sent out of the rail, where there is room to read it. */
+.fabry-spec-review {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sidebar);
+}
+
+.fabry-spec-review-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 26px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.fabry-spec-review-t {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.fabry-spec-review-body {
+  padding: 12px 26px 18px;
+}
+
+/* The inspector rail. */
+.fabry-rail {
+  position: relative;
+  flex: none;
+  border-left: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.fabry-rail-resizer {
+  position: absolute;
+  top: 0;
+  left: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 6;
+}
+
+.fabry-rail-resizer:hover,
+.fabry-rail-resizer.dragging {
+  background: var(--info-border);
+}
+
+.fabry-rail-hd {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fabry-rail-for {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.fabry-rail-name {
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fabry-rail-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.fabry-rail-follow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.fabry-rail-pin {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 650;
+  padding: 2px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.fabry-rail-pin.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fabry-rail-held {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--warning-fg);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.fabry-rail-tabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 7px 8px 0;
+}
+
+.fabry-rail-tab {
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 650;
+  padding: 5px 9px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+}
+
+.fabry-rail-tab[aria-selected='true'] {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.fabry-rail-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: none;
+  padding: 11px 12px 16px;
+  background: var(--bg-card);
+}
+
+.fabry-rail-wide {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fabry-rail-wide:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fabry-rail-elsewhere {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.fabry-arch-placeholder {
+  margin: auto;
+  max-width: 420px;
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 24px;
+}
+
+.fabry-arch-placeholder-title {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.fabry-arch-placeholder-sub {
+  font-size: 13px;
+  margin: 0;
+}
+
+/* Docked, inline "Refine wording" bar — pinned at the bottom of whichever panel hosts it
+   (the design-system FabryInput lives here; the diff card rises above it). */
+.fabry-arch-dock {
+  flex: none;
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  padding: 10px 16px;
+}
+
+.fabry-arch-dock-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 6px 2px 0;
+}
+
+.fabry-arch-dock-err {
+  font-size: 12px;
+  color: var(--danger-fg);
+  margin: 0 2px 8px;
+}
+
+.fabry-arch-refine-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.fabry-arch-refine-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.fabry-arch-refine-card-actions .fabry-arch-credit {
+  margin-right: auto;
+}
+
+/* Where localpages prints `solution.md:75 <state-label> …` to its terminal. A trainee
+   of this pane has no terminal, and an unrecognised custom element renders as nothing
+   at all, so the diagnostic has to be on screen. */
+.fabry-arch-doc-warn {
+  position: relative;
+  flex: none;
+  padding: 6px 30px 6px 14px;
+  border-bottom: 1px solid var(--warning-border);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  font-size: 11px;
+  line-height: 1.5;
+  max-height: 96px;
+  overflow: auto;
+}
+
+.fabry-arch-doc-note {
+  font-weight: 600;
+}
+
+.fabry-arch-doc-warn-x {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 0 4px;
+}
+
+.fabry-arch-doc-warn-x:hover {
+  opacity: 1;
+}
+
+.fabry-arch-viewtoggle {
+  display: inline-flex;
+  background: var(--bg-hover);
+  border-radius: 7px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.fabry-arch-viewtoggle button {
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.fabry-arch-viewtoggle button[aria-pressed='true'] {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow);
+}
+
+/* Version history (the [↺ History] tab, in the inspector rail or at document width). The list
+   and the diff scroll independently instead of dragging their host with them; `min-height: 0` on
+   both children is what lets them actually scroll (the same flex rule the MDH Stages pane
+   needed), and height:100% degrades to content height where the host has no definite height, so
+   neither case collapses. */
+.fabry-arch-hist {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.fabry-arch-hist-list {
+  flex: 0 0 208px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  border-right: 1px solid var(--border);
+}
+
+.fabry-arch-hist-row {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  width: 100%;
+  padding: 5px 7px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  text-align: left;
+}
+
+.fabry-arch-hist-btn {
+  border: 0;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.fabry-arch-hist-btn:hover {
+  background: var(--bg-hover);
+}
+
+.fabry-arch-hist-btn.is-selected {
+  background: var(--bg-card);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* The live text is a landmark, not a version: it is never selectable and never restorable. */
+.fabry-arch-hist-current {
+  color: var(--text-secondary);
+  border-bottom: 1px dashed var(--border);
+  border-radius: 0;
+  margin-bottom: 4px;
+  padding-bottom: 7px;
+}
+
+.fabry-arch-hist-icon {
+  flex: none;
+  opacity: 0.8;
+}
+
+.fabry-arch-hist-when {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fabry-arch-hist-what {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fabry-arch-hist-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fabry-arch-hist-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fabry-arch-hist-cmp button {
+  font-size: 11px;
+  padding: 3px 9px;
+}
+
+.fabry-arch-hist-restore {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fabry-arch-hist-restore:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fabry-arch-hist-restore:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fabry-arch-hist-diff {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: none;
+  padding: 9px 12px;
+}
+
+.fabry-arch-hist-note {
+  padding: 12px 14px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.fabry-arch-hist-error {
+  color: var(--danger);
+}
+
+/* Legacy-collection notice: informational, so it borrows the info tint rather than a warning. */
+.fabry-arch-legacy {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  background: var(--info-bg);
+  border-bottom: 1px solid var(--info-border);
+}
+
+/* Prominent verdict banner inside the Check tab — the main analysis surface. */
+.fabry-arch-check-hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.fabry-arch-check-hd.pass {
+  background: var(--success-bg);
+  border-color: var(--success);
+}
+
+.fabry-arch-check-hd.fail {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+}
+
+.fabry-arch-check-hd.uncertain {
+  background: var(--warning-bg);
+  border-color: var(--warning);
+}
+
+.fabry-arch-check-verdict {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.fabry-arch-check-hd.pass .fabry-arch-check-verdict {
+  color: var(--success-fg);
+}
+
+.fabry-arch-check-hd.fail .fabry-arch-check-verdict {
+  color: var(--danger-fg);
+}
+
+.fabry-arch-check-hd.uncertain .fabry-arch-check-verdict {
+  color: var(--warning-fg);
+}
+
+.fabry-arch-check-stale {
+  font-size: 11.5px;
+  color: var(--warning-fg);
+}
+
+.fabry-arch-rerun {
+  margin-left: auto;
+  border: 1px solid var(--accent);
+  background: none;
+  color: var(--accent);
+  border-radius: 7px;
+  padding: 4px 11px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fabry-arch-rerun:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+
+.fabry-arch-rerun:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fabry-arch-check-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.fabry-arch-check-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.fabry-arch-implement-stop {
+  margin-left: auto;
+  border: 1px solid var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border-radius: 8px;
+  padding: 5px 13px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fabry-arch-implement-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 4px 0 0;
+}
+
+/* The rendered-markdown size overrides live in FabryMarkdown.module.css as
+   :global(.fabry-arch-*) .md, co-located with the component. */
+.fabry-arch-credit {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.fabry-arch-evidence {
+  font-size: 12px;
+}
+
+.fabry-arch-viewchat {
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0;
+}
+
+.fabry-arch-viewchat:hover {
+  text-decoration: underline;
+}
+
+.fabry-arch-error {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: 0 4px 8px;
+  font-size: 12px;
+}
+
+.fabry-arch-spin {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+/* Chat/Architect switcher (S1: segmented pill; inactive is full-contrast text
+   so it never disappears against the track). */
+.fabry-mode {
+  display: flex;
+  gap: 3px;
+  background: var(--bg-hover);
+  border-radius: 10px;
+  padding: 3px;
+  margin: 0 4px 8px;
+}
+
+.fabry-mode-opt {
+  flex: 1;
+  border: 0;
+  background: none;
+  border-radius: 8px;
+  padding: 6px 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.fabry-mode-opt:not(.is-on):hover {
+  background: var(--bg-card);
+  color: var(--accent);
+}
+
+.fabry-mode-opt.is-on {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+/* PDF dialog rows (the print/save-as-PDF options). Radios and checkboxes with a secondary
+   line each, because the choices are not self-evident — "Whole specification" vs "This
+   deliverable" and what a contents page or a check verdict means on paper. */
+.fabry-arch-pdf-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 5px 2px;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+
+.fabry-arch-pdf-row input {
+  margin: 2px 0 0;
+  flex: none;
+  cursor: pointer;
+}
+
+.fabry-arch-pdf-row.off,
+.fabry-arch-pdf-row input:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.fabry-arch-pdf-row > span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fabry-arch-pdf-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ── Document outline, nested under the open deliverable (owner, 2026-08-18) ──────────
+   The TOC moved here from inside the document: upstream's in-page `.toc` wants a 1280px
+   column and the pane is ~936px at a 1280px window, so it was hidden in practice. Nesting it
+   under the row it belongs to keeps the sidebar ONE navigation tree instead of two panels
+   competing for the same vertical space. */
+.fabry-arch-outline {
+  display: flex;
+  flex-direction: column;
+  margin: 1px 0 5px;
+  padding-left: 9px;
+  border-left: 1px solid var(--border);
+}
+
+.fabry-arch-outline-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.45;
+  padding: 2px 6px 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fabry-arch-outline-item.level-3 {
+  padding-left: 20px;
+  font-size: 11px;
+}
+
+.fabry-arch-outline-item:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.fabry-arch-outline-item.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── The Assets tab (2026-08-24) ─────────────────────────────────────────────
+   The organization's files, in the inspector rail. Three groups, one row each,
+   actions on hover. The whole panel is the drop target, which is why the
+   dragging state paints the panel rather than a strip inside it. */
+.fabry-arch-asset {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 180px;
+}
+
+.fabry-arch-asset.dragging {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+  background: var(--info-bg);
+}
+
+.fabry-arch-asset-hd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.fabry-arch-asset-count {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.fabry-arch-asset-sp {
+  flex: 1;
+}
+
+.fabry-arch-asset-btn {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fabry-arch-asset-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fabry-arch-asset-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fabry-arch-asset-btn.danger {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.fabry-arch-asset-filter {
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fabry-arch-asset-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fabry-arch-asset-group-t {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 4px 0 2px;
+}
+
+.fabry-arch-asset-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 3px 4px;
+  border-radius: 6px;
+}
+
+.fabry-arch-asset-row:hover {
+  background: var(--bg-hover);
+}
+
+.fabry-arch-asset-ext {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 4px;
+  flex: none;
+}
+
+.fabry-arch-asset-name {
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.fabry-arch-asset-meta,
+.fabry-arch-asset-in {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  flex: none;
+}
+
+.fabry-arch-asset-in {
+  flex-basis: 100%;
+  padding-left: 30px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fabry-arch-asset-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  padding: 1px 6px;
+  flex: none;
+  color: var(--text-secondary);
+  background: var(--bg-code);
+}
+
+.fabry-arch-asset-pill.unused,
+.fabry-arch-asset-pill.reused {
+  color: var(--warning-fg);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+}
+
+.fabry-arch-asset-pill.added {
+  color: var(--success-fg);
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+}
+
+.fabry-arch-asset-pill.failed {
+  color: var(--danger-fg);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+}
+
+/* Revealed on hover, and on keyboard focus — otherwise the actions are
+   unreachable without a pointer. */
+.fabry-arch-asset-acts {
+  display: flex;
+  gap: 2px;
+  flex: none;
+  visibility: hidden;
+}
+
+.fabry-arch-asset-row:hover .fabry-arch-asset-acts,
+.fabry-arch-asset-row:focus-within .fabry-arch-asset-acts {
+  visibility: visible;
+}
+
+.fabry-arch-asset-act {
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.fabry-arch-asset-act:hover {
+  color: var(--accent);
+  background: var(--bg-card);
+}
+
+.fabry-arch-asset-confirm {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 4px 0 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--danger-border);
+  background: var(--danger-bg);
+  border-radius: 6px;
+}
+
+.fabry-arch-asset-confirm-t {
+  flex: 1 1 100%;
+  font-size: 11.5px;
+  color: var(--danger-fg);
+}
+
+.fabry-arch-asset-log {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 22px 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-sidebar);
+}
+
+.fabry-arch-asset-log-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.fabry-arch-asset-log-more {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.fabry-arch-asset-note {
+  position: relative;
+  margin: 0;
+  padding: 6px 22px 6px 8px;
+  font-size: 11.5px;
+  color: var(--info-fg);
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: 6px;
+}
+
+.fabry-arch-asset-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  color: var(--danger-fg);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: 6px;
+}
+
+.fabry-arch-asset-x {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fabry-arch-asset-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}

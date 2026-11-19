@@ -98,7 +98,7 @@ describe('JsonEditor — fill', () => {
   // The class alone does nothing: `.cm-scroller`'s height: 100% only resolves
   // once .cm-editor may shrink below its content, and that rule is the opt-in.
   it('keeps the rule the class depends on', () => {
-    const css = readFileSync('src/console/console.css', 'utf8');
+    const css = readFileSync('src/mdh/legacy.css', 'utf8');
     expect(css).toMatch(/\.json-editor-fill \.cm-editor\s*\{[^}]*min-height:\s*0/);
   });
 });

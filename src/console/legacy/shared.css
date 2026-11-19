@@ -1,0 +1,507 @@
+/* GLOBAL STYLESHEET, TEMPORARY: Console rules whose classes more than one area emits (buttons,
+   inputs, tabs, banners, shared states), split out of the former src/console/console.css.
+   Task 1.3 of the CSS Modules migration moves them into src/ui/ modules and hands rules used by
+   one area back to that area; this file is then deleted. A few single-area rules sit here only
+   because moving them after this file would change which rule wins.
+
+   Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
+   :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
+   their component. Any class added here must contain a hyphen — esbuild's minified CSS Module
+   names never do, so a hyphenated class can never collide with one
+   (tests/css-class-collision-boundary.test.ts).
+
+   build.js concatenates the Console's partials (CONSOLE_GLOBAL_PARTS) into
+   dist/console/console.base.css in a fixed order, so moving a rule to another partial moves it
+   in the cascade. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+.app-root {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.connection-bar {
+  padding: 6px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connection-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+
+.connection-dot.error {
+  background: var(--danger);
+}
+
+.error-banner {
+  padding: 8px 16px;
+  background: var(--danger-bg);
+  border-bottom: 1px solid var(--danger-border);
+  color: var(--danger-fg);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.error-banner > span {
+  flex: 1;
+}
+
+.error-banner .dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.error-banner .dismiss:hover {
+  opacity: 1;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  max-width: 380px;
+}
+
+.empty-state-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.empty-state-body {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+
+.tab {
+  padding: 9px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.placeholder-input {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+/* The name field in the Edit Search Index modal: the name is the resource
+   identity, so it is shown and not editable. */
+.input-locked {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+/* ── Interactive JSON tree ────────────────────── */
+
+.json-tree {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pagination-controls button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+.pagination-controls button:disabled {
+  color: var(--text-secondary);
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn-warning {
+  background: var(--warning);
+  border-color: var(--warning);
+  color: #fff;
+}
+
+.btn-warning:hover {
+  opacity: 0.85;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.btn:hover {
+  background: var(--bg-hover);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition:
+    background 0.1s,
+    color 0.1s;
+}
+
+.icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.icon-btn[aria-pressed='true'] {
+  color: var(--accent);
+}
+
+.input {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.input-hint {
+  font-size: 11px;
+  color: var(--danger);
+  margin-top: 4px;
+}
+
+/* The whole .modal-* system moved to the self-contained CSS Module
+   src/ui/Modal.module.css. Consumers compose modals with its sub-components
+   (ModalBody / ModalActions / ModalMessage / ModalFieldLabel / …). */
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+  background: var(--bg-card);
+}
+
+.btn-danger:disabled:hover {
+  background: var(--danger);
+}
+
+.btn-primary:disabled:hover {
+  background: var(--accent);
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 6px;
+  text-decoration: underline;
+}
+
+.connection-dot.busy {
+  background: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.muted {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.inspector-empty {
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 26px 20px;
+  text-align: center;
+}
+
+.inspector-fold-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.inspector-fold-btn:hover {
+  text-decoration: underline;
+}
+
+.inspector-esec-skel {
+  height: 11px;
+  border-radius: 4px;
+  margin: 7px 0;
+  background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-code) 50%, var(--bg-hover) 75%);
+  background-size: 200% 100%;
+  animation: inspector-shimmer 1.4s infinite;
+}
+
+@keyframes inspector-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.inspector-followup-q {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.inspector-followup-role {
+  display: inline-block;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-right: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.inspector-diag-credit {
+  font-weight: 500;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+/* One section per deliverable. The header carries identity and status only — the rail owns actions. */
+.docs-section + .docs-section {
+  border-top: 1px solid var(--border);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Print — the Architect deliverable document (the localpages port, spec §5).
+   ══════════════════════════════════════════════════════════════════════════════
+   src/docs/theme.css carries upstream's ENTIRE @media print block verbatim (page
+   breaks, exact-colour printing, forced-open <details>, hidden anchors/TOC/modal).
+   What it cannot know about is the app around it, so these rules ADD the shell
+   teardown: without them Cmd-P prints one viewport of Console chrome, because #app is
+   height:100vh and four ancestors are overflow:hidden — a paginated print needs the
+   document to flow, not to sit in a fixed box.
+
+   Everything is scoped with `body:has(.docs-pane)`, so this engages only while a
+   specification is actually on screen; printing MDH, Audit or Chat is untouched.
+
+   Cmd-P prints WHAT IS ON SCREEN, which in Edit mode is the Markdown source — the Edit and
+   Preview columns are separate mounts now (the old pane kept a hidden preview to reveal), so
+   there is nothing to substitute and pretending otherwise would print a document the reader
+   is not looking at. The ⤓ PDF button is the path that always prints the rendered document,
+   in either mode and at any scope. */
+@media print {
+  body:has(.docs-pane) .app-rail,
+  body:has(.docs-pane) .fabry-sidebar,
+  body:has(.docs-pane) .fabry-spec-bar,
+  body:has(.docs-pane) .fabry-arch-doc-warn,
+  body:has(.docs-pane) .fabry-spec-review,
+  body:has(.docs-pane) .fabry-rail,
+  body:has(.docs-pane) .connection-bar,
+  body:has(.docs-pane) .error-banner {
+    display: none !important;
+  }
+
+  /* Unwind the fixed-height flex column and every clipping ancestor between the page
+     and the document, then let the document own the page. */
+  body:has(.docs-pane),
+  body:has(.docs-pane) #app,
+  body:has(.docs-pane) .app-root,
+  body:has(.docs-pane) .fabry-layout,
+  body:has(.docs-pane) .fabry-main,
+  body:has(.docs-pane) .fabry-spec,
+  body:has(.docs-pane) .docs-pane,
+  body:has(.docs-pane) .docs-root {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  /* A section header is sticky on screen; on paper it is a band at the top of its section,
+     and a sticky element inside a flowing document lands unpredictably. */
+  body:has(.docs-pane) .fabry-spec-sec-hd {
+    position: static !important;
+  }
+}

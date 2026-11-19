@@ -1,0 +1,5629 @@
+/* GLOBAL STYLESHEET, TEMPORARY: Dataset Management's rules (src/mdh/), split out of the former
+   src/console/console.css. Deleted by its Phase 2 task of the CSS Modules migration, which moves
+   every rule into a *.module.css beside the component that uses it.
+
+   Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
+   :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
+   their component. Any class added here must contain a hyphen — esbuild's minified CSS Module
+   names never do, so a hyphenated class can never collide with one
+   (tests/css-class-collision-boundary.test.ts).
+
+   build.js concatenates the Console's partials (CONSOLE_GLOBAL_PARTS) into
+   dist/console/console.base.css in a fixed order, so moving a rule to another partial moves it
+   in the cascade. */
+
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 10px 8px;
+}
+
+.sidebar-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.sidebar-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+
+.sidebar-header-actions {
+  display: flex;
+  gap: 2px;
+}
+
+/* Collections name filter — the sidebar's own layout around the shared <FilterInput>; the
+   box itself is owned by src/ui/FilterInput.module.css. */
+.collection-filter {
+  padding: 0 10px 8px;
+}
+
+.collection-filter-empty {
+  padding: 4px 12px 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.collection-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.collection-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  margin: 0 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-radius: var(--radius);
+  transition:
+    background 0.1s,
+    color 0.1s;
+  position: relative;
+}
+
+.collection-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.collection-item.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.collection-item.active:hover {
+  background: var(--accent-hover);
+}
+
+.collection-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* The run a name filter matched. Weight and one step of contrast, nothing more: across
+   ninety rows a heavy bold reads as noise rather than as a hint. On the selected row the
+   colour is inherited, since white-on-accent already has all the contrast there is. */
+.collection-item-hit {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.collection-item.active .collection-item-hit {
+  color: inherit;
+}
+
+.collection-item-actions {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: inherit;
+  padding-left: 4px;
+}
+
+.collection-item:hover .collection-item-actions {
+  opacity: 1;
+}
+
+.collection-item.active .collection-item-actions {
+  opacity: 0.7;
+}
+
+.collection-item.active:hover .collection-item-actions {
+  opacity: 1;
+}
+
+.collection-item.menu-open .collection-item-actions {
+  opacity: 1;
+}
+
+.collection-item.menu-open {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.collection-item.active.menu-open {
+  background: var(--accent-hover);
+  color: #fff;
+}
+
+.collection-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.1s,
+    color 0.1s;
+}
+
+.collection-action-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
+}
+
+.collection-item.active .collection-action-btn {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.collection-item.active .collection-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .collection-action-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.collection-action-menu {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow:
+    var(--shadow),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 140px;
+  z-index: 50;
+  padding: 4px 0;
+}
+
+.sidebar-count {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.sidebar-footer {
+  border-top: 1px solid var(--border);
+  padding: 6px 0;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  margin: 0 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-radius: var(--radius);
+  transition:
+    background 0.1s,
+    color 0.1s;
+}
+
+.sidebar-nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-nav-item.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.sidebar-nav-item.active:hover {
+  background: var(--accent-hover);
+}
+
+.sidebar-resizer {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.sidebar-resizer:hover,
+.sidebar-resizer.dragging {
+  background: var(--accent);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cache-indicator {
+  margin-left: auto;
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+/* Non-error operation notice — same shape/placement as .error-banner. */
+.op-notice-banner {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.op-notice-banner > span {
+  flex: 1;
+}
+
+.op-notice-banner.info {
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border-bottom-color: var(--info-border);
+}
+
+.op-notice-banner.warning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border-bottom-color: var(--warning-border);
+}
+
+.op-notice-banner .dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.op-notice-banner .dismiss:hover {
+  opacity: 1;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    background 0.2s ease;
+}
+
+.loading-overlay-visible {
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .loading-overlay-visible {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.tab-alert {
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+  line-height: 0;
+}
+
+.tab-alert-icon {
+  display: block;
+}
+
+.tab-alert-warning {
+  fill: var(--warning);
+}
+
+.tab-alert-danger {
+  fill: var(--danger);
+}
+
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Data Panel (split: pipeline + records) ───── */
+
+.data-panel-left {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.data-panel-left .json-editor {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.placeholder-container {
+  padding: 8px 0 0;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.placeholder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.placeholder-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.placeholder-annotation-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2px 6px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.placeholder-annotation-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.placeholder-annotation-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.placeholder-annotation-row .input {
+  flex: 1;
+  font-size: 11px;
+  padding: 3px 8px;
+}
+
+.placeholder-annotation-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.placeholder-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placeholder-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.placeholder-type-select {
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.placeholder-warn {
+  flex-shrink: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--warning-fg);
+  cursor: help;
+}
+
+/* ── Pipeline debug ───────────────────────────── */
+
+.pipeline-debug {
+  padding: 8px 0 0;
+  margin-top: 8px;
+  flex-shrink: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.pipeline-debug-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.pipeline-debug-row:hover {
+  background: var(--bg-hover);
+}
+
+.pipeline-debug-num {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  width: 16px;
+  text-align: right;
+}
+
+.pipeline-debug-stage {
+  color: var(--accent);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.pipeline-debug-preview {
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.pipeline-debug-arrow {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.pipeline-debug-count {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--success);
+  min-width: 50px;
+  text-align: right;
+  font-size: 10px;
+}
+
+.pipeline-debug-time {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  font-size: 10px;
+  min-width: 44px;
+  text-align: right;
+  cursor: help;
+}
+
+/* Slow query (>1s end-to-end for this prefix): warn in orange. Full opacity so
+   it stands out from the muted regular timings. */
+.pipeline-debug-time-slow {
+  color: var(--warning);
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* 0th step: the pipeline input (all records before any stage). The italic
+   "input" label distinguishes it from the numbered pipeline stages below. */
+.pipeline-debug-input-row .pipeline-debug-stage {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.pipeline-debug-zero {
+  color: var(--danger);
+}
+
+.pipeline-debug-error {
+  color: var(--danger);
+  font-weight: 600;
+  font-style: normal;
+}
+
+.pipeline-debug-stage-wrap {
+  display: block;
+}
+
+.pipeline-debug-error-detail {
+  margin: 2px 4px 6px 22px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--danger);
+  background: var(--danger-bg, rgba(220, 38, 38, 0.08));
+  border-radius: 0 3px 3px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: default;
+}
+
+.pipeline-debug-error-msg {
+  color: var(--danger);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 4px;
+}
+
+.pipeline-debug-error-hint {
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 10px;
+  font-style: italic;
+}
+
+/* Horizontal carousel of full-JSON document samples. Used by BulkDelete and
+   BulkUpdate. Cards are fixed-width so
+   side-by-side reading is comfortable; the row scrolls horizontally when
+   there are more samples than fit, and each card scrolls vertically when a
+   single document's JSON is taller than the card. */
+.sample-cards {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  overflow-x: auto;
+  align-items: stretch;
+  padding-bottom: 4px;
+}
+
+.sample-card {
+  flex: 0 0 300px;
+  min-width: 300px;
+  max-width: 300px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.sample-card-header {
+  padding: 6px 10px;
+  background: var(--bg-hover);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sample-card-header-meta {
+  display: block;
+  margin-top: 4px;
+  font-weight: normal;
+}
+
+.sample-card-body {
+  padding: 8px 10px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-code);
+  background: var(--bg-code);
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  flex: 1;
+}
+
+.sample-card-danger {
+  border-color: var(--danger-border);
+}
+
+.sample-card-danger .sample-card-header {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.sample-card-diff-from {
+  color: var(--danger);
+}
+
+.sample-card-diff-to {
+  color: var(--success);
+}
+
+.sample-card-diff-opaque {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.sample-card-diff-strike {
+  text-decoration: line-through;
+}
+
+/* Inline diff lines inside a sample-card-body <pre>. The full-width tint
+   sits behind a single JSON line so the eye locks on to changing fields
+   without losing the surrounding doc structure. */
+.sample-card-line-changed {
+  display: block;
+  background: var(--warning-bg);
+  border-radius: 2px;
+}
+
+.sample-card-line-added {
+  display: block;
+  background: var(--success-bg);
+  border-radius: 2px;
+}
+
+.sample-card-line-removed {
+  display: block;
+  background: var(--danger-bg);
+  border-radius: 2px;
+}
+
+.data-panel-resizer {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.data-panel-resizer:hover,
+.data-panel-resizer.dragging {
+  background: var(--accent);
+}
+
+.data-panel-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* A toolbar group shown but inert (e.g. record actions while in the Stages view). */
+/* A toolbar group shown but inert (e.g. record actions while in the Stages view).
+   pointer-events go on the CHILDREN so the group itself still catches hover and can
+   show its `title` tooltip explaining why the actions are unavailable. */
+.toolbar-group-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-group-disabled > * {
+  pointer-events: none;
+}
+
+/* The Search Indexes toolbar stacks a collection-level sync line under its title.
+   These live in the monolith rather than a CSS Module because every class that
+   panel uses is global and lives here, and .toolbar-group directly above is the
+   existing precedent for a .toolbar child. */
+.toolbar-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.toolbar-sync {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar-sync .dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  margin-right: 5px;
+  vertical-align: 1px;
+}
+
+.toolbar-sync .dot-work {
+  background: var(--warning-fg);
+}
+
+.toolbar-sync .spin {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border: 1.5px solid var(--warning-fg);
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: 0;
+  animation: sa-index-spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .index-badge-pending::before,
+  .toolbar-sync .spin {
+    animation: none;
+  }
+}
+
+/* Segmented results-view switch (List / Table / Stages) — one click to switch. */
+.view-seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.view-seg-opt {
+  padding: 4px 9px;
+  font-size: 11px;
+  font-family: inherit;
+  line-height: 1.4;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.view-seg-opt:last-child {
+  border-right: none;
+}
+
+.view-seg-opt:hover {
+  background: var(--bg-hover);
+}
+
+.view-seg-opt.is-on {
+  background: var(--accent);
+  color: #fff;
+}
+
+.view-seg-opt.is-on:hover {
+  background: var(--accent);
+}
+
+.view-seg-opt:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.view-seg-opt:disabled:hover {
+  background: var(--bg-card);
+}
+
+.toolbar-more-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow:
+    var(--shadow),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 160px;
+  z-index: 50;
+  padding: 4px 0;
+}
+
+.download-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.download-progress-text {
+  white-space: nowrap;
+}
+
+.download-cancel-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 0 4px;
+  border-radius: 3px;
+  line-height: 1;
+  transition:
+    color 0.1s,
+    background 0.1s;
+}
+
+.download-cancel-btn:hover {
+  color: var(--danger);
+  background: var(--bg-hover);
+}
+
+.download-bar {
+  width: 80px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.download-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.download-bar-indeterminate {
+  width: 40%;
+  animation: indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+.toolbar-menu-item {
+  display: block;
+  width: 100%;
+  padding: 7px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.toolbar-menu-item:hover {
+  background: var(--bg-hover);
+}
+
+.toolbar-menu-danger {
+  color: var(--danger);
+}
+
+.toolbar-menu-danger:hover {
+  background: var(--danger-bg);
+}
+
+/* ── Record List ──────────────────────────────── */
+
+.record-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+.record-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.record-list-empty p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.record-list-empty-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin-top: 6px !important;
+}
+
+.record-card {
+  margin-bottom: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.record-card-expanded {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.record-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.record-card-header:hover {
+  background: var(--bg-hover);
+}
+
+/* A non-collapsible card (Stages view) has an inert header — no collapse cursor/hover. */
+.record-card-static .record-card-header {
+  cursor: default;
+}
+
+.record-card-static .record-card-header:hover {
+  background: transparent;
+}
+
+.record-chevron {
+  font-size: 9px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+}
+
+.record-summary {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-summary-empty {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* ── Shared card actions (records + indexes) ──── */
+
+.record-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.record-actions button {
+  background: none;
+  border: none;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition:
+    background 0.1s,
+    color 0.1s;
+  color: var(--text-secondary);
+}
+
+.record-actions button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.record-actions .action-copy {
+  color: var(--accent);
+}
+
+.record-actions .action-delete {
+  color: var(--danger);
+}
+
+.record-actions .action-delete:hover {
+  color: var(--danger);
+}
+
+.record-actions .action-edit {
+  color: var(--accent);
+}
+
+/* A card-level statement the reader must not have to expand the card to see —
+   currently "this index failed but the previous build is still serving". Sits on
+   the body's surface so it reads as part of the card, not as a banner. */
+.record-card-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-code);
+  font-size: 11.5px;
+  color: var(--text-primary);
+}
+
+.record-card-notice-text {
+  flex: 1;
+}
+
+.record-card-body {
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-code);
+}
+
+.json-tree-nested {
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+  margin-left: 4px;
+}
+
+.json-tree-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  padding: 1px 0;
+}
+
+.json-tree-key {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 4px;
+  cursor: pointer;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 500;
+  transition:
+    background 0.1s,
+    border-color 0.1s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.json-tree-key:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+/* Read-only key (Stages view): same look as an interactive key, but inert. */
+.json-tree-key-static {
+  cursor: default;
+}
+
+.json-tree-key-static:hover {
+  background: none;
+  border-color: transparent;
+}
+
+.json-tree-key-asc {
+  background: var(--success) !important;
+  color: #fff !important;
+  border-color: var(--success) !important;
+}
+
+.json-tree-key-desc {
+  background: var(--danger) !important;
+  color: #fff !important;
+  border-color: var(--danger) !important;
+}
+
+.json-tree-key-asc:hover {
+  background: var(--success-hover) !important;
+  border-color: var(--success-hover) !important;
+}
+
+.json-tree-key-desc:hover {
+  background: var(--danger-hover) !important;
+  border-color: var(--danger-hover) !important;
+}
+
+.json-tree-sep {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.json-tree-value-oid {
+  color: #8b5cf6;
+}
+
+.json-tree-value-date {
+  color: #0d9488;
+}
+
+@media (prefers-color-scheme: dark) {
+  .json-tree-value-oid {
+    color: #a78bfa;
+  }
+  .json-tree-value-date {
+    color: #5eead4;
+  }
+}
+
+.json-tree-value {
+  color: var(--text-code);
+  word-break: break-word;
+  min-width: 0;
+}
+
+.json-tree-value-clickable {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 3px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left; /* <button> defaults to center — keep long wrapped values left-aligned */
+  transition:
+    background 0.1s,
+    border-color 0.1s;
+}
+
+.json-tree-value-clickable:hover {
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
+
+.json-tree-value-filtered {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+  border-radius: 3px;
+}
+
+.json-tree-value-string {
+  color: var(--success);
+}
+
+.json-tree-value-number {
+  color: var(--warning);
+}
+
+.json-tree-value-bool {
+  color: var(--accent);
+}
+
+.json-tree-value-null {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.json-tree-value-array {
+  color: var(--text-secondary);
+}
+
+.json-tree-toggle {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.json-tree-array-item {
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+  margin-left: 4px;
+  margin-bottom: 2px;
+}
+
+.json-tree-array-index {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+/* Per-row copy button: an icon-only affordance that stays out of the way
+   until the row is hovered, briefly turns green when the value has been
+   copied. */
+.json-tree-copy-btn {
+  /* Always laid out (reserves its slot) but hidden until the row is hovered, so
+     revealing it never reflows / re-wraps the value next to it ("jumps"). */
+  display: inline-flex;
+  align-items: center;
+  visibility: hidden;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 3px;
+  margin-left: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-secondary);
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.json-tree-row:hover > .json-tree-copy-btn {
+  visibility: visible;
+}
+
+.json-tree-copy-btn:hover {
+  opacity: 1;
+  background: var(--bg-hover);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.json-tree-copy-btn-success {
+  visibility: visible !important; /* stay shown briefly after copy, even off-hover */
+  align-items: center;
+  opacity: 1 !important;
+  background: var(--bg-hover) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Brief outline flash for Alt+click on a key or value — gives feedback
+   that the keyboard shortcut wrote to the clipboard, without permanently
+   altering the button's appearance. */
+.json-tree-flash {
+  animation: jsonTreeCopyFlash 700ms ease-out;
+}
+
+@keyframes jsonTreeCopyFlash {
+  0% {
+    box-shadow: 0 0 0 2px var(--text-secondary);
+  }
+  60% {
+    box-shadow: 0 0 0 2px var(--text-secondary);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}
+
+.pagination-hint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.75;
+}
+
+.split-pane-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.pipeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 6px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pipeline-header-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.pipeline-action-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 3px 8px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.pipeline-action-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.pipeline-save-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2px 6px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+
+.pipeline-save-btn:hover {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.pipeline-save-btn-active {
+  color: var(--warning) !important;
+  border-color: var(--warning) !important;
+  cursor: default;
+}
+
+.pipeline-save-inline {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow:
+    var(--shadow),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.pipeline-save-inline .input {
+  width: 180px;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.pipeline-overflow-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.pipeline-overflow-btn.pipeline-action-btn {
+  font-size: 13px;
+  letter-spacing: 1px;
+  line-height: 1;
+  padding: 2px 8px;
+}
+
+.pipeline-write-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+  background: var(--warning-bg);
+  border-bottom: 1px solid var(--warning-border);
+}
+
+.pipeline-write-msg {
+  flex: 1;
+  font-size: 11px;
+  color: var(--warning-fg);
+}
+
+.index-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+.index-badge {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.index-badge-default {
+  background: var(--accent);
+  color: #fff;
+}
+
+.index-badge-unique {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.index-badge-ready {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.index-badge-pending {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+/* A transitional search index is genuinely working — a static badge reads as a
+   stuck one. Only searchIndexDef.statusBadge emits this class, so the spinner
+   cannot leak onto any other badge. */
+.index-badge-pending::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -1px;
+  animation: sa-index-spin 0.7s linear infinite;
+}
+
+@keyframes sa-index-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.index-badge-warning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.index-badge-failed {
+  background: var(--danger);
+  color: #fff;
+}
+
+.index-card-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-meta {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.record-card-failed {
+  border-color: var(--danger);
+  box-shadow: inset 3px 0 0 var(--danger);
+}
+
+.record-card-failed.record-card-expanded {
+  border-color: var(--danger);
+}
+
+@media (prefers-color-scheme: dark) {
+  .index-badge-unique {
+    background: #6d28d9;
+  }
+}
+
+.record-card-body .json-editor {
+  border: none;
+}
+
+.record-card-body .json-editor-compact .cm-editor {
+  max-height: none;
+}
+
+.btn-success {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.btn-success:hover {
+  background: var(--success-hover);
+  border-color: var(--success-hover);
+}
+
+/* This extension's own collections: an expandable group pinned BELOW the customer's list
+   (owner, 2026-08-18). `margin-top: auto` is what pins it — the sidebar is a flex column, so
+   the group sits at the bottom however short the list above it is, instead of floating
+   directly under the last row. */
+.collection-hidden-group {
+  flex: none;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+}
+
+/* `margin-top: auto` parks the group at the foot of the sidebar, which is right when it is a
+   footer under a full list. While filtering it can hold the ONLY match, and three rules then
+   conspire to strand that row ~500px below the box that produced it: the empty main list
+   absorbs the slack as `flex: 1`, and the auto margin pushes the group past it. So when a
+   filter is active AND the main list is empty, the list stops growing and the group loses its
+   margin — with the slack handed to the nav footer instead, which keeps it pinned to the
+   bottom rather than floating up under the group. Only that case changes; a filtered list
+   WITH rows keeps `flex: 1`, since it owns the scroll range. */
+.sidebar-filtering .collection-list.is-empty {
+  flex: none;
+}
+
+.sidebar-filtering .collection-list.is-empty ~ .collection-hidden-group {
+  margin-top: 0;
+}
+
+.sidebar-filtering .collection-list.is-empty ~ .sidebar-footer {
+  margin-top: auto;
+}
+
+/* Inert while filtering (the group is force-open there), so it should not read as clickable.
+   Kept at full opacity: it is still the label for rows that are on screen. */
+.collection-hidden-toggle:disabled {
+  cursor: default;
+}
+
+.collection-hidden-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 12px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: left;
+  letter-spacing: 0.02em;
+}
+
+.collection-hidden-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.collection-hidden-caret {
+  flex: none;
+  width: 9px;
+  opacity: 0.8;
+}
+
+.collection-hidden-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Open: the rows scroll on their own rather than growing the group without bound, and are
+   tinted so it is obvious these are not the customer's datasets. */
+.collection-hidden-group.open > .collection-list {
+  max-height: 176px;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  background: var(--bg-hover);
+}
+
+.btn-success:disabled:hover {
+  background: var(--success);
+}
+
+.file-input-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.file-input-area:hover {
+  border-color: var(--accent);
+}
+
+.file-input-area.drag-over {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.file-input-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.file-input-info {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  margin-top: 6px;
+}
+
+/* .modal-field-label → ModalFieldLabel in src/ui/Modal.module.css */
+
+/* --- Import from JSON file wizard --- */
+
+/* Shape-validation blocking error — reads unmistakably as an error (danger palette). */
+.import-error {
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border: 1px solid var(--danger-border);
+  border-left: 3px solid var(--danger);
+}
+
+.import-error-head {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.import-error-head strong {
+  color: var(--danger-fg);
+}
+
+.import-error-icon {
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1.35;
+  flex: none;
+}
+
+.import-error code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-card);
+  color: var(--danger-fg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--danger-border);
+}
+
+.import-error-hint {
+  margin-top: 8px;
+  opacity: 0.85;
+}
+
+/* The ledger sits on its own neutral panel inside the red card: field paths and
+   types then read as data in normal text colour, which frees colour to mark the
+   one thing that matters — a row where the two sides actually disagree. */
+.import-ledger-panel {
+  margin-top: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.import-ledger-scroll {
+  overflow-x: auto;
+}
+
+.import-ledger {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+.import-ledger th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--danger-border);
+  white-space: nowrap;
+}
+
+.import-ledger td {
+  padding: 4px 10px;
+  vertical-align: top;
+  white-space: nowrap;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.import-ledger tr:last-child td {
+  border-bottom: 0;
+}
+
+/* A root heading — shown only when more than one row shares that root, i.e. only
+   when there is something to group ("key" over its leaves) — never for a lone finding. */
+.import-ledger-group-cell {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding-top: 8px;
+}
+
+.import-ledger-cell-field {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.import-ledger-cell-field-indent {
+  padding-left: 22px;
+}
+
+.import-ledger-cell-collection,
+.import-ledger-cell-file {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+/* Colour only where the two sides genuinely disagree — a type row. */
+.import-ledger-type-collection {
+  color: var(--success);
+}
+
+.import-ledger-type-file {
+  color: var(--danger);
+}
+
+/* Flags a whitespace row's two cells as SPELLINGS, not types, so they are never
+   misread as the type columns every other row uses. */
+.import-ledger-tag {
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+/* The "N fields arrived flat" coalescing line, inside the panel under a rule. */
+.import-ledger-flat {
+  padding: 7px 10px;
+  border-top: 1px solid var(--danger-border);
+  font-size: 11.5px;
+  color: var(--text-primary);
+}
+
+/* .import-error code (above) chips EVERY <code> in the red card — a red-bordered
+   background pill, meant for the OLD prose caption list. Inside the neutral
+   ledger panel that chip would fight the plain-text/colour treatment this panel
+   exists for, so <code> here is reset to inherit the cell's own font and colour
+   (including the disagreement colours above) instead. */
+.import-ledger-panel code {
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* The "checked against N records" context line inside a status panel — muted,
+   inherits the panel's palette so it never reads as a different severity. */
+.import-shape-note {
+  margin-top: 4px;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+/* Neutral shape-block states (loading / empty collection) — NOT .input-hint,
+   which is danger-red by default. */
+.import-shape-neutral {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.import-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.import-progress-track {
+  height: 8px;
+  background: var(--bg-hover);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.import-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.18s ease-out;
+}
+
+.import-progress-counts {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.import-result-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.import-result-header.success {
+  color: var(--success);
+}
+
+.import-result-header.partial {
+  color: var(--warning, var(--danger));
+}
+
+.import-result-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.import-result-filename {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.import-result-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.import-result-list code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-hover);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.import-failure-list {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.import-failure-list code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--bg-hover);
+  padding: 1px 3px;
+  border-radius: 2px;
+  color: var(--danger);
+}
+
+/* CSV import — Configure stage */
+/* (The wider-card overrides for .import-wizard/.export-wizard/.agent-chat moved
+   into src/ui/Modal.module.css as .card:has(:global(...)).) */
+/* AI run-trace detail modal — a touch wider so candidate pipelines breathe. */
+
+/* ── In-view "Stages" debug view (a RecordList results-view mode) ──────────── */
+/* Fills the right results pane; the editor stays visible (no modal/overlay).
+   overscroll-behavior: none prevents BOTH the rubber-band bounce and scroll-
+   chaining on the nested scroll regions (contain only stops chaining, not the
+   local bounce). */
+.pipeline-inspect {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  /* Shared width for the stage-definition column AND each record card, so the
+     query box lines up with the records below/beside it. */
+  --stage-card-w: 300px;
+  /* Height of the records band inside every stage — the ONE fixed dimension in a
+     stage section (the section itself is content-sized, see below). Records get
+     this much room whether or not "Definitions" is on. */
+  --stage-records-h: 324px;
+}
+
+/* Options strip pinned at the top of the Stages pane (records-per-stage + auto-scroll). */
+.pipeline-inspect-opts {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 12px;
+}
+
+.pipeline-inspect-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pipeline-inspect-opt-label {
+  color: var(--text-secondary);
+}
+
+.pipeline-inspect-autoscroll {
+  cursor: pointer;
+  user-select: none;
+}
+
+.pipeline-inspect-autoscroll input {
+  cursor: pointer;
+  margin: 0;
+}
+
+.pipeline-inspect-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* A stage section is CONTENT-SIZED, deliberately not a fixed height: the records
+   band below is what's pinned (--stage-records-h), so an opt-in stage-definition
+   block ADDS its own height on top instead of stealing from the records. (It was
+   a flat 360px, which left a capped 160px definition just 108px of card JSON —
+   measured — with the records rendered uselessly small.) A section is therefore
+   360px with no definition, ~427px with a 3-line one, 520px with a capped one, and
+   a header-only 36px when the stage is disabled. flex-shrink: 0 keeps the sections
+   at their natural height inside the scrolling column. */
+.pipeline-inspect-section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.12s;
+}
+
+.pipeline-inspect-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-hover);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* ── The SOURCE card (was "stage 0 / input") ─────────────────────────────────
+   A MongoDB pipeline has no stage zero, but the old rendering gave the input the
+   same numbered badge, the same solid card and the same rhythm as stages 1…N, so
+   it read as one of them. Three cues now say otherwise, and they are meant to be
+   read together: DASHED and unfilled (a different class of object, legible before
+   any word is), UNNUMBERED (the numbered list starts at 1), and COLLAPSED by
+   default with an explicit divider beneath it (spatially outside the pipeline).
+   Deliberately NOT dimmed with opacity the way .pipeline-inspect-disabled is —
+   that means "did not run", which is the wrong idea entirely. */
+.pipeline-inspect-source {
+  border-style: dashed;
+  background: transparent;
+}
+
+.pipeline-inspect-source-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pipeline-inspect-source-head:hover {
+  background: var(--bg-hover);
+}
+
+.pipeline-inspect-source-head:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.pipeline-inspect-source-chev {
+  color: var(--text-secondary);
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.pipeline-inspect-source-cap {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.pipeline-inspect-source-name {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Marks where the pipeline actually begins. A rule rather than more whitespace:
+   the boundary is stated, not left to be inferred from spacing. */
+.pipeline-inspect-start {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin: -2px 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.pipeline-inspect-start::before,
+.pipeline-inspect-start::after {
+  content: '';
+  height: 1px;
+  background: var(--border);
+  flex: 1;
+}
+
+/* Mr. Fabry explaining an empty stage, inside that stage's own body. Uses the
+   shared Inspector Diagnosis identity (--diag-*) so every Fabry surface in the
+   extension reads as the same thing: purple-tinted panel, star mark, credited
+   and hedged in the footer. Sits below the "No documents at this stage" line. */
+/* An empty stage has no records to size, so the fixed band would be 324px of
+   nothing — a wall of whitespace under "No documents at this stage", and above
+   any explanation. Let it hug its content instead: the band exists to keep
+   RECORDS uniform, and there are none.
+
+   COMPOUND selector on purpose. `.pipeline-inspect-body` sets the fixed height
+   ~65 lines BELOW this, and at equal specificity the later rule wins — so the
+   single-class version of this rule silently did nothing. Matching both classes
+   (0,2,0) makes it independent of where either rule sits in the file. jsdom has
+   no layout engine, so no unit test can catch that regressing; the selector
+   carrying its own weight is the guard. */
+.pipeline-inspect-body.pipeline-inspect-body-empty {
+  height: auto;
+}
+
+.stage-explain {
+  /* A SECTION child, not a child of .pipeline-inspect-output — that is a
+     horizontal flex row of record cards, so a panel inside it becomes a
+     card-sized sibling BESIDE the message instead of a full-width block under
+     it. Margins here line up with the body's 10px padding. */
+  margin: 0 10px 10px;
+  flex-shrink: 0;
+  /* No inner scroll: the answer is short by construction (one sentence, up to
+     three bullets, one next step) and a nested scroller inside an already
+     scrolling pane is worse than a slightly taller section — you cannot see at a
+     glance that there is more, and the wheel fights over which region moves. The
+     section is content-sized, so it simply grows. */
+  background: linear-gradient(180deg, var(--diag-grad-a), var(--diag-grad-b));
+  border: 1px solid var(--diag-border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.stage-explain-hd {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--diag-fg);
+  margin-bottom: 7px;
+}
+
+.stage-explain-load {
+  margin-left: auto;
+  font-weight: 400;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.stage-explain-ft {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--diag-border);
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.stage-explain-quiet {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.pipeline-inspect-num {
+  color: var(--text-secondary);
+}
+
+.pipeline-inspect-key {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Muted caption that explains a stage (used on stage 0 / input). */
+.pipeline-inspect-hint {
+  color: var(--text-secondary);
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.pipeline-inspect-count {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.pipeline-inspect-zero {
+  color: var(--danger);
+}
+
+.pipeline-inspect-time {
+  color: var(--text-secondary);
+  opacity: 0.7;
+  min-width: 46px;
+  text-align: right;
+}
+
+.pipeline-inspect-time-slow {
+  color: var(--warning);
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* Opt-in read-only block under an active stage's header: the stage's own
+   definition with variables substituted (as sent to the DS API). Mono code
+   block mirroring .inspector-code-block; capped + scrollable — the cap is what
+   bounds how far a huge stage can grow its section (a 40-line $lookup would
+   otherwise leave one stage filling the pane), never what shrinks the records.
+   overscroll-behavior-x: none (NOT the all-axes shorthand) stops the horizontal
+   rubber-band on long lines without blocking vertical scroll-chaining — once the
+   block reaches its top/bottom the wheel chains up to the stage list, so the page
+   keeps scrolling when the mouse is over the block. */
+.pipeline-inspect-stagedef {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  background: var(--bg-code);
+  color: var(--text-code);
+  border-bottom: 1px solid var(--border);
+  max-height: 160px;
+  overflow: auto;
+  overscroll-behavior-x: none;
+  white-space: pre;
+}
+
+/* Records span the full section width (the per-stage query box was removed —
+   hover a stage to draw a connector line to its code in the pipeline editor), and
+   this band carries the section's fixed height rather than taking whatever the
+   header + definition leave over — so its height, and every card's, is identical
+   with Definitions on and off. A DEFINITE height here is what keeps the
+   minmax(0, 1fr) row resolvable, which is what lets each card stretch to the band
+   and scroll its own JSON. */
+.pipeline-inspect-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  height: var(--stage-records-h);
+  flex: none;
+}
+
+/* Records sit side-by-side as fixed-width cards (stages stay stacked above).
+   The row scrolls horizontally when there are more docs than fit; each card
+   scrolls vertically when its JSON is taller than the row. */
+/* The records row scrolls horizontally; a vertical wheel passes through to the
+   stage list. overscroll-behavior-x: none (NOT the all-axes shorthand) stops the
+   horizontal rubber-band without blocking vertical scroll-chaining. A record
+   taller than the stage band scrolls within itself (max-height + overflow-y:
+   auto) and, once at its top/bottom, chains the wheel up to the list (default
+   overscroll-behavior on the card = chaining, so the page keeps scrolling when the
+   mouse is over a record — the macOS vertical rubber-band is the unavoidable cost
+   of that chaining). A record that fits chains immediately, so the list always
+   scrolls when there's nothing left to scroll. */
+.pipeline-inspect-output {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
+  min-height: 0;
+  padding-bottom: 4px;
+  overscroll-behavior-x: none;
+}
+
+/* Cards fill the section height even when the record is short: the card becomes a
+   flex column (header pinned) whose body grows to fill the row and scrolls when the
+   JSON is taller than the row. Collapsed cards (header only) hug the top instead. */
+.pipeline-inspect-output > .record-card {
+  flex: 0 0 var(--stage-card-w);
+  max-width: var(--stage-card-w);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pipeline-inspect-output > .record-card:not(.record-card-expanded) {
+  align-self: flex-start;
+}
+
+.pipeline-inspect-output > .record-card > .record-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Header-only (no body, no definition) — it needs no height override now that a
+   section is content-sized. */
+.pipeline-inspect-disabled {
+  opacity: 0.55;
+}
+
+.pipeline-inspect-disabled-badge {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.pipeline-inspect-error {
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.pipeline-inspect-loading {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* An empty stage is the single most important thing this view can tell you, and
+   since the records band now collapses for it there is no longer a wall of
+   whitespace making it obvious — muted grey italic was easy to scroll straight
+   past. WARNING, not danger: --danger is this pane's colour for a request that
+   FAILED (.pipeline-inspect-error), whereas this query ran fine and matched
+   nothing. Keeping them apart is what lets a real error still stand out.
+   `flex: 1` because the parent is a horizontal flex row of record cards, so
+   without it the band would hug its text instead of spanning the stage. */
+.pipeline-inspect-empty {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border: 1px solid var(--warning-border);
+  font-size: 12px;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.pipeline-inspect-empty-icon {
+  flex-shrink: 0;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.pipeline-inspect-highlight {
+  animation: pipeline-inspect-flash 1.5s ease-out;
+}
+
+/* Tint the body + turn the section's own border accent (not an inset shadow,
+   which the header's opaque background would paint over) so the highlight wraps
+   the header too. */
+@keyframes pipeline-inspect-flash {
+  0%,
+  55% {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  100% {
+    border-color: var(--border);
+    background: transparent;
+  }
+}
+
+/* Hovering a stage in the Stages view draws a connector to its code in the editor;
+   the section's border turns accent (wraps the header, unlike an inset shadow). */
+.pipeline-inspect-section:hover {
+  border-color: var(--accent);
+}
+
+/* The same marking, for when the pointer is in the EDITOR rather than on the
+   section — :hover cannot fire in that direction, so StageLinkOverlay sets this
+   attribute on the link's target instead. Identical treatment on purpose: it is
+   the same "this is the linked stage" state, reached from the other end. */
+.pipeline-inspect-section[data-linked] {
+  border-color: var(--accent);
+}
+
+.stage-link-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.stage-link-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+  opacity: 0.7;
+  stroke-dasharray: 6 4; /* dashed so the connector reads as a subtle guide line */
+}
+
+.stage-link-dot {
+  fill: var(--accent);
+}
+
+/* The far end of the tether when the stage's section is scrolled out of the
+   Stages pane: the line stops at the pane's edge and this arrow points the way
+   (see computeStageLink's `edge`). Same accent as the dot it replaces — it marks
+   the same link, just a boundary rather than the target. */
+.stage-link-arrow {
+  fill: var(--accent);
+}
+
+/* The editor end of that same link: a tinted band behind the hovered stage's
+   lines, so the connector lands on something marked rather than on bare code.
+   Applied per LINE (see linkedStageField in JsonEditor.jsx) so it spans the full
+   width and survives wrapped lines. --info-bg is the accent-paired tint in this
+   stylesheet — there is no --accent-bg — and it is defined in both the light
+   :root block and the prefers-color-scheme: dark override, so the band follows
+   the theme. It is a fill, not a border, precisely so it does not read as a
+   second copy of the accent border the hovered section already gets above.
+
+   The band is a PSEUDO-ELEMENT under a negative z-index rather than a
+   `background` on the line, and that is the whole point of the rule below.
+   drawSelection() (in JsonEditor's aggregateSetup) paints the text selection as
+   .cm-selectionBackground rects inside .cm-selectionLayer — an absolutely
+   positioned layer whose inline z-index is -2, i.e. BELOW the in-flow line
+   backgrounds of .cm-content. A background on .cm-line therefore covered the
+   selection completely (measured in Chrome: pixels inside the selection read
+   exactly --info-bg, in both themes), and drawSelection additionally forces
+   `.cm-line ::selection { background: transparent !important }`, so there is no
+   native highlight left to fall back on — selecting the pipeline to copy it
+   showed nothing at all inside the banded stage. At z-index -3 the band paints
+   under that layer instead: the selection reads at full strength while the band
+   stays pixel-identical to the old background (verified by screenshot diff).
+   .cm-line is not a stacking context (z-index auto), so -3 resolves against
+   .cm-scroller, where CodeMirror's layers live.
+
+   One deliberate exception: a disabled stage's lines also carry
+   .pipeline-stage-disabled-line, whose `opacity: 0.55` makes each of those lines
+   its own stacking context and so keeps the pseudo-element above the selection
+   layer. That same opacity already composites the selection through the band at
+   45%, which is why disabled stages were never part of the problem and need no
+   second mechanism here. */
+.cm-linked-stage {
+  position: relative;
+}
+
+.cm-linked-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background: var(--info-bg);
+  pointer-events: none;
+}
+
+/* Segmented pill group */
+.csv-seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.csv-seg-opt {
+  padding: 4px 9px;
+  font-size: 11px;
+  font-family: inherit;
+  line-height: 1.4;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.csv-seg-opt:last-child {
+  border-right: none;
+}
+
+.csv-seg-opt.is-on {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Tab-bar variant of the segmented control, for the top-level Import source
+   (File/Clipboard) and mode (Insert/Update/Replace) switchers. Left-aligned tabs
+   with an accent underline — reads as intentional tabs, not a cramped pill. */
+.seg-tabs {
+  display: flex;
+  gap: 4px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  overflow: visible;
+}
+
+.seg-tabs .csv-seg-opt {
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 7px 14px;
+  font-size: 12px;
+  border-radius: 0;
+}
+
+.seg-tabs .csv-seg-opt:hover:not(.is-on) {
+  color: var(--text-primary);
+}
+
+.seg-tabs .csv-seg-opt.is-on {
+  background: transparent;
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* Quiet variant: no frame, and the selected option is a card-coloured chip
+   rather than an accent fill, for a switch that sits inside dense content. */
+.seg-quiet {
+  gap: 2px;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.seg-quiet .csv-seg-opt {
+  border: none;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: none;
+  color: var(--text-secondary);
+}
+
+.seg-quiet .csv-seg-opt.is-on {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.seg-quiet .csv-seg-opt:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.import-steps {
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.import-steps ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.import-steps strong {
+  color: var(--text-primary);
+}
+
+.import-steps code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-hover);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--text-primary);
+}
+
+/* Plan summary (shared import/export): one-line outcome + Details expander */
+.plan-summary {
+  margin-top: 12px;
+}
+
+.plan-summary-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.plan-summary-text {
+  flex: 1;
+}
+
+.plan-summary-text code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-hover);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--text-primary);
+}
+
+.plan-summary-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.plan-summary-toggle:hover {
+  text-decoration: underline;
+}
+
+.plan-summary .import-steps {
+  margin-top: 8px;
+}
+
+/* Import Decide screen: parsing options shown inline (no summary/toggle). */
+.parse-strip {
+  margin-bottom: 8px;
+}
+
+/* Shape status lines (silent pass, loud fail) */
+.import-shape-line {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.import-shape-line.ok {
+  color: var(--success);
+}
+
+/* Shape-mismatch acknowledgement (kept visible; ticking it enables import). */
+.import-error-ack {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.import-error-ack input {
+  cursor: pointer;
+}
+
+.match-key-picker {
+  position: relative;
+  margin-top: 4px;
+}
+
+.match-key-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-card);
+}
+
+.match-key-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.match-key-chip-x {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.match-key-chip-x:hover {
+  color: var(--danger);
+}
+
+.match-key-input {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  padding: 2px;
+}
+
+.match-key-suggest {
+  position: fixed;
+  z-index: 250;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-card);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.match-key-suggest-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.match-key-suggest-item:hover {
+  background: var(--bg-hover);
+}
+
+.match-key-suggest-item.active {
+  background: var(--bg-hover);
+}
+
+/* Toggle switch */
+.csv-switch {
+  position: relative;
+  width: 30px;
+  height: 18px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.csv-switch.is-on {
+  background: var(--accent);
+}
+
+.csv-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: left 0.15s;
+}
+
+.csv-switch.is-on .csv-switch-knob {
+  left: 14px;
+}
+
+/* Worksheet-name dropdown (XLSX Configure stage) — sized to fit a sheet name,
+   unlike the fixed 44px single-char .csv-chip. */
+.xlsx-sheet-select {
+  min-width: 120px;
+  max-width: 240px;
+  font-family: inherit;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 6px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+/* Inline hint text, reused in the Advanced panel */
+.csv-opt-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 2px 0 0 0;
+}
+
+/* Configure-stage toolbar + advanced panel */
+.csv-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 10px 0 0;
+  padding: 9px 11px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+
+.csv-tb-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.csv-tb-k {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.csv-adv-toggle {
+  margin-left: auto;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.csv-advanced {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 20px;
+  margin-top: 9px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 9px;
+}
+
+.csv-adv-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.csv-adv-item .csv-opt-hint {
+  margin: 0;
+}
+
+/* CSV import — live preview */
+.csv-preview {
+  margin-top: 12px;
+}
+
+.csv-preview-caption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.csv-preview-legend {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.csv-legend-num {
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.csv-legend-null {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.csv-preview-empty {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 8px 0;
+}
+
+.csv-preview-scroll {
+  max-height: 440px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.csv-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.csv-preview-table th,
+.csv-preview-table td {
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.csv-preview-table th:last-child,
+.csv-preview-table td:last-child {
+  border-right: none;
+}
+
+.csv-preview-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  font-family: var(--font-mono);
+}
+
+.csv-cell-string {
+  color: var(--text-primary, inherit);
+}
+
+.csv-cell-number {
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.csv-cell-bool {
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.csv-cell-null {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.csv-cell-missing {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.csv-cell-empty {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.csv-legend-str {
+  color: var(--text-primary);
+}
+
+.csv-warning {
+  font-size: 12px;
+  color: var(--warning);
+  margin-top: 6px;
+}
+
+.csv-error {
+  font-size: 13px;
+  color: var(--danger);
+  margin: 10px 0;
+}
+
+/* CSV export — live preview */
+.csv-export-preview {
+  margin: 10px 0;
+}
+
+.csv-export-preview-caption {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.csv-export-preview-note {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 8px 0;
+}
+
+.csv-export-preview-text {
+  margin: 0;
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  color: var(--text-primary);
+}
+
+.op-status-badge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.op-status-badge.running {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.op-status-badge.finished {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.op-status-badge.failed {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+/* ── Uploads table ─────────────────────────────── */
+
+.uploads-panel {
+  background: var(--bg-card);
+}
+
+.uploads-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  font-size: 11px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+
+.uploads-stat-chip {
+  --chip-tone: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.uploads-stat-chip:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.uploads-stat-chip b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.uploads-stat-chip[class*='tone-']::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--chip-tone);
+}
+
+.uploads-stat-chip.tone-success {
+  --chip-tone: var(--success);
+}
+
+.uploads-stat-chip.tone-danger {
+  --chip-tone: var(--danger);
+}
+
+.uploads-stat-chip.tone-warning {
+  --chip-tone: var(--warning);
+}
+
+.uploads-stat-chip.active {
+  background: color-mix(in srgb, var(--chip-tone) 14%, transparent);
+  border-color: color-mix(in srgb, var(--chip-tone) 48%, transparent);
+  color: var(--chip-tone);
+}
+
+.uploads-stat-chip.active b {
+  color: var(--chip-tone);
+}
+
+.uploads-stat-chip.active:hover {
+  background: color-mix(in srgb, var(--chip-tone) 22%, transparent);
+  border-color: color-mix(in srgb, var(--chip-tone) 60%, transparent);
+}
+
+.uploads-stat-of {
+  font-weight: 400;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+
+.uploads-sparkline-wrap {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 2px 2px 10px;
+  border-left: 1px solid var(--border);
+}
+
+.uploads-sparkline-host {
+  position: relative;
+  line-height: 0;
+}
+
+.uploads-sparkline {
+  display: block;
+  shape-rendering: crispEdges;
+}
+
+.uploads-sparkline-tip {
+  position: absolute;
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  z-index: 10;
+}
+
+.uploads-dataset-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.uploads-dataset-link:hover {
+  text-decoration: underline;
+}
+
+.uploads-error-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.uploads-error-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.uploads-error-text-msg {
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.uploads-error-text-msg--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.uploads-error-toggle {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--danger);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.uploads-error-toggle:hover {
+  opacity: 1;
+}
+
+.uploads-error-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@keyframes ops-value-flash {
+  0% {
+    background: rgba(66, 112, 219, 0.55);
+    color: #fff;
+  }
+  40% {
+    background: rgba(66, 112, 219, 0.25);
+    color: inherit;
+  }
+  100% {
+    background: transparent;
+    color: inherit;
+  }
+}
+
+.flash-value {
+  display: inline-block;
+  padding: 0 3px;
+  border-radius: 3px;
+  animation: ops-value-flash 1.1s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flash-value {
+    animation: none;
+  }
+}
+
+.uploads-row-group {
+  cursor: pointer;
+}
+
+.uploads-group-count {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-radius: 3px;
+  margin-left: 6px;
+}
+
+.uploads-row-failed .uploads-group-count {
+  background: rgba(239, 68, 68, 0.18);
+  color: var(--danger);
+}
+
+/* Sub-rows: status badge is indented past a ↳ ("return-then-right") glyph
+   in the gutter, so children visibly hang under their parent group row. */
+.uploads-row-sub td {
+  background: color-mix(in srgb, var(--bg-code) 35%, var(--bg-card));
+}
+
+/* Selectors qualified with `tr` to outrank `.uploads-table td:first-child`'s
+   `padding-left: 12px` — equal-specificity ties resolve to source order, and
+   the table-wide rule sits later in the file. */
+tr.uploads-row-sub td:first-child {
+  position: relative;
+  padding-left: 32px;
+  box-shadow: inset 2px 0 0 var(--border);
+}
+
+tr.uploads-row-sub:not(.uploads-row-error) td:first-child::before {
+  content: '↳';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.uploads-row-failed tr.uploads-row-sub td {
+  background: rgba(239, 68, 68, 0.03);
+}
+
+.uploads-row-failed tr.uploads-row-sub td:first-child {
+  box-shadow: inset 2px 0 0 rgba(239, 68, 68, 0.35);
+}
+
+.uploads-row-failed tr.uploads-row-sub:not(.uploads-row-error) td:first-child::before {
+  color: rgba(239, 68, 68, 0.7);
+}
+
+.uploads-new-float {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  z-index: 2;
+  transition:
+    background 0.1s,
+    transform 0.1s,
+    box-shadow 0.1s;
+}
+
+.uploads-new-float:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.uploads-table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+
+.uploads-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  table-layout: fixed;
+}
+
+.uploads-table th {
+  text-align: left;
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--text-secondary);
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 1;
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.uploads-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-light, var(--border));
+}
+
+.uploads-table th:first-child,
+.uploads-table td:first-child {
+  padding-left: 12px;
+}
+
+.uploads-table th:last-child,
+.uploads-table td:last-child {
+  padding-right: 12px;
+}
+
+.uploads-table tbody:hover tr {
+  background: color-mix(in srgb, var(--bg-hover) 35%, var(--bg-card));
+}
+
+.uploads-table .col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 7px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 2;
+  background: transparent;
+  transition: background-color 80ms ease-in-out;
+}
+
+.uploads-table .col-resizer:hover {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.uploads-table .col-resizer.dragging {
+  background: var(--accent);
+}
+
+.uploads-table th:last-child .col-resizer {
+  display: none;
+}
+
+.uploads-cell-dataset {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.uploads-cell-file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+tbody.uploads-row-failed tr {
+  background: rgba(239, 68, 68, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  tbody.uploads-row-failed tr {
+    background: rgba(239, 68, 68, 0.08);
+  }
+}
+
+.uploads-row-has-error td {
+  border-bottom: none;
+}
+
+.uploads-row-error td {
+  padding: 0 12px 8px;
+  font-size: 11px;
+  color: var(--danger);
+  font-family: var(--font-mono);
+  white-space: normal;
+  word-break: break-word;
+  border-bottom: 1px solid var(--border-light, var(--border));
+}
+
+/* Width only. The Operation Logs filter is a fixed box in a toolbar, while the sidebar one
+   fills its column; everything else about both boxes — height, font, states, the clear
+   button — is owned by src/ui/FilterInput.module.css, which they now render through. */
+.uploads-ops-filter {
+  width: 280px;
+}
+
+/* ── JSON Editor (CodeMirror wrapper) ─────────── */
+
+.json-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.json-editor .cm-editor {
+  flex: 1;
+}
+
+.json-editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+.json-editor-invalid {
+  border-color: var(--danger);
+}
+
+.json-editor-compact {
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--radius);
+}
+
+.json-editor-compact .cm-editor {
+  max-height: 120px;
+}
+
+/* `fill`: let the editor resolve to the height its container was GIVEN rather than
+   growing to fit the document, so CodeMirror's own `.cm-scroller` owns the
+   overflow. The generic rule above deliberately omits `min-height: 0` — without
+   it `.cm-scroller`'s `height: 100%` never resolves and the outer .json-editor is
+   the scroller (JsonEditor's stage-scroll code depends on that in the Stages
+   layout), so this is an opt-in rather than a change to every consumer. */
+.json-editor-fill .cm-editor {
+  min-height: 0;
+}
+
+.json-editor-error {
+  font-size: 11px;
+  color: var(--danger);
+  padding: 2px 10px 4px;
+}
+
+.json-editor-error:empty {
+  display: none;
+}
+
+/* ── Query history panel ─────────────────────── */
+
+.query-history-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow:
+    var(--shadow),
+    0 8px 24px rgba(0, 0, 0, 0.12);
+  width: 480px;
+  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.query-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+
+.library-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.library-tab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  margin-bottom: -1px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  transition:
+    color 0.1s,
+    border-color 0.1s;
+}
+
+.library-tab:hover {
+  color: var(--text-primary);
+}
+
+.library-tab-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.query-history-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.query-history-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.query-history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.query-history-item:last-child {
+  border-bottom: none;
+}
+
+.query-history-item:hover {
+  background: var(--bg-hover);
+}
+
+.query-history-item-info {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.query-history-collection {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-bottom: 2px;
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
+.query-history-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.query-history-preview {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.query-history-time {
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.query-history-unsave-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--warning);
+  font-size: 14px;
+  padding: 0 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.1s;
+}
+
+.query-history-unsave-btn:hover {
+  color: var(--danger);
+}
+
+.query-history-variables {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.query-history-item-current {
+  border-left: 2px solid var(--accent);
+}
+
+.query-history-item-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* ── Stats Panel ─────────────────────────────── */
+
+.stats-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.stats-progress-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.stats-loading-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.stats-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stats-empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* States what happened rather than warning about it, so it carries the info
+   token family: 7.5:1 in both themes, where --text-secondary on --bg-card
+   measures 4.21:1 at this size. */
+.stats-note {
+  font-size: 11px;
+  color: var(--info-fg);
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+/* Overview */
+
+.stats-overview-grid {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.stats-overview-card {
+  flex: 1;
+  text-align: center;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-metric-value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stats-metric-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Tables */
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 4px 8px;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.stats-table th {
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.stats-table td {
+  border-bottom: 1px solid var(--border);
+}
+
+.stats-table tr:last-child td {
+  border-bottom: none;
+}
+
+.stats-field-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.stats-field-parent {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.stats-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.stats-dist-special {
+  font-style: italic;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+.stats-dist-object {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+/* ── Stats Visual Enhancements ──────────────────── */
+
+@keyframes stats-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Zebra striping & hover */
+.stats-table tbody tr:nth-child(even) td {
+  background: rgba(128, 128, 128, 0.03);
+}
+
+.stats-table tbody tr:hover td {
+  background: rgba(128, 128, 128, 0.07);
+}
+
+@media (prefers-color-scheme: dark) {
+  .stats-table tbody tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .stats-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Health ring */
+
+/* Coverage bars */
+.stats-coverage-cell {
+  position: relative;
+}
+
+.stats-coverage-bar {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  bottom: 1px;
+  background: var(--accent);
+  opacity: 0.12;
+  border-radius: 2px;
+}
+
+.stats-coverage-text {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sticky progress bar */
+.stats-progress-track {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin: 0 16px 4px;
+}
+
+.stats-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease-out;
+}
+
+/* Overview (All Collections) panel */
+.stats-overview-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.stats-overview-table td:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats-overview-table th.stats-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.stats-overview-table th.stats-sortable:hover {
+  color: var(--text-primary);
+}
+
+.stats-overview-table th.stats-num,
+.stats-overview-table td.stats-num {
+  text-align: right;
+}
+
+.stats-sort-arrow {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--accent);
+  vertical-align: middle;
+  transform: translateY(-1px);
+}
+
+.stats-overview-table tr.stats-clickable {
+  cursor: pointer;
+}
+
+.stats-overview-table tr.stats-clickable:hover td {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.stats-skeleton {
+  display: inline-block;
+  height: 10px;
+  border-radius: 3px;
+  vertical-align: middle;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--text-secondary) 12%, transparent) 0%,
+    color-mix(in srgb, var(--text-secondary) 28%, transparent) 50%,
+    color-mix(in srgb, var(--text-secondary) 12%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: stats-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes stats-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.stats-row-error {
+  color: var(--danger);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+
+.stats-overview-table tfoot td {
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+  background: var(--bg-hover);
+  font-size: 11px;
+}
+
+/* Right-aligned numeric cells: bar grows from the right so it "points" at
+   the value rather than being disconnected on the opposite side. */
+.stats-overview-table td.stats-num.stats-coverage-cell .stats-coverage-bar {
+  left: auto;
+  right: 0;
+}
+
+.stats-overview-table td.stats-num.stats-coverage-cell .stats-coverage-bar {
+  opacity: 0.18;
+}
+
+/* ===== Overview "Charts" panel — storage treemap =====
+   Data colors (blue→teal→yellow index-overhead scale) are fixed hex so they read
+   the same in light/dark; everything else uses theme tokens. */
+.overview-charts {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.overview-charts-body {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 12px 14px 14px;
+}
+
+.oc-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.oc-col-map {
+  flex: 1.45 1 360px;
+}
+
+.oc-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+  min-height: 24px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.oc-scale-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.oc-scale-toggle button {
+  border: 0;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 10px;
+  padding: 3px 9px;
+  cursor: pointer;
+}
+
+.oc-scale-toggle button + button {
+  border-left: 1px solid var(--border);
+}
+
+.oc-scale-toggle button:hover {
+  color: var(--text-primary);
+}
+
+.oc-scale-toggle button.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.oc-treemap {
+  position: relative;
+  width: 100%;
+}
+
+.oc-tile {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 5px 6px;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid var(--bg-card);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  outline: 0 solid transparent;
+}
+
+.oc-tile.is-other {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.oc-tile.is-hover {
+  outline: 2px solid var(--text-primary);
+  z-index: 2;
+}
+
+.oc-tile-name {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oc-tile-name.is-lg {
+  font-size: 12px;
+}
+
+.oc-tile-sub {
+  font-size: 9px;
+  opacity: 0.85;
+}
+
+.oc-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  font-size: 9px;
+  color: var(--text-secondary);
+}
+
+.oc-legend-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #4270db, #19b89a, #f5c518);
+}
+
+.oc-note {
+  margin-top: 7px;
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.oc-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 24px 0;
+}
+
+.oc-tooltip {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+/* Immediate custom tooltip (Tip.jsx) — no native-title delay, viewport-clamped. */
+/* .stats-tip-* (the custom tooltip) moved to the self-contained CSS Module
+   src/ui/Tip.module.css when Tip was promoted to the design system. */
+
+/* Undo toast — bottom-center, fixed, above modal-overlay (z=1000-ish);
+   single instance, replaces previous on new operation. */
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 2000;
+  min-width: 320px;
+  max-width: 560px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  font-size: 13px;
+  overflow: hidden;
+  animation: undo-toast-in 0.18s ease-out;
+}
+
+@keyframes undo-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.undo-toast-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.undo-toast-message {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-toast-action {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.undo-toast-action:hover {
+  background: var(--bg-hover);
+}
+
+.undo-toast-countdown {
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.undo-toast-dismiss {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.undo-toast-dismiss:hover {
+  color: var(--text-primary);
+}
+
+.undo-toast-progress {
+  height: 2px;
+  background: var(--accent);
+  transform-origin: left center;
+  transition: transform 250ms linear;
+}
+
+.undo-toast-running .undo-toast-message,
+.undo-toast-done .undo-toast-message {
+  color: var(--success);
+}
+
+.undo-toast-error {
+  border-color: var(--danger-border);
+}
+
+.undo-toast-error .undo-toast-message {
+  color: var(--danger);
+  white-space: normal;
+}
+
+.record-checkbox {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.record-card-selected {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.bulk-preview {
+  margin-top: 12px;
+}
+
+.bulk-preview-loading {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.bulk-preview-error {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.bulk-preview-count {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.bulk-preview-sample-note {
+  font-size: 11px;
+  color: var(--warning-fg);
+  background: var(--warning-bg);
+  border-left: 3px solid var(--warning);
+  padding: 4px 8px;
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.bulk-undo-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.bulk-result {
+  padding: 8px;
+  background: var(--success-bg);
+  color: var(--success-fg);
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+.bulk-filter-readonly {
+  margin-bottom: 12px;
+}
+
+.bulk-filter-readonly code {
+  display: block;
+  padding: 8px;
+  background: var(--bg-code);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.bulk-filter-readonly-pre {
+  margin: 0;
+  padding: 8px;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-code);
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Single-button dropdown (e.g. the Bulk menu). Mirrors .split-btn's
+   positioning for the menu but without stripping the button's right corners,
+   since there's no second button welded to the right. */
+.dropdown-btn {
+  display: inline-flex;
+  position: relative;
+}
+
+.dropdown-btn .toolbar-more-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+}
+
+.bulk-confirm {
+  margin-top: 12px;
+}
+
+.bulk-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.bulk-confirm-label {
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.bulk-confirm-blocked {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.selection-count {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-left: 4px;
+  cursor: pointer;
+  border-bottom: 1px dotted var(--text-secondary);
+}
+
+.selection-mismatch-banner {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  padding: 8px 12px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selection-popover {
+  position: absolute;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 8px;
+  min-width: 240px;
+  max-width: 360px;
+  max-height: 320px;
+  overflow: auto;
+  z-index: 100;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.selection-popover-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.selection-popover-row:hover {
+  background: var(--bg-hover);
+}
+
+.selection-popover-id {
+  color: var(--text-primary);
+}
+
+.selection-popover-remove {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.selection-popover-remove:hover {
+  color: var(--danger);
+}
+
+.selection-popover-actions {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+
+/* Disable-stage feature: a tiny checkbox toggles each stage (checked = enabled).
+   Small + muted by default so it doesn't draw the eye; brightens on hover. */
+.pipeline-stage-toggle {
+  cursor: pointer;
+  flex-shrink: 0;
+  align-self: center;
+  width: 10px;
+  height: 10px;
+  margin: 0;
+  accent-color: var(--text-secondary);
+  opacity: 0.5;
+  transition: opacity 0.12s;
+}
+
+.pipeline-stage-toggle:hover {
+  opacity: 1;
+  accent-color: var(--accent);
+}
+
+/* matches the checkbox's footprint so the 0. input row aligns with numbered rows */
+.pipeline-stage-toggle-spacer {
+  display: inline-block;
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.pipeline-debug-disabled {
+  opacity: 0.55;
+}
+
+.pipeline-debug-disabled .pipeline-debug-stage,
+.pipeline-debug-disabled .pipeline-debug-preview {
+  text-decoration: line-through;
+}
+
+.pipeline-debug-disabled-badge {
+  margin-left: auto;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.cm-stage-gutter {
+  min-width: 16px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* in the gutter the line cell is the click target (CodeMirror resolves the
+   clicked line), so the checkbox is a visual indicator only */
+.cm-stage-gutter .pipeline-stage-toggle {
+  pointer-events: none;
+}
+
+.pipeline-stage-disabled-line {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+/* .inspector-modal* migrated to the self-contained CSS Module
+   src/ui/fabry/FabryTranscript.module.css (the only renderer of the transcript modal). */
+
+/* Record table view */
+.record-table-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+/* width:100% (not just min-width) is required for table-layout:fixed to actually
+   engage: the explicit <col> widths then become authoritative, so columns stretch
+   to fill when there's room, stay at their width and let the wrap scroll when
+   crowded, and (crucially) long cell content clips with an ellipsis instead of
+   expanding the column. In the default state every <col> is DEFAULT_COL_WIDTH and
+   they stretch equally; after a manual resize the JS-computed widths take over
+   (RecordTable: every non-last column explicit, the last column a computed filler
+   that fills the pane exactly — no trailing gap, never narrower than the pane,
+   wrap scrolls when the non-last columns overflow). */
+.record-table {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.record-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: normal;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.record-table thead th:hover {
+  background: var(--bg-hover);
+}
+
+.record-table tbody tr:nth-child(even) {
+  background: var(--bg-sidebar);
+}
+
+.record-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.record-table tbody td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.record-table-cell-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.record-table-cell-inner > .record-table-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Reserve the copy button's space always (visibility, not display) so revealing
+   it on hover doesn't reflow the cell value and make columns appear to jump. */
+.record-table-cell-inner > .json-tree-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  visibility: hidden;
+}
+
+.record-table tbody td:hover > .record-table-cell-inner > .json-tree-copy-btn,
+.record-table-cell-inner > .json-tree-copy-btn.json-tree-copy-btn-success {
+  visibility: visible;
+}
+
+.record-table-badge {
+  display: inline-block;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* Shared compact EJSON type mini-badge, used everywhere a value's BSON type is
+   shown (the dense Table view and the JSON tree / record cards). A small boxed
+   tint — its own pill so it reads as a label, not part of the value. The text +
+   tint both derive from the value's type color via the co-applied
+   json-tree-value-* class (currentColor), so each type keeps its own hue. The
+   full type name is on the tag's title (hover). In the Table the
+   .record-table-cell-inner flex `gap` spaces it; the JSON tree rows have no gap,
+   so add explicit margins there. */
+.value-type-tag {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  cursor: default;
+}
+
+.json-tree-row .value-type-tag {
+  margin: 0 4px;
+}
+
+.record-table .col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 7px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 2;
+  background: transparent;
+  transition: background-color 80ms ease-in-out;
+}
+
+.record-table .col-resizer:hover {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.record-table .col-resizer.dragging {
+  background: var(--accent);
+}
+
+.record-table-sort-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #fff;
+  vertical-align: middle;
+}
+
+.record-table-sort-badge.asc {
+  background: var(--success);
+}
+
+.record-table-sort-badge.desc {
+  background: var(--danger);
+}
+
+.record-table td.record-table-cell-clickable {
+  cursor: pointer;
+}
+
+.record-table-value {
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+.record-table-caret {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.record-table td.record-table-cell-expanded {
+  white-space: normal;
+  max-width: none;
+  overflow: visible;
+}
+
+.record-table-nested {
+  margin-top: 4px;
+}
+
+.record-table tbody tr.record-table-row-selected {
+  background: var(--bg-hover);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.record-table-check {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* The AI-input subsystem (.nl-search-input base + loading border, the gerund
+   loader, and their keyframes) moved to the self-contained CSS Module
+   src/ui/aiInput.module.css (shared by FabryInput + GerundLoader). */
+
+/* NOTE: the Fabry mark (src/ui/FabryMark.module.css) and the AI-input primitive
+   (src/ui/aiInput.module.css — input/spark/loader/row) are self-contained CSS
+   Modules. Only AgentBox's own MDH layout (.agent-box / .agent-footer / .agent-chat-*)
+   stays here. */
+
+/* Agent surface ("Mr. Fabry") — AgentBox's own layout around the shared <FabryInput>:
+   a footer lifecycle slot (hidden idle → phase tracker running → result line done). */
+.agent-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 0;
+}
+
+/* .nl-search-wrapper / .agent-input-row (+ sparkle clearance) / .agent-spark (+ loading
+   twinkle) / the gradient focus ring all moved to src/ui/aiInput.module.css — FabryInput
+   owns the AI-input primitive. .agent-box + .agent-footer stay (AgentBox's own layout). */
+/* Footer lifecycle slot (only rendered while running or once a result exists). */
+.agent-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 15px;
+}
+
+.agent-phases {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.agent-phase {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  opacity: 0.45;
+  transition:
+    opacity 0.25s,
+    color 0.25s;
+}
+
+.agent-phase i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.agent-phase.active {
+  opacity: 1;
+  color: #8b5cf6;
+}
+
+.agent-phase.done {
+  opacity: 0.8;
+}
+
+.agent-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  min-width: 0;
+  flex: 1;
+}
+
+.agent-result-ok {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.agent-result-err {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.agent-result-sum {
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.agent-result-meta {
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.agent-result-msg {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.agent-transcript-link {
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 10px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: var(--font-sans);
+}
+
+.agent-transcript-link:hover {
+  color: var(--accent-hover, var(--accent));
+}
+
+/* Transcript modal (opened from "View transcript") */
+.agent-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+.agent-chat-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.agent-chat-role {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.agent-chat-text {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.agent-chat-user .agent-chat-text {
+  font-weight: 500;
+}
+
+.agent-chat-system .agent-chat-text {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.agent-chat-assistant-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.agent-chat-reasoning {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-left: 2px solid var(--border);
+  padding-left: 8px;
+}
+
+.agent-chat-code {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-code);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+/* Interactive transcript modal: scrolling transcript + a "continue this chat" input. */
+.agent-chat-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agent-chat-continue {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+/* input sizing now via <FabryInput size="sm"> */
+
+/* ── Stats panel: summary dashboard ───────────────────────────── */
+.stats-band-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin: 0 2px 4px;
+}
+
+.stats-dash {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+@media (max-width: 620px) {
+  .stats-dash {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-health {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-right: 20px;
+  border-right: 1px solid var(--border);
+}
+
+@media (max-width: 620px) {
+  .stats-health {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 0 14px;
+  }
+}
+
+.stats-ring {
+  position: relative;
+  width: 104px;
+  height: 104px;
+}
+
+.stats-ring .stats-ring-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-ring .stats-ring-num b {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.stats-ring .stats-ring-num span {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.stats-health-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stats-dash-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stats-fields-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: -6px;
+}
+
+.stats-hcomp-wrap {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.stats-hcomp {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 210px;
+}
+
+.stats-hcomp-row {
+  display: grid;
+  grid-template-columns: 134px 1fr 26px;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.stats-hcomp-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.stats-hcomp-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-help {
+  display: inline-grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 9px;
+  line-height: 1;
+  cursor: help;
+  flex: none;
+}
+
+.stats-help:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stats-hbar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--bg-hover);
+  overflow: hidden;
+}
+
+.stats-hbar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* ── collection band ── */
+.stats-schema-line {
+  font-size: 12px;
+  /* --text-primary, not --text-secondary: this line carries the section's verdict
+     and is now always visible, and --text-secondary measures 3.74:1 here, under
+     the 4.5:1 floor. Same fix as .stats-fcard-meta and ModalFieldLabel (a9ed60a).
+     The mono face and size keep it subordinate to the band label without
+     relying on colour to do it. */
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.stats-shape-baseline {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.stats-shape-cols {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.stats-shape-col {
+  flex: 1;
+  /* 180px, not 150: measured against the longest realistic header
+     ("Shape 1 · most common" over "19 fields · 8,214 · 71%"), below which the
+     shape label wraps and the header grows from 52px to 85px. The container
+     already has overflow-x: auto, so several shapes in a narrow panel now
+     scroll — which also keeps the columns aligned, and that alignment is the
+     whole point of showing them side by side. */
+  min-width: 180px;
+  /* 260px: measured as the width at which the longest realistic field name
+     (33 characters) stops being clipped — the rows are nowrap inside an
+     overflow: hidden column, so a name that does not fit is cut. Past 260 the
+     extra width buys nothing, and with only two shapes flex: 1 would otherwise
+     stretch each column across half the panel. */
+  max-width: 260px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.stats-shape-col-h {
+  padding: 7px 10px;
+  background: var(--bg-code);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stats-shape-col-h b {
+  font-size: 12px;
+}
+
+.stats-shape-col-meta {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.stats-shape-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+}
+
+.stats-shape-col li {
+  padding: 1px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.stats-shape-col li .stats-shape-mark {
+  width: 9px;
+  flex: none;
+  text-align: center;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.stats-shape-col li.is-add {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.stats-shape-col li.is-add .stats-shape-mark {
+  color: var(--success-fg);
+}
+
+.stats-shape-col li.is-gone {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  text-decoration: line-through;
+}
+
+.stats-shape-col li.is-gone .stats-shape-mark {
+  color: var(--danger-fg);
+}
+
+.stats-schema-more {
+  padding: 1px 10px;
+}
+
+.stats-schema-more button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  padding: 2px 4px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.stats-schema-more button:hover {
+  color: var(--accent-hover);
+}
+
+.stats-schema-chev {
+  /* Flex centres the element boxes, not the glyphs inside them, and U+25BE's
+     ink sits ~1.2px below the label's ink centre in this repo's mono stack
+     (measured from canvas actualBoundingBox metrics). U+2304, used before,
+     sat 3.7px low — a nudge that large would not survive a font substitution,
+     which is why the glyph changed rather than the offset growing. */
+  position: relative;
+  top: -1px;
+  line-height: 1;
+}
+
+.stats-shape-records {
+  margin-top: 4px;
+  align-self: flex-start;
+  font: inherit;
+  font-size: 10.5px;
+  padding: 2px 8px;
+  cursor: pointer;
+  color: var(--accent);
+  background: var(--bg-card);
+  /* --info-border, not --accent-border: undefined in this stylesheet. */
+  border: 1px solid var(--info-border);
+  border-radius: 5px;
+}
+
+.stats-shape-records:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── field grid ── */
+.stats-fgrid-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stats-fgrid-head .stats-band-label {
+  flex: 1;
+  margin: 0 2px;
+}
+
+.stats-fgrid-filter {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 3px 8px;
+  width: 140px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.stats-fcard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  scroll-margin-top: 12px;
+}
+
+.stats-fcard.is-flagged {
+  border-color: var(--warning-border);
+}
+
+.stats-fcard.is-target {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.stats-fcard.is-dimmed {
+  opacity: 0.4;
+  transition: opacity 0.12s ease;
+}
+
+.stats-fcard.is-dimmed:hover {
+  opacity: 1;
+}
+
+.stats-fcard-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stats-fcard-h .stats-field-name {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-tchip {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border: 1px solid var(--info-border);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stats-tchip.is-num {
+  background: #eef9f1;
+  color: var(--success-fg);
+  border-color: #bfe8cb;
+}
+
+.stats-tchip.is-date {
+  background: var(--type-user-bg);
+  color: var(--type-user-fg);
+  border-color: #ddd1fb;
+}
+
+.stats-tchip.is-mix {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border-color: var(--warning-border);
+}
+
+.stats-idx-chip {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.stats-fcard-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.stats-fcard-meta b {
+  font-weight: 600;
+}
+
+/* top-values mini bars */
+.stats-tv {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stats-tv-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  font-size: 11px;
+  padding: 1px 0;
+}
+
+.stats-tv-row.is-clickable {
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.stats-tv-row.is-clickable:hover {
+  background: var(--bg-hover);
+}
+
+.stats-tv-row.is-clickable:hover .stats-tv-val {
+  text-decoration: underline;
+}
+
+.stats-tv-row .stats-tv-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 3px;
+}
+
+.stats-tv-row .stats-tv-val {
+  position: relative;
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: 5px;
+}
+
+.stats-tv-row .stats-tv-count {
+  position: relative;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.stats-tv-row.is-placeholder .stats-tv-bar {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.stats-tv-row.is-placeholder .stats-tv-val {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.stats-tv-row.is-placeholder .stats-tv-count {
+  color: var(--danger);
+}
+
+/* range / span bar */
+.stats-rangebar {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stats-rangebar-track {
+  position: relative;
+  height: 6px;
+  background: var(--bg-hover);
+  border-radius: 3px;
+  margin: 7px 4px 2px;
+}
+
+.stats-rangebar-track .stats-rangebar-seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 3px;
+}
+
+.stats-rangebar-track .stats-rangebar-avg {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 12px;
+  background: var(--accent);
+}
+
+.stats-rangebar-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+/* badges */
+/* Field-card issue messages (bottom of card) — badges are reserved for the header chips. */
+.stats-msgs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stats-msg {
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 5px 8px;
+  border-radius: var(--radius);
+}
+
+.stats-msg b {
+  font-weight: 600;
+}
+
+.stats-msg.is-error {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border: 1px solid var(--danger-border);
+}
+
+.stats-msg.is-warn {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border: 1px solid var(--warning-border);
+}
+
+@media (prefers-color-scheme: dark) {
+  .stats-tchip.is-num {
+    background: rgba(34, 136, 62, 0.18);
+    color: #6ee7a0;
+    border-color: rgba(34, 136, 62, 0.4);
+  }
+  .stats-tchip.is-date {
+    background: rgba(91, 33, 182, 0.25);
+    color: #c4b5fd;
+    border-color: rgba(91, 33, 182, 0.5);
+  }
+}
+
+/* Special / invisible character markers in record values (specialChars.js). */
+.mdh-special {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding: 0 4px;
+  margin: 0 1px;
+  border-radius: 3px;
+  /* abbreviation label (e.g. "NBSP") — small, bold, slightly tracked */
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  vertical-align: baseline;
+  cursor: help;
+  /* subtle tint derived from the category color set via `color` below */
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.mdh-special-space {
+  color: var(--warning);
+}
+
+.mdh-special-zero-width {
+  color: var(--danger);
+}
+
+.mdh-special-control {
+  color: var(--accent);
+}
+
+.mdh-special-bidi {
+  color: var(--mdh-special-bidi);
+}
+
+.import-progress-fill.indeterminate {
+  width: 40%;
+  border-radius: inherit;
+  animation: import-indet 1.1s ease-in-out infinite;
+}
+
+@keyframes import-indet {
+  0% {
+    margin-left: -40%;
+  }
+  100% {
+    margin-left: 100%;
+  }
+}
+
+.import-progress-status {
+  margin-top: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+/* Unified Export wizard */
+.export-wizard .csv-export-preview {
+  margin-top: 10px;
+}

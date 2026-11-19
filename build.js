@@ -2,6 +2,26 @@ const esbuild = require('esbuild');
 const { execSync } = require('child_process');
 const { cpSync, existsSync, rmSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
 
+// The Console's global stylesheet, dist/console/console.base.css: these partials concatenated
+// in THIS order. They were split per area out of the former src/console/console.css monolith,
+// in its original rule order wherever the order could change which rule wins (proven when the
+// split landed, 2026-11-19), so the order here is part of the cascade: moving a rule to another
+// partial, or reordering this list, can change what the Console looks like. Each area's partial
+// goes when that area moves to CSS Modules; tokens.css stays.
+// Exported for tests/console-css-split.test.ts, which requires this file without building.
+const CONSOLE_GLOBAL_PARTS = [
+  'src/console/tokens.css',
+  'src/console/legacy/shared.css',
+  'src/mdh/legacy.css',
+  'src/console/legacy.css',
+  'src/audit/legacy.css',
+  'src/galaxy/legacy.css',
+  'src/inspector/legacy.css',
+  'src/fabry/legacy.css',
+];
+module.exports = { CONSOLE_GLOBAL_PARTS };
+if (require.main !== module) return;
+
 const isWatch = process.argv.includes('--watch');
 
 // ── Git-based versioning ───────────────────────────
@@ -27,12 +47,14 @@ cpSync('icons', 'dist/icons', { recursive: true });
 cpSync('src/popup/popup.html', 'dist/popup/popup.html');
 cpSync('src/popup/popup.css', 'dist/popup/popup.css');
 cpSync('src/console/console.html', 'dist/console/console.html');
-// The hand-written monolith is the LEGACY base stylesheet, copied as-is. esbuild
-// emits dist/console/app.css from imported CSS Modules (self-contained
-// design-system component styles); the monolith keeps its own name, console.base.css.
-// As components migrate their rules into CSS Modules, console.base.css shrinks and
-// is eventually retired. console.html links both (base first, then the modules).
-cpSync('src/console/console.css', 'dist/console/console.base.css');
+// The LEGACY base stylesheet: the global partials (CONSOLE_GLOBAL_PARTS, above) concatenated.
+// esbuild emits dist/console/app.css from imported CSS Modules (self-contained design-system
+// component styles). As areas migrate their rules into CSS Modules, console.base.css shrinks
+// to the tokens. console.html links both (base first, then the modules).
+writeFileSync(
+  'dist/console/console.base.css',
+  CONSOLE_GLOBAL_PARTS.map((p) => readFileSync(p, 'utf8')).join(''),
+);
 cpSync('src/devtools/devtools.html', 'dist/devtools/devtools.html');
 cpSync('src/devtools/panel.html', 'dist/devtools/panel.html');
 cpSync('src/devtools/panel.css', 'dist/devtools/panel.css');
