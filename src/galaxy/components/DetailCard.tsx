@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { selectedNodeId, graph, domain } from '../store.js';
 import { buildDeeplink } from '../../audit/deeplink.js';
+import styles from './DetailCard.module.css';
 
 const TYPE_LABEL = {
   organization: 'Organization',
@@ -21,10 +22,10 @@ export default function DetailCard() {
   const rows = node.detail || [];
 
   return (
-    <div class="galaxy-detail-card">
+    <div class={styles.card}>
       <button
         type="button"
-        class="galaxy-detail-close"
+        class={styles.close}
         title="Close"
         onClick={() => {
           selectedNodeId.value = null;
@@ -32,12 +33,12 @@ export default function DetailCard() {
       >
         {'×'}
       </button>
-      <div class="galaxy-detail-type" style={`color:${node.color}`}>
+      <div class={styles.type} style={`color:${node.color}`}>
         {TYPE_LABEL[node.type] || node.type}
       </div>
-      <div class="galaxy-detail-name">{node.name}</div>
+      <div class={styles.name}>{node.name}</div>
       {rows.length > 0 && (
-        <dl class="galaxy-detail-facts">
+        <dl class={styles.facts}>
           {rows.map(([k, v]) => (
             <div key={k}>
               <dt>{k}</dt>
@@ -47,7 +48,7 @@ export default function DetailCard() {
         </dl>
       )}
       {href && (
-        <a class="galaxy-detail-link" href={href} target="_blank" rel="noopener noreferrer">
+        <a class={styles.link} href={href} target="_blank" rel="noopener noreferrer">
           Open in Rossum
         </a>
       )}

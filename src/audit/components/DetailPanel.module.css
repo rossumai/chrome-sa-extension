@@ -1,0 +1,59 @@
+/* The Audit Log's detail panel beside the results, and its sections. Moved from the global
+   src/audit/legacy.css, rules in their original order. */
+
+.section {
+  margin-bottom: 6px;
+}
+
+.summary {
+  cursor: pointer;
+  padding: 3px 0;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--text-primary);
+  user-select: none;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary:hover {
+  color: var(--accent);
+}
+
+.sectionBody {
+  padding: 6px 0 6px 14px;
+}
+
+.root {
+  width: 420px;
+  min-width: 320px;
+  max-width: 46%;
+  border-left: 1px solid var(--border);
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.body {
+  overflow: auto;
+  padding: 10px 12px;
+}
+
+.empty {
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 24px 8px;
+  text-align: center;
+}

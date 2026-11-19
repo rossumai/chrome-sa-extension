@@ -1,0 +1,70 @@
+/* The Audit Log's JSON tree nodes, on the shared base src/ui/JsonTree.module.css. Moved from the
+   global src/audit/legacy.css, rules in their original order. */
+
+.row {
+  padding: 1px 0;
+  line-height: 1.6;
+}
+
+.key {
+  color: var(--accent);
+}
+
+.sep {
+  color: var(--text-secondary);
+}
+
+.index {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.toggle {
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle:hover {
+  color: var(--accent);
+}
+
+.nested {
+  padding-left: 14px;
+  border-left: 1px dashed var(--border);
+  margin-left: 2px;
+}
+
+.leaf {
+  color: var(--text-code);
+}
+
+.string {
+  color: var(--success-fg);
+}
+
+.number {
+  color: var(--accent);
+}
+
+.bool {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.null {
+  color: var(--text-secondary);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.empty {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+@media (prefers-color-scheme: dark) {
+  .string {
+    color: #86efac;
+  }
+}

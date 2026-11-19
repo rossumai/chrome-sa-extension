@@ -4,6 +4,7 @@ import { activeSource, filtersBySource, patchFilters } from '../store.js';
 import { SOURCES } from '../sources/index.js';
 import ctl from '../../ui/controls.module.css';
 import inp from '../../ui/Input.module.css';
+import styles from './FiltersBar.module.css';
 
 function DebouncedInput({
   value,
@@ -65,11 +66,11 @@ export default function FiltersBar() {
   const hasActiveFilters = desc.filters.some((f: any) => !f.required && st[f.name]) || !!st.search;
 
   return (
-    <section class="filters">
-      <div class="filters-row">
+    <section class={styles.root}>
+      <div class={styles.row}>
         {desc.filters.map((f: any) => (
-          <label class="filter">
-            <span class="filter-label">{f.label}</span>
+          <label class={styles.filter}>
+            <span class={styles.label}>{f.label}</span>
             {f.kind === 'select' ? (
               <select
                 class={inp.input}
@@ -95,8 +96,8 @@ export default function FiltersBar() {
         ))}
 
         {desc.supportsServerSearch && (
-          <label class="filter filter-grow">
-            <span class="filter-label">Search</span>
+          <label class={`${styles.filter} ${styles.grow}`}>
+            <span class={styles.label}>Search</span>
             <DebouncedInput
               type="search"
               value={st.search}
@@ -105,7 +106,7 @@ export default function FiltersBar() {
           </label>
         )}
 
-        <div class="filters-actions">
+        <div class={styles.actions}>
           <button
             class={`${ctl.btn} ${ctl.btnSecondary}`}
             onClick={clearFilters}

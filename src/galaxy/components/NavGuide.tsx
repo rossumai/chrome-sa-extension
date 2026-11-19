@@ -1,4 +1,5 @@
 import { h } from 'preact';
+import styles from './NavGuide.module.css';
 
 const ITEMS = [
   ['Drag', 'Rotate'],
@@ -10,10 +11,10 @@ const ITEMS = [
 
 export default function NavGuide() {
   return (
-    <div class="galaxy-help">
-      <div class="galaxy-help-title">Navigate</div>
+    <div class={styles.help}>
+      <div class={styles.title}>Navigate</div>
       {ITEMS.map(([k, v]) => (
-        <div class="galaxy-help-row">
+        <div class={styles.row}>
           <kbd>{k}</kbd>
           <span>{v}</span>
         </div>

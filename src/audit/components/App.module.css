@@ -1,0 +1,15 @@
+/* The Audit Log's body column and the row holding the results and the detail panel. Moved from the
+   global src/audit/legacy.css, rules in their original order. */
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.resultsRow {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}

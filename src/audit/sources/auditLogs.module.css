@@ -1,0 +1,77 @@
+/* The audit_logs descriptor's cells: column widths (.col*), the object-type pill and the HTTP
+   status colours. Moved from the global src/audit/legacy.css, rules in their original order. */
+
+.colTime {
+  width: 158px;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.colUser {
+  width: 200px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.colType {
+  width: 110px;
+}
+
+.colAction {
+  width: 140px;
+}
+
+.colId {
+  width: 100px;
+  text-align: right;
+}
+
+.colStatus {
+  width: 70px;
+  text-align: right;
+}
+
+.typePill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.typeDocument {
+  background: var(--type-doc-bg);
+  color: var(--type-doc-fg);
+}
+
+.typeAnnotation {
+  background: var(--type-ann-bg);
+  color: var(--type-ann-fg);
+}
+
+.typeUser {
+  background: var(--type-user-bg);
+  color: var(--type-user-fg);
+}
+
+.status2xx {
+  color: var(--success);
+}
+
+.status3xx {
+  color: var(--accent);
+}
+
+.status4xx {
+  color: var(--warning);
+}
+
+.status5xx {
+  color: var(--danger);
+  font-weight: 600;
+}

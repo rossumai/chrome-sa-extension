@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { domain, loading, pageInfo } from '../store.js';
 import { connectedOrg } from '../../console/store.js';
 import cb from '../../ui/ConnectionBar.module.css';
+import styles from './ConnectionBar.module.css';
 
 export default function ConnectionBar({ connected }: { connected: boolean | null }) {
   if (!connected) {
@@ -18,7 +19,7 @@ export default function ConnectionBar({ connected }: { connected: boolean | null
       Audit Logs · Connected to {prettyDomain(domain.value)}
       {connectedOrg.value ? ` \u00b7 ${connectedOrg.value}` : ''}
       {pageInfo.value.total != null && (
-        <span class="connection-meta">{pageInfo.value.total.toLocaleString()} records</span>
+        <span class={styles.meta}>{pageInfo.value.total.toLocaleString()} records</span>
       )}
     </div>
   );

@@ -6,6 +6,11 @@ vi.mock('../src/audit/api.js');
 import * as api from '../src/audit/api.js';
 import * as store from '../src/audit/store.js';
 import App from '../src/audit/components/App.jsx';
+import filters from '../src/audit/components/FiltersBar.module.css';
+import table from '../src/audit/components/ResultsTable.module.css';
+import detail from '../src/audit/components/DetailPanel.module.css';
+import unavailable from '../src/audit/components/UnavailablePanel.module.css';
+import fabry from '../src/audit/components/FabryPanel.module.css';
 
 async function waitFor(cond: any, desc = 'condition', timeoutMs = 2000) {
   const start = Date.now();
@@ -41,7 +46,7 @@ beforeEach(() => {
 describe('Audit shell', () => {
   it('renders the audit filters and no tab bar when connected', () => {
     const root = mount(true);
-    expect(root.querySelector('.filters')).not.toBeNull();
+    expect(root.querySelector('.' + filters.root)).not.toBeNull();
     expect(root.querySelector('.audit-tabbar')).toBeNull();
   });
 
@@ -58,30 +63,30 @@ describe('Audit shell', () => {
       },
     ];
     const root = mount(true);
-    await waitFor(() => root.querySelector('.result-row'), 'row rendered');
+    await waitFor(() => root.querySelector('.' + table.row), 'row rendered');
     // The detail sidebar is always present; before any selection it prompts the user.
-    expect(root.querySelector('.audit-detail')!.textContent).toContain('Click a row');
-    root.querySelector<HTMLElement>('.result-row')!.click();
+    expect(root.querySelector('.' + detail.root)!.textContent).toContain('Click a row');
+    root.querySelector<HTMLElement>('.' + table.row)!.click();
     await waitFor(
-      () => root.querySelector('.audit-detail')!.textContent.includes('app_load'),
+      () => root.querySelector('.' + detail.root)!.textContent.includes('app_load'),
       'raw JSON shown',
     );
     // The sidebar shows the full raw record as a JSON tree (keys + values).
-    expect(root.querySelector('.audit-detail')!.textContent).toContain('app_load');
-    expect(root.querySelector('.audit-detail')!.textContent).toContain('request_id');
+    expect(root.querySelector('.' + detail.root)!.textContent).toContain('app_load');
+    expect(root.querySelector('.' + detail.root)!.textContent).toContain('request_id');
   });
 
   it('shows the unavailable panel when the active source is 403', () => {
     store.availability.value = 'unavailable';
     const root = mount(true);
-    expect(root.querySelector('.unavailable-panel')).not.toBeNull();
-    expect(root.querySelector('.results-wrap')).toBeNull();
+    expect(root.querySelector('.' + unavailable.panel)).not.toBeNull();
+    expect(root.querySelector('.' + table.wrap)).toBeNull();
   });
 
   it('mounts the Fabry panel only when the agent is available', () => {
     store.aiAvailable.value = false;
-    expect(mount(true).querySelector('.audit-fabry')).toBeNull();
+    expect(mount(true).querySelector('.' + fabry.root)).toBeNull();
     store.aiAvailable.value = true;
-    expect(mount(true).querySelector('.audit-fabry')).not.toBeNull();
+    expect(mount(true).querySelector('.' + fabry.root)).not.toBeNull();
   });
 });

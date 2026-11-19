@@ -41,7 +41,7 @@ function MsgRow({ m, idx }: { m: any; idx: number }) {
   return (
     <div class="inspector-mrow" data-evidence-id={`message:${m.idx}`}>
       <span class={`inspector-lv inspector-lv-${m.level}`}>{m.level}</span>
-      <div class="mc">
+      <div class="inspector-mc">
         <div class="inspector-mtxt">{m.content}</div>
         <div class="inspector-mrow2">
           {m.culprit ? <CulpritChip culprit={m.culprit} /> : <AttrLine entry={attr} />}

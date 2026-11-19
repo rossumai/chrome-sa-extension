@@ -75,11 +75,11 @@
    is not looking at. The ⤓ PDF button is the path that always prints the rendered document,
    in either mode and at any scope.
 
-   The connection bar and the error banner are hidden by the same rule in their own modules,
-   src/ui/ConnectionBar.module.css and src/ui/ErrorBanner.module.css, and the app root is
-   unwound by it in src/ui/AppShell.module.css. */
+   The connection bar, the error banner and the app rail are hidden by the same rule in their
+   own modules, src/ui/ConnectionBar.module.css, src/ui/ErrorBanner.module.css and
+   src/console/components/Rail.module.css, and the app root is unwound by it in
+   src/ui/AppShell.module.css. */
 @media print {
-  body:has(.docs-pane) .app-rail,
   body:has(.docs-pane) .fabry-sidebar,
   body:has(.docs-pane) .fabry-spec-bar,
   body:has(.docs-pane) .fabry-arch-doc-warn,

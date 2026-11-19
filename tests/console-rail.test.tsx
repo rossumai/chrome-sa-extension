@@ -4,6 +4,7 @@ import { h, render } from 'preact';
 import Rail from '../src/console/components/Rail.jsx';
 import { activeApp, experimentalUnlocked } from '../src/console/store.js';
 import markStyles from '../src/ui/FabryMark.module.css';
+import styles from '../src/console/components/Rail.module.css';
 
 // Component tests are .test.tsx and render with JSX, matching src/. Only .tsx is
 // JSX-transformed, which is why the suite's non-component tests stay .test.ts.
@@ -22,7 +23,7 @@ describe('Rail', () => {
 
   it('renders the Inspector app button and switches to it on click', () => {
     const root = mount();
-    const btn = [...root.querySelectorAll('.app-rail-item')].find(
+    const btn = [...root.querySelectorAll('.' + styles.item)].find(
       (b) => b.getAttribute('title') === 'Annotation Inspector',
     );
     expect(btn).toBeTruthy();
@@ -32,18 +33,18 @@ describe('Rail', () => {
 
   it('renders the Inspector as a normal (non-muted) rail item, positioned above Galaxy', () => {
     const root = mount();
-    const items = [...root.querySelectorAll('.app-rail-item')];
+    const items = [...root.querySelectorAll('.' + styles.item)];
     const idx = (title: any) => items.findIndex((b) => b.getAttribute('title') === title);
     const inspector = items[idx('Annotation Inspector')];
-    expect(inspector.classList.contains('muted')).toBe(false); // no dimming
-    expect(items.some((b) => b.classList.contains('muted'))).toBe(false); // nothing is muted now
+    expect(inspector.classList.contains(styles.muted)).toBe(false); // no dimming
+    expect(items.some((b) => b.classList.contains(styles.muted))).toBe(false); // nothing is muted now
     expect(idx('Annotation Inspector')).toBeLessThan(idx('Org Galaxy')); // above Galaxy
   });
 
   // CIB sits right under Audit; Galaxy still comes before the Academy (visible once unlocked).
   it('orders CIB right after Audit, and Galaxy before Academy when the gate is unlocked', () => {
     experimentalUnlocked.value = true;
-    const items = [...mount().querySelectorAll('.app-rail-item')];
+    const items = [...mount().querySelectorAll('.' + styles.item)];
     const title = (b: any) => b.getAttribute('title');
     const idx = (t: any) => items.findIndex((b) => title(b) === t);
     expect(idx('Mr. Fabry')).toBeLessThan(idx('Org Galaxy'));
@@ -53,7 +54,7 @@ describe('Rail', () => {
 
   it('renders the Galaxy app button and switches to it on click', () => {
     const root = mount();
-    const btn = [...root.querySelectorAll('.app-rail-item')].find(
+    const btn = [...root.querySelectorAll('.' + styles.item)].find(
       (b) => b.getAttribute('title') === 'Org Galaxy',
     );
     expect(btn).toBeTruthy();
@@ -63,13 +64,13 @@ describe('Rail', () => {
 
   it('marks the active app with its full name as the tooltip', () => {
     const root = mount();
-    const active = root.querySelector('.app-rail-item.active');
+    const active = root.querySelector('.' + styles.item + '.' + styles.active);
     expect(active!.getAttribute('title')).toBe('Dataset Management');
   });
 
   it('renders the Fabry rail icon as a STATIC shared FabryMark (no color cycle)', () => {
     const root = mount();
-    const btn = [...root.querySelectorAll('.app-rail-item')].find(
+    const btn = [...root.querySelectorAll('.' + styles.item)].find(
       (b) => b.getAttribute('title') === 'Mr. Fabry',
     );
     const svg = btn!.querySelector('svg')!;
@@ -79,17 +80,17 @@ describe('Rail', () => {
 
   it('Galaxy rail item has no beta badge', () => {
     const root = mount();
-    const btn = [...root.querySelectorAll('.app-rail-item')].find(
+    const btn = [...root.querySelectorAll('.' + styles.item)].find(
       (b) => b.getAttribute('title') === 'Org Galaxy',
     );
-    expect(btn!.querySelector('.app-rail-beta')).toBeNull();
+    expect(btn!.querySelector('.' + styles.beta)).toBeNull();
   });
 
   it('re-renders the active marker after activeApp changes', () => {
     const root = mount();
     activeApp.value = 'audit';
     render(<Rail />, root);
-    expect(root.querySelector('.app-rail-item.active')!.getAttribute('title')).toBe(
+    expect(root.querySelector('.' + styles.item + '.' + styles.active)!.getAttribute('title')).toBe(
       'Audit Log Viewer',
     );
   });
@@ -99,12 +100,12 @@ describe('Rail — fabry is public', () => {
   it('shows Fabry with its beta badge while the experimental gate is LOCKED', () => {
     experimentalUnlocked.value = false;
     const root = mount();
-    const btn = [...root.querySelectorAll('.app-rail-item')].find(
+    const btn = [...root.querySelectorAll('.' + styles.item)].find(
       (b) => b.getAttribute('title') === 'Mr. Fabry',
     )!;
     expect(btn).toBeTruthy();
-    expect(btn.querySelector('.app-rail-beta')!.textContent).toBe('beta');
-    expect(btn.querySelector('.app-rail-exp')).toBeNull(); // public: beta, never exp
+    expect(btn.querySelector('.' + styles.beta)!.textContent).toBe('beta');
+    expect(btn.querySelector('.' + styles.exp)).toBeNull(); // public: beta, never exp
     (btn as HTMLElement).click();
     expect(activeApp.value).toBe('fabry');
   });
@@ -116,9 +117,9 @@ describe('Rail — academy (experimental) gate', () => {
   it('hides Academy while the gate is locked', () => {
     experimentalUnlocked.value = false;
     const root = mount();
-    expect(root.querySelectorAll('.app-rail-item').length).toBe(7); // the Academy and rdc are gated
+    expect(root.querySelectorAll('.' + styles.item).length).toBe(7); // the Academy and rdc are gated
     expect(
-      [...root.querySelectorAll('.app-rail-item')].some(
+      [...root.querySelectorAll('.' + styles.item)].some(
         (b) => b.getAttribute('title') === ACADEMY_TITLE,
       ),
     ).toBe(false);
@@ -127,13 +128,13 @@ describe('Rail — academy (experimental) gate', () => {
   it('shows Academy with an EXP badge when unlocked, and switches on click', () => {
     experimentalUnlocked.value = true;
     const root = mount();
-    const btn = [...root.querySelectorAll('.app-rail-item')].find(
+    const btn = [...root.querySelectorAll('.' + styles.item)].find(
       (b) => b.getAttribute('title') === ACADEMY_TITLE,
     )!;
     expect(btn).toBeTruthy();
     // exp REPLACES beta on a gated app: the badge names the gate it sits behind.
-    expect(btn.querySelector('.app-rail-exp')!.textContent).toBe('exp');
-    expect(btn.querySelector('.app-rail-beta')).toBeNull();
+    expect(btn.querySelector('.' + styles.exp)!.textContent).toBe('exp');
+    expect(btn.querySelector('.' + styles.beta)).toBeNull();
     (btn as HTMLElement).click();
     expect(activeApp.value).toBe('academy');
   });
@@ -144,7 +145,7 @@ describe('Rail — academy (experimental) gate', () => {
   // the surviving gate quietly re-acquires Fabry — so that is what this pins.
   it('drives the Academy; Fabry and CIB are present in both gate states', () => {
     experimentalUnlocked.value = false;
-    let titles = [...mount().querySelectorAll('.app-rail-item')].map((b) =>
+    let titles = [...mount().querySelectorAll('.' + styles.item)].map((b) =>
       b.getAttribute('title'),
     );
     expect(titles).toContain('Mr. Fabry');
@@ -152,7 +153,7 @@ describe('Rail — academy (experimental) gate', () => {
     expect(titles).toContain('CIB deploy (Coupa Integration Baseline)');
 
     experimentalUnlocked.value = true;
-    titles = [...mount().querySelectorAll('.app-rail-item')].map((b) => b.getAttribute('title'));
+    titles = [...mount().querySelectorAll('.' + styles.item)].map((b) => b.getAttribute('title'));
     expect(titles).toContain('Mr. Fabry');
     expect(titles).toContain(ACADEMY_TITLE);
     expect(titles).toContain('CIB deploy (Coupa Integration Baseline)');
@@ -162,20 +163,20 @@ describe('Rail — academy (experimental) gate', () => {
 describe('Rail — CIB is public', () => {
   it('shows CIB with no badge while the experimental gate is LOCKED, and switches on click', () => {
     experimentalUnlocked.value = false;
-    const btn = [...mount().querySelectorAll('.app-rail-item')].find(
+    const btn = [...mount().querySelectorAll('.' + styles.item)].find(
       (b) => b.getAttribute('title') === 'CIB deploy (Coupa Integration Baseline)',
     )!;
     expect(btn).toBeTruthy();
-    expect(btn.querySelector('.app-rail-beta')).toBeNull();
-    expect(btn.querySelector('.app-rail-exp')).toBeNull();
+    expect(btn.querySelector('.' + styles.beta)).toBeNull();
+    expect(btn.querySelector('.' + styles.exp)).toBeNull();
     (btn as HTMLElement).click();
     expect(activeApp.value).toBe('cib');
   });
 
   it('marks the Builder as beta', () => {
-    const btn = [...mount().querySelectorAll('.app-rail-item')].find(
+    const btn = [...mount().querySelectorAll('.' + styles.item)].find(
       (b) => b.getAttribute('title') === 'Schema Builder',
     )!;
-    expect(btn.querySelector('.app-rail-beta')).not.toBeNull();
+    expect(btn.querySelector('.' + styles.beta)).not.toBeNull();
   });
 });

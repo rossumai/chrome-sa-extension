@@ -1,0 +1,8 @@
+/* The Audit Log's record count on the shared connection bar. Moved from the global
+   src/audit/legacy.css, rules in their original order. */
+
+.meta {
+  margin-left: auto;
+  font-size: 10px;
+  opacity: 0.5;
+}

@@ -18,6 +18,7 @@ import DetailCard from './DetailCard.jsx';
 import ctl from '../../ui/controls.module.css';
 import es from '../../ui/EmptyState.module.css';
 import shell from '../../ui/AppShell.module.css';
+import styles from './App.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -70,22 +71,22 @@ export default function App({ connected }: { connected: boolean | null }) {
 
   return (
     <div class={shell.root}>
-      <div class="galaxy-stage">
-        <div class="galaxy-canvas" ref={hostRef}></div>
+      <div class={styles.stage}>
+        <div class={styles.canvas} ref={hostRef}></div>
         <Legend />
         <NavGuide />
         <DetailCard />
         {loading.value && (
-          <div class="galaxy-loading">
-            <span class="galaxy-spinner" aria-hidden="true"></span>
+          <div class={styles.loading}>
+            <span class={styles.spinner} aria-hidden="true"></span>
             <span>Loading your organization{'…'}</span>
             {loadedCount.value > 0 && (
-              <span class="galaxy-loading-count">{loadedCount.value} objects loaded</span>
+              <span class={styles.loadingCount}>{loadedCount.value} objects loaded</span>
             )}
           </div>
         )}
         {error.value && (
-          <div class="galaxy-error">
+          <div class={styles.error}>
             <span>{error.value}</span>
             {retryable.value && (
               <button type="button" class={ctl.btn} onClick={() => loadGraph()}>

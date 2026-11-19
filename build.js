@@ -14,9 +14,6 @@ const CONSOLE_GLOBAL_PARTS = [
   'src/console/tokens.css',
   'src/console/legacy/shared.css',
   'src/mdh/legacy.css',
-  'src/console/legacy.css',
-  'src/audit/legacy.css',
-  'src/galaxy/legacy.css',
   'src/inspector/legacy.css',
   'src/fabry/legacy.css',
 ];
