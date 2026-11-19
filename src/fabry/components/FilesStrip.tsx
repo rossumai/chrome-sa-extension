@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import * as store from '../store.js';
 import { downloadFile } from '../chat.js';
+import styles from './FilesStrip.module.css';
 
 function fmtBytes(n: number) {
   if (!Number.isFinite(n)) return '';
@@ -13,16 +14,16 @@ export default function FilesStrip() {
   const files = store.files.value;
   if (!files.length) return null;
   return (
-    <div class="fabry-files">
+    <div class={styles.files}>
       {files.map((f) => (
-        <span class="fabry-file">
+        <span class={styles.file}>
           <span class="fabry-file-name" title={f.filename}>
             {f.filename}
           </span>
-          <span class="fabry-file-size">{fmtBytes(f.size)}</span>
+          <span class={styles.fileSize}>{fmtBytes(f.size)}</span>
           <button
             type="button"
-            class="fabry-file-dl"
+            class={styles.fileDl}
             title="Download"
             onClick={() => downloadFile(f.filename)}
           >

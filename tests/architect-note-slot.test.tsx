@@ -44,6 +44,7 @@ import { keepBusy, noteWith } from '../src/fabry/architect/noteText.js';
 import * as store from '../src/fabry/architect/store.js';
 import SpecView from '../src/fabry/architect/components/SpecView.jsx';
 import { deliverable } from './support/architect.js';
+import specViewStyles from '../src/fabry/architect/components/SpecView.module.css';
 
 const HELD = { lines: ['shot.png could not be added: 502 Bad Gateway'], hidden: 0 };
 
@@ -80,7 +81,7 @@ beforeEach(() => {
 });
 
 const noteText = (root: any) =>
-  (root.querySelector('.fabry-arch-doc-note') as HTMLElement | null)?.textContent || '';
+  (root.querySelector(`.${specViewStyles.docNote}`) as HTMLElement | null)?.textContent || '';
 const pdfBtn = (root: any) => root.querySelector('[data-act="pdf"]') as HTMLButtonElement;
 
 // The sentinel's owner may replace it; nobody else may. That asymmetry is the whole rule, and it is
@@ -129,7 +130,7 @@ describe('an asset link opened from the document column', () => {
     download.mockResolvedValue(null);
     const root = mount();
     await openAsset(root);
-    expect(root.querySelector('.fabry-arch-doc-note')).toBe(null);
+    expect(root.querySelector(`.${specViewStyles.docNote}`)).toBe(null);
   });
 
   it('a failed download is reported beside the failure already held', async () => {

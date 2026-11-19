@@ -8,6 +8,8 @@ import * as chat from '../src/fabry/chat.js';
 import * as store from '../src/fabry/store.js';
 import ChatHeader from '../src/fabry/components/ChatHeader.jsx';
 import FilesStrip from '../src/fabry/components/FilesStrip.jsx';
+import chatHeaderStyles from '../src/fabry/components/ChatHeader.module.css';
+import filesStripStyles from '../src/fabry/components/FilesStrip.module.css';
 
 function mount(Comp: any) {
   const root = document.createElement('div');
@@ -48,13 +50,13 @@ beforeEach(() => {
 describe('ChatHeader', () => {
   it('shows the band mark, title and token stat', () => {
     const root = mount(ChatHeader);
-    expect(root.querySelector('.fabry-hd-mark svg')).toBeTruthy(); // shared <FabryMark> (SVG), no longer a text glyph
+    expect(root.querySelector(`.${chatHeaderStyles.hdMark} svg`)).toBeTruthy(); // shared <FabryMark> (SVG), no longer a text glyph
     expect(root.textContent).toContain('Failed exports triage');
-    expect(root.querySelector('.fabry-hd-tokens')!.textContent).toContain('2.0k');
+    expect(root.querySelector(`.${chatHeaderStyles.hdTokens}`)!.textContent).toContain('2.0k');
   });
   it('renders nothing without an active chat', () => {
     store.activeChatId.value = null;
-    expect(mount(ChatHeader).querySelector('.fabry-hd')).toBeNull();
+    expect(mount(ChatHeader).querySelector(`.${chatHeaderStyles.hd}`)).toBeNull();
   });
 });
 
@@ -63,11 +65,11 @@ describe('FilesStrip', () => {
     const root = mount(FilesStrip);
     expect(root.textContent).toContain('out.csv');
     expect(root.textContent).toContain('2.0 KB');
-    root.querySelector<HTMLElement>('.fabry-file-dl')!.click();
+    root.querySelector<HTMLElement>(`.${filesStripStyles.fileDl}`)!.click();
     expect(chat.downloadFile).toHaveBeenCalledWith('out.csv');
   });
   it('renders nothing when no files', () => {
     store.files.value = [];
-    expect(mount(FilesStrip).querySelector('.fabry-files')).toBeNull();
+    expect(mount(FilesStrip).querySelector(`.${filesStripStyles.files}`)).toBeNull();
   });
 });

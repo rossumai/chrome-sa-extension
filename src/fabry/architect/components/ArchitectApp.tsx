@@ -5,6 +5,7 @@ import { loadArchitect } from '../actions.js';
 import { preloadDeliverables } from '../preload.js';
 import SpecView from './SpecView.jsx';
 import InspectorRail from './InspectorRail.jsx';
+import styles from './ArchitectApp.module.css';
 
 export default function ArchitectApp() {
   useEffect(() => {
@@ -36,13 +37,13 @@ export default function ArchitectApp() {
   }, [ids, store.activeId.value]);
   const legacy = store.legacyNotice.value;
   return (
-    <div class="fabry-arch fabry-arch-unified">
+    <div class={`${styles.arch} ${styles.unified}`}>
       {legacy ? (
         // Both collections exist, which means an older build recreated the previous one after
         // this org was migrated. Stated plainly rather than "fixed" silently: nothing is
         // copied or dropped, and each deliverable is written back to whichever collection it
         // lives in (api.js colFor). See collectionPlan.js.
-        <p class="fabry-arch-legacy">
+        <p class={styles.legacy}>
           <span>{'\u2637'}</span>
           <span>
             {legacy.count} deliverable{legacy.count === 1 ? '' : 's'} still stored under this
@@ -54,9 +55,9 @@ export default function ArchitectApp() {
       {store.deliverables.value.length ? (
         <SpecView />
       ) : (
-        <div class="fabry-arch-placeholder">
-          <p class="fabry-arch-placeholder-title">SOW deliverables</p>
-          <p class="fabry-arch-placeholder-sub">
+        <div class={styles.placeholder}>
+          <p class={styles.placeholderTitle}>SOW deliverables</p>
+          <p class={styles.placeholderSub}>
             Select a deliverable from the sidebar, or add one, then Run to check it read-only
             against this organization.
           </p>

@@ -1,0 +1,32 @@
+.hd {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 22px;
+  border-bottom: 1px solid var(--info-border);
+  background: linear-gradient(135deg, var(--bg-card), var(--info-bg));
+  width: 100%;
+}
+
+.hdMark {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.hdTitle {
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.hdTokens {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-secondary);
+}

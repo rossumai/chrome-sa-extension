@@ -1,0 +1,32 @@
+/* Docked, inline "Refine wording" bar — pinned at the bottom of whichever panel hosts it
+   (the design-system FabryInput lives here; the diff card rises above it). */
+.dock {
+  flex: none;
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  padding: 10px 16px;
+}
+
+.dockHint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 6px 2px 0;
+}
+
+.dockErr {
+  font-size: 12px;
+  color: var(--danger-fg);
+  margin: 0 2px 8px;
+}
+
+.refineCard {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}

@@ -20,6 +20,8 @@ import { updateDeliverable } from '../actions.js';
 import type { Deliverable } from '../collectionPlan.js';
 import type { CheckResult } from '../api.js';
 import type { SourceSection } from '../../../docs/specDocument.js';
+import styles from './SpecView.module.css';
+import arch from './Architect.module.css';
 
 // The whole specification as ONE document (spec 2026-08-19). Every deliverable is a section in one
 // scroller, which is what lets a reader go top-to-bottom and what makes Cmd+F reach all of it — the
@@ -40,11 +42,12 @@ export const VERDICT: Record<string, string[]> = {
   uncertain: ['uncertain', '? Uncertain'],
 };
 export function CheckBadge({ result }: { result: CheckResult | undefined }) {
-  if (result && result.running) return <span class="fabry-spec-pill run">{'Checking…'}</span>;
+  if (result && result.running)
+    return <span class={`${styles.specPill} ${styles.run}`}>{'Checking…'}</span>;
   const known = result && VERDICT[result.verdict as string];
   if (!known)
     return (
-      <span class="fabry-spec-pill none" title="No check has run for this deliverable">
+      <span class={styles.specPill} title="No check has run for this deliverable">
         {'Not checked'}
       </span>
     );
@@ -52,7 +55,7 @@ export function CheckBadge({ result }: { result: CheckResult | undefined }) {
   const stale = !!result.stale;
   return (
     <span
-      class={'fabry-spec-pill ' + cls + (stale ? ' stale' : '')}
+      class={`${styles.specPill} ${styles[cls]}` + (stale ? ' ' + styles.stale : '')}
       title={
         stale
           ? 'This verdict is older than the text — re-run the check'
@@ -71,7 +74,7 @@ function SectionHeader({ deliverable }: { deliverable: Deliverable }) {
   const result = store.results.value[deliverable.id];
   return (
     <div
-      class="fabry-spec-sec-hd"
+      class={styles.specSecHd}
       data-for={deliverable.id}
       onClick={() => {
         // A click is explicit, so the inspector follows it at once rather than after the settle delay.
@@ -80,7 +83,7 @@ function SectionHeader({ deliverable }: { deliverable: Deliverable }) {
         if (store.pinnedTarget.value) store.setPinnedTarget(deliverable.id);
       }}
     >
-      <span class="fabry-spec-sec-n">{displayTitle(deliverable)}</span>
+      <span class={styles.specSecN}>{displayTitle(deliverable)}</span>
       <CheckBadge result={result} />
     </div>
   );
@@ -93,13 +96,13 @@ function SectionHeader({ deliverable }: { deliverable: Deliverable }) {
 // and the rail's "Bring it back".
 function ReviewHost({ deliverable, kind }: { deliverable: Deliverable; kind: string }) {
   return (
-    <div class="fabry-spec-review">
-      <div class="fabry-spec-review-bar">
-        <span class="fabry-spec-review-t">{kind === 'refine' ? 'Refine' : 'Version history'}</span>
-        <span class="fabry-spec-sp" />
+    <div class={styles.specReview}>
+      <div class={styles.specReviewBar}>
+        <span class={styles.specReviewT}>{kind === 'refine' ? 'Refine' : 'Version history'}</span>
+        <span class={styles.specSp} />
         <button
           type="button"
-          class="fabry-spec-btn"
+          class={arch.specBtn}
           data-act="review-close"
           title="Close — it stays available in the inspector"
           onClick={() => store.setReviewTarget(null)}
@@ -107,7 +110,7 @@ function ReviewHost({ deliverable, kind }: { deliverable: Deliverable; kind: str
           {'✕ Close'}
         </button>
       </div>
-      <div class="fabry-spec-review-body">
+      <div class={styles.specReviewBody}>
         {kind === 'refine' ? (
           <RefineDock deliverable={deliverable} />
         ) : (
@@ -252,10 +255,10 @@ export default function SpecView() {
   };
 
   return (
-    <div class="fabry-spec">
-      <div class="fabry-spec-bar">
-        <span class="fabry-spec-lbl">Specification</span>
-        <div class="fabry-spec-modes fabry-arch-viewtoggle" role="group" aria-label="Text mode">
+    <div class={styles.spec}>
+      <div class={styles.specBar}>
+        <span class={styles.specLbl}>Specification</span>
+        <div class={`fabry-spec-modes ${arch.viewtoggle}`} role="group" aria-label="Text mode">
           <button
             type="button"
             aria-pressed={mode === 'edit'}
@@ -273,10 +276,10 @@ export default function SpecView() {
             {'◑ Preview'}
           </button>
         </div>
-        <span class="fabry-spec-sp" />
+        <span class={styles.specSp} />
         <button
           type="button"
-          class="fabry-spec-btn"
+          class={arch.specBtn}
           data-act="pdf"
           disabled={note === 'busy' || !ds.length}
           title="Print, or save as PDF"
@@ -292,7 +295,7 @@ export default function SpecView() {
         </button>
         <button
           type="button"
-          class="fabry-spec-btn"
+          class={arch.specBtn}
           data-act="toggle-rail"
           aria-pressed={store.railOpen.value}
           title={store.railOpen.value ? 'Hide the inspector' : 'Show the inspector'}
@@ -302,14 +305,14 @@ export default function SpecView() {
         </button>
       </div>
       {(warnings.length > 0 || (note && note !== 'busy')) && (
-        <div class="fabry-arch-doc-warn">
-          {note && note !== 'busy' && <div class="fabry-arch-doc-note">{note}</div>}
+        <div class={styles.docWarn}>
+          {note && note !== 'busy' && <div class={styles.docNote}>{note}</div>}
           {warnings.map((w, i) => (
             <div key={i}>{w}</div>
           ))}
           <button
             type="button"
-            class="fabry-arch-doc-warn-x"
+            class={styles.docWarnX}
             aria-label="Dismiss"
             onClick={() => {
               setWarnings([]);

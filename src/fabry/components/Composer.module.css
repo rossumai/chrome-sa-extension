@@ -1,0 +1,225 @@
+/* inline streaming gerund in the composer bar */
+.working {
+  position: relative;
+  height: 22px;
+  min-width: 132px;
+}
+
+.composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--bg-card);
+  padding: 10px 22px 14px;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.senderr {
+  color: var(--danger-fg);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+/* Attachment thumbnails now sit INSIDE the box, above the textarea. */
+.attachRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.attach {
+  position: relative;
+}
+
+.attach img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.attach button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Claude-style single rounded box: textarea on top, all controls in a bar below, inside. */
+.composerBox {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 10px 12px 8px;
+  box-shadow: var(--shadow);
+}
+
+.composerBox:focus-within {
+  border-color: var(--info-border);
+}
+
+.inputWrap {
+  position: relative;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  border: 0;
+  padding: 4px 4px 2px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  background: none;
+  color: var(--text-primary);
+  min-height: 46px;
+  max-height: 180px;
+}
+
+.input:focus {
+  outline: none;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.barSpacer {
+  flex: 1;
+}
+
+.barIco {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
+}
+
+/* + attach icon button */
+.attachBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex: none;
+}
+
+.attachBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* send (accent square, up-arrow) / stop (square) */
+.send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  color: #fff;
+  background: var(--accent);
+  flex: none;
+}
+
+.send:hover:not(:disabled) {
+  background: var(--accent-hover, #3560c5);
+}
+
+.send:disabled {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  flex: none;
+}
+
+.stop:hover {
+  background: var(--bg-hover);
+}
+
+.stopSq {
+  width: 11px;
+  height: 11px;
+  background: currentColor;
+  border-radius: 2.5px;
+}
+
+.notice {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* In the welcome screen (<Composer welcome />) the composer is a normal centered block — undo
+   its sticky-bottom layout. */
+.composer.welcome {
+  position: static;
+  padding: 0;
+  max-width: 640px;
+}
+
+/* Deep verify: composer toggle, live-phase chip, per-turn verdict chip + critic strip. */
+/* Deep verify: an in-bar icon toggle (the ✦ FabryMark, static). Dim when off,
+   accent-filled when on — the star's fill inherits this button's color. */
+.deepToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: #a9afb9;
+  cursor: pointer;
+  flex: none;
+}
+
+.deepToggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.deepToggle.isOn {
+  color: var(--accent);
+  background: var(--info-bg);
+}

@@ -12,6 +12,7 @@ import { displayTitle } from '../format.js';
 import { formatBytes } from '../../../mdh/indexDef.js';
 import useFileDrop from '../hooks/useFileDrop.js';
 import type { AssetRow } from '../assets.js';
+import styles from './AssetsPanel.module.css';
 
 // The organization's files, managed from the inspector rail (design 2026-08-24, D4/§5.5).
 //
@@ -422,22 +423,22 @@ export default function AssetsPanel({
 
   return (
     <div
-      class={'fabry-arch-asset' + (dragging ? ' dragging' : '')}
+      class={styles.asset + (dragging ? ' ' + styles.dragging : '')}
       onDragEnter={handlers.dragenter}
       onDragOver={handlers.dragover}
       onDragLeave={handlers.dragleave}
       onDrop={handlers.drop}
     >
-      <div class="fabry-arch-asset-hd">
-        <span class="fabry-arch-asset-count">
+      <div class={styles.assetHd}>
+        <span class={styles.assetCount}>
           {rows.length} file{rows.length === 1 ? '' : 's'}
           {' · '}
           {formatBytes(total)}
         </span>
-        <span class="fabry-arch-asset-sp" />
+        <span class={styles.assetSp} />
         <button
           type="button"
-          class="fabry-arch-asset-btn"
+          class={styles.assetBtn}
           data-act="add"
           disabled={busy || blocked}
           title={blocked ? BLOCKED : undefined}
@@ -448,7 +449,7 @@ export default function AssetsPanel({
         {folderPicker ? (
           <button
             type="button"
-            class="fabry-arch-asset-btn"
+            class={styles.assetBtn}
             data-act="add-folder"
             disabled={busy || blocked}
             title={blocked ? BLOCKED : 'Bulk import a folder — a one-time copy, not a sync'}
@@ -459,7 +460,7 @@ export default function AssetsPanel({
         ) : null}
         <button
           type="button"
-          class="fabry-arch-asset-btn"
+          class={styles.assetBtn}
           data-act="download-all"
           disabled={busy || !shown.length}
           title={
@@ -484,7 +485,7 @@ export default function AssetsPanel({
       />
 
       <input
-        class="fabry-arch-asset-filter"
+        class={styles.assetFilter}
         type="search"
         placeholder="Filter by name"
         value={filter}
@@ -492,11 +493,11 @@ export default function AssetsPanel({
       />
 
       {indexError ? (
-        <p class="fabry-arch-asset-error">
+        <p class={styles.assetError}>
           {indexError}
           <button
             type="button"
-            class="fabry-arch-asset-btn"
+            class={styles.assetBtn}
             data-act="retry"
             // A read is queued on the store's write chain, so one issued mid-batch waits behind
             // every upload in it — for a 30-file batch, minutes of a button that does nothing
@@ -512,11 +513,11 @@ export default function AssetsPanel({
         </p>
       ) : null}
       {note ? (
-        <p class="fabry-arch-asset-note">
+        <p class={styles.assetNote}>
           {note}
           <button
             type="button"
-            class="fabry-arch-asset-x"
+            class={styles.assetX}
             aria-label="Dismiss"
             onClick={() => setNote(null)}
           >
@@ -526,18 +527,20 @@ export default function AssetsPanel({
       ) : null}
 
       {log.rows.length || tail ? (
-        <div class="fabry-arch-asset-log">
-          {tail ? <div class="fabry-arch-asset-log-more">{tail}</div> : null}
+        <div class={styles.assetLog}>
+          {tail ? <div class={styles.assetLogMore}>{tail}</div> : null}
           {log.rows.map((e) => (
-            <div key={e.id} class={'fabry-arch-asset-log-row state-' + e.state}>
-              <span class="fabry-arch-asset-name">{e.name}</span>
-              <span class={'fabry-arch-asset-pill ' + e.state}>{LOG_LABEL[e.state]}</span>
-              {e.detail ? <span class="fabry-arch-asset-meta">{e.detail}</span> : null}
+            <div key={e.id} class={`${styles.assetLogRow} state-${e.state}`}>
+              <span class={styles.assetName}>{e.name}</span>
+              <span class={`${styles.assetPill} ${styles[e.state] || ''}`}>
+                {LOG_LABEL[e.state]}
+              </span>
+              {e.detail ? <span class={styles.assetMeta}>{e.detail}</span> : null}
             </div>
           ))}
           <button
             type="button"
-            class="fabry-arch-asset-x"
+            class={styles.assetX}
             aria-label="Clear"
             onClick={() => setLog(EMPTY_LOG)}
           >
@@ -548,30 +551,28 @@ export default function AssetsPanel({
 
       {SECTIONS.map(([kind, label]) =>
         groups[kind].length ? (
-          <div key={kind} class={'fabry-arch-asset-group ' + kind}>
-            <div class="fabry-arch-asset-group-t">{label}</div>
+          <div key={kind} class={styles.assetGroup} data-kind={kind}>
+            <div class={styles.assetGroupT}>{label}</div>
             {groups[kind].map((r) => (
-              <div key={r.key} class="fabry-arch-asset-row" data-asset-key={r.key}>
-                <span class="fabry-arch-asset-ext">{extChip(r.name)}</span>
-                <span class="fabry-arch-asset-name" title={r.key}>
+              <div key={r.key} class={styles.assetRow} data-asset-key={r.key}>
+                <span class={styles.assetExt}>{extChip(r.name)}</span>
+                <span class={styles.assetName} title={r.key}>
                   {r.name}
                 </span>
-                <span class="fabry-arch-asset-meta">
+                <span class={styles.assetMeta}>
                   {formatBytes(r.size)}
                   {' · '}
                   {(refsByKey[r.key] || []).length} ref
                   {(refsByKey[r.key] || []).length === 1 ? '' : 's'}
                 </span>
                 {kind === 'unused' ? (
-                  <span class="fabry-arch-asset-pill unused">unused</span>
+                  <span class={`${styles.assetPill} ${styles.unused}`}>unused</span>
                 ) : null}
-                {kind === 'elsewhere' ? (
-                  <span class="fabry-arch-asset-in">{names(r.key)}</span>
-                ) : null}
-                <span class="fabry-arch-asset-acts">
+                {kind === 'elsewhere' ? <span class={styles.assetIn}>{names(r.key)}</span> : null}
+                <span class={styles.assetActs}>
                   <button
                     type="button"
-                    class="fabry-arch-asset-act"
+                    class={styles.assetAct}
                     data-act="copy"
                     title={'Copy the reference — ' + r.key}
                     onClick={() => copyRef(r.key)}
@@ -580,7 +581,7 @@ export default function AssetsPanel({
                   </button>
                   <button
                     type="button"
-                    class="fabry-arch-asset-act"
+                    class={styles.assetAct}
                     data-act="download"
                     title="Download"
                     onClick={() => one(r.key)}
@@ -589,7 +590,7 @@ export default function AssetsPanel({
                   </button>
                   <button
                     type="button"
-                    class="fabry-arch-asset-act"
+                    class={styles.assetAct}
                     data-act="delete"
                     title="Delete"
                     onClick={() => setConfirming(confirming === r.key ? null : r.key)}
@@ -600,11 +601,11 @@ export default function AssetsPanel({
                 {confirming === r.key ? (
                   // Informed, not blocked (§5.5): what still points at this file is named, and
                   // then the delete is allowed anyway.
-                  <div class="fabry-arch-asset-confirm">
-                    <span class="fabry-arch-asset-confirm-t">{confirmText(r.key)}</span>
+                  <div class={styles.assetConfirm}>
+                    <span class={styles.assetConfirmT}>{confirmText(r.key)}</span>
                     <button
                       type="button"
-                      class="fabry-arch-asset-btn danger"
+                      class={`${styles.assetBtn} ${styles.danger}`}
                       data-act="delete-confirm"
                       onClick={() => remove(r.key)}
                     >
@@ -612,7 +613,7 @@ export default function AssetsPanel({
                     </button>
                     <button
                       type="button"
-                      class="fabry-arch-asset-btn"
+                      class={styles.assetBtn}
                       data-act="delete-cancel"
                       onClick={() => setConfirming(null)}
                     >
@@ -627,12 +628,12 @@ export default function AssetsPanel({
       )}
 
       {!rows.length && !indexError ? (
-        <p class="fabry-arch-asset-empty">
+        <p class={styles.assetEmpty}>
           {'No files yet. Drop them here, or use Add files — they are stored in this organization.'}
         </p>
       ) : null}
       {rows.length > 0 && !shown.length ? (
-        <p class="fabry-arch-asset-empty">{`Nothing matches “${filter.trim()}”.`}</p>
+        <p class={styles.assetEmpty}>{`Nothing matches “${filter.trim()}”.`}</p>
       ) : null}
     </div>
   );

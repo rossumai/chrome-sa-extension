@@ -1,0 +1,79 @@
+/* Agent clarifying-question form + fallback notice (spec §1/§6). */
+.q {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--info-border);
+  border-radius: 10px;
+  background: var(--info-bg);
+}
+
+.qItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qText {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.qOpts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.qOpt {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.qOpt.isOn {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-hover);
+  font-weight: 600;
+}
+
+.qInput {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.qInput:focus {
+  outline: 2px solid var(--info-border);
+}
+
+.qSubmit {
+  align-self: flex-start;
+  border: 0;
+  background: var(--accent);
+  color: var(--bg-card);
+  font-weight: 650;
+  border-radius: 8px;
+  padding: 7px 16px;
+  cursor: pointer;
+}
+
+.qSubmit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.qDone .qAnswer {
+  font-size: 13px;
+  color: var(--accent);
+}

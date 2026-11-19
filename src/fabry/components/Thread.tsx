@@ -3,15 +3,17 @@ import { useEffect, useRef } from 'preact/hooks';
 import * as store from '../store.js';
 import AssistantTurn from './AssistantTurn.jsx';
 import type { Turn } from '../thread.js';
+import styles from './Thread.module.css';
+import appStyles from './App.module.css';
 
 function UserTurn({ turn }: { turn: Turn }) {
-  if (turn.chip) return <div class="fabry-turn-chip">{turn.text}</div>;
+  if (turn.chip) return <div class={styles.turnChip}>{turn.text}</div>;
   return (
-    <div class="fabry-turn-user">
+    <div class={styles.turnUser}>
       {turn.images.map((img, idx) => (
         <img
           key={idx}
-          class="fabry-turn-img"
+          class={styles.turnImg}
           src={`data:${img.media_type};base64,${img.data}`}
           alt="attachment"
         />
@@ -27,11 +29,11 @@ export default function Thread() {
   const live = store.liveTurn.value;
 
   // Pin-to-bottom: only auto-scroll when the user hasn't scrolled up. The
-  // scroll region is the whole main pane (.fabry-main), not the thread itself.
+  // scroll region is the whole main pane (App's .main), not the thread itself.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const scroller = el.closest('.fabry-main') || el;
+    const scroller = el.closest('.' + appStyles.main) || el;
     const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 120;
     if (nearBottom) scroller.scrollTop = scroller.scrollHeight;
   }, [turns, live && live.text, live && live.reasoning]);
@@ -39,16 +41,16 @@ export default function Thread() {
   // The empty-new-chat greeting now lives in <Welcome> (App renders it instead of
   // this thread stack while the chat is empty), so Thread only renders turns + live.
   return (
-    <div class="fabry-thread" ref={ref}>
+    <div class={styles.thread} ref={ref}>
       {store.threadLoading.value && (
-        <div class="fabry-thread-loading">Loading conversation{'…'}</div>
+        <div class={styles.threadLoading}>Loading conversation{'…'}</div>
       )}
       {turns.map((t, i) => {
         if (t.role !== 'assistant') return <UserTurn key={i} turn={t} />;
         return <AssistantTurn key={i} turn={t} threadIdx={i} streaming={false} />;
       })}
       {store.streaming.value && store.deepPhase.value && (
-        <div class="fabry-deep-phase">
+        <div class={styles.deepPhase}>
           {store.deepPhase.value.phase === 'verify'
             ? 'Verifying in a fresh chat…'
             : `Refining ${store.deepPhase.value.round}/2…`}

@@ -1,0 +1,53 @@
+.cmdmenu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 5;
+}
+
+.cmdRow {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cmdRow:hover {
+  background: var(--bg-hover);
+}
+
+.cmdName {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.cmdDesc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.cmdArg {
+  border: 1px solid var(--info-border);
+  background: none;
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 10px;
+  padding: 1px 8px;
+  margin: 0 0 4px 26px;
+  cursor: pointer;
+}

@@ -1,0 +1,388 @@
+/* The Architect's sidebar: the deliverable list, its outline, and the Run all footer. */
+.side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+/* Bottom panel (B2): full-width Run (same width as Stop — no jump), results
+   summary, then New at the very bottom. */
+.foot {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  padding-top: 9px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.runall {
+  width: 100%;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.runall:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.runall:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.filter {
+  display: flex;
+  gap: 4px;
+}
+
+.filterChip {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 3px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filterChip:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.filterChip[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filterChip.pass[aria-pressed='true'] {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.filterChip.fail[aria-pressed='true'] {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.filterChip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.item.skipped .itemTitle {
+  color: var(--text-secondary);
+}
+
+.skip {
+  flex: none;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.summary {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary .ok {
+  color: var(--success-fg);
+  font-weight: 600;
+}
+
+.summary .bad {
+  color: var(--danger-fg);
+  font-weight: 600;
+}
+
+.summary .warn {
+  color: var(--warning-fg);
+  font-weight: 600;
+}
+
+.newDeliverable {
+  width: 100%;
+  text-align: center;
+  border: 1px dashed var(--border);
+  color: var(--accent);
+  background: none;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.newDeliverable:hover {
+  background: var(--bg-hover);
+  border-style: solid;
+}
+
+/* flex:1 pushes the footer down; the list breaks out of the sidebar's right
+   padding (margin-right:-10px) and hides its scrollbar so the active row's
+   surface runs flush into the editor with no seam. */
+.list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: none;
+  margin-right: -10px;
+  scrollbar-width: none;
+}
+
+.list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.empty {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  padding: 8px 6px;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  padding: 7px 6px 7px 10px;
+  border-radius: 10px 0 0 10px;
+  cursor: pointer;
+}
+
+.item:hover {
+  background: var(--bg-hover);
+}
+
+/* Active row blends into the editor: same --bg-card surface, no right seam. */
+.item.active {
+  background: var(--bg-card);
+}
+
+.item.active:hover {
+  background: var(--bg-card);
+}
+
+.item.dragging {
+  opacity: 0.45;
+}
+
+/* Indicator edge matches where the row will land (see ArchitectSidebar). */
+.item.dragoverBefore {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.item.dragoverAfter {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.itemTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.dot.pass {
+  background: var(--success);
+}
+
+.dot.fail {
+  background: var(--danger);
+}
+
+.dot.uncertain {
+  background: var(--warning);
+}
+
+.dot.stale {
+  box-shadow: inset 0 0 0 2px var(--bg-card);
+  opacity: 0.75;
+}
+
+/* hollow = outdated */
+/* Visible ring spinner (a solid rotating circle shows no motion). */
+.dot.running {
+  box-sizing: border-box;
+  background: transparent;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+}
+
+/* Per-row kebab (⋮) menu holding Re-run + Delete (Delete confirms inline). */
+.kebab {
+  flex: none;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 6px;
+  opacity: 0;
+}
+
+.item:hover .kebab,
+.item.active .kebab,
+.item.menuopen .kebab {
+  opacity: 0.55;
+}
+
+.kebab:hover {
+  opacity: 1;
+  background: var(--bg-hover);
+}
+
+.menu {
+  position: absolute;
+  right: 6px;
+  top: 30px;
+  z-index: 20;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+  padding: 4px;
+  min-width: 132px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.menu.isUp {
+  top: auto;
+  bottom: 30px;
+}
+
+.menuItem {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.menuItem:hover {
+  background: var(--bg-hover);
+}
+
+.menuItem:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.menuItem.danger {
+  color: var(--danger-fg);
+}
+
+.menuItem.danger:hover {
+  background: var(--danger-bg);
+}
+
+.error {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: 0 4px 8px;
+  font-size: 12px;
+}
+
+/* ── Document outline, nested under the open deliverable (owner, 2026-08-18) ──────────
+   The TOC moved here from inside the document: upstream's in-page `.toc` wants a 1280px
+   column and the pane is ~936px at a 1280px window, so it was hidden in practice. Nesting it
+   under the row it belongs to keeps the sidebar ONE navigation tree instead of two panels
+   competing for the same vertical space. */
+.outline {
+  display: flex;
+  flex-direction: column;
+  margin: 1px 0 5px;
+  padding-left: 9px;
+  border-left: 1px solid var(--border);
+}
+
+.outlineItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.45;
+  padding: 2px 6px 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outlineItem.level3 {
+  padding-left: 20px;
+  font-size: 11px;
+}
+
+.outlineItem:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.outlineItem.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+
+/* Local copy of the Console's global `spin` (a module's animation names are local). */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

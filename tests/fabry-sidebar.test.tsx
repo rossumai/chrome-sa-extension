@@ -11,6 +11,7 @@ vi.mock('../src/fabry/chat.js', () => ({
 import * as chat from '../src/fabry/chat.js';
 import * as store from '../src/fabry/store.js';
 import Sidebar from '../src/fabry/components/Sidebar.jsx';
+import sidebarStyles from '../src/fabry/components/Sidebar.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -39,16 +40,18 @@ beforeEach(() => {
 describe('Sidebar', () => {
   it('renders the Mr. Fabry brand title at the top', () => {
     const root = mount();
-    expect(root.querySelector('.fabry-sidebar-name')!.textContent).toBe('Mr. Fabry');
-    expect(root.querySelector('.fabry-sidebar-title .fabry-sidebar-mark')).toBeTruthy();
+    expect(root.querySelector(`.${sidebarStyles.sidebarName}`)!.textContent).toBe('Mr. Fabry');
+    expect(
+      root.querySelector(`.${sidebarStyles.sidebarTitle} .${sidebarStyles.sidebarMark}`),
+    ).toBeTruthy();
   });
   it('renders rows with title fallback chain, no time-ago meta, and marks the active one', () => {
     const root = mount();
-    const rows = [...root.querySelectorAll('.fabry-chat-row')];
+    const rows = [...root.querySelectorAll(`.${sidebarStyles.chatRow}`)];
     expect(rows.length).toBe(2);
     expect(rows[0].textContent).toContain('Failed exports triage'); // summary wins
     expect(rows[1].textContent).toContain('hello'); // first_message fallback
-    expect(rows[1].classList.contains('active')).toBe(true);
+    expect(rows[1].classList.contains(sidebarStyles.active)).toBe(true);
     expect(root.querySelector('.fabry-chat-meta')).toBeNull(); // time-ago removed
   });
   it('has no chat search box', () => {
@@ -56,9 +59,9 @@ describe('Sidebar', () => {
   });
   it('clicking a row opens it; New chat resets', () => {
     const root = mount();
-    root.querySelectorAll<HTMLElement>('.fabry-chat-row')[0].click();
+    root.querySelectorAll<HTMLElement>(`.${sidebarStyles.chatRow}`)[0].click();
     expect(chat.openChat).toHaveBeenCalledWith('chat_1');
-    root.querySelector<HTMLElement>('.fabry-newchat')!.click();
+    root.querySelector<HTMLElement>(`.${sidebarStyles.newchat}`)!.click();
     expect(chat.startNewChat).toHaveBeenCalled();
   });
 });
@@ -66,9 +69,9 @@ describe('Sidebar', () => {
 describe('Sidebar — no collapse', () => {
   it('always renders expanded (no collapse toggle)', () => {
     const root = mount();
-    expect(root.querySelector('.fabry-sidebar.collapsed')).toBeNull();
+    expect(root.querySelector(`.${sidebarStyles.sidebar}.collapsed`)).toBeNull();
     expect(root.querySelector('.fabry-sidebar-toggle')).toBeNull();
-    expect(root.querySelector('.fabry-chatlist')).toBeTruthy();
+    expect(root.querySelector(`.${sidebarStyles.chatlist}`)).toBeTruthy();
   });
 });
 
@@ -77,17 +80,23 @@ describe('Sidebar — infinite scroll', () => {
     store.chatsTotal.value = 50; // more than loaded
     const root = mount();
     expect(root.querySelector('.fabry-loadmore')).toBeNull();
-    root.querySelector('.fabry-chatlist')!.dispatchEvent(new Event('scroll', { bubbles: true }));
+    root
+      .querySelector(`.${sidebarStyles.chatlist}`)!
+      .dispatchEvent(new Event('scroll', { bubbles: true }));
     expect(chat.loadChats).toHaveBeenCalledWith({ more: true }); // jsdom zero-geometry = near-bottom
   });
   it('does not load while already loading or when everything is loaded', () => {
     store.chatsLoading.value = true;
     const root = mount();
-    root.querySelector('.fabry-chatlist')!.dispatchEvent(new Event('scroll', { bubbles: true }));
+    root
+      .querySelector(`.${sidebarStyles.chatlist}`)!
+      .dispatchEvent(new Event('scroll', { bubbles: true }));
     store.chatsLoading.value = false;
     store.chatsTotal.value = 2; // all loaded
     const root2 = mount();
-    root2.querySelector('.fabry-chatlist')!.dispatchEvent(new Event('scroll', { bubbles: true }));
+    root2
+      .querySelector(`.${sidebarStyles.chatlist}`)!
+      .dispatchEvent(new Event('scroll', { bubbles: true }));
     expect(chat.loadChats).not.toHaveBeenCalled();
   });
 });
@@ -99,7 +108,7 @@ describe('Sidebar — resize', () => {
     } as any;
     store.sidebarWidth.value = 280;
     const root = mount();
-    const handle = root.querySelector('.fabry-side-resizer');
+    const handle = root.querySelector(`.${sidebarStyles.sideResizer}`);
     handle!.dispatchEvent(new MouseEvent('mousedown', { clientX: 300, bubbles: true }));
     document.dispatchEvent(new MouseEvent('mousemove', { clientX: 380, bubbles: true }));
     expect(store.sidebarWidth.value).toBe(360);

@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
+import styles from './FabryQuestions.module.css';
 
 // An option is normally an object `{value, label, description}` (live shape);
 // a plain string is also accepted for backward-compat.
@@ -46,29 +47,30 @@ export default function FabryQuestions({
 
   if (submitted) {
     return (
-      <div class="fabry-q fabry-q-done">
+      <div class={`${styles.q} ${styles.qDone}`}>
         {questions.map((q, i) => (
-          <div key={i} class="fabry-q-item">
-            <div class="fabry-q-text">{q.question}</div>
-            <div class="fabry-q-answer">{answerFor(q, answers[i])}</div>
+          <div key={i} class={styles.qItem}>
+            <div class={styles.qText}>{q.question}</div>
+            <div class={styles.qAnswer}>{answerFor(q, answers[i])}</div>
           </div>
         ))}
       </div>
     );
   }
   return (
-    <div class="fabry-q">
+    <div class={styles.q}>
       {questions.map((q, i) => (
-        <div key={i} class="fabry-q-item">
-          <div class="fabry-q-text">{q.question}</div>
+        <div key={i} class={styles.qItem}>
+          <div class={styles.qText}>{q.question}</div>
           {q.options && q.options.length ? (
-            <div class="fabry-q-opts">
+            <div class={styles.qOpts}>
               {q.options.map((opt: any, k: any) => (
                 <button
                   type="button"
                   key={k}
                   class={
-                    'fabry-q-opt' + (answers[i].selected.includes(optLabel(opt)) ? ' is-on' : '')
+                    styles.qOpt +
+                    (answers[i].selected.includes(optLabel(opt)) ? ' ' + styles.isOn : '')
                   }
                   title={optDesc(opt)}
                   onClick={() => toggle(i, optLabel(opt), q.multi_select)}
@@ -79,7 +81,7 @@ export default function FabryQuestions({
             </div>
           ) : (
             <input
-              class="fabry-q-input"
+              class={styles.qInput}
               type="text"
               value={answers[i].text}
               placeholder="Your answer"
@@ -90,7 +92,7 @@ export default function FabryQuestions({
       ))}
       <button
         type="button"
-        class="fabry-q-submit"
+        class={styles.qSubmit}
         disabled={!complete}
         onClick={async () => {
           setSubmitted(true);

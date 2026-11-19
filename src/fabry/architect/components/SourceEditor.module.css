@@ -1,0 +1,31 @@
+/* Edit mode: EVERY deliverable is an editor, visible immediately (owner, 2026-08-19), with Markdown
+   highlighting. `.markdown-body` is carried on the HOST for its box — max-width, centring, and
+   upstream's own @container branch that drops the padding on a narrow column (measured: 15px at a
+   646px column, not the 45px the wide rule states) — so switching mode does not move the text
+   sideways. Restating those numbers here is what made Edit sit wider than Preview. */
+.specCm {
+  min-height: 1.6em;
+}
+
+/* Content height, page scrolling: the specification is ONE scroller, so no editor may own a viewport
+   of its own (measured: inner scroll range 0, and CodeMirror still renders only the visible lines). */
+.specCm :global(.cm-editor) {
+  height: auto;
+}
+
+.specCm :global(.cm-scroller) {
+  overflow: visible;
+}
+
+.specCm :global(.cm-content) {
+  min-height: 0 !important;
+}
+
+/* A file dragged over an editor: the same outline the Assets tab paints, so the two drop targets
+   read as one gesture (they share useFileDrop). */
+.specCm.dragging {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+  background: var(--info-bg);
+}

@@ -12,6 +12,7 @@ import { message } from '../errorText.js';
 import { noteWith, withFailure, type NoteFailures } from '../noteText.js';
 import useFileDrop from '../hooks/useFileDrop.js';
 import type { AssetRow } from '../assets.js';
+import styles from './SourceEditor.module.css';
 
 // One deliverable's Markdown source, with highlighting, inside the unified specification view.
 //
@@ -257,7 +258,7 @@ export default function SourceEditor({
     if (cur !== text) v.dispatch({ changes: { from: 0, to: cur.length, insert: text } });
   }, [text]);
 
-  return <div class={'fabry-spec-cm' + (dragging ? ' dragging' : '')} ref={host} />;
+  return <div class={styles.specCm + (dragging ? ' ' + styles.dragging : '')} ref={host} />;
 }
 
 // Put a source LINE at the top of the page's scroller.

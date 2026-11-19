@@ -24,6 +24,10 @@ vi.mock('../src/fabry/chat.js', () => ({
 import * as chat from '../src/fabry/chat.js';
 import * as store from '../src/fabry/store.js';
 import App from '../src/fabry/components/App.jsx';
+import sidebarStyles from '../src/fabry/components/Sidebar.module.css';
+import appStyles from '../src/fabry/components/App.module.css';
+import welcomeStyles from '../src/fabry/components/Welcome.module.css';
+import threadStyles from '../src/fabry/components/Thread.module.css';
 
 function mount(props: any) {
   const root = document.createElement('div');
@@ -65,17 +69,17 @@ describe('Fabry App states', () => {
   });
   it('connected renders sidebar + main', () => {
     const root = mount({ connected: true });
-    expect(root.querySelector('.fabry-sidebar')).toBeTruthy();
-    expect(root.querySelector('.fabry-main')).toBeTruthy();
+    expect(root.querySelector(`.${sidebarStyles.sidebar}`)).toBeTruthy();
+    expect(root.querySelector(`.${appStyles.main}`)).toBeTruthy();
   });
   it('app-level error shows the banner', () => {
     store.error.value = 'Session expired. Reconnect.';
-    expect(mount({ connected: true }).querySelector('.fabry-error')!.textContent).toContain(
+    expect(mount({ connected: true }).querySelector(`.${appStyles.error}`)!.textContent).toContain(
       'Session expired',
     );
   });
   it('empty new chat renders the centered welcome; a non-empty chat renders the thread', () => {
-    expect(mount({ connected: true }).querySelector('.fabry-welcome')).toBeTruthy();
+    expect(mount({ connected: true }).querySelector(`.${welcomeStyles.welcome}`)).toBeTruthy();
     store.activeChatId.value = 'chat_1';
     store.thread.value = [
       {
@@ -90,7 +94,7 @@ describe('Fabry App states', () => {
       },
     ];
     const root = mount({ connected: true });
-    expect(root.querySelector('.fabry-welcome')).toBeNull();
-    expect(root.querySelector('.fabry-thread')).toBeTruthy();
+    expect(root.querySelector(`.${welcomeStyles.welcome}`)).toBeNull();
+    expect(root.querySelector(`.${threadStyles.thread}`)).toBeTruthy();
   });
 });

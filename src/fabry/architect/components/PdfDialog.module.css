@@ -1,0 +1,34 @@
+/* PDF dialog rows (the print/save-as-PDF options). Radios and checkboxes with a secondary
+   line each, because the choices are not self-evident — "Whole specification" vs "This
+   deliverable" and what a contents page or a check verdict means on paper. */
+.pdfRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 5px 2px;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+
+.pdfRow input {
+  margin: 2px 0 0;
+  flex: none;
+  cursor: pointer;
+}
+
+.pdfRow.off,
+.pdfRow input:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.pdfRow > span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pdfHint {
+  font-size: 11px;
+  color: var(--text-secondary);
+}

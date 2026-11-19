@@ -1,0 +1,192 @@
+/* The document's column in ArchitectApp's unified grid (formerly `.fabry-arch-unified >
+   .fabry-spec`; SpecView is only ever rendered there). */
+.spec {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.spec {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.specBar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.specLbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.specSp {
+  margin-left: auto;
+}
+
+.spec :global(.docs-pane) {
+  flex: 1;
+  min-height: 0;
+}
+
+.specSecHd {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 26px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.specSecN {
+  font-size: 12.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.specPill {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.specPill.pass {
+  background: var(--success-bg);
+  color: var(--success-fg);
+  border-color: var(--success-border);
+}
+
+.specPill.fail {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border-color: var(--danger-border);
+}
+
+.specPill.uncertain {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border-color: var(--warning-border);
+}
+
+.specPill.run {
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border-color: var(--info-border);
+}
+
+/* Stale = the SAME verdict on less solid ground: the fill drops away and the pill says so. One badge,
+   two facts — the separate "stale" word beside it is gone (2026-08-19), as is the manual state pill. */
+.specPill.pass.stale,
+.specPill.fail.stale,
+.specPill.uncertain.stale {
+  background: none;
+}
+
+/* A diff sent out of the rail, where there is room to read it. */
+.specReview {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sidebar);
+}
+
+.specReviewBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 26px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.specReviewT {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.specReviewBody {
+  padding: 12px 26px 18px;
+}
+
+/* Where localpages prints `solution.md:75 <state-label> …` to its terminal. A trainee
+   of this pane has no terminal, and an unrecognised custom element renders as nothing
+   at all, so the diagnostic has to be on screen. */
+.docWarn {
+  position: relative;
+  flex: none;
+  padding: 6px 30px 6px 14px;
+  border-bottom: 1px solid var(--warning-border);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  font-size: 11px;
+  line-height: 1.5;
+  max-height: 96px;
+  overflow: auto;
+}
+
+.docNote {
+  font-weight: 600;
+}
+
+.docWarnX {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 0 4px;
+}
+
+.docWarnX:hover {
+  opacity: 1;
+}
+
+/* Printing the specification: the bar, the notes and the review host are app chrome, the
+   column unwinds so the document flows across pages, and a sticky section header becomes a
+   band at the top of its section (see the print block in src/console/legacy/shared.css). */
+@media print {
+  :global(body:has(.docs-pane)) .specBar,
+  :global(body:has(.docs-pane)) .docWarn,
+  :global(body:has(.docs-pane)) .specReview {
+    display: none !important;
+  }
+
+  :global(body:has(.docs-pane)) .spec {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  :global(body:has(.docs-pane)) .specSecHd {
+    position: static !important;
+  }
+}

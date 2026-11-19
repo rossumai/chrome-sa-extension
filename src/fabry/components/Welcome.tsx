@@ -3,6 +3,7 @@ import Composer from './Composer.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
 import { STARTERS } from '../starters.js';
 import { sendMessage } from '../chat.js';
+import styles from './Welcome.module.css';
 
 // Centered "welcome" empty state for a new chat (Claude-style): the composer is the
 // hero, vertically centered under a short greeting, with the starter prompts as
@@ -11,19 +12,19 @@ import { sendMessage } from '../chat.js';
 // bottom-composer thread view.
 export default function Welcome() {
   return (
-    <div class="fabry-welcome">
-      <div class="fabry-welcome-inner">
-        <div class="fabry-welcome-mark">
+    <div class={styles.welcome}>
+      <div class={styles.welcomeInner}>
+        <div class={styles.welcomeMark}>
           <FabryMark size={40} />
         </div>
-        <div class="fabry-welcome-title">What would you like to explore?</div>
-        <Composer />
-        <div class="fabry-welcome-pills">
+        <div class={styles.welcomeTitle}>What would you like to explore?</div>
+        <Composer welcome />
+        <div class={styles.welcomePills}>
           {STARTERS.map((s) => (
             <button
               type="button"
               key={s.label}
-              class="fabry-welcome-pill"
+              class={styles.welcomePill}
               title={s.prompt}
               onClick={() => sendMessage(s.prompt)}
             >

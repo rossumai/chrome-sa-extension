@@ -10,6 +10,7 @@ import {
 } from '../../../ui/Modal.jsx';
 import * as store from '../store.js';
 import ctl from '../../../ui/controls.module.css';
+import styles from './PdfDialog.module.css';
 
 // Asked every time: which scope. Remembered: what the document includes.
 //
@@ -37,7 +38,7 @@ function PdfForm({
       </ModalMessage>
 
       <ModalFieldLabel>{'What to print'}</ModalFieldLabel>
-      <label class="fabry-arch-pdf-row">
+      <label class={styles.pdfRow}>
         <input
           type="radio"
           name="pdf-scope"
@@ -46,10 +47,10 @@ function PdfForm({
         />
         <span>
           {'This deliverable'}
-          <span class="fabry-arch-pdf-hint">{deliverableTitle}</span>
+          <span class={styles.pdfHint}>{deliverableTitle}</span>
         </span>
       </label>
-      <label class="fabry-arch-pdf-row">
+      <label class={styles.pdfRow}>
         <input
           type="radio"
           name="pdf-scope"
@@ -59,14 +60,14 @@ function PdfForm({
         />
         <span>
           {'Whole specification'}
-          <span class="fabry-arch-pdf-hint">
+          <span class={styles.pdfHint}>
             {count < 2 ? 'only one deliverable exists' : `${count} deliverables, one after another`}
           </span>
         </span>
       </label>
 
       <ModalFieldLabel>{'Include'}</ModalFieldLabel>
-      <label class={'fabry-arch-pdf-row' + (many ? '' : ' off')}>
+      <label class={styles.pdfRow + (many ? '' : ' ' + styles.off)}>
         <input
           type="checkbox"
           checked={opts.contents}
@@ -75,16 +76,16 @@ function PdfForm({
         />
         <span>
           {'Contents page'}
-          <span class="fabry-arch-pdf-hint">
+          <span class={styles.pdfHint}>
             {many ? 'a list of the documents, first page' : 'needs more than one document'}
           </span>
         </span>
       </label>
-      <label class="fabry-arch-pdf-row">
+      <label class={styles.pdfRow}>
         <input type="checkbox" checked={opts.verdicts} onChange={() => toggle('verdicts')} />
         <span>
           {'Check verdict'}
-          <span class="fabry-arch-pdf-hint">{'the last ✓ Met / ✗ Not met from Fabry'}</span>
+          <span class={styles.pdfHint}>{'the last ✓ Met / ✗ Not met from Fabry'}</span>
         </span>
       </label>
 

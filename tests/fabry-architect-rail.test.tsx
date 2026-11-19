@@ -24,6 +24,7 @@ import * as store from '../src/fabry/architect/store.js';
 import * as fstore from '../src/fabry/store.js';
 import InspectorRail from '../src/fabry/architect/components/InspectorRail.jsx';
 import { deliverable } from './support/architect.js';
+import inspectorRailStyles from '../src/fabry/architect/components/InspectorRail.module.css';
 
 const D = [
   deliverable({ id: 'd1', text: '# One', order: 1, title: 'One', titleSource: 'manual' }),
@@ -58,31 +59,33 @@ beforeEach(() => {
 describe('InspectorRail', () => {
   it('names the deliverable it is inspecting and follows the scroll once it settles', () => {
     const root = mount();
-    expect(root.querySelector('.fabry-rail-name')!.textContent).toMatch(/One/);
+    expect(root.querySelector(`.${inspectorRailStyles.railName}`)!.textContent).toMatch(/One/);
     // The rail follows the SETTLED target, not the live one — a fast scroll must not re-render this
     // panel on every frame (store.setSettledTarget explains the measurement behind that).
     act(() => {
       store.setSpyTarget('d2');
     });
-    expect(root.querySelector('.fabry-rail-name')!.textContent).toMatch(/One/);
+    expect(root.querySelector(`.${inspectorRailStyles.railName}`)!.textContent).toMatch(/One/);
     act(() => {
       store.setSettledTarget('d2', { immediate: true });
     });
-    expect(root.querySelector('.fabry-rail-name')!.textContent).toMatch(/Two/);
-    expect(root.querySelector('.fabry-rail-for')!.textContent).toMatch(/Inspecting/);
+    expect(root.querySelector(`.${inspectorRailStyles.railName}`)!.textContent).toMatch(/Two/);
+    expect(root.querySelector(`.${inspectorRailStyles.railFor}`)!.textContent).toMatch(
+      /Inspecting/,
+    );
   });
 
   it('pinning stops it following, and says so', () => {
     const root = mount();
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-rail-pin')!.click();
+      root.querySelector<HTMLElement>(`.${inspectorRailStyles.railPin}`)!.click();
     });
     expect(store.pinnedTarget.value).toBe('d1');
     act(() => {
       store.setSettledTarget('d2', { immediate: true });
     });
-    expect(root.querySelector('.fabry-rail-name')!.textContent).toMatch(/One/);
-    expect(root.querySelector('.fabry-rail-for')!.textContent).toMatch(/Pinned/i);
+    expect(root.querySelector(`.${inspectorRailStyles.railName}`)!.textContent).toMatch(/One/);
+    expect(root.querySelector(`.${inspectorRailStyles.railFor}`)!.textContent).toMatch(/Pinned/i);
   });
 
   it('HOLDS the target while a check runs for the shown deliverable', () => {
@@ -93,42 +96,42 @@ describe('InspectorRail', () => {
     act(() => {
       store.setSettledTarget('d2', { immediate: true });
     });
-    expect(root.querySelector('.fabry-rail-name')!.textContent).toMatch(/One/);
-    expect(root.querySelector('.fabry-rail-held')).toBeTruthy();
+    expect(root.querySelector(`.${inspectorRailStyles.railName}`)!.textContent).toMatch(/One/);
+    expect(root.querySelector(`.${inspectorRailStyles.railHeld}`)).toBeTruthy();
   });
 
   it('shows the verdict for its target and offers every tab', () => {
     const root = mount();
     expect(root.textContent).toMatch(/Met/);
     // Check, Refine, Implement, History, Assets — the fifth is the organization's files.
-    expect(root.querySelectorAll('.fabry-rail-tab').length).toBe(5);
+    expect(root.querySelectorAll(`.${inspectorRailStyles.railTab}`).length).toBe(5);
   });
 
   it('hides the Implement tab when the loop is not available', () => {
     fstore.implementAllowed.value = false;
     const root = mount();
-    expect(root.querySelectorAll('.fabry-rail-tab').length).toBe(4);
+    expect(root.querySelectorAll(`.${inspectorRailStyles.railTab}`).length).toBe(4);
     expect(root.textContent).not.toMatch(/Implement/);
   });
 
   it('offers to open a diff at document width, for the panels that need the room', () => {
     const root = mount();
-    expect(root.querySelector('.fabry-rail-wide')).toBe(null); // Check needs no extra width
+    expect(root.querySelector(`.${inspectorRailStyles.railWide}`)).toBe(null); // Check needs no extra width
     act(() => {
       (
-        [...root.querySelectorAll('.fabry-rail-tab')].find((t) =>
+        [...root.querySelectorAll(`.${inspectorRailStyles.railTab}`)].find((t) =>
           /History/.test(t.textContent),
         ) as HTMLElement
       ).click();
     });
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-rail-wide')!.click();
+      root.querySelector<HTMLElement>(`.${inspectorRailStyles.railWide}`)!.click();
     });
     expect(store.reviewTarget.value).toEqual({ id: 'd1', kind: 'history' });
   });
 
   it('renders nothing at all when there are no deliverables', () => {
     store.deliverables.value = [];
-    expect(mount().querySelector('.fabry-rail')).toBe(null);
+    expect(mount().querySelector(`.${inspectorRailStyles.rail}`)).toBe(null);
   });
 });

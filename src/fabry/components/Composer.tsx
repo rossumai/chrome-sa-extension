@@ -6,6 +6,7 @@ import GerundLoader from '../../ui/GerundLoader.jsx';
 import CommandMenu from './CommandMenu.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
 import Tip from '../../ui/Tip.jsx';
+import styles from './Composer.module.css';
 
 const MAX_IMAGES = 4;
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -15,12 +16,12 @@ const GERUNDS = ['Thinking', 'Investigating', 'Reading', 'Cross-checking', 'Answ
 // Bottom-bar icons (stroke, currentColor). Kept inline so the composer owns no
 // extra deps; sized by the button, not hard-coded here beyond the 24-box viewBox.
 const IconPlus = () => (
-  <svg class="fabry-bar-ico" viewBox="0 0 24 24">
+  <svg class={styles.barIco} viewBox="0 0 24 24">
     <path d="M12 5v14M5 12h14" />
   </svg>
 );
 const IconSend = () => (
-  <svg class="fabry-bar-ico" viewBox="0 0 24 24">
+  <svg class={styles.barIco} viewBox="0 0 24 24">
     <path d="M12 19V5M5 12l7-7 7 7" />
   </svg>
 );
@@ -33,7 +34,8 @@ function fileToImage(file: any) {
   });
 }
 
-export default function Composer() {
+// `welcome`: the composer sits centered in <Welcome> instead of pinned to the thread's bottom.
+export default function Composer({ welcome }: { welcome?: boolean }) {
   const [draft, setDraft] = useState('');
   const [images, setImages] = useState<any[]>([]);
   const streaming = store.streaming.value;
@@ -90,19 +92,19 @@ export default function Composer() {
 
   return (
     <div
-      class="fabry-composer"
+      class={styles.composer + (welcome ? ' ' + styles.welcome : '')}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
         addFiles(e.dataTransfer?.files || []);
       }}
     >
-      {store.sendError.value && <div class="fabry-senderr">{store.sendError.value}</div>}
-      <div class="fabry-composer-box">
+      {store.sendError.value && <div class={styles.senderr}>{store.sendError.value}</div>}
+      <div class={styles.composerBox}>
         {images.length > 0 && (
-          <div class="fabry-attach-row">
+          <div class={styles.attachRow}>
             {images.map((img, i) => (
-              <span class="fabry-attach">
+              <span class={styles.attach}>
                 <img src={`data:${img.media_type};base64,${img.data}`} alt="attachment" />
                 <button
                   type="button"
@@ -115,7 +117,7 @@ export default function Composer() {
             ))}
           </div>
         )}
-        <div class="fabry-input-wrap">
+        <div class={styles.inputWrap}>
           {showMenu && (
             <CommandMenu
               query={draft}
@@ -124,7 +126,7 @@ export default function Composer() {
             />
           )}
           <textarea
-            class="fabry-input"
+            class={styles.input}
             rows={1}
             placeholder={
               streaming
@@ -141,8 +143,8 @@ export default function Composer() {
             onPaste={onPaste}
           />
         </div>
-        <div class="fabry-bar">
-          <label class="fabry-attach-btn" title="Attach image">
+        <div class={styles.bar}>
+          <label class={styles.attachBtn} title="Attach image">
             <IconPlus />
             <input
               type="file"
@@ -156,11 +158,11 @@ export default function Composer() {
             />
           </label>
           {streaming && (
-            <span class="fabry-working">
+            <span class={styles.working}>
               <GerundLoader gerunds={GERUNDS} />
             </span>
           )}
-          <span class="fabry-bar-spacer" />
+          <span class={styles.barSpacer} />
           {store.deepVerifyAllowed.value && (
             <Tip
               text={
@@ -172,7 +174,7 @@ export default function Composer() {
             >
               <button
                 type="button"
-                class={'fabry-deep-toggle' + (store.deepMode.value ? ' is-on' : '')}
+                class={styles.deepToggle + (store.deepMode.value ? ' ' + styles.isOn : '')}
                 aria-label="Deep verify"
                 aria-pressed={store.deepMode.value}
                 onClick={() => {
@@ -184,13 +186,13 @@ export default function Composer() {
             </Tip>
           )}
           {streaming ? (
-            <button type="button" class="fabry-stop" title="Stop" onClick={stopStreaming}>
-              <span class="fabry-stop-sq" />
+            <button type="button" class={styles.stop} title="Stop" onClick={stopStreaming}>
+              <span class={styles.stopSq} />
             </button>
           ) : (
             <button
               type="button"
-              class="fabry-send"
+              class={styles.send}
               title="Send"
               disabled={!draft.trim()}
               onClick={() => submit()}
@@ -200,7 +202,7 @@ export default function Composer() {
           )}
         </div>
       </div>
-      <div class="fabry-notice">
+      <div class={styles.notice}>
         Mr. Fabry works read-only here {'—'} it inspects this organization to answer you, but won't
         change anything.
       </div>

@@ -15,6 +15,7 @@ import * as actions from '../src/fabry/architect/actions.js';
 import * as store from '../src/fabry/architect/store.js';
 import HistoryPanel from '../src/fabry/architect/components/HistoryPanel.jsx';
 import { deliverable } from './support/architect.js';
+import historyPanelStyles from '../src/fabry/architect/components/HistoryPanel.module.css';
 
 const D = deliverable({ id: 'd1', text: 'current text here', editedAt: Date.now() - 60_000 });
 function mount(deliverable = D) {
@@ -25,7 +26,7 @@ function mount(deliverable = D) {
   });
   return root;
 }
-const rows = (root: any) => [...root.querySelectorAll('.fabry-arch-hist-btn')];
+const rows = (root: any) => [...root.querySelectorAll(`.${historyPanelStyles.histBtn}`)];
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -55,7 +56,9 @@ describe('HistoryPanel', () => {
   it('surfaces a load error instead of an empty state', () => {
     store.revisions.value = { d1: { loading: false, error: 'Session expired.' } };
     const root = mount();
-    expect(root.querySelector('.fabry-arch-hist-error')!.textContent).toMatch(/Session expired/);
+    expect(root.querySelector(`.${historyPanelStyles.histError}`)!.textContent).toMatch(
+      /Session expired/,
+    );
   });
 
   it('lists a row per version with its kind of change, newest first, plus the live text as a landmark', () => {
@@ -76,7 +79,7 @@ describe('HistoryPanel', () => {
     expect(labels[1]).toMatch(/Edited/);
     expect(labels[1]).toMatch(/2h ago/);
     // The current text is shown but is not a version: no button, nothing to restore.
-    const current = root.querySelector('.fabry-arch-hist-current')!;
+    const current = root.querySelector(`.${historyPanelStyles.histCurrent}`)!;
     expect(current.textContent).toMatch(/Current/);
     expect(current.tagName).not.toBe('BUTTON');
   });
@@ -124,7 +127,7 @@ describe('HistoryPanel', () => {
       store.revisionTexts.value = { r1: 'current text gone' };
       store.selectedRevision.value = 'r1';
     });
-    const diff = root.querySelector('.fabry-arch-hist-diff')!;
+    const diff = root.querySelector(`.${historyPanelStyles.histDiff}`)!;
     expect(diff).toBeTruthy();
     expect(diff.querySelector('del')).toBeTruthy(); // 'gone' removed
     expect(diff.querySelector('ins')).toBeTruthy(); // 'here' added
@@ -138,7 +141,7 @@ describe('HistoryPanel', () => {
     act(() => {
       store.selectedRevision.value = 'r1';
     });
-    expect(root.querySelector('.fabry-arch-hist-diff')).toBe(null);
+    expect(root.querySelector(`.${historyPanelStyles.histDiff}`)).toBe(null);
     expect(root.textContent).toMatch(/Loading version/i);
   });
 
@@ -157,7 +160,7 @@ describe('HistoryPanel', () => {
       store.revisionTexts.value = { r1: 'one' };
       store.selectedRevision.value = 'r1';
     });
-    const vsNext = [...root.querySelectorAll('.fabry-arch-hist-cmp button')].find((b) =>
+    const vsNext = [...root.querySelectorAll(`.${historyPanelStyles.histCmp} button`)].find((b) =>
       /vs next/i.test(b.textContent),
     );
     act(() => {
@@ -176,12 +179,14 @@ describe('HistoryPanel', () => {
     act(() => {
       store.selectedRevision.value = 'r1';
     });
-    expect(root.querySelector<HTMLButtonElement>('.fabry-arch-hist-restore')!.disabled).toBe(true);
+    expect(
+      root.querySelector<HTMLButtonElement>(`.${historyPanelStyles.histRestore}`)!.disabled,
+    ).toBe(true);
 
     act(() => {
       store.revisionTexts.value = { r1: 'old' };
     });
-    const btn = root.querySelector<HTMLButtonElement>('.fabry-arch-hist-restore')!;
+    const btn = root.querySelector<HTMLButtonElement>(`.${historyPanelStyles.histRestore}`)!;
     expect(btn.disabled).toBe(false);
     act(() => {
       btn.click();

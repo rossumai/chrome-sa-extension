@@ -1,0 +1,290 @@
+/* ── The Assets tab (2026-08-24) ─────────────────────────────────────────────
+   The organization's files, in the inspector rail. Three groups, one row each,
+   actions on hover. The whole panel is the drop target, which is why the
+   dragging state paints the panel rather than a strip inside it. */
+.asset {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 180px;
+}
+
+.asset.dragging {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+  background: var(--info-bg);
+}
+
+.assetHd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.assetCount {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.assetSp {
+  flex: 1;
+}
+
+.assetBtn {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.assetBtn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.assetBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.assetBtn.danger {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.assetFilter {
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.assetGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.assetGroupT {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 4px 0 2px;
+}
+
+.assetRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 3px 4px;
+  border-radius: 6px;
+}
+
+.assetRow:hover {
+  background: var(--bg-hover);
+}
+
+.assetExt {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 4px;
+  flex: none;
+}
+
+.assetName {
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.assetMeta,
+.assetIn {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  flex: none;
+}
+
+.assetIn {
+  flex-basis: 100%;
+  padding-left: 30px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assetPill {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  padding: 1px 6px;
+  flex: none;
+  color: var(--text-secondary);
+  background: var(--bg-code);
+}
+
+.assetPill.unused,
+.assetPill.reused {
+  color: var(--warning-fg);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+}
+
+.assetPill.added {
+  color: var(--success-fg);
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+}
+
+.assetPill.failed {
+  color: var(--danger-fg);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+}
+
+/* Revealed on hover, and on keyboard focus — otherwise the actions are
+   unreachable without a pointer. */
+.assetActs {
+  display: flex;
+  gap: 2px;
+  flex: none;
+  visibility: hidden;
+}
+
+.assetRow:hover .assetActs,
+.assetRow:focus-within .assetActs {
+  visibility: visible;
+}
+
+.assetAct {
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.assetAct:hover {
+  color: var(--accent);
+  background: var(--bg-card);
+}
+
+.assetConfirm {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 4px 0 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--danger-border);
+  background: var(--danger-bg);
+  border-radius: 6px;
+}
+
+.assetConfirmT {
+  flex: 1 1 100%;
+  font-size: 11.5px;
+  color: var(--danger-fg);
+}
+
+.assetLog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 22px 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-sidebar);
+}
+
+.assetLogRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.assetLogMore {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.assetNote {
+  position: relative;
+  margin: 0;
+  padding: 6px 22px 6px 8px;
+  font-size: 11.5px;
+  color: var(--info-fg);
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: 6px;
+}
+
+.assetError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  color: var(--danger-fg);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: 6px;
+}
+
+.assetX {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.assetEmpty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}

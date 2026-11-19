@@ -5,6 +5,8 @@ import { loadRevisions, openRevision, ensureRevisionText, restoreRevision } from
 import DiffView from '../../../ui/DiffView.jsx';
 import { relativeTime } from '../format.js';
 import type { Deliverable } from '../collectionPlan.js';
+import styles from './HistoryPanel.module.css';
+import arch from './Architect.module.css';
 
 // What kind of change produced each version. `source` records the change that SUPERSEDED
 // the stored text, so a row reads "a Refine acceptance changed this; here is what it
@@ -56,11 +58,10 @@ export default function HistoryPanel({ deliverable }: { deliverable: Deliverable
     mode === 'current' ? deliverable.text : compareId ? texts[compareId] : deliverable.text;
   const now = Date.now();
 
-  if (state.error)
-    return <div class="fabry-arch-hist-note fabry-arch-hist-error">{state.error}</div>;
+  if (state.error) return <div class={`${styles.histNote} ${styles.histError}`}>{state.error}</div>;
   if (!items.length) {
     return (
-      <div class="fabry-arch-hist-note">
+      <div class={styles.histNote}>
         {state.loading
           ? 'Loading versions…'
           : 'No earlier versions yet — the next edit records what this looks like now.'}
@@ -69,12 +70,12 @@ export default function HistoryPanel({ deliverable }: { deliverable: Deliverable
   }
 
   return (
-    <div class="fabry-arch-hist">
-      <ol class="fabry-arch-hist-list">
-        <li class="fabry-arch-hist-row fabry-arch-hist-current">
-          <span class="fabry-arch-hist-icon">{'●'}</span>
-          <span class="fabry-arch-hist-when">Current</span>
-          <span class="fabry-arch-hist-what">
+    <div class={styles.hist}>
+      <ol class={styles.histList}>
+        <li class={`${styles.histRow} ${styles.histCurrent}`}>
+          <span class={styles.histIcon}>{'●'}</span>
+          <span class={styles.histWhen}>Current</span>
+          <span class={styles.histWhat}>
             {deliverable.editedAt
               ? 'edited ' + relativeTime(deliverable.editedAt, now)
               : 'not edited yet'}
@@ -87,21 +88,23 @@ export default function HistoryPanel({ deliverable }: { deliverable: Deliverable
             <li key={r.id}>
               <button
                 type="button"
-                class={'fabry-arch-hist-row fabry-arch-hist-btn' + (isSel ? ' is-selected' : '')}
+                class={
+                  `${styles.histRow} ${styles.histBtn}` + (isSel ? ' ' + styles.isSelected : '')
+                }
                 aria-pressed={isSel}
                 onClick={() => openRevision(id, r.id)}
               >
-                <span class="fabry-arch-hist-icon">{s.icon}</span>
-                <span class="fabry-arch-hist-when">{relativeTime(r.at, now)}</span>
-                <span class="fabry-arch-hist-what">{s.label}</span>
+                <span class={styles.histIcon}>{s.icon}</span>
+                <span class={styles.histWhen}>{relativeTime(r.at, now)}</span>
+                <span class={styles.histWhat}>{s.label}</span>
               </button>
             </li>
           );
         })}
       </ol>
-      <div class="fabry-arch-hist-pane">
-        <div class="fabry-arch-hist-bar">
-          <div class="fabry-arch-viewtoggle fabry-arch-hist-cmp">
+      <div class={styles.histPane}>
+        <div class={styles.histBar}>
+          <div class={`${arch.viewtoggle} ${styles.histCmp}`}>
             <button
               type="button"
               aria-pressed={mode === 'current'}
@@ -120,7 +123,7 @@ export default function HistoryPanel({ deliverable }: { deliverable: Deliverable
           </div>
           <button
             type="button"
-            class="fabry-arch-hist-restore"
+            class={styles.histRestore}
             disabled={!selected || typeof before !== 'string'}
             title="Replace the deliverable text with this version. The current text is kept as a new version, so this is undoable."
             onClick={() => restoreRevision(id, selected)}
@@ -129,11 +132,11 @@ export default function HistoryPanel({ deliverable }: { deliverable: Deliverable
           </button>
         </div>
         {typeof before === 'string' && typeof after === 'string' ? (
-          <div class="fabry-arch-hist-diff">
+          <div class={styles.histDiff}>
             <DiffView before={before} after={after} />
           </div>
         ) : (
-          <div class="fabry-arch-hist-note">Loading version…</div>
+          <div class={styles.histNote}>Loading version…</div>
         )}
       </div>
     </div>

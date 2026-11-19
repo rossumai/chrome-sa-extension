@@ -31,6 +31,7 @@ import * as store from '../src/fabry/architect/store.js';
 import * as fstore from '../src/fabry/store.js';
 import InspectorRail from '../src/fabry/architect/components/InspectorRail.jsx';
 import { deliverable } from './support/architect.js';
+import inspectorRailStyles from '../src/fabry/architect/components/InspectorRail.module.css';
 
 const D = [
   deliverable({ id: 'd1', text: '# One', order: 1, title: 'One', titleSource: 'manual' }),
@@ -46,8 +47,9 @@ function mount() {
   return root;
 }
 const tab = (root: any, label: RegExp) =>
-  [...root.querySelectorAll('.fabry-rail-tab')].find((t: any) => label.test(t.textContent)) as
-    HTMLElement | undefined;
+  [...root.querySelectorAll(`.${inspectorRailStyles.railTab}`)].find((t: any) =>
+    label.test(t.textContent),
+  ) as HTMLElement | undefined;
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -66,7 +68,7 @@ beforeEach(() => {
 describe('the rail’s Assets tab', () => {
   it('is offered beside the per-deliverable panels', () => {
     const root = mount();
-    expect(root.querySelectorAll('.fabry-rail-tab').length).toBe(5);
+    expect(root.querySelectorAll(`.${inspectorRailStyles.railTab}`).length).toBe(5);
     expect(tab(root, /Assets/)).toBeTruthy();
   });
 
@@ -92,7 +94,7 @@ describe('the rail’s Assets tab', () => {
     act(() => {
       store.setSettledTarget('d2', { immediate: true });
     });
-    expect(root.querySelector('.fabry-rail-name')!.textContent).toMatch(/Two/);
+    expect(root.querySelector(`.${inspectorRailStyles.railName}`)!.textContent).toMatch(/Two/);
     expect(root.querySelector('.assets-stub')).toBe(node);
     expect(root.querySelector('.assets-stub')!.textContent).toBe('d2');
   });
@@ -102,6 +104,6 @@ describe('the rail’s Assets tab', () => {
     act(() => {
       tab(root, /Assets/)!.click();
     });
-    expect(root.querySelector('.fabry-rail-wide')).toBe(null);
+    expect(root.querySelector(`.${inspectorRailStyles.railWide}`)).toBe(null);
   });
 });

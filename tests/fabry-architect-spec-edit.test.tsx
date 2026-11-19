@@ -29,6 +29,7 @@ import * as store from '../src/fabry/architect/store.js';
 import { updateDeliverable } from '../src/fabry/architect/actions.js';
 import SpecView from '../src/fabry/architect/components/SpecView.jsx';
 import { deliverable } from './support/architect.js';
+import specViewStyles from '../src/fabry/architect/components/SpecView.module.css';
 
 const D = [
   deliverable({ id: 'd1', text: '# One\n\nalpha\n', order: 1, title: '', titleSource: '' }),
@@ -142,12 +143,14 @@ describe('edit mode', () => {
     act(() => {
       seen[0].onNote('Added assets/y.png · x.png could not be added: 502 from the gateway');
     });
-    expect(root.querySelector('.fabry-arch-doc-note')!.textContent).toMatch(/could not be added/);
+    expect(root.querySelector(`.${specViewStyles.docNote}`)!.textContent).toMatch(
+      /could not be added/,
+    );
 
     act(() => {
-      (root.querySelector('.fabry-arch-doc-warn-x') as HTMLElement).click();
+      (root.querySelector(`.${specViewStyles.docWarnX}`) as HTMLElement).click();
     });
     expect(carrier.current).toEqual({ lines: [], hidden: 0 });
-    expect(root.querySelector('.fabry-arch-doc-note')).toBeNull();
+    expect(root.querySelector(`.${specViewStyles.docNote}`)).toBeNull();
   });
 });

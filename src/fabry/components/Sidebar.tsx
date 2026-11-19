@@ -4,6 +4,7 @@ import { loadChats, openChat, startNewChat } from '../chat.js';
 import { chatTitle } from '../format.js';
 import ArchitectSidebar from '../architect/components/ArchitectSidebar.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
+import styles from './Sidebar.module.css';
 
 // Drag the sidebar's right edge to resize (MDH SidebarResizer pattern, but
 // signal-driven since the width lives in the parent grid). Live drag updates
@@ -13,14 +14,14 @@ function startResize(e: any) {
   const startX = e.clientX;
   const startWidth = store.sidebarWidth.value;
   const handle = e.currentTarget;
-  handle.classList.add('dragging');
+  handle.classList.add(styles.dragging);
   document.body.style.cursor = 'col-resize';
   document.body.style.userSelect = 'none';
   function onMove(ev: any) {
     store.sidebarWidth.value = store.clampSidebarWidth(startWidth + ev.clientX - startX);
   }
   function onUp() {
-    handle.classList.remove('dragging');
+    handle.classList.remove(styles.dragging);
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
     document.removeEventListener('mousemove', onMove);
@@ -39,24 +40,24 @@ export default function Sidebar() {
 
   const architect = store.fabryMode.value === 'architect';
   return (
-    <aside class="fabry-sidebar">
-      <div class="fabry-sidebar-title">
-        <span class="fabry-sidebar-mark">
+    <aside class={styles.sidebar}>
+      <div class={styles.sidebarTitle}>
+        <span class={styles.sidebarMark}>
           <FabryMark />
         </span>
-        <span class="fabry-sidebar-name">Mr. Fabry</span>
+        <span class={styles.sidebarName}>Mr. Fabry</span>
       </div>
-      <div class="fabry-mode" role="tablist">
+      <div class={styles.mode} role="tablist">
         <button
           type="button"
-          class={'fabry-mode-opt' + (!architect ? ' is-on' : '')}
+          class={styles.modeOpt + (!architect ? ' ' + styles.isOn : '')}
           onClick={() => store.setFabryMode('chat')}
         >
           Chat
         </button>
         <button
           type="button"
-          class={'fabry-mode-opt' + (architect ? ' is-on' : '')}
+          class={styles.modeOpt + (architect ? ' ' + styles.isOn : '')}
           onClick={() => store.setFabryMode('architect')}
         >
           Architect
@@ -66,11 +67,11 @@ export default function Sidebar() {
         <ArchitectSidebar />
       ) : (
         <>
-          <button type="button" class="fabry-newchat" onClick={startNewChat}>
+          <button type="button" class={styles.newchat} onClick={startNewChat}>
             {'＋ New chat'}
           </button>
           <div
-            class="fabry-chatlist"
+            class={styles.chatlist}
             onScroll={(e) => {
               const el = e.currentTarget;
               if (
@@ -86,22 +87,25 @@ export default function Sidebar() {
               <button
                 type="button"
                 key={c.chat_id}
-                class={'fabry-chat-row' + (store.activeChatId.value === c.chat_id ? ' active' : '')}
+                class={
+                  styles.chatRow +
+                  (store.activeChatId.value === c.chat_id ? ' ' + styles.active : '')
+                }
                 onClick={() => openChat(c.chat_id)}
               >
-                <span class="fabry-chat-title" title={chatTitle(c)}>
+                <span class={styles.chatTitle} title={chatTitle(c)}>
                   {chatTitle(c)}
                 </span>
               </button>
             ))}
             {list.length === 0 && !store.chatsLoading.value && (
-              <div class="fabry-chat-empty">No conversations yet</div>
+              <div class={styles.chatEmpty}>No conversations yet</div>
             )}
           </div>
-          {store.chatsLoading.value && <div class="fabry-chat-loadingrow">Loading{'…'}</div>}
+          {store.chatsLoading.value && <div class={styles.chatLoadingrow}>Loading{'…'}</div>}
         </>
       )}
-      <div class="fabry-side-resizer" title="Drag to resize" onMouseDown={startResize} />
+      <div class={styles.sideResizer} title="Drag to resize" onMouseDown={startResize} />
     </aside>
   );
 }

@@ -1,0 +1,174 @@
+/* No divider: the active row's --bg-card surface blends into the content pane. */
+.sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 10px;
+  gap: 8px;
+}
+
+.sideResizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+}
+
+.sideResizer:hover,
+.sideResizer.dragging {
+  background: var(--info-border);
+}
+
+/* Sidebar (final: F1 search-first over N3 two-line rows, blue scheme):
+   full-width regular-weight title + tiny time; active chat = soft info fill
+   + accent title; ghost New chat. */
+.newchat {
+  border: 1px solid var(--border);
+  color: var(--accent);
+  background: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.newchat:hover {
+  background: var(--bg-hover);
+  border-color: var(--info-border);
+}
+
+/* Break out of the sidebar's right padding + hide the scrollbar so the active
+   row runs flush into the content pane (same blend as Architect). */
+.chatlist {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overscroll-behavior: contain;
+  margin-right: -10px;
+  scrollbar-width: none;
+}
+
+.chatRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  border: 0;
+  background: none;
+  border-radius: 10px 0 0 10px;
+  padding: 8px 16px 8px 11px;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.chatRow:hover {
+  background: var(--bg-hover);
+}
+
+.chatRow.active {
+  background: var(--bg-card);
+}
+
+.chatRow.active .chatTitle {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.chatTitle {
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatEmpty {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 12px;
+  text-align: center;
+}
+
+.chatLoadingrow {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 6px;
+}
+
+.sidebarTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 4px 2px;
+}
+
+.sidebarMark {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.sidebarName {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Chat list scrollbar fully hidden so the active row runs flush into the pane. */
+.chatlist::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Chat/Architect switcher (S1: segmented pill; inactive is full-contrast text
+   so it never disappears against the track). */
+.mode {
+  display: flex;
+  gap: 3px;
+  background: var(--bg-hover);
+  border-radius: 10px;
+  padding: 3px;
+  margin: 0 4px 8px;
+}
+
+.modeOpt {
+  flex: 1;
+  border: 0;
+  background: none;
+  border-radius: 8px;
+  padding: 6px 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.modeOpt:not(.isOn):hover {
+  background: var(--bg-card);
+  color: var(--accent);
+}
+
+.modeOpt.isOn {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+/* Printing an Architect specification prints the document, not the app around it (see the
+   print block in src/console/legacy/shared.css). */
+@media print {
+  :global(body:has(.docs-pane)) .sidebar {
+    display: none !important;
+  }
+}

@@ -1,0 +1,139 @@
+/* Version history (the [↺ History] tab, in the inspector rail or at document width). The list
+   and the diff scroll independently instead of dragging their host with them; `min-height: 0` on
+   both children is what lets them actually scroll (the same flex rule the MDH Stages pane
+   needed), and height:100% degrades to content height where the host has no definite height, so
+   neither case collapses. */
+.hist {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.histList {
+  flex: 0 0 208px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  border-right: 1px solid var(--border);
+}
+
+.histRow {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  width: 100%;
+  padding: 5px 7px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  text-align: left;
+}
+
+.histBtn {
+  border: 0;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.histBtn:hover {
+  background: var(--bg-hover);
+}
+
+.histBtn.isSelected {
+  background: var(--bg-card);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* The live text is a landmark, not a version: it is never selectable and never restorable. */
+.histCurrent {
+  color: var(--text-secondary);
+  border-bottom: 1px dashed var(--border);
+  border-radius: 0;
+  margin-bottom: 4px;
+  padding-bottom: 7px;
+}
+
+.histIcon {
+  flex: none;
+  opacity: 0.8;
+}
+
+.histWhen {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.histWhat {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.histPane {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.histBar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.histCmp button {
+  font-size: 11px;
+  padding: 3px 9px;
+}
+
+.histRestore {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.histRestore:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.histRestore:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.histDiff {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: none;
+  padding: 9px 12px;
+}
+
+.histNote {
+  padding: 12px 14px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.histError {
+  color: var(--danger);
+}

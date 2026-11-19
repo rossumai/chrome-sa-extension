@@ -6,6 +6,8 @@ import { reRun } from '../actions.js';
 import { relativeTime } from '../format.js';
 import FabryMarkdown from '../../../ui/fabry/FabryMarkdown.jsx';
 import type { Deliverable } from '../collectionPlan.js';
+import styles from './CheckPanel.module.css';
+import arch from './Architect.module.css';
 
 // The read-only check for ONE deliverable. Markup lifted verbatim from the deliverable pane's Check
 // tab when the pane was replaced by the unified view (2026-08-19); only its host changed.
@@ -29,19 +31,19 @@ export default function CheckPanel({ deliverable }: { deliverable: Deliverable }
 
   if (result?.running) {
     return (
-      <div class="fabry-arch-check-empty">
-        <span class="fabry-arch-spin" />
+      <div class={styles.checkEmpty}>
+        <span class={arch.spin} />
         {' Checking this deliverable against the organization…'}
       </div>
     );
   }
   if (!chip) {
     return (
-      <div class="fabry-arch-check-empty">
+      <div class={styles.checkEmpty}>
         {'Not checked yet. '}
         <button
           type="button"
-          class="fabry-arch-rerun"
+          class={styles.rerun}
           disabled={busy}
           onClick={() => reRun(deliverable.id)}
         >
@@ -52,10 +54,10 @@ export default function CheckPanel({ deliverable }: { deliverable: Deliverable }
   }
   return (
     <div class="fabry-arch-check">
-      <div class={'fabry-arch-check-hd ' + chip.cls}>
-        <span class="fabry-arch-check-verdict">{chip.label}</span>
+      <div class={`${styles.checkHd} ${styles[chip.cls]}`}>
+        <span class={styles.checkVerdict}>{chip.label}</span>
         {result.stale && (
-          <span class="fabry-arch-check-stale">
+          <span class={styles.checkStale}>
             {'last checked '}
             {relativeTime(result.ranAt as number, now) || 'previously'}
             {' · may be outdated'}
@@ -63,20 +65,20 @@ export default function CheckPanel({ deliverable }: { deliverable: Deliverable }
         )}
         <button
           type="button"
-          class="fabry-arch-rerun"
+          class={styles.rerun}
           disabled={busy}
           onClick={() => reRun(deliverable.id)}
         >
           {'Re-run ▷'}
         </button>
       </div>
-      <div class="fabry-arch-evidence">
+      <div class={`fabry-arch-evidence ${styles.evidence}`}>
         <FabryMarkdown text={result.evidence || '(no evidence returned)'} streaming={false} />
       </div>
-      <div class="fabry-arch-check-foot">
-        <span class="fabry-arch-credit">by Mr. Fabry</span>
+      <div class={styles.checkFoot}>
+        <span class={arch.credit}>by Mr. Fabry</span>
         {result.chatId && (
-          <button type="button" class="fabry-arch-viewchat" onClick={viewChat}>
+          <button type="button" class={styles.viewchat} onClick={viewChat}>
             {'View investigation →'}
           </button>
         )}

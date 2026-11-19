@@ -6,6 +6,8 @@ import FabryInput from '../../../ui/fabry/FabryInput.jsx';
 import FabryQuestions from '../../components/FabryQuestions.jsx';
 import type { Deliverable } from '../collectionPlan.js';
 import ctl from '../../../ui/controls.module.css';
+import styles from './RefineDock.module.css';
+import arch from './Architect.module.css';
 
 const GERUNDS = ['Refining', 'Consulting the org', 'Tightening the wording', 'Checking names'];
 
@@ -98,30 +100,30 @@ export default function RefineDock({ deliverable }: { deliverable: Deliverable }
   }
 
   return (
-    <div class="fabry-arch-dock">
+    <div class={styles.dock}>
       {questions ? (
-        <div class="fabry-arch-refine-card">
+        <div class={styles.refineCard}>
           <FabryQuestions questions={questions} onSubmit={onAnswer} />
-          <div class="fabry-arch-refine-card-actions">
-            <span class="fabry-arch-credit">by Mr. Fabry</span>
+          <div class={arch.refineCardActions}>
+            <span class={arch.credit}>by Mr. Fabry</span>
             <button type="button" class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={reset}>
               Discard
             </button>
           </div>
         </div>
       ) : proposal != null ? (
-        <div class="fabry-arch-refine-card">
+        <div class={styles.refineCard}>
           {changed ? (
             <DiffView before={base} after={proposal} />
           ) : (
-            <p class="fabry-arch-dock-hint">
+            <p class={styles.dockHint}>
               {emptyProposal
                 ? 'Mr. Fabry didn’t return a revision — try a more specific instruction.'
                 : 'Mr. Fabry returned the same wording — try another instruction.'}
             </p>
           )}
-          <div class="fabry-arch-refine-card-actions">
-            <span class="fabry-arch-credit">by Mr. Fabry</span>
+          <div class={arch.refineCardActions}>
+            <span class={arch.credit}>by Mr. Fabry</span>
             <button type="button" class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={reset}>
               Discard
             </button>
@@ -136,7 +138,7 @@ export default function RefineDock({ deliverable }: { deliverable: Deliverable }
           </div>
         </div>
       ) : null}
-      {error && <p class="fabry-arch-dock-err">{error}</p>}
+      {error && <p class={styles.dockErr}>{error}</p>}
       <FabryInput
         size="sm"
         value={instruction}
@@ -151,7 +153,7 @@ export default function RefineDock({ deliverable }: { deliverable: Deliverable }
         }
         gerunds={GERUNDS}
       />
-      <p class="fabry-arch-dock-hint">Read-only · Enter to send · you approve every change.</p>
+      <p class={styles.dockHint}>Read-only · Enter to send · you approve every change.</p>
     </div>
   );
 }

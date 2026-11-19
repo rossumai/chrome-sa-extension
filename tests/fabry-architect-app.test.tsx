@@ -30,6 +30,9 @@ import * as astore from '../src/fabry/architect/store.js';
 import * as fstore from '../src/fabry/store.js';
 import ArchitectApp from '../src/fabry/architect/components/ArchitectApp.jsx';
 import { deliverable } from './support/architect.js';
+import architectAppStyles from '../src/fabry/architect/components/ArchitectApp.module.css';
+import specViewStyles from '../src/fabry/architect/components/SpecView.module.css';
+import inspectorRailStyles from '../src/fabry/architect/components/InspectorRail.module.css';
 
 // The per-deliverable pane was replaced by the unified specification view (2026-08-19), so what this
 // file covers is the SHELL: the placeholder, the document column plus the rail, and the legacy notice.
@@ -68,9 +71,9 @@ beforeEach(() => {
 describe('ArchitectApp shell', () => {
   it('shows a placeholder, and no document or rail, when there are no deliverables', () => {
     const root = mount();
-    expect(root.querySelector('.fabry-arch-placeholder')).toBeTruthy();
-    expect(root.querySelector('.fabry-spec')).toBe(null);
-    expect(root.querySelector('.fabry-rail')).toBe(null);
+    expect(root.querySelector(`.${architectAppStyles.placeholder}`)).toBeTruthy();
+    expect(root.querySelector(`.${specViewStyles.spec}`)).toBe(null);
+    expect(root.querySelector(`.${inspectorRailStyles.rail}`)).toBe(null);
   });
 
   it('renders the whole specification plus the inspector rail once there are deliverables', async () => {
@@ -79,8 +82,8 @@ describe('ArchitectApp shell', () => {
       deliverable({ id: 'b', text: '# B\n\nbeta\n', order: 2 }),
     ];
     const root = mount();
-    expect(root.querySelector('.fabry-spec')).toBeTruthy();
-    expect(root.querySelector('.fabry-rail')).toBeTruthy();
+    expect(root.querySelector(`.${specViewStyles.spec}`)).toBeTruthy();
+    expect(root.querySelector(`.${inspectorRailStyles.rail}`)).toBeTruthy();
     await vi.waitFor(() => expect(root.querySelectorAll('[data-deliverable]').length).toBe(2));
     // Both deliverables are on screen at once — the point of the view.
     await vi.waitFor(() => expect(root.textContent).toMatch(/alpha/));
@@ -91,8 +94,8 @@ describe('ArchitectApp shell', () => {
     astore.deliverables.value = [deliverable({ id: 'a', text: '# A', order: 1 })];
     astore.railOpen.value = false;
     const root = mount();
-    expect(root.querySelector('.fabry-rail')).toBe(null);
-    expect(root.querySelector('.fabry-spec')).toBeTruthy();
+    expect(root.querySelector(`.${inspectorRailStyles.rail}`)).toBe(null);
+    expect(root.querySelector(`.${specViewStyles.spec}`)).toBeTruthy();
   });
 });
 
@@ -100,7 +103,7 @@ describe('legacy collection notice', () => {
   it('says how many deliverables are still under the previous collection name', () => {
     astore.deliverables.value = [deliverable({ id: 'a', text: '# A', order: 1 })];
     astore.legacyNotice.value = { count: 2, collection: '__mrfabry_architect' };
-    const note = mount().querySelector('.fabry-arch-legacy')!;
+    const note = mount().querySelector(`.${architectAppStyles.legacy}`)!;
     expect(note.textContent).toMatch(/2 deliverables still stored/i);
     // The collection NAME is not shown: it means nothing to a reader, and the message is about
     // their documents, not our storage.
@@ -109,6 +112,6 @@ describe('legacy collection notice', () => {
 
   it('renders nothing at all in the ordinary single-collection case', () => {
     astore.deliverables.value = [deliverable({ id: 'a', text: '# A', order: 1 })];
-    expect(mount().querySelector('.fabry-arch-legacy')).toBe(null);
+    expect(mount().querySelector(`.${architectAppStyles.legacy}`)).toBe(null);
   });
 });

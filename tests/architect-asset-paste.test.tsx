@@ -7,6 +7,7 @@ import SourceEditor, { referenceFor } from '../src/fabry/architect/components/So
 import { SourceColumn } from '../src/fabry/architect/components/SpecView.jsx';
 import { createAssetStore } from '../src/fabry/architect/assets.js';
 import type { AssetRow } from '../src/fabry/architect/assets.js';
+import sourceEditorStyles from '../src/fabry/architect/components/SourceEditor.module.css';
 
 // Paste and drop into the deliverable being edited (design 2026-08-24 D3/§5.3). REAL CodeMirror and
 // a REAL asset store over fake transports: nothing in this file can reach Data Storage or the
@@ -312,7 +313,7 @@ describe('dropping files into a deliverable', () => {
   it('claims the drag and highlights the editor while files are over it', () => {
     const { store } = assetStore();
     const { root, view } = mount({ assets: store });
-    const host = root.querySelector('.fabry-spec-cm') as HTMLElement;
+    const host = root.querySelector(`.${sourceEditorStyles.specCm}`) as HTMLElement;
     const fire = (type: string) => {
       const ev: any = new Event(type, { bubbles: true, cancelable: true });
       ev.dataTransfer = { types: ['Files'], files: [], dropEffect: '' };
@@ -322,12 +323,12 @@ describe('dropping files into a deliverable', () => {
       return ev;
     };
     expect(fire('dragenter').defaultPrevented).toBe(true);
-    expect(host.classList.contains('dragging')).toBe(true);
+    expect(host.classList.contains(sourceEditorStyles.dragging)).toBe(true);
     const over = fire('dragover');
     expect(over.defaultPrevented).toBe(true);
     expect(over.dataTransfer.dropEffect).toBe('copy');
     fire('dragleave');
-    expect(host.classList.contains('dragging')).toBe(false);
+    expect(host.classList.contains(sourceEditorStyles.dragging)).toBe(false);
   });
 
   // The note channel holds ONE message. A failure erased by the success that follows it is a

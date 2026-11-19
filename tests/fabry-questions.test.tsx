@@ -2,6 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { h, render } from 'preact';
 import FabryQuestions from '../src/fabry/components/FabryQuestions.jsx';
+import fabryQuestionsStyles from '../src/fabry/components/FabryQuestions.module.css';
 
 function mount(props: any) {
   const root = document.createElement('div');
@@ -18,14 +19,16 @@ describe('FabryQuestions', () => {
       questions: [{ question: 'Name?', options: [], multi_select: false }],
       onSubmit,
     });
-    const submit = root.querySelector<HTMLButtonElement>('.fabry-q-submit');
+    const submit = root.querySelector<HTMLButtonElement>(`.${fabryQuestionsStyles.qSubmit}`);
     expect(submit!.disabled).toBe(true);
-    const input = root.querySelector<HTMLInputElement>('.fabry-q-input')!;
+    const input = root.querySelector<HTMLInputElement>(`.${fabryQuestionsStyles.qInput}`)!;
     input.value = 'Acme';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await flush();
-    expect(root.querySelector<HTMLButtonElement>('.fabry-q-submit')!.disabled).toBe(false);
-    root.querySelector<HTMLElement>('.fabry-q-submit')!.click();
+    expect(
+      root.querySelector<HTMLButtonElement>(`.${fabryQuestionsStyles.qSubmit}`)!.disabled,
+    ).toBe(false);
+    root.querySelector<HTMLElement>(`.${fabryQuestionsStyles.qSubmit}`)!.click();
     expect(onSubmit).toHaveBeenCalledWith([{ question: 'Name?', answer: 'Acme' }]);
   });
 
@@ -39,13 +42,13 @@ describe('FabryQuestions', () => {
       questions: [{ question: 'Env?', options, multi_select: false }],
       onSubmit,
     });
-    const opts = root.querySelectorAll<HTMLElement>('.fabry-q-opt');
+    const opts = root.querySelectorAll<HTMLElement>(`.${fabryQuestionsStyles.qOpt}`);
     expect(opts[0].textContent).toBe('Development');
     expect(opts[1].textContent).toBe('Production');
     expect(opts[1].title).toBe('The live environment');
     opts[1].click();
     await flush();
-    root.querySelector<HTMLElement>('.fabry-q-submit')!.click();
+    root.querySelector<HTMLElement>(`.${fabryQuestionsStyles.qSubmit}`)!.click();
     expect(onSubmit).toHaveBeenCalledWith([{ question: 'Env?', answer: 'Production' }]);
   });
 
@@ -60,11 +63,11 @@ describe('FabryQuestions', () => {
       questions: [{ question: 'Which?', options, multi_select: true }],
       onSubmit,
     });
-    const opts = root.querySelectorAll<HTMLElement>('.fabry-q-opt');
+    const opts = root.querySelectorAll<HTMLElement>(`.${fabryQuestionsStyles.qOpt}`);
     opts[0].click();
     opts[2].click();
     await flush();
-    root.querySelector<HTMLElement>('.fabry-q-submit')!.click();
+    root.querySelector<HTMLElement>(`.${fabryQuestionsStyles.qSubmit}`)!.click();
     expect(onSubmit).toHaveBeenCalledWith([{ question: 'Which?', answer: 'Alpha, Gamma' }]);
   });
 
@@ -74,12 +77,12 @@ describe('FabryQuestions', () => {
       questions: [{ question: 'Env?', options: ['dev', 'prod'], multi_select: false }],
       onSubmit,
     });
-    const opts = root.querySelectorAll<HTMLElement>('.fabry-q-opt');
+    const opts = root.querySelectorAll<HTMLElement>(`.${fabryQuestionsStyles.qOpt}`);
     expect(opts[1].textContent).toBe('prod');
     expect(opts[1].title).toBe('');
     opts[1].click();
     await flush();
-    root.querySelector<HTMLElement>('.fabry-q-submit')!.click();
+    root.querySelector<HTMLElement>(`.${fabryQuestionsStyles.qSubmit}`)!.click();
     expect(onSubmit).toHaveBeenCalledWith([{ question: 'Env?', answer: 'prod' }]);
   });
 
@@ -88,14 +91,14 @@ describe('FabryQuestions', () => {
       questions: [{ question: 'Name?', options: [], multi_select: false }],
       onSubmit: vi.fn(),
     });
-    const input = root.querySelector<HTMLInputElement>('.fabry-q-input')!;
+    const input = root.querySelector<HTMLInputElement>(`.${fabryQuestionsStyles.qInput}`)!;
     input.value = 'Acme';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await flush();
-    root.querySelector<HTMLElement>('.fabry-q-submit')!.click();
+    root.querySelector<HTMLElement>(`.${fabryQuestionsStyles.qSubmit}`)!.click();
     await flush();
-    expect(root.querySelector('.fabry-q-input')).toBeNull();
-    expect(root.querySelector('.fabry-q-answer')!.textContent).toBe('Acme');
+    expect(root.querySelector(`.${fabryQuestionsStyles.qInput}`)).toBeNull();
+    expect(root.querySelector(`.${fabryQuestionsStyles.qAnswer}`)!.textContent).toBe('Acme');
   });
 
   it('re-enables the form when onSubmit resolves false (failed send)', async () => {
@@ -104,14 +107,14 @@ describe('FabryQuestions', () => {
       questions: [{ question: 'Name?', options: [], multi_select: false }],
       onSubmit,
     });
-    const input = root.querySelector<HTMLInputElement>('.fabry-q-input')!;
+    const input = root.querySelector<HTMLInputElement>(`.${fabryQuestionsStyles.qInput}`)!;
     input.value = 'Acme';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await flush();
-    root.querySelector<HTMLElement>('.fabry-q-submit')!.click();
+    root.querySelector<HTMLElement>(`.${fabryQuestionsStyles.qSubmit}`)!.click();
     await flush(); // submitted=true renders read-only view synchronously
     await flush(); // let the awaited onSubmit promise resolve and re-render
-    expect(root.querySelector('.fabry-q-input')).not.toBeNull();
-    expect(root.querySelector('.fabry-q-submit')).not.toBeNull();
+    expect(root.querySelector(`.${fabryQuestionsStyles.qInput}`)).not.toBeNull();
+    expect(root.querySelector(`.${fabryQuestionsStyles.qSubmit}`)).not.toBeNull();
   });
 });

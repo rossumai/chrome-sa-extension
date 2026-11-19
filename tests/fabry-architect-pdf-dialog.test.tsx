@@ -7,6 +7,7 @@ import { act } from 'preact/test-utils';
 import { modalContent, closeModal } from '../src/ui/Modal.jsx';
 import * as store from '../src/fabry/architect/store.js';
 import { openPdfDialog } from '../src/fabry/architect/components/PdfDialog.jsx';
+import pdfDialogStyles from '../src/fabry/architect/components/PdfDialog.module.css';
 
 function openAndMount({ deliverableTitle = 'Scope', count = 3 } = {}) {
   const confirmed: any = [];
@@ -18,7 +19,7 @@ function openAndMount({ deliverableTitle = 'Scope', count = 3 } = {}) {
   });
   return { root, confirmed };
 }
-const rows = (root: any) => [...root.querySelectorAll('.fabry-arch-pdf-row')];
+const rows = (root: any) => [...root.querySelectorAll(`.${pdfDialogStyles.pdfRow}`)];
 const input = (root: any, label: any) =>
   rows(root)
     .find((r) => r.textContent.includes(label))

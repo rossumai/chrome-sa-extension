@@ -8,6 +8,7 @@ import * as store from '../src/fabry/architect/store.js';
 import { createAssetStore } from '../src/fabry/architect/assets.js';
 import AssetsPanel from '../src/fabry/architect/components/AssetsPanel.jsx';
 import { deliverable } from './support/architect.js';
+import assetsPanelStyles from '../src/fabry/architect/components/AssetsPanel.module.css';
 
 // The panel drives a store, never the network: every test here injects one, so nothing in this
 // file can reach Data Storage or the Rossum API. The one real instance is store.assets, and the
@@ -79,16 +80,16 @@ function rerender(root: any, props: any) {
 }
 
 const groupOf = (root: any, kind: string) =>
-  root.querySelector(`.fabry-arch-asset-group.${kind}`) as HTMLElement | null;
+  root.querySelector(`.${assetsPanelStyles.assetGroup}[data-kind="${kind}"]`) as HTMLElement | null;
 const keysIn = (root: any, kind: string) =>
-  [...(groupOf(root, kind)?.querySelectorAll('.fabry-arch-asset-row') || [])].map((el) =>
+  [...(groupOf(root, kind)?.querySelectorAll(`.${assetsPanelStyles.assetRow}`) || [])].map((el) =>
     (el as HTMLElement).getAttribute('data-asset-key'),
   );
 const act$ = (root: any, what: string) =>
   root.querySelector(`[data-act="${what}"]`) as HTMLButtonElement;
 
 const noteText = (root: any) =>
-  (root.querySelector('.fabry-arch-asset-note') as HTMLElement | null)?.textContent || '';
+  (root.querySelector(`.${assetsPanelStyles.assetNote}`) as HTMLElement | null)?.textContent || '';
 
 /** Microtask flushes until a condition holds. `settle` below waits on the header's busy flag, which
  *  a batch the index killed never clears — the drop target stays refused. */
@@ -123,23 +124,31 @@ describe('AssetsPanel', () => {
     expect(keysIn(root, 'here')).toEqual(['assets/a.png']);
     expect(keysIn(root, 'elsewhere')).toEqual(['assets/b.png']);
     expect(keysIn(root, 'unused')).toEqual(['assets/orphan.csv']);
-    expect(groupOf(root, 'elsewhere')!.querySelector('.fabry-arch-asset-in')!.textContent).toBe(
-      'Two',
-    );
-    expect(groupOf(root, 'unused')!.querySelector('.fabry-arch-asset-pill.unused')).toBeTruthy();
+    expect(
+      groupOf(root, 'elsewhere')!.querySelector(`.${assetsPanelStyles.assetIn}`)!.textContent,
+    ).toBe('Two');
+    expect(
+      groupOf(root, 'unused')!.querySelector(
+        `.${assetsPanelStyles.assetPill}.${assetsPanelStyles.unused}`,
+      ),
+    ).toBeTruthy();
   });
 
   it('counts the files and their total in the header', () => {
     const root = mount({ currentId: 'd1', assets: fakeStore(ROWS) });
-    expect(root.querySelector('.fabry-arch-asset-count')!.textContent).toBe('3 files · 3 KB');
+    expect(root.querySelector(`.${assetsPanelStyles.assetCount}`)!.textContent).toBe(
+      '3 files · 3 KB',
+    );
   });
 
   it('shows each row its extension, size and how many deliverables reference it', () => {
     const root = mount({ currentId: 'd1', assets: fakeStore(ROWS) });
-    const first = groupOf(root, 'here')!.querySelector('.fabry-arch-asset-row')!;
-    expect(first.querySelector('.fabry-arch-asset-ext')!.textContent).toBe('png');
-    expect(first.querySelector('.fabry-arch-asset-name')!.textContent).toBe('a.png');
-    expect(first.querySelector('.fabry-arch-asset-meta')!.textContent).toBe('1 KB · 1 ref');
+    const first = groupOf(root, 'here')!.querySelector(`.${assetsPanelStyles.assetRow}`)!;
+    expect(first.querySelector(`.${assetsPanelStyles.assetExt}`)!.textContent).toBe('png');
+    expect(first.querySelector(`.${assetsPanelStyles.assetName}`)!.textContent).toBe('a.png');
+    expect(first.querySelector(`.${assetsPanelStyles.assetMeta}`)!.textContent).toBe(
+      '1 KB · 1 ref',
+    );
   });
 
   // Ruling D4: the rail follows the scroll, so the list must re-sort on a new target WITHOUT
@@ -156,7 +165,7 @@ describe('AssetsPanel', () => {
 
   it('filters by name across every group', () => {
     const root = mount({ currentId: 'd1', assets: fakeStore(ROWS) });
-    const filter = root.querySelector('.fabry-arch-asset-filter') as HTMLInputElement;
+    const filter = root.querySelector(`.${assetsPanelStyles.assetFilter}`) as HTMLInputElement;
     act(() => {
       filter.value = 'orphan';
       filter.dispatchEvent(new Event('input'));
@@ -175,7 +184,9 @@ describe('AssetsPanel', () => {
     const assets = fakeStore([]);
     assets.stats = () => ({ bytes: 0, entries: 0, indexed: 0, indexError: 'Session expired.' });
     const root = mount({ currentId: 'd1', assets });
-    expect(root.querySelector('.fabry-arch-asset-error')!.textContent).toMatch(/Session expired/);
+    expect(root.querySelector(`.${assetsPanelStyles.assetError}`)!.textContent).toMatch(
+      /Session expired/,
+    );
   });
 
   // F1: a transient failure is recoverable in the store, so the panel must offer the recovery.
@@ -200,7 +211,7 @@ describe('AssetsPanel', () => {
     await act(async () => {
       assets.bump();
     });
-    expect(root.querySelector('.fabry-arch-asset-error')).toBeTruthy();
+    expect(root.querySelector(`.${assetsPanelStyles.assetError}`)).toBeTruthy();
     expect(assets.load).toHaveBeenCalledTimes(1);
   });
 
@@ -215,8 +226,8 @@ describe('AssetsPanel', () => {
     });
     expect(assets.upload).toHaveBeenCalledTimes(1);
     expect((assets.upload.mock.calls[0][0] as File).name).toBe('shot.png');
-    expect(root.querySelector('.fabry-arch-asset-log')!.textContent).toMatch(/shot\.png/);
-    expect(root.querySelector('.fabry-arch-asset-log')!.textContent).toMatch(/added/);
+    expect(root.querySelector(`.${assetsPanelStyles.assetLog}`)!.textContent).toMatch(/shot\.png/);
+    expect(root.querySelector(`.${assetsPanelStyles.assetLog}`)!.textContent).toMatch(/added/);
   });
 
   // D9: de-duplication is something the user SEES, not something that quietly happens.
@@ -232,13 +243,16 @@ describe('AssetsPanel', () => {
     await act(async () => {
       input.dispatchEvent(new Event('change'));
     });
-    expect(root.querySelector('.fabry-arch-asset-pill.reused')!.textContent).toBe('reused');
+    expect(
+      root.querySelector(`.${assetsPanelStyles.assetPill}.${assetsPanelStyles.reused}`)!
+        .textContent,
+    ).toBe('reused');
   });
 
   it('takes a drop anywhere in the panel body', async () => {
     const assets = fakeStore(ROWS);
     const root = mount({ currentId: 'd1', assets });
-    const panel = root.querySelector('.fabry-arch-asset') as HTMLElement;
+    const panel = root.querySelector(`.${assetsPanelStyles.asset}`) as HTMLElement;
     const ev: any = new Event('drop', { bubbles: true });
     ev.dataTransfer = { types: ['Files'], files: [new File(['x'], 'dropped.png')] };
     await act(async () => {
@@ -253,8 +267,8 @@ describe('AssetsPanel', () => {
   // a flag would flicker off every time the pointer crossed a row.
   it('keeps the drop highlight while the pointer crosses a child element', () => {
     const root = mount({ currentId: 'd1', assets: fakeStore(ROWS) });
-    const panel = root.querySelector('.fabry-arch-asset') as HTMLElement;
-    const child = root.querySelector('.fabry-arch-asset-filter') as HTMLElement;
+    const panel = root.querySelector(`.${assetsPanelStyles.asset}`) as HTMLElement;
+    const child = root.querySelector(`.${assetsPanelStyles.assetFilter}`) as HTMLElement;
     const drag = (type: string, target: HTMLElement) => {
       const ev: any = new Event(type, { bubbles: true });
       ev.dataTransfer = { types: ['Files'], files: [] };
@@ -263,12 +277,12 @@ describe('AssetsPanel', () => {
       });
     };
     drag('dragenter', panel);
-    expect(panel.classList.contains('dragging')).toBe(true);
+    expect(panel.classList.contains(assetsPanelStyles.dragging)).toBe(true);
     drag('dragenter', child);
     drag('dragleave', panel);
-    expect(panel.classList.contains('dragging')).toBe(true);
+    expect(panel.classList.contains(assetsPanelStyles.dragging)).toBe(true);
     drag('dragleave', child);
-    expect(panel.classList.contains('dragging')).toBe(false);
+    expect(panel.classList.contains(assetsPanelStyles.dragging)).toBe(false);
   });
 
   // A deliverable dragged in the sidebar passes over this panel. It must not highlight, and the
@@ -277,7 +291,7 @@ describe('AssetsPanel', () => {
   it('ignores a drag that carries no files, so dragging a deliverable is not an upload', async () => {
     const assets = fakeStore(ROWS);
     const root = mount({ currentId: 'd1', assets });
-    const panel = root.querySelector('.fabry-arch-asset') as HTMLElement;
+    const panel = root.querySelector(`.${assetsPanelStyles.asset}`) as HTMLElement;
     const fire = (type: string) => {
       const ev: any = new Event(type, { bubbles: true, cancelable: true });
       ev.dataTransfer = { types: ['text/plain'], files: [] };
@@ -287,7 +301,7 @@ describe('AssetsPanel', () => {
       return ev;
     };
     expect(fire('dragenter').defaultPrevented).toBe(false);
-    expect(panel.classList.contains('dragging')).toBe(false);
+    expect(panel.classList.contains(assetsPanelStyles.dragging)).toBe(false);
     expect(fire('dragover').defaultPrevented).toBe(false);
     expect(fire('drop').defaultPrevented).toBe(false);
     expect(assets.upload).not.toHaveBeenCalled();
@@ -322,7 +336,7 @@ describe('AssetsPanel', () => {
     });
     await settle(root);
     expect(posted).toBe(0);
-    const failed = root.querySelector('.fabry-arch-asset-log-row.state-failed')!;
+    const failed = root.querySelector(`.${assetsPanelStyles.assetLogRow}.state-failed`)!;
     expect(failed.textContent).toMatch(/huge\.xlsx/);
     expect(failed.textContent).toMatch(/over the 40 MB limit/);
   });
@@ -331,18 +345,18 @@ describe('AssetsPanel', () => {
   it('names what still references a file before deleting it, and then deletes it anyway', async () => {
     const assets = fakeStore(ROWS);
     const root = mount({ currentId: 'd1', assets });
-    const target = groupOf(root, 'here')!.querySelector('.fabry-arch-asset-row')!;
+    const target = groupOf(root, 'here')!.querySelector(`.${assetsPanelStyles.assetRow}`)!;
     act(() => {
       (target.querySelector('[data-act="delete"]') as HTMLElement).click();
     });
-    const confirm = root.querySelector('.fabry-arch-asset-confirm')!;
+    const confirm = root.querySelector(`.${assetsPanelStyles.assetConfirm}`)!;
     expect(confirm.textContent).toMatch(/Still referenced by One/);
     expect(assets.remove).not.toHaveBeenCalled();
     await act(async () => {
       (confirm.querySelector('[data-act="delete-confirm"]') as HTMLElement).click();
     });
     expect(assets.remove).toHaveBeenCalledWith('assets/a.png');
-    expect(root.querySelector('.fabry-arch-asset-confirm')).toBe(null);
+    expect(root.querySelector(`.${assetsPanelStyles.assetConfirm}`)).toBe(null);
   });
 
   it('cancelling a delete leaves the file alone', async () => {
@@ -355,7 +369,7 @@ describe('AssetsPanel', () => {
       (root.querySelector('[data-act="delete-cancel"]') as HTMLElement).click();
     });
     expect(assets.remove).not.toHaveBeenCalled();
-    expect(root.querySelector('.fabry-arch-asset-confirm')).toBe(null);
+    expect(root.querySelector(`.${assetsPanelStyles.assetConfirm}`)).toBe(null);
   });
 
   // D6: with no repository copy and no cross-organization copy, this is the only way an asset
@@ -380,7 +394,7 @@ describe('AssetsPanel', () => {
     const assets = fakeStore(ROWS);
     const download = vi.fn(async () => null);
     const root = mount({ currentId: 'd1', assets, download });
-    const filter = root.querySelector('.fabry-arch-asset-filter') as HTMLInputElement;
+    const filter = root.querySelector(`.${assetsPanelStyles.assetFilter}`) as HTMLInputElement;
     act(() => {
       filter.value = 'orphan';
       filter.dispatchEvent(new Event('input'));
@@ -442,9 +456,9 @@ describe('AssetsPanel', () => {
       input.dispatchEvent(new Event('change'));
     });
     await settle(root);
-    const log = root.querySelector('.fabry-arch-asset-log')!;
-    expect(log.querySelectorAll('.fabry-arch-asset-log-row')).toHaveLength(12);
-    expect(log.querySelector('.fabry-arch-asset-log-more')!.textContent).toBe(
+    const log = root.querySelector(`.${assetsPanelStyles.assetLog}`)!;
+    expect(log.querySelectorAll(`.${assetsPanelStyles.assetLogRow}`)).toHaveLength(12);
+    expect(log.querySelector(`.${assetsPanelStyles.assetLogMore}`)!.textContent).toBe(
       '3 earlier, not shown',
     );
     expect(log.textContent).toMatch(/f14\.png/);
@@ -469,7 +483,7 @@ describe('AssetsPanel', () => {
       input.dispatchEvent(new Event('change'));
     });
     await settle(root);
-    const failed = root.querySelector('.fabry-arch-asset-log-row.state-failed')!;
+    const failed = root.querySelector(`.${assetsPanelStyles.assetLogRow}.state-failed`)!;
     expect(failed.textContent).toMatch(/quiet\.png/);
     expect(failed.textContent).toMatch(/no reason given/);
   });
@@ -492,13 +506,13 @@ describe('AssetsPanel', () => {
       input.dispatchEvent(new Event('change'));
     });
     await settle(root);
-    const log = root.querySelector('.fabry-arch-asset-log')!;
-    const failed = log.querySelector('.fabry-arch-asset-log-row.state-failed')!;
+    const log = root.querySelector(`.${assetsPanelStyles.assetLog}`)!;
+    const failed = log.querySelector(`.${assetsPanelStyles.assetLogRow}.state-failed`)!;
     expect(failed.textContent).toMatch(/f0\.png/);
     expect(failed.textContent).toMatch(/larger than the service accepts/);
     // A success was collapsed to make room for it, and the tail still accounts for that.
     expect(log.textContent).not.toMatch(/f1\.png/);
-    expect(log.querySelector('.fabry-arch-asset-log-more')!.textContent).toBe(
+    expect(log.querySelector(`.${assetsPanelStyles.assetLogMore}`)!.textContent).toBe(
       '3 earlier, not shown',
     );
   });
@@ -518,10 +532,12 @@ describe('AssetsPanel', () => {
       const ev: any = new Event('drop', { bubbles: true });
       ev.dataTransfer = { types: ['Files'], files: [new File(['x'], 'dropped.png')] };
       await act(async () => {
-        (root.querySelector('.fabry-arch-asset') as HTMLElement).dispatchEvent(ev);
+        (root.querySelector(`.${assetsPanelStyles.asset}`) as HTMLElement).dispatchEvent(ev);
       });
       expect(assets.upload).not.toHaveBeenCalled();
-      expect(root.querySelector('.fabry-arch-asset-note')!.textContent).toMatch(/file index/i);
+      expect(root.querySelector(`.${assetsPanelStyles.assetNote}`)!.textContent).toMatch(
+        /file index/i,
+      );
     } finally {
       delete (window as any).showDirectoryPicker;
     }
@@ -548,10 +564,12 @@ describe('AssetsPanel', () => {
     const ev: any = new Event('drop', { bubbles: true });
     ev.dataTransfer = { types: ['Files'], files: [new File(['x'], 'dropped.png')] };
     await act(async () => {
-      (root.querySelector('.fabry-arch-asset') as HTMLElement).dispatchEvent(ev);
+      (root.querySelector(`.${assetsPanelStyles.asset}`) as HTMLElement).dispatchEvent(ev);
     });
     expect(assets.upload).not.toHaveBeenCalled();
-    expect(root.querySelector('.fabry-arch-asset-note')!.textContent).toMatch(/file index/i);
+    expect(root.querySelector(`.${assetsPanelStyles.assetNote}`)!.textContent).toMatch(
+      /file index/i,
+    );
   });
 
   // T2. `blocked` and this banner both read `indexError` as a flag, so a read that fails carrying
@@ -571,10 +589,10 @@ describe('AssetsPanel', () => {
       deleteRow: async () => {},
     });
     const root = mount({ currentId: 'd1', assets });
-    for (let i = 0; i < 20 && !root.querySelector('.fabry-arch-asset-error'); i += 1) {
+    for (let i = 0; i < 20 && !root.querySelector(`.${assetsPanelStyles.assetError}`); i += 1) {
       await act(async () => {});
     }
-    const banner = root.querySelector('.fabry-arch-asset-error');
+    const banner = root.querySelector(`.${assetsPanelStyles.assetError}`);
     expect(banner).toBeTruthy();
     expect(banner!.textContent).toMatch(/no reason given/i);
     expect(act$(root, 'add').disabled).toBe(true);
@@ -620,7 +638,7 @@ describe('AssetsPanel', () => {
     await act(async () => {
       (groupOf(root, 'here')!.querySelector('[data-act="download"]') as HTMLElement).click();
     });
-    expect(root.querySelector('.fabry-arch-asset-note')!.textContent).toMatch(/404/);
+    expect(root.querySelector(`.${assetsPanelStyles.assetNote}`)!.textContent).toMatch(/404/);
   });
 
   it('copies the reference an author would write', async () => {
@@ -652,7 +670,7 @@ describe('AssetsPanel', () => {
     act(() => {
       (groupOf(root, 'here')!.querySelector('[data-act="delete"]') as HTMLElement).click();
     });
-    expect(root.querySelector('.fabry-arch-asset-confirm')!.textContent).toMatch(
+    expect(root.querySelector(`.${assetsPanelStyles.assetConfirm}`)!.textContent).toMatch(
       /Still referenced by One/,
     );
   });
@@ -730,9 +748,9 @@ describe('AssetsPanel', () => {
     expect(note).toMatch(/Stopped: Session expired\./);
     expect(note).toMatch(/2 files not attempted/);
     // The failure it stopped ON is still named in the log — stopping is not a way of going quiet.
-    expect(root.querySelector('.fabry-arch-asset-log-row.state-failed')!.textContent).toMatch(
-      /f2\.png/,
-    );
+    expect(
+      root.querySelector(`.${assetsPanelStyles.assetLogRow}.state-failed`)!.textContent,
+    ).toMatch(/f2\.png/);
   });
 
   // D2: a reference written before this feature existed resolves through an alias, so it must

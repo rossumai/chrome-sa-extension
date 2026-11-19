@@ -32,6 +32,7 @@ import { openPdfFlow } from '../src/fabry/architect/pdfAction.js';
 import * as store from '../src/fabry/architect/store.js';
 import SpecView from '../src/fabry/architect/components/SpecView.jsx';
 import { deliverable } from './support/architect.js';
+import specViewStyles from '../src/fabry/architect/components/SpecView.module.css';
 
 const D = [
   // Deliberately carries the retired state fields: the assertion is that they are ignored.
@@ -90,7 +91,7 @@ describe('SpecView', () => {
 
   it('switching mode changes the mode and keeps the chrome', () => {
     const root = mount();
-    const before = root.querySelectorAll('.fabry-spec-sec-hd').length;
+    const before = root.querySelectorAll(`.${specViewStyles.specSecHd}`).length;
     act(() => {
       (
         [...root.querySelectorAll('.fabry-spec-modes button')].find((b) =>
@@ -99,17 +100,19 @@ describe('SpecView', () => {
       ).click();
     });
     expect(store.docView.value).toBe('edit');
-    expect(root.querySelectorAll('.fabry-spec-sec-hd').length).toBe(before);
+    expect(root.querySelectorAll(`.${specViewStyles.specSecHd}`).length).toBe(before);
   });
 
   it('renders a header per deliverable carrying identity and status only — no action buttons', async () => {
     const root = mount();
-    await vi.waitFor(() => expect(root.querySelectorAll('.fabry-spec-sec-hd').length).toBe(2));
-    const hd = root.querySelector('.fabry-spec-sec-hd')!;
+    await vi.waitFor(() =>
+      expect(root.querySelectorAll(`.${specViewStyles.specSecHd}`).length).toBe(2),
+    );
+    const hd = root.querySelector(`.${specViewStyles.specSecHd}`)!;
     expect(hd.querySelectorAll('button').length).toBe(0);
     expect(hd.textContent).toMatch(/One/);
     // ONE badge: the check verdict. The manual state pill was dropped on 2026-08-19.
-    expect(hd.querySelectorAll('.fabry-spec-pill').length).toBe(1);
+    expect(hd.querySelectorAll(`.${specViewStyles.specPill}`).length).toBe(1);
     expect(hd.textContent).toMatch(/Met/);
     expect(hd.textContent).not.toMatch(/Verified/);
   });
@@ -117,13 +120,13 @@ describe('SpecView', () => {
   it('clicking a section header targets that deliverable, and moves an existing pin', () => {
     const root = mount();
     act(() => {
-      root.querySelectorAll<HTMLElement>('.fabry-spec-sec-hd')[1].click();
+      root.querySelectorAll<HTMLElement>(`.${specViewStyles.specSecHd}`)[1].click();
     });
     expect(store.spyTarget.value).toBe('d2');
     expect(store.pinnedTarget.value).toBe(null); // no pin was set, so none is created
     act(() => {
       store.setPinnedTarget('d2');
-      root.querySelectorAll<HTMLElement>('.fabry-spec-sec-hd')[0].click();
+      root.querySelectorAll<HTMLElement>(`.${specViewStyles.specSecHd}`)[0].click();
     });
     expect(store.pinnedTarget.value).toBe('d1'); // an existing pin follows the click
   });
@@ -180,11 +183,13 @@ describe('the document bar owns Download PDF', () => {
     act(() => {
       onNote('print view opened');
     });
-    expect(root.querySelector('.fabry-arch-doc-note')!.textContent).toMatch(/print view opened/);
+    expect(root.querySelector(`.${specViewStyles.docNote}`)!.textContent).toMatch(
+      /print view opened/,
+    );
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-arch-doc-warn-x')!.click();
+      root.querySelector<HTMLElement>(`.${specViewStyles.docWarnX}`)!.click();
     });
-    expect(root.querySelector('.fabry-arch-doc-note')).toBe(null);
+    expect(root.querySelector(`.${specViewStyles.docNote}`)).toBe(null);
   });
 
   it('its note carries an upload failure the reader has not dismissed', () => {
@@ -211,12 +216,12 @@ describe('the document bar owns Download PDF', () => {
     });
     expect(root.querySelector<HTMLElement>('[data-act="pdf"]')!.textContent).toMatch(/Preparing/);
     expect(root.querySelector<HTMLButtonElement>('[data-act="pdf"]')!.disabled).toBe(true);
-    expect(root.querySelector('.fabry-arch-doc-note')).toBe(null);
+    expect(root.querySelector(`.${specViewStyles.docNote}`)).toBe(null);
 
     act(() => {
       onNote('print view opened');
     });
-    const note = root.querySelector('.fabry-arch-doc-note')!.textContent!;
+    const note = root.querySelector(`.${specViewStyles.docNote}`)!.textContent!;
     expect(note).toMatch(/print view opened/);
     expect(note).toMatch(/over the 40 MB limit/);
     expect(note).toMatch(/2 earlier failures not shown/);
@@ -231,21 +236,23 @@ describe('review at document width', () => {
   it('renders the requested panel above its own section, and closes', () => {
     store.docView.value = 'edit'; // the mode whose headers Preact re-renders on a signal change
     const root = mount();
-    expect(root.querySelector('.fabry-spec-review')).toBe(null);
+    expect(root.querySelector(`.${specViewStyles.specReview}`)).toBe(null);
 
     act(() => {
       store.setReviewTarget({ id: 'd2', kind: 'history' });
     });
-    const host = root.querySelector('.fabry-spec-review')!;
+    const host = root.querySelector(`.${specViewStyles.specReview}`)!;
     expect(host).not.toBe(null);
-    expect(host.querySelector('.fabry-spec-review-t')!.textContent).toMatch(/Version history/);
+    expect(host.querySelector(`.${specViewStyles.specReviewT}`)!.textContent).toMatch(
+      /Version history/,
+    );
     // Above ITS OWN section, not the first one.
     expect(host.closest<HTMLElement>('[data-deliverable]')!.dataset.deliverable).toBe('d2');
 
     act(() => {
       host.querySelector<HTMLElement>('[data-act="review-close"]')!.click();
     });
-    expect(root.querySelector('.fabry-spec-review')).toBe(null);
+    expect(root.querySelector(`.${specViewStyles.specReview}`)).toBe(null);
   });
 
   it('shows Refine for the refine kind', () => {
@@ -254,7 +261,7 @@ describe('review at document width', () => {
     act(() => {
       store.setReviewTarget({ id: 'd1', kind: 'refine' });
     });
-    expect(root.querySelector('.fabry-spec-review-t')!.textContent).toMatch(/Refine/);
+    expect(root.querySelector(`.${specViewStyles.specReviewT}`)!.textContent).toMatch(/Refine/);
   });
 
   it('closes on Escape', () => {
@@ -263,10 +270,10 @@ describe('review at document width', () => {
     act(() => {
       store.setReviewTarget({ id: 'd1', kind: 'history' });
     });
-    expect(root.querySelector('.fabry-spec-review')).not.toBe(null);
+    expect(root.querySelector(`.${specViewStyles.specReview}`)).not.toBe(null);
     act(() => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     });
-    expect(root.querySelector('.fabry-spec-review')).toBe(null);
+    expect(root.querySelector(`.${specViewStyles.specReview}`)).toBe(null);
   });
 });

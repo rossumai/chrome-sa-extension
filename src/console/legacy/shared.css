@@ -77,14 +77,12 @@
 
    The connection bar and the error banner are hidden by the same rule in their own modules,
    src/ui/ConnectionBar.module.css and src/ui/ErrorBanner.module.css, and the app root is
-   unwound by it in src/ui/AppShell.module.css. */
+   unwound by it in src/ui/AppShell.module.css. Fabry's sidebar, main pane, specification
+   column and inspector rail do the same in their modules under src/fabry/ (a sticky section
+   header becomes a static band there too: a sticky element inside a flowing document lands
+   unpredictably). */
 @media print {
-  body:has(.docs-pane) .app-rail,
-  body:has(.docs-pane) .fabry-sidebar,
-  body:has(.docs-pane) .fabry-spec-bar,
-  body:has(.docs-pane) .fabry-arch-doc-warn,
-  body:has(.docs-pane) .fabry-spec-review,
-  body:has(.docs-pane) .fabry-rail {
+  body:has(.docs-pane) .app-rail {
     display: none !important;
   }
 
@@ -92,9 +90,6 @@
      and the document, then let the document own the page. */
   body:has(.docs-pane),
   body:has(.docs-pane) #app,
-  body:has(.docs-pane) .fabry-layout,
-  body:has(.docs-pane) .fabry-main,
-  body:has(.docs-pane) .fabry-spec,
   body:has(.docs-pane) .docs-pane,
   body:has(.docs-pane) .docs-root {
     display: block !important;
@@ -102,12 +97,6 @@
     max-height: none !important;
     min-height: 0 !important;
     overflow: visible !important;
-    position: static !important;
-  }
-
-  /* A section header is sticky on screen; on paper it is a band at the top of its section,
-     and a sticky element inside a flowing document lands unpredictably. */
-  body:has(.docs-pane) .fabry-spec-sec-hd {
     position: static !important;
   }
 }

@@ -12,6 +12,7 @@ vi.mock('../src/fabry/architect/actions.js', () => ({
 import * as actions from '../src/fabry/architect/actions.js';
 import RefineDock from '../src/fabry/architect/components/RefineDock.jsx';
 import diffStyles from '../src/ui/DiffView.module.css';
+import fabryQuestionsStyles from '../src/fabry/components/FabryQuestions.module.css';
 
 let root: any;
 function mount(props: any) {
@@ -91,7 +92,7 @@ describe('RefineDock (docked, inline, design-system AI input)', () => {
     });
     const r = mount({ deliverable: { id: 'a', text: '# base' } });
     await submit(r, 'tighten');
-    expect(r.querySelector('.fabry-q')).toBeTruthy();
+    expect(r.querySelector(`.${fabryQuestionsStyles.q}`)).toBeTruthy();
     expect(r.querySelector('.' + diffStyles.diff)).toBeNull();
     expect(accept(r)).toBeFalsy(); // nothing to accept yet
   });
@@ -106,13 +107,13 @@ describe('RefineDock (docked, inline, design-system AI input)', () => {
     });
     const r = mount({ deliverable: { id: 'a', text: '# base' } });
     await submit(r, 'tighten');
-    const qin = r.querySelector('.fabry-q-input');
+    const qin = r.querySelector(`.${fabryQuestionsStyles.qInput}`);
     act(() => {
       qin.value = 'Invoices';
       qin.dispatchEvent(new Event('input', { bubbles: true }));
     });
     await act(async () => {
-      r.querySelector('.fabry-q-submit').click();
+      r.querySelector(`.${fabryQuestionsStyles.qSubmit}`).click();
       await flush();
     });
     expect(actions.answerRefine).toHaveBeenCalledWith(

@@ -10,6 +10,8 @@ import ImplementPanel from './ImplementPanel.jsx';
 import RefineDock from './RefineDock.jsx';
 import HistoryPanel from './HistoryPanel.jsx';
 import AssetsPanel from './AssetsPanel.jsx';
+import styles from './InspectorRail.module.css';
+import arch from './Architect.module.css';
 
 // The per-deliverable inspector, beside the one continuous specification (spec 2026-08-19 §6).
 //
@@ -71,14 +73,14 @@ export default function InspectorRail() {
     const startX = e.clientX;
     const startWidth = store.railWidth.value;
     const handle = e.currentTarget;
-    handle.classList.add('dragging');
+    handle.classList.add(styles.dragging);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
     function onMove(ev: any) {
       store.railWidth.value = store.clampRailWidth(startWidth - (ev.clientX - startX));
     }
     function onUp() {
-      handle.classList.remove('dragging');
+      handle.classList.remove(styles.dragging);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       document.removeEventListener('mousemove', onMove);
@@ -90,20 +92,20 @@ export default function InspectorRail() {
   }
 
   return (
-    <aside class="fabry-rail" style={{ width: store.railWidth.value + 'px' }}>
-      <div class="fabry-rail-resizer" title="Drag to resize" onMouseDown={startResize} />
-      <div class="fabry-rail-hd">
-        <div class="fabry-rail-for">{pinned ? 'Pinned to' : 'Inspecting'}</div>
-        <div class="fabry-rail-name" title={displayTitle(d)}>
+    <aside class={styles.rail} style={{ width: store.railWidth.value + 'px' }}>
+      <div class={styles.railResizer} title="Drag to resize" onMouseDown={startResize} />
+      <div class={styles.railHd}>
+        <div class={styles.railFor}>{pinned ? 'Pinned to' : 'Inspecting'}</div>
+        <div class={styles.railName} title={displayTitle(d)}>
           {displayTitle(d)}
         </div>
-        <div class="fabry-rail-chips">
+        <div class={styles.railChips}>
           <CheckBadge result={result} />
         </div>
-        <div class="fabry-rail-follow">
+        <div class={styles.railFollow}>
           <button
             type="button"
-            class={'fabry-rail-pin' + (pinned ? ' is-on' : '')}
+            class={styles.railPin + (pinned ? ' ' + styles.isOn : '')}
             aria-pressed={pinned}
             title={
               pinned ? 'Unpin — follow what I scroll to' : 'Pin the inspector to this deliverable'
@@ -113,20 +115,20 @@ export default function InspectorRail() {
             {pinned ? '◉ Pinned' : '○ Following scroll'}
           </button>
           {held ? (
-            <span class="fabry-rail-held" title="The target stays put while this run finishes">
+            <span class={styles.railHeld} title="The target stays put while this run finishes">
               {'held while this runs'}
             </span>
           ) : null}
         </div>
       </div>
 
-      <div class="fabry-rail-tabs" role="tablist">
+      <div class={styles.railTabs} role="tablist">
         {TABS.map(([key, label]) => (
           <button
             key={key}
             type="button"
             role="tab"
-            class="fabry-rail-tab"
+            class={styles.railTab}
             aria-selected={active === key}
             onClick={() => setTab(key)}
           >
@@ -135,17 +137,13 @@ export default function InspectorRail() {
         ))}
       </div>
 
-      <div class="fabry-rail-body">
+      <div class={styles.railBody}>
         {wideHere ? (
           // The same panel must not be mounted twice: HistoryPanel's selection is a shared signal, so
           // two copies would fight over it. While the wide view has it, the rail points at it.
-          <div class="fabry-rail-elsewhere">
+          <div class={styles.railElsewhere}>
             {'Shown at document width. '}
-            <button
-              type="button"
-              class="fabry-spec-btn"
-              onClick={() => store.setReviewTarget(null)}
-            >
+            <button type="button" class={arch.specBtn} onClick={() => store.setReviewTarget(null)}>
               {'Bring it back'}
             </button>
           </div>
@@ -167,7 +165,7 @@ export default function InspectorRail() {
           // which is where the width is (spec §6).
           <button
             type="button"
-            class="fabry-rail-wide"
+            class={styles.railWide}
             onClick={() => store.setReviewTarget({ id: d.id, kind: active })}
           >
             {'⤢ Open at document width'}

@@ -1,0 +1,111 @@
+.turnAssistant {
+  align-self: stretch;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.thinkingToggle {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.thinkingBody {
+  font-size: 11px;
+  color: var(--text-secondary);
+  border-left: 2px solid var(--info-border);
+  padding: 4px 10px;
+  margin: 6px 0;
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.toolChip {
+  font-size: 10px;
+  color: var(--accent);
+  border: 1px solid var(--info-border);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.turnFoot {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.turnFoot button {
+  border: 1px solid var(--border);
+  background: none;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.turnFoot button:hover {
+  opacity: 1;
+  border-color: var(--info-border);
+  color: var(--accent);
+}
+
+.interrupted {
+  font-size: 11px;
+  color: var(--warning-fg, #92600a);
+  margin-top: 6px;
+}
+
+.refresh {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 11px;
+}
+
+.deepChip {
+  border: 1px solid var(--border);
+  background: none;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.deepChip.pass {
+  color: var(--success-fg);
+  border-color: var(--success-border);
+  background: var(--success-bg);
+}
+
+.deepChip.fail {
+  color: var(--warning-fg);
+  border-color: var(--warning-border);
+  background: var(--warning-bg);
+}
+
+.deepChip.inconclusive {
+  color: var(--text-secondary);
+}
+
+.deepStrip {
+  border: 1px solid var(--info-border);
+  border-radius: 8px;
+  background: var(--info-bg);
+  padding: 8px 12px;
+  margin-top: 6px;
+  font-size: 12px;
+}

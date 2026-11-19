@@ -21,6 +21,7 @@ import { confirmModal, promptModal } from '../../../ui/Modal.jsx';
 import * as fstore from '../../store.js';
 import { openArmDialog } from './ArmDialog.jsx';
 import type { Deliverable } from '../collectionPlan.js';
+import styles from './ArchitectSidebar.module.css';
 
 // One-entry memo keyed on the exact text. The sidebar re-renders on every keystroke in the
 // open deliverable, and re-parsing the document each time would be pure waste; the key cannot
@@ -43,7 +44,7 @@ function Outline({ deliverable }: { deliverable: Deliverable }) {
   if (!entries.length) return null;
   const active = store.activeHeading.value;
   return (
-    <nav class="fabry-arch-outline" aria-label="Document outline">
+    <nav class={styles.outline} aria-label="Document outline">
       {/* NOT `h` as the loop variable: it would shadow Preact's own `h` factory, which the
           JSX in this scope compiles down to. */}
       {entries.map((entry) => (
@@ -51,9 +52,9 @@ function Outline({ deliverable }: { deliverable: Deliverable }) {
           type="button"
           key={entry.slug}
           class={
-            'fabry-arch-outline-item level-' +
-            entry.level +
-            (active === entry.slug ? ' active' : '')
+            `${styles.outlineItem} level-${entry.level}` +
+            (entry.level === 3 ? ' ' + styles.level3 : '') +
+            (active === entry.slug ? ' ' + styles.active : '')
           }
           title={entry.text}
           onClick={(e) => {
@@ -71,12 +72,13 @@ function Outline({ deliverable }: { deliverable: Deliverable }) {
 }
 
 function dotClass(r: any) {
-  if (!r) return 'none';
-  if (r.running) return 'running';
-  if (r.verdict === 'pass') return 'pass' + (r.stale ? ' stale' : '');
-  if (r.verdict === 'fail') return 'fail' + (r.stale ? ' stale' : '');
-  if (r.verdict === 'uncertain') return 'uncertain' + (r.stale ? ' stale' : '');
-  return 'none';
+  if (!r) return '';
+  if (r.running) return styles.running;
+  const stale = r.stale ? ' ' + styles.stale : '';
+  if (r.verdict === 'pass') return styles.pass + stale;
+  if (r.verdict === 'fail') return styles.fail + stale;
+  if (r.verdict === 'uncertain') return styles.uncertain + stale;
+  return '';
 }
 
 const FILTER_LABEL: Record<RunFilter, { label: string; title: string }> = {
@@ -89,10 +91,10 @@ const FILTER_LABEL: Record<RunFilter, { label: string; title: string }> = {
 function RunFilterBar({ disabled }: { disabled: boolean }) {
   const sel = store.runFilter.value;
   return (
-    <div class="fabry-arch-filter" role="group" aria-label="Run all checks">
+    <div class={styles.filter} role="group" aria-label="Run all checks">
       <button
         type="button"
-        class="fabry-arch-filter-chip"
+        class={styles.filterChip}
         aria-pressed={sel.length === 0}
         disabled={disabled}
         onClick={() => store.toggleRunFilter(null)}
@@ -103,7 +105,7 @@ function RunFilterBar({ disabled }: { disabled: boolean }) {
         <button
           type="button"
           key={f}
-          class={'fabry-arch-filter-chip ' + f}
+          class={`${styles.filterChip} ${styles[f] || ''}`}
           aria-pressed={sel.includes(f)}
           title={FILTER_LABEL[f].title}
           disabled={disabled}
@@ -133,7 +135,7 @@ function Summary({
   const done = ds.map((d) => results[d.id]).filter((r) => r && !r.running && r.verdict);
   if (running) {
     return (
-      <div class="fabry-arch-summary">
+      <div class={styles.summary}>
         {done.length}
         {' / '}
         {total} checked
@@ -142,7 +144,7 @@ function Summary({
   }
   if (!done.length) {
     return (
-      <div class="fabry-arch-summary">
+      <div class={styles.summary}>
         {total} deliverable{total === 1 ? '' : 's'}
         {' · not yet run'}
       </div>
@@ -152,24 +154,24 @@ function Summary({
   const notmet = done.filter((r) => r.verdict === 'fail').length;
   const unc = done.filter((r) => r.verdict === 'uncertain').length;
   return (
-    <div class="fabry-arch-summary">
+    <div class={styles.summary}>
       {total} deliverable{total === 1 ? '' : 's'}
       {met > 0 && (
         <>
           {' · '}
-          <span class="ok">{met} met</span>
+          <span class={styles.ok}>{met} met</span>
         </>
       )}
       {notmet > 0 && (
         <>
           {' · '}
-          <span class="bad">{notmet} not met</span>
+          <span class={styles.bad}>{notmet} not met</span>
         </>
       )}
       {unc > 0 && (
         <>
           {' · '}
-          <span class="warn">{unc} uncertain</span>
+          <span class={styles.warn}>{unc} uncertain</span>
         </>
       )}
     </div>
@@ -234,8 +236,7 @@ export default function ArchitectSidebar() {
   useEffect(() => {
     if (!menuId) return undefined;
     const onDown = (e: any) => {
-      if (!e.target.closest || !e.target.closest('.fabry-arch-menu, .fabry-arch-kebab'))
-        closeMenu();
+      if (!e.target.closest || !e.target.closest(`.${styles.menu}, .${styles.kebab}`)) closeMenu();
     };
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
@@ -249,10 +250,10 @@ export default function ArchitectSidebar() {
   }
 
   return (
-    <div class="fabry-arch-side">
-      {store.loadError.value && <div class="fabry-arch-error">{store.loadError.value}</div>}
-      <div class="fabry-arch-list" ref={listRef}>
-        {ds.length === 0 && <div class="fabry-arch-empty">No deliverables yet.</div>}
+    <div class={styles.side}>
+      {store.loadError.value && <div class={styles.error}>{store.loadError.value}</div>}
+      <div class={styles.list} ref={listRef}>
+        {ds.length === 0 && <div class={styles.empty}>No deliverables yet.</div>}
         {ds.map((d, i) => (
           <Fragment key={d.id}>
             <div
@@ -260,20 +261,20 @@ export default function ArchitectSidebar() {
               tabIndex={0}
               draggable
               class={
-                'fabry-arch-item' +
+                styles.item +
                 // Highlighted by what the reader is LOOKING AT, which in one continuous document is the
                 // scroll spy's answer rather than a stored selection.
                 (store.spyTarget.value === d.id ||
                 (!store.spyTarget.value && store.activeId.value === d.id)
-                  ? ' active'
+                  ? ' ' + styles.active
                   : '') +
-                (dragId === d.id ? ' dragging' : '') +
-                (menuId === d.id ? ' menuopen' : '') +
-                (d.skipCheck ? ' skipped' : '') +
+                (dragId === d.id ? ' ' + styles.dragging : '') +
+                (menuId === d.id ? ' ' + styles.menuopen : '') +
+                (d.skipCheck ? ' ' + styles.skipped : '') +
                 (overId === d.id && dragId && dragId !== d.id
                   ? dragIndex >= 0 && dragIndex < i
-                    ? ' dragover-after'
-                    : ' dragover-before'
+                    ? ' ' + styles.dragoverAfter
+                    : ' ' + styles.dragoverBefore
                   : '')
               }
               onClick={() => {
@@ -305,16 +306,16 @@ export default function ArchitectSidebar() {
                 setOverId(null);
               }}
             >
-              <span class={'fabry-arch-dot ' + dotClass(results[d.id])} />
-              <span class="fabry-arch-item-title">{displayTitle(d)}</span>
+              <span class={`${styles.dot} ${dotClass(results[d.id])}`} />
+              <span class={styles.itemTitle}>{displayTitle(d)}</span>
               {d.skipCheck && (
-                <span class="fabry-arch-skip" title="Left out of Run all">
+                <span class={styles.skip} title="Left out of Run all">
                   {'skip'}
                 </span>
               )}
               <button
                 type="button"
-                class="fabry-arch-kebab"
+                class={styles.kebab}
                 title="Deliverable actions"
                 aria-label="Deliverable actions"
                 onClick={(e) => {
@@ -326,12 +327,12 @@ export default function ArchitectSidebar() {
               </button>
               {menuId === d.id && (
                 <div
-                  class={'fabry-arch-menu' + (menuUp ? ' is-up' : '')}
+                  class={styles.menu + (menuUp ? ' ' + styles.isUp : '')}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
                     type="button"
-                    class="fabry-arch-menu-item"
+                    class={styles.menuItem}
                     disabled={running || implementRunning || results[d.id]?.running}
                     onClick={() => {
                       reRun(d.id);
@@ -342,7 +343,7 @@ export default function ArchitectSidebar() {
                   </button>
                   <button
                     type="button"
-                    class="fabry-arch-menu-item"
+                    class={styles.menuItem}
                     disabled={running}
                     onClick={() => {
                       closeMenu();
@@ -354,7 +355,7 @@ export default function ArchitectSidebar() {
                   {implementAllowed && (
                     <button
                       type="button"
-                      class="fabry-arch-menu-item"
+                      class={styles.menuItem}
                       disabled={implementRunning || running || results[d.id]?.running}
                       onClick={() => {
                         closeMenu();
@@ -366,7 +367,7 @@ export default function ArchitectSidebar() {
                   )}
                   <button
                     type="button"
-                    class="fabry-arch-menu-item"
+                    class={styles.menuItem}
                     onClick={() => {
                       closeMenu();
                       promptModal(
@@ -384,7 +385,7 @@ export default function ArchitectSidebar() {
                   </button>
                   <button
                     type="button"
-                    class="fabry-arch-menu-item danger"
+                    class={`${styles.menuItem} ${styles.danger}`}
                     onClick={() => confirmDelete(d.id)}
                   >
                     Delete
@@ -398,11 +399,11 @@ export default function ArchitectSidebar() {
           </Fragment>
         ))}
       </div>
-      <div class="fabry-arch-foot">
+      <div class={styles.foot}>
         {ds.length > 0 && <RunFilterBar disabled={running} />}
         <button
           type="button"
-          class="fabry-arch-runall"
+          class={styles.runall}
           disabled={implementRunning || (!running && targets.length === 0)}
           onClick={() => (running ? stopRun() : runAll())}
         >
@@ -413,7 +414,7 @@ export default function ArchitectSidebar() {
               : `Run ${targets.length} of ${ds.length} ▷`}
         </button>
         <Summary ds={ds} results={results} running={running} />
-        <button type="button" class="fabry-arch-new" onClick={() => addDeliverable()}>
+        <button type="button" class={styles.newDeliverable} onClick={() => addDeliverable()}>
           {'＋ New deliverable'}
         </button>
       </div>

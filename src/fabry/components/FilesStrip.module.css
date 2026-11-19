@@ -1,0 +1,32 @@
+.files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 22px;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+}
+
+.fileSize {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.fileDl {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 13px;
+}

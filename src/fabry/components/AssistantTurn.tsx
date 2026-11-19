@@ -7,6 +7,7 @@ import { toolLabel, fallbackNotice } from '../../agent/agentStream.js';
 import { openChat, answerQuestions } from '../chat.js';
 import * as store from '../store.js';
 import type { AssistantTurnView } from '../thread.js';
+import styles from './AssistantTurn.module.css';
 
 // One assistant turn: collapsible reasoning, ordered tool chips, then either the
 // markdown body, a clarifying-question form (turn.questions), or a fallback
@@ -26,23 +27,23 @@ export default function AssistantTurn({
   const [showDeep, setShowDeep] = useState(false);
   const open = streaming || showThinking; // stream visibly, collapse when done
   return (
-    <div class={'fabry-turn-assistant' + (streaming ? ' fabry-turn-live' : '')}>
+    <div class={styles.turnAssistant + (streaming ? ' fabry-turn-live' : '')}>
       {turn.reasoning ? (
         <div class="fabry-thinking">
           <button
             type="button"
-            class="fabry-thinking-toggle"
+            class={styles.thinkingToggle}
             onClick={() => setShowThinking(!showThinking)}
           >
             {open ? 'Thinking ▾' : 'Thinking ▸'}
           </button>
-          {open && <pre class="fabry-thinking-body">{turn.reasoning}</pre>}
+          {open && <pre class={styles.thinkingBody}>{turn.reasoning}</pre>}
         </div>
       ) : null}
       {turn.tools && turn.tools.length ? (
-        <div class="fabry-tools">
+        <div class={styles.tools}>
           {turn.tools.map((t: any, idx) => (
-            <span key={idx} class="fabry-tool-chip" title={t}>
+            <span key={idx} class={styles.toolChip} title={t}>
               {toolLabel(t)}
             </span>
           ))}
@@ -54,11 +55,11 @@ export default function AssistantTurn({
       ) : null}
       {!streaming ? <FabryNotice notice={fallbackNotice(turn)} /> : null}
       {turn.interrupted && (
-        <div class="fabry-interrupted">
+        <div class={styles.interrupted}>
           Stopped before the reply finished.{' '}
           <button
             type="button"
-            class="fabry-refresh"
+            class={styles.refresh}
             onClick={() => openChat(store.activeChatId.value as string)}
           >
             Refresh from server
@@ -66,7 +67,7 @@ export default function AssistantTurn({
         </div>
       )}
       {!streaming && !turn.interrupted && !turn.questions && !fallbackNotice(turn) && (
-        <div class="fabry-turn-foot">
+        <div class={styles.turnFoot}>
           {/* No 👍/👎. PUT /feedback's turn_index addresses the RAW stored history,
               but GET /chats drops text-less tool-only steps, so a thread index
               mis-targets feedback on any tool-using turn (live-confirmed
@@ -85,7 +86,7 @@ export default function AssistantTurn({
           {turn.deep && (
             <button
               type="button"
-              class={'fabry-deep-chip ' + turn.deep.verdict}
+              class={styles.deepChip + ' ' + styles[turn.deep.verdict]}
               onClick={() => setShowDeep(!showDeep)}
             >
               {turn.deep.verdict === 'pass' && <span>{'✓'} Independently verified</span>}
@@ -101,7 +102,7 @@ export default function AssistantTurn({
         </div>
       )}
       {turn.deep && showDeep && (
-        <div class="fabry-deep-strip">
+        <div class={styles.deepStrip}>
           <FabryMarkdown text={turn.deep.criticText || '(no critic output)'} />
         </div>
       )}

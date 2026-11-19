@@ -28,6 +28,8 @@ vi.mock('../src/fabry/architect/components/ArchitectSidebar.jsx', () => ({
 import * as store from '../src/fabry/store.js';
 import App from '../src/fabry/components/App.jsx';
 import Sidebar from '../src/fabry/components/Sidebar.jsx';
+import appStyles from '../src/fabry/components/App.module.css';
+import sidebarStyles from '../src/fabry/components/Sidebar.module.css';
 
 function mount(Comp: any, props?: any) {
   const root = document.createElement('div');
@@ -49,7 +51,7 @@ describe('App pane swap', () => {
   it('chat mode renders the composer, not the architect pane', () => {
     const root = mount(App, { connected: true });
     expect(root.querySelector('.arch-marker')).toBeNull();
-    expect(root.querySelector('.fabry-main')).toBeTruthy();
+    expect(root.querySelector(`.${appStyles.main}`)).toBeTruthy();
   });
   it('architect mode renders the architect pane', () => {
     store.fabryMode.value = 'architect';
@@ -61,7 +63,7 @@ describe('App pane swap', () => {
 describe('Sidebar mode toggle', () => {
   it('renders a Chat/Architect segmented control and switches mode', () => {
     const root = mount(Sidebar);
-    const opts = root.querySelectorAll('.fabry-mode-opt');
+    const opts = root.querySelectorAll(`.${sidebarStyles.modeOpt}`);
     expect(opts.length).toBe(2);
     const arch = [...opts].find((o) => /architect/i.test(o.textContent));
     (arch as HTMLElement).click();
@@ -70,13 +72,13 @@ describe('Sidebar mode toggle', () => {
   it('renders the deliverable sidebar (not the chat list) in architect mode', () => {
     store.fabryMode.value = 'architect';
     const root = mount(Sidebar);
-    expect(root.querySelector('.fabry-chatlist')).toBeNull();
+    expect(root.querySelector(`.${sidebarStyles.chatlist}`)).toBeNull();
     expect(root.querySelector('.arch-side-marker')).toBeTruthy();
-    expect(root.querySelector('.fabry-mode')).toBeTruthy();
+    expect(root.querySelector(`.${sidebarStyles.mode}`)).toBeTruthy();
   });
   it('shows the chat list and New chat in chat mode', () => {
     const root = mount(Sidebar);
-    expect(root.querySelector('.fabry-chatlist')).toBeTruthy();
-    expect(root.querySelector('.fabry-newchat')).toBeTruthy();
+    expect(root.querySelector(`.${sidebarStyles.chatlist}`)).toBeTruthy();
+    expect(root.querySelector(`.${sidebarStyles.newchat}`)).toBeTruthy();
   });
 });

@@ -2,6 +2,7 @@ import { h } from 'preact';
 import * as store from '../store.js';
 import { chatTitle } from '../format.js';
 import FabryMark from '../../ui/FabryMark.jsx';
+import styles from './ChatHeader.module.css';
 
 function kTokens(s: { total_input_tokens?: number; total_output_tokens?: number } | undefined) {
   const n = (s?.total_input_tokens || 0) + (s?.total_output_tokens || 0);
@@ -16,14 +17,14 @@ export default function ChatHeader() {
   const title = summary ? chatTitle(summary) : firstUser?.text || 'Conversation';
   const tokens = kTokens(summary);
   return (
-    <header class="fabry-hd">
-      <span class="fabry-hd-mark">
+    <header class={styles.hd}>
+      <span class={styles.hdMark}>
         <FabryMark />
       </span>
-      <span class="fabry-hd-title" title={title}>
+      <span class={styles.hdTitle} title={title}>
         {title}
       </span>
-      {tokens && <span class="fabry-hd-tokens">{tokens}</span>}
+      {tokens && <span class={styles.hdTokens}>{tokens}</span>}
     </header>
   );
 }

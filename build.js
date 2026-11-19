@@ -18,7 +18,6 @@ const CONSOLE_GLOBAL_PARTS = [
   'src/audit/legacy.css',
   'src/galaxy/legacy.css',
   'src/inspector/legacy.css',
-  'src/fabry/legacy.css',
 ];
 // Text before a partial's first marker (its header comment) is not emitted.
 function consoleBaseCss() {

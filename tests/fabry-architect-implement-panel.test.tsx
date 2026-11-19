@@ -32,6 +32,9 @@ import * as fstore from '../src/fabry/store.js';
 import { openArmDialog } from '../src/fabry/architect/components/ArmDialog.jsx';
 import InspectorRail from '../src/fabry/architect/components/InspectorRail.jsx';
 import { deliverable } from './support/architect.js';
+import inspectorRailStyles from '../src/fabry/architect/components/InspectorRail.module.css';
+import implementPanelStyles from '../src/fabry/architect/components/ImplementPanel.module.css';
+import architectStyles from '../src/fabry/architect/components/Architect.module.css';
 
 // The implement loop moved from the deliverable pane's bottom console into the inspector rail
 // (2026-08-19) when the pane was replaced by the unified specification view. Same panel, new host —
@@ -46,7 +49,9 @@ function mount() {
   return root;
 }
 const implTab = (root: any) =>
-  [...root.querySelectorAll('.fabry-rail-tab')].find((t) => /Implement/.test(t.textContent));
+  [...root.querySelectorAll(`.${inspectorRailStyles.railTab}`)].find((t) =>
+    /Implement/.test(t.textContent),
+  );
 function openImplement(root: any) {
   act(() => {
     implTab(root).click();
@@ -72,15 +77,15 @@ describe('Implement panel — now in the inspector rail', () => {
   it('shows an Implement tab; clicking it renders the panel', () => {
     const root = mount();
     expect(implTab(root)).toBeTruthy();
-    expect(root.querySelector('.fabry-arch-implement-hd')).toBe(null);
+    expect(root.querySelector(`.${implementPanelStyles.implementHd}`)).toBe(null);
     openImplement(root);
-    expect(root.querySelector('.fabry-arch-implement-hd')).toBeTruthy();
+    expect(root.querySelector(`.${implementPanelStyles.implementHd}`)).toBeTruthy();
   });
 
   it('the Implement button opens the Arm dialog (count=1), and its onConfirm runs the loop', () => {
     const root = openImplement(mount());
     act(() => {
-      root.querySelector('.fabry-arch-implement-run').click();
+      root.querySelector(`.${implementPanelStyles.implementRun}`).click();
     });
     expect(openArmDialog).toHaveBeenCalledTimes(1);
     expect(vi.mocked(openArmDialog).mock.calls[0][0]).toBe(1);
@@ -94,9 +99,9 @@ describe('Implement panel — now in the inspector rail', () => {
     store.implement.value = { d1: { status: 'running', tasks: [] } };
     store.implementRunning.value = true;
     const root = openImplement(mount());
-    expect(root.querySelector('.fabry-arch-implement-run')).toBe(null);
+    expect(root.querySelector(`.${implementPanelStyles.implementRun}`)).toBe(null);
     act(() => {
-      root.querySelector('.fabry-arch-implement-stop').click();
+      root.querySelector(`.${implementPanelStyles.implementStop}`).click();
     });
     expect(actions.stopImplement).toHaveBeenCalled();
   });
@@ -109,9 +114,9 @@ describe('Implement panel — now in the inspector rail', () => {
       },
     };
     const root = openImplement(mount());
-    const audit = root.querySelector('.fabry-arch-implement-audit');
+    const audit = root.querySelector(`.${implementPanelStyles.implementAudit}`);
     expect(audit.textContent).toMatch(/create_rule/);
-    expect(audit.querySelector('li').className).toBe('ok');
+    expect(audit.querySelector('li').classList.contains(implementPanelStyles.pending)).toBe(false);
   });
 
   it('renders the task list with per-task status classes and origin', () => {
@@ -126,25 +131,27 @@ describe('Implement panel — now in the inspector rail', () => {
     };
     store.implementRunning.value = true;
     const root = openImplement(mount());
-    const items = [...root.querySelectorAll('.fabry-arch-task')];
+    const items = [...root.querySelectorAll(`.${implementPanelStyles.task}`)];
     expect(items.map((li) => li.className)).toEqual([
-      'fabry-arch-task task-done',
-      'fabry-arch-task task-pending',
+      `${implementPanelStyles.task} ${implementPanelStyles.taskDone}`,
+      implementPanelStyles.task,
     ]);
     expect(items[1].textContent).toMatch(/discovered/);
-    expect(root.querySelector('.fabry-arch-spin')).toBeTruthy();
+    expect(root.querySelector(`.${architectStyles.spin}`)).toBeTruthy();
   });
 
   it('shows no spinner when the loop is not globally running, even mid-status (e.g. after Stop)', () => {
     store.implement.value = { d1: { status: 'running', tasks: [] } };
     store.implementRunning.value = false;
     const root = openImplement(mount());
-    expect(root.querySelector('.fabry-arch-spin')).toBe(null);
+    expect(root.querySelector(`.${architectStyles.spin}`)).toBe(null);
   });
 
   it('shows an implemented status when passing', () => {
     store.implement.value = { d1: { status: 'passing', tasks: [] } };
     const root = openImplement(mount());
-    expect(root.querySelector('.fabry-arch-implement-status').textContent).toMatch(/implemented/);
+    expect(root.querySelector(`.${implementPanelStyles.implementStatus}`).textContent).toMatch(
+      /implemented/,
+    );
   });
 });

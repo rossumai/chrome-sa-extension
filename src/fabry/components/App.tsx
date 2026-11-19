@@ -12,6 +12,7 @@ import ArchitectApp from '../architect/components/ArchitectApp.jsx';
 import Modal from '../../ui/Modal.jsx';
 import es from '../../ui/EmptyState.module.css';
 import shell from '../../ui/AppShell.module.css';
+import styles from './App.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   // Switching Console apps unmounts/remounts this component, so a mount is
@@ -41,14 +42,14 @@ export default function App({ connected }: { connected: boolean | null }) {
     );
   }
   return (
-    <div class={`${shell.root} fabry-root`}>
-      {store.error.value && <div class="fabry-error">{store.error.value}</div>}
+    <div class={`${shell.root} ${styles.root}`}>
+      {store.error.value && <div class={styles.error}>{store.error.value}</div>}
       <div
-        class="fabry-layout"
+        class={styles.layout}
         style={{ gridTemplateColumns: store.sidebarWidth.value + 'px 1fr' }}
       >
         <Sidebar />
-        <main class="fabry-main">
+        <main class={styles.main}>
           {store.fabryMode.value === 'architect' ? (
             <ArchitectApp />
           ) : !store.activeChatId.value &&

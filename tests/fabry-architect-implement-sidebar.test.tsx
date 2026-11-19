@@ -27,6 +27,7 @@ import * as store from '../src/fabry/architect/store.js';
 import * as fstore from '../src/fabry/store.js';
 import ArchitectSidebar from '../src/fabry/architect/components/ArchitectSidebar.jsx';
 import { deliverable } from './support/architect.js';
+import architectSidebarStyles from '../src/fabry/architect/components/ArchitectSidebar.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -60,10 +61,10 @@ describe('Sidebar implement controls (kill-switch on)', () => {
     store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1 })];
     const root = mount();
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-arch-kebab')!.click();
+      root.querySelector<HTMLElement>(`.${architectSidebarStyles.kebab}`)!.click();
     });
-    const menu = root.querySelector('.fabry-arch-menu');
-    const implBtn = [...menu!.querySelectorAll('.fabry-arch-menu-item')].find((b) =>
+    const menu = root.querySelector(`.${architectSidebarStyles.menu}`);
+    const implBtn = [...menu!.querySelectorAll(`.${architectSidebarStyles.menuItem}`)].find((b) =>
       /implement/i.test(b.textContent),
     );
     expect(implBtn).toBeTruthy();
@@ -71,7 +72,7 @@ describe('Sidebar implement controls (kill-switch on)', () => {
       (implBtn as HTMLElement).click();
     });
     expect(openArmDialog).toHaveBeenCalledTimes(1);
-    expect(root.querySelector('.fabry-arch-menu')).toBeNull(); // menu closes
+    expect(root.querySelector(`.${architectSidebarStyles.menu}`)).toBeNull(); // menu closes
     const [count, onConfirm] = vi.mocked(openArmDialog).mock.calls[0];
     expect(count).toBe(1);
     await act(async () => {
@@ -84,10 +85,10 @@ describe('Sidebar implement controls (kill-switch on)', () => {
     store.implementRunning.value = true;
     const root = mount();
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-arch-kebab')!.click();
+      root.querySelector<HTMLElement>(`.${architectSidebarStyles.kebab}`)!.click();
     });
-    const menu = root.querySelector('.fabry-arch-menu');
-    const implBtn = [...menu!.querySelectorAll('.fabry-arch-menu-item')].find((b) =>
+    const menu = root.querySelector(`.${architectSidebarStyles.menu}`);
+    const implBtn = [...menu!.querySelectorAll(`.${architectSidebarStyles.menuItem}`)].find((b) =>
       /implement/i.test(b.textContent),
     );
     expect((implBtn as HTMLButtonElement).disabled).toBe(true);
@@ -97,11 +98,11 @@ describe('Sidebar implement controls (kill-switch on)', () => {
     store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1 })];
     const root = mount();
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-arch-kebab')!.click();
+      root.querySelector<HTMLElement>(`.${architectSidebarStyles.kebab}`)!.click();
     });
-    const menu = root.querySelector('.fabry-arch-menu');
+    const menu = root.querySelector(`.${architectSidebarStyles.menu}`);
     expect(
-      [...menu!.querySelectorAll('.fabry-arch-menu-item')].find((b) =>
+      [...menu!.querySelectorAll(`.${architectSidebarStyles.menuItem}`)].find((b) =>
         /implement/i.test(b.textContent),
       ),
     ).toBeFalsy();
@@ -110,10 +111,10 @@ describe('Sidebar implement controls (kill-switch on)', () => {
     store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1, title: 'Old title' })];
     const root = mount();
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-arch-kebab')!.click();
+      root.querySelector<HTMLElement>(`.${architectSidebarStyles.kebab}`)!.click();
     });
-    const menu = root.querySelector('.fabry-arch-menu');
-    const renameBtn = [...menu!.querySelectorAll('.fabry-arch-menu-item')].find((b) =>
+    const menu = root.querySelector(`.${architectSidebarStyles.menu}`);
+    const renameBtn = [...menu!.querySelectorAll(`.${architectSidebarStyles.menuItem}`)].find((b) =>
       /rename/i.test(b.textContent),
     );
     expect(renameBtn).toBeTruthy();

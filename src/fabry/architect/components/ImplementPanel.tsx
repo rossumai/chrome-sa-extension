@@ -3,6 +3,24 @@ import * as store from '../store.js';
 import { reImplement, stopImplement } from '../actions.js';
 import { openArmDialog } from './ArmDialog.jsx';
 import type { Deliverable } from '../collectionPlan.js';
+import styles from './ImplementPanel.module.css';
+import arch from './Architect.module.css';
+
+// The status classes that carry a rule (idle and stopped keep the plain border; a pending task
+// the plain dot).
+const STATUS_CLASS: Record<string, string> = {
+  passing: styles.statusPassing,
+  failed: styles.statusFailed,
+  blocked: styles.statusBlocked,
+  uncertain: styles.statusUncertain,
+  planning: styles.statusPlanning,
+  running: styles.statusRunning,
+};
+const TASK_CLASS: Record<string, string> = {
+  doing: styles.taskDoing,
+  done: styles.taskDone,
+  failed: styles.taskFailed,
+};
 
 // The write-enabled implement loop for ONE deliverable. Markup lifted verbatim from the deliverable
 // pane's Implement tab when the pane was replaced by the unified view (2026-08-19). The Arm dialog
@@ -21,16 +39,16 @@ export default function ImplementPanel({ deliverable }: { deliverable: Deliverab
 
   return (
     <div>
-      <div class="fabry-arch-implement-hd">
-        <span class="fabry-arch-implement-title">{'Implement this deliverable'}</span>
+      <div class={styles.implementHd}>
+        <span class={styles.implementTitle}>{'Implement this deliverable'}</span>
         {active ? (
-          <button type="button" class="fabry-arch-implement-stop" onClick={stopImplement}>
+          <button type="button" class={styles.implementStop} onClick={stopImplement}>
             {'Stop'}
           </button>
         ) : (
           <button
             type="button"
-            class="fabry-arch-implement-run"
+            class={styles.implementRun}
             disabled={store.implementRunning.value || store.running.value || result?.running}
             onClick={onImplement}
           >
@@ -39,16 +57,21 @@ export default function ImplementPanel({ deliverable }: { deliverable: Deliverab
         )}
       </div>
       {!impl && (
-        <p class="fabry-arch-implement-hint">
+        <p class={styles.implementHint}>
           {
             'Mr. Fabry plans this deliverable into tasks and implements them autonomously — write-enabled, bounded, and audited. You confirm before it starts.'
           }
         </p>
       )}
       {impl && (
-        <div class={'fabry-arch-implement-body status-' + (impl.status || 'idle')}>
-          <div class="fabry-arch-implement-status">
-            {active ? h('span', { class: 'fabry-arch-spin' }) : null}
+        <div
+          class={
+            styles.implementBody +
+            (STATUS_CLASS[impl.status as string] ? ' ' + STATUS_CLASS[impl.status as string] : '')
+          }
+        >
+          <div class={styles.implementStatus}>
+            {active ? h('span', { class: arch.spin }) : null}
             {impl.status === 'passing'
               ? '✓ implemented (check passed)'
               : impl.status === 'failed'
@@ -65,37 +88,43 @@ export default function ImplementPanel({ deliverable }: { deliverable: Deliverab
                           ? 'Implementing tasks…'
                           : ''}
             {impl.error && (
-              <span class="fabry-arch-implement-err">
+              <span class={styles.implementErr}>
                 {' — '}
                 {impl.error}
               </span>
             )}
           </div>
           {impl.tasks && impl.tasks.length > 0 && (
-            <ol class="fabry-arch-tasklist">
+            <ol class={styles.tasklist}>
               {impl.tasks.map((t) => (
-                <li key={t.id} class={'fabry-arch-task task-' + (t.status || 'pending')}>
-                  <span class="fabry-arch-task-dot" />
-                  <span class="fabry-arch-task-text">{t.text}</span>
+                <li
+                  key={t.id}
+                  class={
+                    styles.task +
+                    (TASK_CLASS[t.status as string] ? ' ' + TASK_CLASS[t.status as string] : '')
+                  }
+                >
+                  <span class={styles.taskDot} />
+                  <span class={styles.taskText}>{t.text}</span>
                   {t.origin && t.origin !== 'plan' && (
-                    <span class="fabry-arch-task-origin">{t.origin}</span>
+                    <span class={styles.taskOrigin}>{t.origin}</span>
                   )}
                 </li>
               ))}
             </ol>
           )}
-          {impl.summary && <div class="fabry-arch-implement-summary">{impl.summary}</div>}
+          {impl.summary && <div class={styles.implementSummary}>{impl.summary}</div>}
           {impl.notes &&
             impl.notes.length > 0 &&
             impl.notes.map((n: any, i: any) => (
-              <div key={i} class="fabry-arch-implement-note">
+              <div key={i} class={styles.implementNote}>
                 {n}
               </div>
             ))}
           {impl.writes && impl.writes.length > 0 && (
-            <ul class="fabry-arch-implement-audit">
+            <ul class={styles.implementAudit}>
               {impl.writes.map((w, i) => (
-                <li key={i} class={w.ok ? 'ok' : 'pending'}>
+                <li key={i} class={w.ok ? undefined : styles.pending}>
                   <code>{w.tool}</code>
                   {w.argsSummary ? ' ' + w.argsSummary : ''}
                 </li>

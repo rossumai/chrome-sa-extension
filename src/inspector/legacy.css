@@ -400,7 +400,7 @@
   margin-bottom: 8px;
 }
 
-.inspector-mrow .mc {
+.inspector-mrow .inspector-mc {
   flex: 1;
   min-width: 0;
 }

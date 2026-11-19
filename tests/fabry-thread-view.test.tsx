@@ -13,6 +13,9 @@ import * as store from '../src/fabry/store.js';
 import Thread from '../src/fabry/components/Thread.jsx';
 import noticeStyles from '../src/ui/fabry/FabryNotice.module.css';
 import mdStyles from '../src/ui/fabry/FabryMarkdown.module.css';
+import threadStyles from '../src/fabry/components/Thread.module.css';
+import assistantTurnStyles from '../src/fabry/components/AssistantTurn.module.css';
+import fabryQuestionsStyles from '../src/fabry/components/FabryQuestions.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -80,17 +83,20 @@ beforeEach(() => {
 describe('Thread', () => {
   it('renders chips, user turns, assistant markdown, reasoning and tool chips', () => {
     const root = mount();
-    expect(root.querySelector('.fabry-turn-chip')!.textContent).toContain('/usage');
-    expect(root.querySelectorAll('.fabry-turn-user').length).toBe(1); // chip is not a user bubble
+    expect(root.querySelector(`.${threadStyles.turnChip}`)!.textContent).toContain('/usage');
+    expect(root.querySelectorAll(`.${threadStyles.turnUser}`).length).toBe(1); // chip is not a user bubble
     expect(
-      root.querySelector('.fabry-turn-assistant .' + mdStyles.md + ' strong')!.textContent,
+      root.querySelector(`.${assistantTurnStyles.turnAssistant} .` + mdStyles.md + ' strong')!
+        .textContent,
     ).toBe('answer');
-    expect(root.querySelector('.fabry-tools')!.textContent).toContain('reading the queue');
+    expect(root.querySelector(`.${assistantTurnStyles.tools}`)!.textContent).toContain(
+      'reading the queue',
+    );
     expect(root.querySelector('.fabry-thinking')).toBeTruthy();
   });
   it('does not render 👍/👎 feedback buttons (hidden pending backend feedback-id fix), keeps Copy', () => {
     const root = mount();
-    const turns = root.querySelectorAll('.fabry-turn-assistant');
+    const turns = root.querySelectorAll(`.${assistantTurnStyles.turnAssistant}`);
     expect(turns[1].querySelector('.fabry-fb-up')).toBeNull();
     expect(turns[1].querySelector('.fabry-fb-down')).toBeNull();
     expect(turns[1].querySelector('.fabry-copy')).toBeTruthy();
@@ -123,7 +129,7 @@ describe('Thread', () => {
       },
     ];
     const root2 = mount();
-    root2.querySelector<HTMLElement>('.fabry-refresh')!.click();
+    root2.querySelector<HTMLElement>(`.${assistantTurnStyles.refresh}`)!.click();
     expect(chat.openChat).toHaveBeenCalledWith('chat_1');
   });
   // The empty-new-chat greeting + starters moved to <Welcome> (App renders it
@@ -133,12 +139,14 @@ describe('Thread', () => {
     store.liveTurn.value = { reasoning: '', text: 'x', tools: [] };
     store.deepPhase.value = { phase: 'verify', round: 0 };
     const root = mount();
-    expect(root.querySelector('.fabry-deep-phase')!.textContent).toContain(
+    expect(root.querySelector(`.${threadStyles.deepPhase}`)!.textContent).toContain(
       'Verifying in a fresh chat',
     );
     store.deepPhase.value = { phase: 'refine', round: 2 };
     const root2 = mount();
-    expect(root2.querySelector('.fabry-deep-phase')!.textContent).toContain('Refining 2/2');
+    expect(root2.querySelector(`.${threadStyles.deepPhase}`)!.textContent).toContain(
+      'Refining 2/2',
+    );
   });
   it('verdict chip renders per state and expands the critic strip', async () => {
     store.thread.value = [
@@ -171,11 +179,15 @@ describe('Thread', () => {
       },
     ];
     const root = mount();
-    const chipEl = root.querySelector<HTMLElement>('.fabry-deep-chip.fail')!;
+    const chipEl = root.querySelector<HTMLElement>(
+      `.${assistantTurnStyles.deepChip}.${assistantTurnStyles.fail}`,
+    )!;
     expect(chipEl.textContent).toContain('1 unresolved issue');
     chipEl.click();
     await flush();
-    expect(root.querySelector('.fabry-deep-strip')!.textContent).toContain('wrong count');
+    expect(root.querySelector(`.${assistantTurnStyles.deepStrip}`)!.textContent).toContain(
+      'wrong count',
+    );
   });
   it('renders a question form for a question turn and suppresses feedback', () => {
     store.thread.value = [
@@ -204,8 +216,8 @@ describe('Thread', () => {
       },
     ];
     const root = mount();
-    expect(root.querySelector('.fabry-q')).toBeTruthy();
-    expect(root.querySelector('.fabry-turn-foot')).toBeNull(); // no feedback on a question turn
+    expect(root.querySelector(`.${fabryQuestionsStyles.q}`)).toBeTruthy();
+    expect(root.querySelector(`.${assistantTurnStyles.turnFoot}`)).toBeNull(); // no feedback on a question turn
   });
   it('renders the unsupported-element notice for a text-less unknown turn', () => {
     store.thread.value = [
@@ -226,6 +238,6 @@ describe('Thread', () => {
     expect(root.querySelector('.' + noticeStyles.warn)!.textContent).toContain(
       'data-agent-confirmation',
     );
-    expect(root.querySelector('.fabry-turn-foot')).toBeNull();
+    expect(root.querySelector(`.${assistantTurnStyles.turnFoot}`)).toBeNull();
   });
 });

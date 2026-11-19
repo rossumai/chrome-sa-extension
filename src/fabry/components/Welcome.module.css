@@ -1,0 +1,56 @@
+/* Centered "welcome" empty state (new chat): the composer is the hero, centered
+   under a greeting, with starter prompts as pills below. Replaces the old
+   .fabry-greeting / .fabry-starters block. */
+.welcome {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.welcomeInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 680px;
+  width: 100%;
+}
+
+.welcomeMark {
+  color: var(--accent);
+  line-height: 0;
+}
+
+.welcomeTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.welcomePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.welcomePill {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.welcomePill:hover {
+  border-color: var(--info-border);
+  background: var(--info-bg);
+  color: var(--accent);
+}

@@ -23,6 +23,7 @@ import { confirmModal, promptModal } from '../src/ui/Modal.jsx';
 import * as store from '../src/fabry/architect/store.js';
 import ArchitectSidebar from '../src/fabry/architect/components/ArchitectSidebar.jsx';
 import { deliverable } from './support/architect.js';
+import architectSidebarStyles from '../src/fabry/architect/components/ArchitectSidebar.module.css';
 const flush = () => new Promise((r) => setTimeout(r, 0));
 function mount() {
   const root = document.createElement('div');
@@ -52,7 +53,7 @@ describe('ArchitectSidebar', () => {
       deliverable({ id: 'b', text: 'plain', order: 2 }),
     ];
     const root = mount();
-    const rows = root.querySelectorAll('.fabry-arch-item');
+    const rows = root.querySelectorAll(`.${architectSidebarStyles.item}`);
     expect(rows.length).toBe(2);
     expect(rows[0].textContent).toMatch(/VAT/);
   });
@@ -60,8 +61,10 @@ describe('ArchitectSidebar', () => {
     store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1 })];
     store.activeId.value = 'a';
     const root = mount();
-    expect(root.querySelector('.fabry-arch-item.active')).toBeTruthy();
-    root.querySelector<HTMLElement>('.fabry-arch-item')!.click();
+    expect(
+      root.querySelector(`.${architectSidebarStyles.item}.${architectSidebarStyles.active}`),
+    ).toBeTruthy();
+    root.querySelector<HTMLElement>(`.${architectSidebarStyles.item}`)!.click();
     expect(actions.openDeliverable).toHaveBeenCalledWith('a');
   });
   it('names a row by the heading its text declares, over an AI-generated title', () => {
@@ -75,7 +78,9 @@ describe('ArchitectSidebar', () => {
       }),
     ];
     const root = mount();
-    expect(root.querySelector('.fabry-arch-item-title')!.textContent).toBe('Vendor Matching');
+    expect(root.querySelector(`.${architectSidebarStyles.itemTitle}`)!.textContent).toBe(
+      'Vendor Matching',
+    );
   });
   it('kebab Rename prefills with the name on screen, not the (absent) stored title', () => {
     store.deliverables.value = [
@@ -83,11 +88,11 @@ describe('ArchitectSidebar', () => {
     ];
     const root = mount();
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-arch-kebab')!.click();
+      root.querySelector<HTMLElement>(`.${architectSidebarStyles.kebab}`)!.click();
     });
     act(() => {
       (
-        [...root.querySelectorAll('.fabry-arch-menu-item')].find((b) =>
+        [...root.querySelectorAll(`.${architectSidebarStyles.menuItem}`)].find((b) =>
           /Rename/.test(b.textContent),
         ) as HTMLElement
       ).click();
@@ -106,20 +111,36 @@ describe('ArchitectSidebar', () => {
       c: { evidence: '', chatId: null, verdict: 'fail', stale: true },
     };
     const root = mount();
-    const dots = root.querySelectorAll('.fabry-arch-dot');
-    expect(dots[0].className).toMatch(/pass/);
-    expect(root.querySelector('.fabry-arch-dot.running')).toBeTruthy();
-    expect(root.querySelector('.fabry-arch-dot.stale')).toBeTruthy();
+    const dots = root.querySelectorAll(`.${architectSidebarStyles.dot}`);
+    expect(dots[0].classList.contains(architectSidebarStyles.pass)).toBe(true);
+    expect(
+      root.querySelector(`.${architectSidebarStyles.dot}.${architectSidebarStyles.running}`),
+    ).toBeTruthy();
+    expect(
+      root.querySelector(`.${architectSidebarStyles.dot}.${architectSidebarStyles.stale}`),
+    ).toBeTruthy();
   });
   it('New deliverable + Run all wire to actions; Run disabled when empty', () => {
     const root = mount();
-    expect(root.querySelector<HTMLButtonElement>('.fabry-arch-runall')!.disabled).toBe(true);
-    root.querySelector<HTMLElement>('.fabry-arch-new')!.click();
+    expect(
+      root.querySelector<HTMLButtonElement>(`.${architectSidebarStyles.runall}`)!.disabled,
+    ).toBe(true);
+    root.querySelector<HTMLElement>(`.${architectSidebarStyles.newDeliverable}`)!.click();
     expect(actions.addDeliverable).toHaveBeenCalled();
     store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1 })];
     const root2 = mount();
-    root2.querySelector<HTMLElement>('.fabry-arch-runall')!.click();
+    root2.querySelector<HTMLElement>(`.${architectSidebarStyles.runall}`)!.click();
     expect(actions.runAll).toHaveBeenCalled();
+  });
+  it("the New filter chip does not take the New deliverable button's class", () => {
+    store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1 })];
+    const root = mount();
+    const chips = [...root.querySelectorAll(`.${architectSidebarStyles.filterChip}`)];
+    expect(chips.map((c) => c.textContent)).toContain('New');
+    expect(root.querySelectorAll(`.${architectSidebarStyles.newDeliverable}`).length).toBe(1);
+    for (const c of chips) {
+      expect(c.classList.contains(architectSidebarStyles.newDeliverable)).toBe(false);
+    }
   });
   it('while running the Run-all control shows Stop with a progress count', () => {
     store.deliverables.value = [
@@ -131,11 +152,13 @@ describe('ArchitectSidebar', () => {
     };
     store.running.value = true;
     const root = mount();
-    const btn = root.querySelector<HTMLElement>('.fabry-arch-runall')!;
+    const btn = root.querySelector<HTMLElement>(`.${architectSidebarStyles.runall}`)!;
     expect(btn.textContent).toMatch(/stop/i);
     btn.click();
     expect(actions.stopRun).toHaveBeenCalled();
-    expect(root.querySelector('.fabry-arch-summary')!.textContent).toMatch(/1\s*\/\s*2/);
+    expect(root.querySelector(`.${architectSidebarStyles.summary}`)!.textContent).toMatch(
+      /1\s*\/\s*2/,
+    );
   });
   it('idle summary shows the met / not-met breakdown', () => {
     store.deliverables.value = [
@@ -148,7 +171,7 @@ describe('ArchitectSidebar', () => {
       b: { evidence: '', chatId: null, verdict: 'fail', running: false },
     };
     const root = mount();
-    const s = root.querySelector('.fabry-arch-summary')!.textContent;
+    const s = root.querySelector(`.${architectSidebarStyles.summary}`)!.textContent;
     expect(s).toMatch(/1 met/);
     expect(s).toMatch(/1 not met/);
   });
@@ -159,7 +182,7 @@ describe('ArchitectSidebar', () => {
       gone: { evidence: '', chatId: null, verdict: 'fail', running: false },
     };
     const root = mount();
-    const s = root.querySelector('.fabry-arch-summary')!.textContent;
+    const s = root.querySelector(`.${architectSidebarStyles.summary}`)!.textContent;
     expect(s).toMatch(/1 deliverable/);
     expect(s).toMatch(/1 met/);
     expect(s).not.toMatch(/not met/); // the orphan 'fail' (id not in ds) is excluded
@@ -168,11 +191,11 @@ describe('ArchitectSidebar', () => {
     store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1 })];
     const root = mount();
     root
-      .querySelector('.fabry-arch-kebab')!
+      .querySelector(`.${architectSidebarStyles.kebab}`)!
       .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     expect(actions.openDeliverable).not.toHaveBeenCalled(); // nested button doesn't bubble into open
     root
-      .querySelector('.fabry-arch-item')!
+      .querySelector(`.${architectSidebarStyles.item}`)!
       .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     expect(actions.openDeliverable).toHaveBeenCalledWith('a');
   });
@@ -183,7 +206,7 @@ describe('ArchitectSidebar', () => {
       deliverable({ id: 'c', text: 'C', order: 2 }),
     ];
     const root = mount();
-    const rows = root.querySelectorAll('.fabry-arch-item');
+    const rows = root.querySelectorAll(`.${architectSidebarStyles.item}`);
     expect(rows[0].getAttribute('draggable')).toBe('true');
     act(() => {
       rows[0].dispatchEvent(new Event('dragstart', { bubbles: true }));
@@ -200,24 +223,24 @@ describe('ArchitectSidebar — kebab menu', () => {
     store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1 })];
     const root = mount();
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-arch-kebab')!.click();
+      root.querySelector<HTMLElement>(`.${architectSidebarStyles.kebab}`)!.click();
     });
-    const menu = root.querySelector('.fabry-arch-menu');
+    const menu = root.querySelector(`.${architectSidebarStyles.menu}`);
     expect(menu).toBeTruthy();
-    const rerun = [...menu!.querySelectorAll('.fabry-arch-menu-item')].find((b) =>
+    const rerun = [...menu!.querySelectorAll(`.${architectSidebarStyles.menuItem}`)].find((b) =>
       /re-run/i.test(b.textContent),
     );
     act(() => {
       (rerun as HTMLElement).click();
     });
     expect(actions.reRun).toHaveBeenCalledWith('a');
-    expect(root.querySelector('.fabry-arch-menu')).toBeNull();
+    expect(root.querySelector(`.${architectSidebarStyles.menu}`)).toBeNull();
   });
   it('clicking the kebab does not open the deliverable', () => {
     store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1 })];
     const root = mount();
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-arch-kebab')!.click();
+      root.querySelector<HTMLElement>(`.${architectSidebarStyles.kebab}`)!.click();
     });
     expect(actions.openDeliverable).not.toHaveBeenCalled();
   });
@@ -225,9 +248,9 @@ describe('ArchitectSidebar — kebab menu', () => {
     store.deliverables.value = [deliverable({ id: 'a', text: 'A', order: 1 })];
     const root = mount();
     act(() => {
-      root.querySelector<HTMLElement>('.fabry-arch-kebab')!.click();
+      root.querySelector<HTMLElement>(`.${architectSidebarStyles.kebab}`)!.click();
     });
-    const del = [...root.querySelectorAll('.fabry-arch-menu-item')].find(
+    const del = [...root.querySelectorAll(`.${architectSidebarStyles.menuItem}`)].find(
       (b) => b.textContent === 'Delete',
     );
     act(() => {
@@ -235,7 +258,7 @@ describe('ArchitectSidebar — kebab menu', () => {
     });
     expect(confirmModal).toHaveBeenCalled();
     expect(actions.deleteDeliverable).not.toHaveBeenCalled(); // not until confirmed
-    expect(root.querySelector('.fabry-arch-menu')).toBeNull(); // menu closed when the dialog opens
+    expect(root.querySelector(`.${architectSidebarStyles.menu}`)).toBeNull(); // menu closed when the dialog opens
     const onConfirm = vi.mocked(confirmModal).mock.calls[0][2];
     onConfirm!();
     expect(actions.deleteDeliverable).toHaveBeenCalledWith('a');
@@ -273,7 +296,7 @@ describe('the document outline in the sidebar', () => {
     store.deliverables.value = [deliverable({ id: 'a', text: WITH_HEADINGS, order: 1 })];
     store.activeId.value = 'a';
     const root = mount();
-    const items = [...root.querySelectorAll('.fabry-arch-outline-item')];
+    const items = [...root.querySelectorAll(`.${architectSidebarStyles.outlineItem}`)];
     expect(items.map((b) => b.textContent)).toEqual(['Overview', 'Detail', 'Operations']);
     expect(items[0].classList.contains('level-2')).toBe(true);
     expect(items[1].classList.contains('level-3')).toBe(true); // indented deeper
@@ -289,10 +312,12 @@ describe('the document outline in the sidebar', () => {
     ];
     store.activeId.value = 'a';
     const root = mount();
-    const labels = [...root.querySelectorAll('.fabry-arch-outline-item')].map((b) => b.textContent);
+    const labels = [...root.querySelectorAll(`.${architectSidebarStyles.outlineItem}`)].map(
+      (b) => b.textContent,
+    );
     expect(labels).toContain('Overview');
     expect(labels).toContain('Elsewhere');
-    expect(root.querySelectorAll('.fabry-arch-outline')).toHaveLength(2);
+    expect(root.querySelectorAll(`.${architectSidebarStyles.outline}`)).toHaveLength(2);
   });
 
   it('does not repeat the deliverable own title, which the row already shows', () => {
@@ -302,9 +327,13 @@ describe('the document outline in the sidebar', () => {
       deliverable({ id: 'a', text: '## 1. Overview\n\ntext\n\n## 1.1 Scope\n\nmore\n', order: 1 }),
     ];
     const root = mount();
-    const labels = [...root.querySelectorAll('.fabry-arch-outline-item')].map((b) => b.textContent);
+    const labels = [...root.querySelectorAll(`.${architectSidebarStyles.outlineItem}`)].map(
+      (b) => b.textContent,
+    );
     expect(labels).toEqual(['1.1 Scope']);
-    expect(root.querySelector('.fabry-arch-item')!.textContent).toMatch(/1\. Overview/);
+    expect(root.querySelector(`.${architectSidebarStyles.item}`)!.textContent).toMatch(
+      /1\. Overview/,
+    );
   });
 
   it('carries the deliverable id with the heading, so a shared slug resolves in the right section', () => {
@@ -315,7 +344,7 @@ describe('the document outline in the sidebar', () => {
     const jumped: any = [];
     store.setOutlineNavigator((slug: any, docId: any) => jumped.push([slug, docId]));
     const root = mount();
-    const items = [...root.querySelectorAll('.fabry-arch-outline-item')];
+    const items = [...root.querySelectorAll(`.${architectSidebarStyles.outlineItem}`)];
     (items[1] as HTMLElement).click();
     expect(jumped).toEqual([['scope', 'b']]);
     store.setOutlineNavigator(null);
@@ -327,7 +356,7 @@ describe('the document outline in the sidebar', () => {
     ];
     store.activeId.value = 'a';
     const root = mount();
-    expect(root.querySelector('.fabry-arch-outline')).toBeNull();
+    expect(root.querySelector(`.${architectSidebarStyles.outline}`)).toBeNull();
   });
 
   it('clicking an entry asks the open pane to navigate, and does not open/re-open the row', () => {
@@ -337,7 +366,7 @@ describe('the document outline in the sidebar', () => {
     store.setOutlineNavigator((slug: any) => jumped.push(slug));
     const root = mount();
     act(() => {
-      root.querySelectorAll<HTMLElement>('.fabry-arch-outline-item')[2].click();
+      root.querySelectorAll<HTMLElement>(`.${architectSidebarStyles.outlineItem}`)[2].click();
     });
     expect(jumped).toEqual(['operations']);
     // The row's own click handler must not fire: the outline is a SIBLING of the row, and the
@@ -351,7 +380,11 @@ describe('the document outline in the sidebar', () => {
     store.activeId.value = 'a';
     store.setActiveHeading('detail');
     const root = mount();
-    const active = [...root.querySelectorAll('.fabry-arch-outline-item.active')];
+    const active = [
+      ...root.querySelectorAll(
+        `.${architectSidebarStyles.outlineItem}.${architectSidebarStyles.active}`,
+      ),
+    ];
     expect(active).toHaveLength(1);
     expect(active[0].textContent).toBe('Detail');
     store.setActiveHeading(null);
@@ -362,7 +395,9 @@ describe('the document outline in the sidebar', () => {
     store.activeId.value = 'a';
     const root = mount();
     expect(
-      [...root.querySelectorAll('.fabry-arch-outline-item')].map((b) => b.textContent),
+      [...root.querySelectorAll(`.${architectSidebarStyles.outlineItem}`)].map(
+        (b) => b.textContent,
+      ),
     ).not.toContain('Not a heading');
   });
 });

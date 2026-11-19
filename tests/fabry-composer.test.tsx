@@ -12,6 +12,8 @@ import * as store from '../src/fabry/store.js';
 import aiStyles from '../src/ui/aiInput.module.css';
 import Composer from '../src/fabry/components/Composer.jsx';
 import CommandMenu from '../src/fabry/components/CommandMenu.jsx';
+import composerStyles from '../src/fabry/components/Composer.module.css';
+import commandMenuStyles from '../src/fabry/components/CommandMenu.module.css';
 
 function mount(Comp: any, props: any) {
   const root = document.createElement('div');
@@ -41,11 +43,11 @@ beforeEach(() => {
 describe('Composer', () => {
   it('renders one rounded box with the textarea and the bottom bar inside it', () => {
     const root = mount(Composer, {});
-    const box = root.querySelector('.fabry-composer-box')!;
+    const box = root.querySelector(`.${composerStyles.composerBox}`)!;
     expect(box).toBeTruthy();
-    expect(box.querySelector('textarea.fabry-input')).toBeTruthy();
-    expect(box.querySelector('.fabry-bar')).toBeTruthy();
-    expect(box.querySelector('.fabry-bar .fabry-attach-btn')).toBeTruthy(); // + attach inside the bar
+    expect(box.querySelector(`textarea.${composerStyles.input}`)).toBeTruthy();
+    expect(box.querySelector(`.${composerStyles.bar}`)).toBeTruthy();
+    expect(box.querySelector(`.${composerStyles.bar} .${composerStyles.attachBtn}`)).toBeTruthy(); // + attach inside the bar
   });
   it('Enter sends and clears; Shift+Enter does not send', async () => {
     const root = mount(Composer, {});
@@ -61,12 +63,12 @@ describe('Composer', () => {
   });
   it('the send button is disabled until there is text', async () => {
     const root = mount(Composer, {});
-    expect(root.querySelector<HTMLButtonElement>('.fabry-send')!.disabled).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>(`.${composerStyles.send}`)!.disabled).toBe(true);
     const ta = root.querySelector('textarea')!;
     ta.value = 'hi';
     ta.dispatchEvent(new Event('input', { bubbles: true }));
     await flush();
-    expect(root.querySelector<HTMLButtonElement>('.fabry-send')!.disabled).toBe(false);
+    expect(root.querySelector<HTMLButtonElement>(`.${composerStyles.send}`)!.disabled).toBe(false);
   });
   it('Stop does not clobber a newer draft typed while streaming', async () => {
     let resolveSend: any;
@@ -102,8 +104,8 @@ describe('Composer', () => {
   it('shows Stop (not Send) while streaming and calls stopStreaming', () => {
     store.streaming.value = true;
     const root = mount(Composer, {});
-    expect(root.querySelector('.fabry-send')).toBeNull();
-    const stop = root.querySelector<HTMLElement>('.fabry-stop');
+    expect(root.querySelector(`.${composerStyles.send}`)).toBeNull();
+    const stop = root.querySelector<HTMLElement>(`.${composerStyles.stop}`);
     expect(stop).toBeTruthy();
     stop!.click();
     expect(chat.stopStreaming).toHaveBeenCalled();
@@ -111,9 +113,9 @@ describe('Composer', () => {
   it('while streaming: draft editable, gerund shows inline in the bar, deep toggle present, Enter does not send', async () => {
     store.streaming.value = true;
     const root = mount(Composer, {});
-    const bar = root.querySelector('.fabry-bar')!;
-    expect(bar.querySelector('.fabry-working .' + aiStyles.loader)).toBeTruthy();
-    expect(bar.querySelector('.fabry-deep-toggle')).toBeTruthy();
+    const bar = root.querySelector(`.${composerStyles.bar}`)!;
+    expect(bar.querySelector(`.${composerStyles.working} .` + aiStyles.loader)).toBeTruthy();
+    expect(bar.querySelector(`.${composerStyles.deepToggle}`)).toBeTruthy();
     const ta = root.querySelector('textarea')!;
     expect(ta.disabled).toBe(false);
     expect(ta.getAttribute('placeholder')).toMatch(/next message/i);
@@ -130,13 +132,17 @@ describe('Composer', () => {
     ta.value = '/li';
     ta.dispatchEvent(new Event('input', { bubbles: true }));
     await flush();
-    expect(root.querySelector('.fabry-cmdmenu')!.textContent).toContain('/list-skills');
+    expect(root.querySelector(`.${commandMenuStyles.cmdmenu}`)!.textContent).toContain(
+      '/list-skills',
+    );
     store.sendError.value = 'Rate-limited by the agent — try again shortly.';
     const root2 = mount(Composer, {});
-    expect(root2.querySelector('.fabry-senderr')!.textContent).toMatch(/Rate-limited/);
+    expect(root2.querySelector(`.${composerStyles.senderr}`)!.textContent).toMatch(/Rate-limited/);
   });
   it('always shows the standing capability notice', () => {
-    expect(mount(Composer, {}).querySelector('.fabry-notice')!.textContent).toMatch(/read-only/i);
+    expect(mount(Composer, {}).querySelector(`.${composerStyles.notice}`)!.textContent).toMatch(
+      /read-only/i,
+    );
   });
 });
 
@@ -145,13 +151,13 @@ describe('deep verify toggle', () => {
     store.deepVerifyAllowed.value = true;
     store.deepMode.value = false;
     const root = mount(Composer, {});
-    const btn = root.querySelector<HTMLElement>('.fabry-deep-toggle');
+    const btn = root.querySelector<HTMLElement>(`.${composerStyles.deepToggle}`);
     expect(btn).toBeTruthy();
     btn!.click();
     expect(store.deepMode.value).toBe(true);
     store.deepVerifyAllowed.value = false;
     const root2 = mount(Composer, {});
-    expect(root2.querySelector('.fabry-deep-toggle')).toBeNull();
+    expect(root2.querySelector(`.${composerStyles.deepToggle}`)).toBeNull();
   });
 });
 
@@ -159,11 +165,11 @@ describe('CommandMenu', () => {
   it('filters by prefix and picks with arguments', () => {
     const onPick = vi.fn();
     const root = mount(CommandMenu, { query: '/re', commands: store.commands.value, onPick });
-    const rows = [...root.querySelectorAll('.fabry-cmd-row')];
+    const rows = [...root.querySelectorAll(`.${commandMenuStyles.cmdRow}`)];
     expect(rows.length).toBe(1);
     (rows[0] as HTMLElement).click();
     expect(onPick).toHaveBeenCalledWith('/report ');
-    const sug = root.querySelector<HTMLElement>('.fabry-cmd-arg');
+    const sug = root.querySelector<HTMLElement>(`.${commandMenuStyles.cmdArg}`);
     sug!.click();
     expect(onPick).toHaveBeenCalledWith('/report weekly');
   });
