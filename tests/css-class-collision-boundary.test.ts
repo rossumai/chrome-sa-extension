@@ -119,7 +119,6 @@ const ALLOWLIST: Record<string, { sheet: string; permanent?: true }> = {
   spinner: { sheet: 'src/mdh/legacy.css' },
   stale: { sheet: 'src/fabry/legacy.css' },
   success: { sheet: 'src/mdh/legacy.css' },
-  tab: { sheet: 'src/console/legacy/shared.css' },
   thr: { sheet: 'src/inspector/legacy.css' },
   toc: { sheet: 'src/docs/theme.css', permanent: true },
   toggle: { sheet: 'src/popup/legacy.css' },

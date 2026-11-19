@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { activePanel, selectedCollection, statsSummary } from '../store.js';
+import tb from '../../ui/Tabs.module.css';
 
 const TABS = [
   { id: 'data', label: 'Data' },
@@ -43,10 +44,10 @@ function StatsAlertIcon() {
 
 export default function TabBar() {
   return (
-    <div class="tab-bar">
+    <div class={tb.bar}>
       {TABS.map(({ id, label }) => (
         <button
-          class={'tab' + (activePanel.value === id ? ' active' : '')}
+          class={tb.tab + (activePanel.value === id ? ` ${tb.active}` : '')}
           onClick={() => {
             activePanel.value = id;
           }}

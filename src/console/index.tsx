@@ -4,6 +4,7 @@
 import '../ui/controls.module.css';
 import '../ui/Segmented.module.css';
 import '../ui/Input.module.css';
+import '../ui/Tabs.module.css';
 import { h, render } from 'preact';
 import { effect } from '@preact/signals';
 import { activeApp, experimentalUnlocked, connectedOrg } from './store.js';

@@ -5,6 +5,7 @@ import PanelHead from './PanelHead.jsx';
 import ValidationRules from './ValidationRules.jsx';
 import ProvenanceReplay from './ProvenanceReplay.jsx';
 import s from './Builder.module.css';
+import tb from '../../ui/Tabs.module.css';
 
 export default function ValidationPanel() {
   const { tab } = rightPanel.value as Extract<RightPanel, { kind: 'validation' }>;
@@ -14,12 +15,12 @@ export default function ValidationPanel() {
         title={`Validation · annotation (${annotationId.value})`}
         onClose={closeValidationPanel}
       />
-      <div class={'tab-bar ' + s.tabs}>
+      <div class={`${tb.bar} ` + s.tabs}>
         {(['rules', 'provenance'] as const).map((t) => (
           <button
             type="button"
             data-tab={t}
-            class={'tab' + (tab === t ? ' active' : '')}
+            class={tb.tab + (tab === t ? ` ${tb.active}` : '')}
             onClick={() => (rightPanel.value = { kind: 'validation', tab: t })}
           >
             {t === 'rules' ? 'Rules' : 'Provenance'}

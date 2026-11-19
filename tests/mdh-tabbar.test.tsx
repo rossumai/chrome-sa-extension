@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { h, render } from 'preact';
 import * as store from '../src/mdh/store.js';
 import TabBar from '../src/mdh/components/TabBar.jsx';
+import tb from '../src/ui/Tabs.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -65,7 +66,7 @@ describe('TabBar stats alert icon', () => {
   it('attaches the icon to the Stats tab specifically', () => {
     store.statsSummary.value = { collection: 'col1', health: 60, label: 'Fair' };
     const root = mount();
-    const statsTab = Array.from(root.querySelectorAll('.tab')).find((b) =>
+    const statsTab = Array.from(root.querySelectorAll('.' + tb.tab)).find((b) =>
       b.textContent.includes('Stats'),
     );
     expect(statsTab).toBeDefined();

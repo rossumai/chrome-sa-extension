@@ -7,6 +7,7 @@ import CodeEditor, { type CodeEditorHandle } from './CodeEditor.jsx';
 import PanelHead from './PanelHead.jsx';
 import s from './Builder.module.css';
 import ctl from '../../ui/controls.module.css';
+import tb from '../../ui/Tabs.module.css';
 
 // A hook that mentions a field, read-only: its code or its settings, scrolled to each place
 // the field id appears (↑/↓ step through them). Editing other hooks is out of scope.
@@ -44,12 +45,12 @@ export default function HookCodeView() {
       {codeHidden(hook) && (
         <div class={s.dim}>A webhook runs on its own server: only its settings are searched.</div>
       )}
-      <div class={'tab-bar ' + s.tabs}>
+      <div class={`${tb.bar} ` + s.tabs}>
         {text.code && (
           <button
             type="button"
             data-tab="code"
-            class={'tab' + (tab === 'code' ? ' active' : '')}
+            class={tb.tab + (tab === 'code' ? ` ${tb.active}` : '')}
             onClick={() => pick('code')}
           >
             Code ({inCode.length})
@@ -59,7 +60,7 @@ export default function HookCodeView() {
           <button
             type="button"
             data-tab="settings"
-            class={'tab' + (tab === 'settings' ? ' active' : '')}
+            class={tb.tab + (tab === 'settings' ? ` ${tb.active}` : '')}
             onClick={() => pick('settings')}
           >
             Settings ({inSettings.length})
