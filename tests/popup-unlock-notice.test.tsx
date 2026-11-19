@@ -4,6 +4,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import App from '../src/popup/components/App.jsx';
+import offCss from '../src/popup/components/OffSite.module.css';
+import appCss from '../src/popup/components/App.module.css';
 
 async function waitFor(cond: () => unknown, timeout = 2000) {
   const start = Date.now();
@@ -59,23 +61,23 @@ afterEach(() => {
 async function mountApp(url: string, seed: any = {}) {
   Object.assign(state, seed);
   render(<App tab={{ id: 1, index: 0, url }} />, document.body);
-  await waitFor(() => document.body.querySelector('.version'));
+  await waitFor(() => document.body.querySelector(`.${appCss.version}`));
 }
 
 function clickVersion() {
-  const el = document.body.querySelector<HTMLElement>('.version')!;
+  const el = document.body.querySelector<HTMLElement>(`.${appCss.version}`)!;
   for (let i = 0; i < 5; i++) el.click();
 }
 
-const notice = () => document.body.querySelector('.unlock-notice');
+const notice = () => document.body.querySelector(`.${offCss.unlockNotice}`);
 
 describe('the unlock notice', () => {
   it('replaces the note line on an unrelated tab, never joining the footer', async () => {
     await mountApp('https://example.com/');
     clickVersion();
     await waitFor(notice);
-    expect(document.body.querySelector('.footer .unlock-notice')).toBeNull();
-    expect(document.body.querySelector('.offsite-note')).toBeNull();
+    expect(document.body.querySelector(`.${appCss.footer} .${offCss.unlockNotice}`)).toBeNull();
+    expect(document.body.querySelector(`.${offCss.offsiteNote}`)).toBeNull();
     expect(notice()!.textContent).toContain('Experimental features unlocked');
     expect(notice()!.textContent).toContain('Academy, rdc added');
   });
@@ -84,8 +86,10 @@ describe('the unlock notice', () => {
     await mountApp('https://org.rossum.app/documents');
     clickVersion();
     await waitFor(notice);
-    expect(document.body.querySelector('.footer-left .unlock-notice')).not.toBeNull();
-    expect(document.body.querySelector('.footer')!.children).toHaveLength(2);
+    expect(
+      document.body.querySelector(`.${appCss.footerLeft} .${offCss.unlockNotice}`),
+    ).not.toBeNull();
+    expect(document.body.querySelector(`.${appCss.footer}`)!.children).toHaveLength(2);
   });
 
   it('on the Console, replaces the app list label and marks the new apps', async () => {
@@ -94,8 +98,8 @@ describe('the unlock notice', () => {
     clickVersion();
     await waitFor(notice);
     expect(document.body.textContent).not.toContain('Switch app in this tab');
-    const fresh = [...document.body.querySelectorAll('.console-app.is-new')];
-    expect(fresh.map((r) => r.querySelector('.console-app-name')!.textContent)).toEqual([
+    const fresh = [...document.body.querySelectorAll(`.${offCss.consoleApp}.${offCss.isNew}`)];
+    expect(fresh.map((r) => r.querySelector(`.${offCss.consoleAppName}`)!.textContent)).toEqual([
       'Academy',
       'rdc',
     ]);

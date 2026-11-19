@@ -1,0 +1,188 @@
+.mdhQ {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.3;
+  padding: 1px 0;
+}
+
+.mdhQNum {
+  color: var(--text-hint);
+  flex-shrink: 0;
+  width: 14px;
+}
+
+.mdhQName {
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mdhQStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-sans);
+  cursor: help;
+}
+
+.mdhQStatusPending {
+  color: var(--text-hint);
+  background: transparent;
+  animation: mdh-q-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mdh-q-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.mdhQStatusWinner {
+  color: #fff;
+  background: #16a34a;
+}
+.mdhQStatusEmpty {
+  color: var(--text-hint);
+  background: transparent;
+}
+.mdhQStatusSkipped {
+  color: var(--text-hint);
+  background: transparent;
+  opacity: 0.6;
+}
+.mdhQStatusGated {
+  color: var(--text-hint);
+  background: transparent;
+  opacity: 0.6;
+}
+.mdhQStatusError {
+  color: #fff;
+  background: #c0392b;
+}
+
+.mdhQWinner .mdhQName {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.mdhQSkipped .mdhQNum,
+.mdhQSkipped .mdhQName,
+.mdhQGated .mdhQNum,
+.mdhQGated .mdhQName {
+  opacity: 0.45;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mdhQStatusWinner {
+    background: #15803d;
+  }
+  .mdhQStatusError {
+    background: #991b1b;
+  }
+}
+
+/* The query-status hint. It used to be an inline `flex-basis: 100%` line inside
+   the <li>, which grew the row by one to several lines the moment a replay
+   resolved — the layout shift this replaced. It is now a popover anchored to the
+   status dot, so a query row is one line high from first paint and never changes.
+
+   `position: fixed` is load-bearing: #app sets `overflow: hidden`, so an absolute
+   tip would be clipped exactly where a hint on the last failing query needs to
+   appear. Verified no ancestor of .mdhQ sets transform/filter/perspective/
+   will-change, any of which would re-clip a fixed element. Placement + viewport
+   clamping live in hintPlacement.js. */
+.mdhQHint {
+  position: fixed;
+  z-index: 300;
+  max-width: 300px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: #1c1e28;
+  color: #eef0f6;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.45;
+  word-break: break-word;
+  pointer-events: none; /* never swallows the hover that opened it */
+}
+.mdhQHintTitle {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 3px;
+}
+.mdhQHintError .mdhQHintTitle {
+  color: #ff9d94;
+  opacity: 1;
+}
+/* A visible cue that this dot has more behind it. */
+.mdhQStatusHinted {
+  cursor: help;
+}
+.mdhQStatusHinted:focus-visible {
+  outline: 2px solid var(--accent, #4270db);
+  outline-offset: 1px;
+}
+
+.mdhQActions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.mdhQAction {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--text-hint);
+  cursor: pointer;
+  padding: 2px 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  transition:
+    color 0.12s,
+    background 0.12s,
+    border-color 0.12s;
+}
+.mdhQAction:hover {
+  color: var(--accent);
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
+.mdhQAction:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.mdhQCopyOk {
+  color: #16a34a;
+}
+@media (prefers-color-scheme: dark) {
+  .mdhQCopyOk {
+    color: #22c55e;
+  }
+}

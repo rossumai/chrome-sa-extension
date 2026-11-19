@@ -19,6 +19,10 @@ import { UnlockNoticeText } from './NoticeLine.jsx';
 import { readConsoleTab } from '../consoleTab.js';
 import type { UnlockNotice } from '../offSite.js';
 import styles from './App.module.css';
+import card from './Card.module.css';
+import hb from './HeaderButtons.module.css';
+import tg from './Toggle.module.css';
+import tn from './ToolNotice.module.css';
 
 const STORAGE_TOGGLES = [
   'schemaAnnotationsEnabled',
@@ -272,7 +276,7 @@ export default function App({ tab }: { tab?: any }) {
     window.close();
   };
 
-  const dimClass = (ctx: any) => (site && site !== ctx ? ' dimmed' : '');
+  const dimClass = (ctx: any, dimmed: string) => (site && site !== ctx ? ` ${dimmed}` : '');
 
   if (storageValues === null || consent === undefined || asked === undefined) {
     // Avoid first-paint flicker before storage has resolved — including consent
@@ -285,30 +289,30 @@ export default function App({ tab }: { tab?: any }) {
     <Fragment>
       <div class={styles.accentBar}></div>
 
-      <header class="header">
-        <div class="brand-badge">SA</div>
-        <span class="brand-name">Rossum SA</span>
+      <header class={styles.header}>
+        <div class={styles.brandBadge}>SA</div>
+        <span class={styles.brandName}>Rossum SA</span>
         {site ? (
-          <div class="header-actions">
+          <div class={hb.headerActions}>
             <button
-              class={`token-btn${tokenCopied ? ' copied' : ''}${dimClass('rossum')}`}
+              class={`${hb.tokenBtn}${tokenCopied ? ` ${hb.copied}` : ''}${dimClass('rossum', hb.dimmed)}`}
               onClick={onCopyToken}
               aria-label="Copy API token"
             >
               {tokenCopied ? <CheckIcon /> : <KeyIcon />}
-              <span class="token-tip" role="status">
+              <span class={hb.tokenTip} role="status">
                 {tokenCopied ? 'Copied' : 'Copy API token'}
               </span>
             </button>
             <button
-              class={`mdh-btn${dimClass('rossum')}`}
+              class={`${hb.mdhBtn}${dimClass('rossum', hb.dimmed)}`}
               onClick={onMasterDataHub}
               title="Open Master Data Hub"
             >
               <span>Master Data Hub</span>
               <ExternalIconSmall />
             </button>
-            <button class="console-btn" onClick={onRossumConsole}>
+            <button class={hb.consoleBtn} onClick={onRossumConsole}>
               <span>Rossum Console</span>
               <ExternalIcon />
             </button>
@@ -342,9 +346,9 @@ export default function App({ tab }: { tab?: any }) {
         />
       ) : (
         <div id="mainContent">
-          <div class="content-row">
+          <div class={styles.contentRow}>
             {showMdhPanel ? (
-              <div class="content-col content-col-mdh">
+              <div class={`${styles.contentCol} ${styles.contentColMdh}`}>
                 <MdhProvenancePanel
                   tab={tab}
                   onPin={canPinSidePanel ? onPinSidePanel : undefined}
@@ -352,12 +356,15 @@ export default function App({ tab }: { tab?: any }) {
               </div>
             ) : null}
 
-            <div class="content-col content-col-toggles">
-              <section class={`card${dimClass('rossum')}`} data-context="rossum">
-                <h3 class="section-title">Rossum</h3>
+            <div class={`${styles.contentCol} ${styles.contentColToggles}`}>
+              <section
+                class={`${card.card}${dimClass('rossum', card.dimmed)}`}
+                data-context="rossum"
+              >
+                <h3 class={card.sectionTitle}>Rossum</h3>
 
-                <div class="toggle-group toggle-group--cols-2">
-                  <span class="group-label">Overlays</span>
+                <div class={`${tg.toggleGroup} ${tg.toggleGroupCols2}`}>
+                  <span class={tg.groupLabel}>Overlays</span>
                   <Toggle
                     id="schemaAnnotationsEnabled"
                     label="Schema IDs"
@@ -392,8 +399,8 @@ export default function App({ tab }: { tab?: any }) {
                   />
                 </div>
 
-                <div class="toggle-group">
-                  <span class="group-label">Behavior</span>
+                <div class={tg.toggleGroup}>
+                  <span class={tg.groupLabel}>Behavior</span>
                   <Toggle
                     id="expandFormulasEnabled"
                     label="Expand formulas"
@@ -417,8 +424,8 @@ export default function App({ tab }: { tab?: any }) {
                   />
                 </div>
 
-                <div class="toggle-group toggle-group--cols-2">
-                  <span class="group-label">Developer</span>
+                <div class={`${tg.toggleGroup} ${tg.toggleGroupCols2}`}>
+                  <span class={tg.groupLabel}>Developer</span>
                   <Toggle
                     id="devFeaturesEnabled"
                     label="Dev features"
@@ -436,9 +443,12 @@ export default function App({ tab }: { tab?: any }) {
                 </div>
               </section>
 
-              <div class="card-row">
-                <section class={`card${dimClass('netsuite')}`} data-context="netsuite">
-                  <h3 class="section-title">NetSuite</h3>
+              <div class={card.cardRow}>
+                <section
+                  class={`${card.card}${dimClass('netsuite', card.dimmed)}`}
+                  data-context="netsuite"
+                >
+                  <h3 class={card.sectionTitle}>NetSuite</h3>
                   <Toggle
                     id="netsuiteFieldNamesEnabled"
                     label="Field names"
@@ -448,9 +458,12 @@ export default function App({ tab }: { tab?: any }) {
                   />
                 </section>
 
-                <section class={`card${dimClass('coupa')}`} data-context="coupa">
-                  <h3 class="section-title">
-                    Coupa <span class="beta-badge">beta</span>
+                <section
+                  class={`${card.card}${dimClass('coupa', card.dimmed)}`}
+                  data-context="coupa"
+                >
+                  <h3 class={card.sectionTitle}>
+                    Coupa <span class={card.betaBadge}>beta</span>
                   </h3>
                   <Toggle
                     id="coupaFieldNamesEnabled"
@@ -463,22 +476,22 @@ export default function App({ tab }: { tab?: any }) {
               </div>
 
               {authError ? (
-                <div class={`tool-notice${dimClass('rossum')}`} role="alert">
+                <div class={`${tn.toolNotice}${dimClass('rossum', tn.dimmed)}`} role="alert">
                   {authError.kind === 'reload' ? (
                     <Fragment>
-                      <span class="tool-notice-msg">
+                      <span class={tn.toolNoticeMsg}>
                         Reload the Rossum tab — the extension was updated and lost its connection.
                       </span>
-                      <button class="tool-notice-action" onClick={onReloadTab}>
+                      <button class={tn.toolNoticeAction} onClick={onReloadTab}>
                         Reload tab
                       </button>
                     </Fragment>
                   ) : authError.kind === 'clipboard' ? (
-                    <span class="tool-notice-msg">
+                    <span class={tn.toolNoticeMsg}>
                       Could not copy to the clipboard. Click the key again.
                     </span>
                   ) : (
-                    <span class="tool-notice-msg">Sign in to Rossum in this tab first.</span>
+                    <span class={tn.toolNoticeMsg}>Sign in to Rossum in this tab first.</span>
                   )}
                 </div>
               ) : null}
@@ -488,10 +501,10 @@ export default function App({ tab }: { tab?: any }) {
         </div>
       )}
 
-      <footer class="footer">
+      <footer class={styles.footer}>
         {/* Version hash with the usage-data control beside it, rather than a
             third item floating in the middle of the footer. */}
-        <div class="footer-left">
+        <div class={styles.footerLeft}>
           {/* On Rossum, NetSuite and Coupa the notice takes this group's place for 2.5 s —
               never a third item in the row, which wrapped the footer at 380px. Off those
               sites it takes the line under the header instead (NoticeLine). */}
@@ -499,7 +512,7 @@ export default function App({ tab }: { tab?: any }) {
             <UnlockNoticeText notice={unlockNotice} />
           ) : (
             <Fragment>
-              <span class="version" onClick={onVersionClick}>
+              <span class={styles.version} onClick={onVersionClick}>
                 {version}
               </span>
               <UsageFooterButton
@@ -510,7 +523,7 @@ export default function App({ tab }: { tab?: any }) {
             </Fragment>
           )}
         </div>
-        <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" class="footer-link">
+        <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" class={styles.footerLink}>
           Support & feedback
           <ExternalIconSmall />
         </a>

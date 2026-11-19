@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import MdhProvenancePanel from '../src/popup/components/MdhProvenancePanel.jsx';
+import mpCss from '../src/popup/components/MdhProvenancePanel.module.css';
 
 const DOMAIN = 'https://org.rossum.app';
 const TAB = { id: 1, windowId: 7, index: 0, url: `${DOMAIN}/document/5` };
@@ -49,7 +50,7 @@ async function waitFor(cond: () => boolean, timeout = 3000) {
     await new Promise((r) => setTimeout(r, 10));
   }
 }
-const message = () => root.querySelector('.mdh-empty')?.textContent;
+const message = () => root.querySelector(`.${mpCss.mdhEmpty}`)?.textContent;
 const count = (part: string) => urls.filter((u) => u.includes(part)).length;
 async function open() {
   render(null, root);
@@ -141,7 +142,9 @@ describe('MDH card — queue with no MDH hook', () => {
     await open();
     await open();
     urls = [];
-    const btn = root.querySelector<HTMLButtonElement>('button.mdh-refresh-btn[title^="Refresh"]')!;
+    const btn = root.querySelector<HTMLButtonElement>(
+      `button.${mpCss.mdhRefreshBtn}[title^="Refresh"]`,
+    )!;
     btn.click();
     await waitFor(() => count('/api/v1/hooks?') >= 1 && count('?fields=schema') >= 1);
   });

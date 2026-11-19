@@ -2,6 +2,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import App from '../src/popup/components/App.jsx';
+import offCss from '../src/popup/components/OffSite.module.css';
+import appCss from '../src/popup/components/App.module.css';
 
 const GATE_KEY = 'experimentalUnlocked';
 
@@ -77,16 +79,16 @@ async function mountApp(tab: any, seed: any) {
   // below, including the exact-call-count check in the brand-name test.
   Object.assign(state, { usageAsked: true }, seed);
   render(<App tab={tab} />, document.body);
-  await waitFor(() => document.body.querySelector('.brand-name'));
+  await waitFor(() => document.body.querySelector(`.${appCss.brandName}`));
 }
 
 function clickVersion(times: any) {
-  const el = document.body.querySelector<HTMLElement>('.version');
+  const el = document.body.querySelector<HTMLElement>(`.${appCss.version}`);
   for (let i = 0; i < times; i++) el!.click();
 }
 
 function clickBrandName(times: any) {
-  const el = document.body.querySelector<HTMLElement>('.brand-name');
+  const el = document.body.querySelector<HTMLElement>(`.${appCss.brandName}`);
   for (let i = 0; i < times; i++) el!.click();
 }
 
@@ -117,11 +119,11 @@ describe('unified unlock gate — popup App integration', () => {
 
   it('shows a notice naming experimental features, distinguishing unlocked from hidden', async () => {
     await mountApp(UNSITED_TAB, { [GATE_KEY]: false });
-    expect(document.body.querySelector('.unlock-notice')).toBeNull();
+    expect(document.body.querySelector(`.${offCss.unlockNotice}`)).toBeNull();
 
     clickVersion(5);
-    await waitFor(() => !!document.body.querySelector('.unlock-notice'));
-    const unlockedText = document.body.querySelector('.unlock-notice')!.textContent;
+    await waitFor(() => !!document.body.querySelector(`.${offCss.unlockNotice}`));
+    const unlockedText = document.body.querySelector(`.${offCss.unlockNotice}`)!.textContent;
     expect(unlockedText).toMatch(/unlock/i);
     // One vocabulary from storage key to badge to notice.
     expect(unlockedText).toMatch(/experimental/i);
@@ -130,9 +132,9 @@ describe('unified unlock gate — popup App integration', () => {
 
     clickVersion(5);
     await waitFor(
-      () => document.body.querySelector('.unlock-notice')?.textContent !== unlockedText,
+      () => document.body.querySelector(`.${offCss.unlockNotice}`)?.textContent !== unlockedText,
     );
-    const hiddenText = document.body.querySelector('.unlock-notice')!.textContent;
+    const hiddenText = document.body.querySelector(`.${offCss.unlockNotice}`)!.textContent;
     expect(hiddenText).toMatch(/hid/i);
     expect(hiddenText).not.toBe(unlockedText);
   });
@@ -152,7 +154,7 @@ describe('unified unlock gate — popup App integration', () => {
 
     expect(chrome.storage.local.set).not.toHaveBeenCalled();
     expect(state[GATE_KEY]).toBe(false);
-    expect(document.body.querySelector('.unlock-notice')).toBeNull();
+    expect(document.body.querySelector(`.${offCss.unlockNotice}`)).toBeNull();
   });
 });
 

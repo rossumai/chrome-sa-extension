@@ -1,4 +1,6 @@
 import { h, render } from 'preact';
+// First, so the reset and the #app shell open the bundle's emitted sheet.
+import './page.module.css';
 import App from './components/App.jsx';
 
 (async () => {

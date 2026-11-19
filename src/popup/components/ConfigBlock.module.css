@@ -1,0 +1,184 @@
+.mdhCfg {
+  margin-top: 6px;
+  padding: 4px 0 2px;
+}
+.mdhCfg + .mdhCfg {
+  border-top: 1px dashed var(--border);
+  margin-top: 8px;
+  padding-top: 6px;
+}
+
+/* Where a cfg comes from — its hook, or "Lookup field" — linked to its settings,
+   then the cfg's own name. The card is ONE list in schema order, so this line is
+   what tells the two sources apart. */
+.mdhCfgSource {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  margin: 0 0 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mdhCfgSource a {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+.mdhCfgSource a:hover {
+  color: var(--accent-dim);
+  text-decoration: underline;
+}
+
+.mdhCfgNote {
+  margin: 0 0 4px;
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+.mdhRowPicker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 4px 0 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+.mdhRowLabel,
+.mdhRowOf {
+  color: var(--text-hint);
+}
+
+.mdhRowSelect {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 4px;
+  cursor: pointer;
+}
+.mdhRowSelect:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Names the table these rows belong to. A document can hold several tables of
+   different lengths, so a bare "of 4" is ambiguous — this says which 4. */
+.mdhRowTable {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-hint);
+  opacity: 0.85;
+}
+.mdhRowTable::before {
+  content: '·';
+  margin-right: 4px;
+}
+
+.mdhCfgHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.3;
+  padding: 1px 0 4px;
+}
+/* The target takes the free width; the collection sits at the right edge at its
+   own width, and both ellipsize rather than wrap when the line is short. */
+.mdhCfgHead .mdhQTarget {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mdhCfgHead .mdhQDataset {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 55%;
+  margin-left: auto;
+}
+
+.mdhCfgHeadGated .mdhQTarget {
+  text-decoration: line-through;
+  text-decoration-color: currentColor;
+  color: var(--text-hint);
+  font-weight: 400;
+}
+.mdhCfgHeadGated .mdhQDataset {
+  color: var(--text-hint);
+  opacity: 0.75;
+}
+
+.mdhQTarget {
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mdhQDataset {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+.mdhQDatasetIcon {
+  flex-shrink: 0;
+  color: var(--text-hint);
+}
+.mdhQDatasetName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mdhQueryList {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mdhCfgCondCaption {
+  margin: 0 0 4px;
+  line-height: 1.3;
+  cursor: help;
+  /* The caption itself is just a layout wrapper; the expression badge below
+     carries the visual weight. */
+}
+.mdhCfgCondExpr {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+.mdhCfgCondCaptionError .mdhCfgCondExpr {
+  background: rgba(192, 57, 43, 0.08);
+  border-color: rgba(192, 57, 43, 0.35);
+  color: #c0392b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mdhCfgCondCaptionError .mdhCfgCondExpr {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.35);
+    color: #f87171;
+  }
+}

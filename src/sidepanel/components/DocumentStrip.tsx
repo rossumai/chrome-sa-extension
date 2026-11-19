@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { fetchJson } from '../../popup/mdh-provenance.js';
+import styles from './DocumentStrip.module.css';
 
 // The one piece of UI the popup never needed: a panel that outlives a click has
 // to say WHICH document it is showing. The id alone already identifies it, so the
@@ -40,21 +41,21 @@ export default function DocumentStrip({
 
   if (!annotationId) {
     return (
-      <div class="sp-strip sp-strip--idle">
-        <span class="sp-strip-title">No document open</span>
-        <span class="sp-strip-hint">following this tab</span>
+      <div class={`${styles.spStrip} ${styles.spStripIdle}`}>
+        <span class={styles.spStripTitle}>No document open</span>
+        <span class={styles.spStripHint}>following this tab</span>
       </div>
     );
   }
 
   return (
-    <div class="sp-strip">
-      <i class="sp-live"></i>
-      <span class="sp-strip-title" title={name || 'Document'}>
+    <div class={styles.spStrip}>
+      <i class={styles.spLive}></i>
+      <span class={styles.spStripTitle} title={name || 'Document'}>
         {name || 'Document'}
       </span>
-      <code class="sp-strip-id">#{annotationId}</code>
-      <span class="sp-strip-hint">following this tab</span>
+      <code class={styles.spStripId}>#{annotationId}</code>
+      <span class={styles.spStripHint}>following this tab</span>
     </div>
   );
 }

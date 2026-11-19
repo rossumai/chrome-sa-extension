@@ -7,7 +7,7 @@ import { join } from 'path';
 // block, and all 3388 tests stayed green while the strip's link sat flush
 // against "No thanks" instead of at the far right. Reading the stylesheet as
 // text is crude, but it is the only thing in this suite that can catch it.
-const css = readFileSync(join(process.cwd(), 'src/popup/legacy.css'), 'utf8');
+const css = readFileSync(join(process.cwd(), 'src/popup/components/UsageStrip.module.css'), 'utf8');
 
 function block(selector: any) {
   const i = css.indexOf(`\n${selector} {`);
@@ -17,7 +17,7 @@ function block(selector: any) {
 
 describe('usage strip layout rules survive edits', () => {
   it('the action row is a flex row', () => {
-    const b = block('.usage-strip-actions');
+    const b = block('.usageStripActions');
     expect(b).toMatch(/display:\s*flex/);
     expect(b).toMatch(/align-items:\s*center/);
     expect(b).toMatch(/gap:/);
@@ -26,11 +26,11 @@ describe('usage strip layout rules survive edits', () => {
   it('the disclosure link is pushed to the right edge', () => {
     // Inert unless the row above is a flex container, which is why both are
     // asserted together rather than in isolation.
-    expect(block('.usage-strip-link')).toMatch(/margin-left:\s*auto/);
+    expect(block('.usageStripLink')).toMatch(/margin-left:\s*auto/);
   });
 
   it('the strip itself is still a card-like block in flow, not an overlay', () => {
-    const b = block('.usage-strip');
+    const b = block('.usageStrip');
     expect(b).not.toMatch(/position:\s*(fixed|absolute)/);
     expect(b).toMatch(/border-left:/);
   });

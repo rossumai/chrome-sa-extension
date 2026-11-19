@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import OffSite from '../src/popup/components/OffSite.jsx';
+import offCss from '../src/popup/components/OffSite.module.css';
 
 async function waitFor(cond: () => unknown, timeout = 2000) {
   const start = Date.now();
@@ -101,7 +102,7 @@ function mount(props: Partial<Parameters<typeof OffSite>[0]> = {}) {
   });
 }
 
-const rows = () => [...document.body.querySelectorAll('.offsite-row')];
+const rows = () => [...document.body.querySelectorAll(`.${offCss.offsiteRow}`)];
 
 describe('OffSite — Rossum tabs open', () => {
   it('says there is nothing to do here, without the old warning', () => {
@@ -117,13 +118,13 @@ describe('OffSite — Rossum tabs open', () => {
     mount();
     await waitFor(() => rows()[0].textContent!.includes('Acme Corp'));
     expect(rows()[0].textContent).toContain('482113');
-    expect(document.body.querySelector('.env-chip')).toBeNull();
+    expect(document.body.querySelector(`.${offCss.envChip}`)).toBeNull();
   });
 
   it('shows the environment chip only when Org env is on', async () => {
     mount({ orgEnvEnabled: true });
-    await waitFor(() => document.body.querySelector('.env-chip'));
-    expect(document.body.querySelector('.env-chip')!.textContent).toBe('Production');
+    await waitFor(() => document.body.querySelector(`.${offCss.envChip}`));
+    expect(document.body.querySelector(`.${offCss.envChip}`)!.textContent).toBe('Production');
   });
 
   it('falls back to the title on an expired cache', async () => {
@@ -131,7 +132,7 @@ describe('OffSite — Rossum tabs open', () => {
     mount();
     await waitFor(() => rows()[1].textContent!.includes('Acme Corp'));
     expect(rows()[0].textContent).not.toContain('Acme Corp');
-    expect(rows()[0].querySelector('.offsite-title')!.textContent).toContain('Rossum');
+    expect(rows()[0].querySelector(`.${offCss.offsiteTitle}`)!.textContent).toContain('Rossum');
   });
 
   it('falls back to the title with Org info off', async () => {
@@ -191,7 +192,7 @@ describe('OffSite — no Rossum tab', () => {
     expect(document.body.textContent).toContain(
       'No Rossum tab is open. Pick up where you left off:',
     );
-    expect(rows().map((r) => r.querySelector('.offsite-title')!.textContent)).toEqual([
+    expect(rows().map((r) => r.querySelector(`.${offCss.offsiteTitle}`)!.textContent)).toEqual([
       'acme.rossum.app',
       'partner-sandbox.rossum.app',
     ]);

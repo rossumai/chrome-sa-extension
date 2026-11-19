@@ -19,6 +19,8 @@ import {
 } from '../offSite.js';
 import { CheckIcon, ExternalIconSmall, InfoIcon, KeyIcon } from './icons.jsx';
 import NoticeLine from './NoticeLine.jsx';
+import off from './OffSite.module.css';
+import tn from './ToolNotice.module.css';
 
 type Props = {
   tabs: chrome.tabs.Tab[] | null;
@@ -32,7 +34,7 @@ type RowError = { kind: 'reload' | 'login' | 'clipboard'; tab: chrome.tabs.Tab }
 
 export function EnvChip({ org }: { org: Org }) {
   return (
-    <span class={`env-chip ${org.sandbox ? 'env-chip-sandbox' : 'env-chip-production'}`}>
+    <span class={`${off.envChip} ${org.sandbox ? off.envChipSandbox : off.envChipProduction}`}>
       {org.sandbox ? 'Sandbox' : 'Production'}
     </span>
   );
@@ -74,9 +76,9 @@ export default function OffSite({ tabs, viewed, orgNameEnabled, orgEnvEnabled, n
       : 'No Rossum tab is open.';
 
   return (
-    <div class="offsite">
+    <div class={off.offsite}>
       <NoticeLine notice={notice}>
-        <p class="offsite-note">
+        <p class={off.offsiteNote}>
           <InfoIcon />
           {lead}
         </p>
@@ -84,18 +86,18 @@ export default function OffSite({ tabs, viewed, orgNameEnabled, orgEnvEnabled, n
       {open.length ? (
         <OpenTabs tabs={open} orgNameEnabled={orgNameEnabled} orgEnvEnabled={orgEnvEnabled} />
       ) : recent.length ? (
-        <section class="offsite-section">
-          <h3 class="offsite-label">Recent organizations</h3>
-          <ul class="offsite-list">
+        <section class={off.offsiteSection}>
+          <h3 class={off.offsiteLabel}>Recent organizations</h3>
+          <ul class={off.offsiteList}>
             {recent.map((r, i) => (
-              <li class={`offsite-row${i === 0 ? ' is-first' : ''}`}>
-                <button class="offsite-row-main" onClick={() => openOrigin(r.origin)}>
-                  <span class="offsite-kbd">{i + 1}</span>
-                  <span class="offsite-text">
-                    <span class="offsite-title">{hostOf(r.origin)}</span>
+              <li class={`${off.offsiteRow}${i === 0 ? ` ${off.isFirst}` : ''}`}>
+                <button class={off.offsiteRowMain} onClick={() => openOrigin(r.origin)}>
+                  <span class={off.offsiteKbd}>{i + 1}</span>
+                  <span class={off.offsiteText}>
+                    <span class={off.offsiteTitle}>{hostOf(r.origin)}</span>
                   </span>
-                  <span class="offsite-ago">{relativeTime(r.at, Date.now())}</span>
-                  <span class="offsite-act" aria-hidden="true">
+                  <span class={off.offsiteAgo}>{relativeTime(r.at, Date.now())}</span>
+                  <span class={off.offsiteAct} aria-hidden="true">
                     Open <ExternalIconSmall />
                   </span>
                 </button>
@@ -104,7 +106,7 @@ export default function OffSite({ tabs, viewed, orgNameEnabled, orgEnvEnabled, n
           </ul>
         </section>
       ) : null}
-      {open.length ? null : <p class="offsite-foot">Also works on NetSuite and Coupa.</p>}
+      {open.length ? null : <p class={off.offsiteFoot}>Also works on NetSuite and Coupa.</p>}
     </div>
   );
 }
@@ -170,43 +172,45 @@ function OpenTabs({
 
   return (
     <Fragment>
-      <section class="offsite-section">
-        <h3 class="offsite-label">
+      <section class={off.offsiteSection}>
+        <h3 class={off.offsiteLabel}>
           Open Rossum tabs <span>most recent first</span>
         </h3>
-        <ul class="offsite-list">
+        <ul class={off.offsiteList}>
           {tabs.map((t, i) => {
             const org = orgs[t.id as number] ?? null;
             const host = hostOf(t.url || '');
             const place = tabPlace(t.url || '');
             const named = org && orgNameEnabled;
             return (
-              <li class={`offsite-row${i === 0 ? ' is-first' : ''}`}>
-                <button class="offsite-row-main" onClick={() => activateTab(t)} title={t.url}>
-                  <span class="offsite-kbd">{i + 1}</span>
-                  <span class="offsite-text">
-                    <span class="offsite-title">
+              <li class={`${off.offsiteRow}${i === 0 ? ` ${off.isFirst}` : ''}`}>
+                <button class={off.offsiteRowMain} onClick={() => activateTab(t)} title={t.url}>
+                  <span class={off.offsiteKbd}>{i + 1}</span>
+                  <span class={off.offsiteText}>
+                    <span class={off.offsiteTitle}>
                       {named ? org.name : t.title || host}
-                      {named && org.id !== null ? <span class="offsite-id">{org.id}</span> : null}
+                      {named && org.id !== null ? (
+                        <span class={off.offsiteId}>{org.id}</span>
+                      ) : null}
                       {org && orgEnvEnabled ? <EnvChip org={org} /> : null}
                     </span>
-                    <span class="offsite-meta">
+                    <span class={off.offsiteMeta}>
                       {place ? <b>{place}</b> : null}
                       {place ? ' · ' : null}
                       {host}
                     </span>
                   </span>
                 </button>
-                <span class="offsite-actions">
+                <span class={off.offsiteActions}>
                   <button
-                    class="offsite-act offsite-console"
+                    class={`${off.offsiteAct} offsite-console`}
                     onClick={() => onConsole(t)}
                     title="Open the Console on this organization"
                   >
                     Console
                   </button>
                   <button
-                    class={`offsite-act offsite-icon offsite-token${copied === t.id ? ' copied' : ''}`}
+                    class={`${off.offsiteAct} ${off.offsiteIcon} offsite-token${copied === t.id ? ` ${off.copied}` : ''}`}
                     onClick={() => onToken(t)}
                     aria-label="Copy API token"
                     title={copied === t.id ? 'Copied' : 'Copy API token'}
@@ -219,7 +223,7 @@ function OpenTabs({
           })}
         </ul>
       </section>
-      <div class="offsite-hint">
+      <div class={off.offsiteHint}>
         <span>
           <kbd>↵</kbd> switch to 1
         </span>
@@ -239,12 +243,12 @@ function OpenTabs({
 function RowNotice({ error }: { error: RowError }) {
   if (error.kind === 'reload') {
     return (
-      <div class="tool-notice offsite-notice" role="alert">
-        <span class="tool-notice-msg">
+      <div class={tn.toolNotice} role="alert">
+        <span class={tn.toolNoticeMsg}>
           Reload the Rossum tab — the extension was updated and lost its connection.
         </span>
         <button
-          class="tool-notice-action"
+          class={tn.toolNoticeAction}
           onClick={() => {
             chrome.tabs.reload(error.tab.id as number);
             window.close();
@@ -256,8 +260,8 @@ function RowNotice({ error }: { error: RowError }) {
     );
   }
   return (
-    <div class="tool-notice offsite-notice" role="alert">
-      <span class="tool-notice-msg">
+    <div class={tn.toolNotice} role="alert">
+      <span class={tn.toolNoticeMsg}>
         {error.kind === 'clipboard'
           ? 'Could not copy to the clipboard. Click the key again.'
           : 'Sign in to Rossum in this tab first.'}

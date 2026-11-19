@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import DocumentStrip from '../src/sidepanel/components/DocumentStrip.jsx';
+import dsCss from '../src/sidepanel/components/DocumentStrip.module.css';
 
 // Condition-based wait — never fixed timeouts (repo rule).
 async function waitFor(cond: any, timeout = 1000) {
@@ -30,7 +31,7 @@ describe('DocumentStrip', () => {
   it('says no document is open when there is no annotation', () => {
     render(<DocumentStrip ctx={CTX} annotationId={null} />, root);
     expect(root.textContent).toContain('No document open');
-    expect(root.querySelector('.sp-live')).toBeNull();
+    expect(root.querySelector(`.${dsCss.spLive}`)).toBeNull();
   });
 
   it('paints the id immediately, before any request resolves', () => {
@@ -40,7 +41,7 @@ describe('DocumentStrip', () => {
     );
     render(<DocumentStrip ctx={CTX} annotationId="1250417" />, root);
     expect(root.textContent).toContain('#1250417');
-    expect(root.querySelector('.sp-live')).not.toBeNull();
+    expect(root.querySelector(`.${dsCss.spLive}`)).not.toBeNull();
   });
 
   it('upgrades to the file name when the sideload resolves', async () => {

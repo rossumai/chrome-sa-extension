@@ -11,6 +11,7 @@ import UsageStrip, {
   UsageFooterButton,
   stripVisible,
 } from '../src/popup/components/UsageStrip.jsx';
+import usCss from '../src/popup/components/UsageStrip.module.css';
 
 let root: any;
 beforeEach(() => {
@@ -25,7 +26,7 @@ const show: any = (props = {}) =>
 describe('UsageStrip — the first ask', () => {
   it('blocks nothing: no overlay, no scrim, no dialog semantics', () => {
     show();
-    expect(root.querySelector('.usage-strip')).not.toBeNull();
+    expect(root.querySelector(`.${usCss.usageStrip}`)).not.toBeNull();
     expect(root.querySelector('.usage-overlay')).toBeNull();
     expect(root.querySelector('[role="dialog"]')).toBeNull();
     expect(root.querySelector('[aria-modal]')).toBeNull();
@@ -76,14 +77,14 @@ describe('UsageStrip — the first ask', () => {
 
   it('renders nothing while storage is unresolved, so it cannot flash', () => {
     show({ consent: undefined });
-    expect(root.querySelector('.usage-strip')).toBeNull();
+    expect(root.querySelector(`.${usCss.usageStrip}`)).toBeNull();
   });
 });
 
 describe('the disclosure is a link, not an in-popup block', () => {
   it('links out to the full event list, unnumbered so it cannot go stale', () => {
     show();
-    const link: any = root.querySelector('.usage-strip-link');
+    const link: any = root.querySelector(`.${usCss.usageStripLink}`);
     expect(link.textContent.trim()).toBe("What's sent ›");
     expect(link.textContent).not.toMatch(/\d/);
     expect(link.getAttribute('href')).toMatch(/PRIVACY\.md$/);
@@ -99,7 +100,7 @@ describe('the disclosure is a link, not an in-popup block', () => {
 
   it('stays three short elements, so it costs almost no vertical space', () => {
     show();
-    const strip: any = root.querySelector('.usage-strip');
+    const strip: any = root.querySelector(`.${usCss.usageStrip}`);
     expect([...strip.children].map((el) => el.tagName)).toEqual(['P', 'DIV']);
     expect(strip.querySelectorAll('button')).toHaveLength(2);
   });
@@ -109,10 +110,10 @@ describe('UsageStrip — reopened for review', () => {
   it('reopens for an answered user only when review is requested', () => {
     for (const consent of [true, false]) {
       show({ consent, reviewing: false });
-      expect(root.querySelector('.usage-strip')).toBeNull();
+      expect(root.querySelector(`.${usCss.usageStrip}`)).toBeNull();
 
       show({ consent, reviewing: true });
-      expect(root.querySelector('.usage-strip')).not.toBeNull();
+      expect(root.querySelector(`.${usCss.usageStrip}`)).not.toBeNull();
       expect(root.textContent).toContain('Help decide what gets built');
     }
   });
@@ -137,9 +138,9 @@ describe('UsageStrip — reopened for review', () => {
     // whether the strip is on screen and nothing else. Any future per-mode
     // difference has to be added deliberately, and this fails when it is.
     show({ consent: null, reviewing: false });
-    const askHtml: any = root.querySelector('.usage-strip').outerHTML;
+    const askHtml: any = root.querySelector(`.${usCss.usageStrip}`).outerHTML;
     show({ consent: true, reviewing: true });
-    expect(root.querySelector('.usage-strip').outerHTML).toBe(askHtml);
+    expect(root.querySelector(`.${usCss.usageStrip}`).outerHTML).toBe(askHtml);
   });
 
   it('can turn usage data off from the reopened strip', () => {
@@ -186,12 +187,12 @@ describe('UsageFooterButton', () => {
     render(<UsageFooterButton asked consent onToggle={noop} />, root);
     let btn: any = root.querySelector('[data-testid="usage-footer-button"]');
     expect(btn.textContent).toMatch(/Usage data on/);
-    expect(btn.className).toMatch(/\bon\b/);
+    expect(btn.classList.contains(usCss.isOn)).toBe(true);
 
     render(<UsageFooterButton asked consent={false} onToggle={noop} />, root);
     btn = root.querySelector('[data-testid="usage-footer-button"]');
     expect(btn.textContent).toMatch(/Usage data off/);
-    expect(btn.className).not.toMatch(/\bon\b/);
+    expect(btn.classList.contains(usCss.isOn)).toBe(false);
   });
 
   it('toggles the strip instead of silently flipping the setting', () => {
@@ -239,7 +240,7 @@ describe('vocabulary is unified on "usage data"', () => {
   ]) {
     it(`uses no measuring/tracking/counting words in ${label} mode`, () => {
       show(props);
-      const text: any = root.querySelector('.usage-strip').textContent;
+      const text: any = root.querySelector(`.${usCss.usageStrip}`).textContent;
       expect(text).not.toMatch(/\b(telemetr|measur|track|count)\w*\b/i);
       expect(text).toMatch(/usage data/i);
     });

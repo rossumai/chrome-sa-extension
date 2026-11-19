@@ -1,0 +1,120 @@
+/* ── Usage data (opt-in) ───────────────────────────────────────────────────── */
+/* The one-time consent overlay, plus the footer control that reopens it. The
+   overlay is fixed-position, so it neither is clipped by nor contributes to
+   Chrome's 600px popup height cap. */
+/* Modal overlay over the WHOLE popup, on every site. Fixed positioning escapes
+   #app's `overflow: hidden`, so the card is never clipped by the 600px cap; the
+   overlay itself scrolls if the card is ever taller than the popup. */
+/* ── usage-data first ask (non-blocking strip) ──────────────
+   In FLOW at the top of the popup body, not over it. Sized and spaced like a
+   .card so it reads as part of the popup rather than an interruption; the accent
+   left border is the only thing marking it out. Because it blocks nothing it
+   persists until answered — see the header note in UsageStrip.jsx. */
+.usageStrip {
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.usageStripText {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.usageStripText b {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* The action row. `display: flex` is load-bearing for BOTH the button spacing
+   and the right-aligned link below it (margin-left: auto is inert without it),
+   and jsdom cannot see either — this rule was deleted by accident on 2026-08-19
+   and every test stayed green. tests/popup-usage-strip-css.test.ts guards it. */
+.usageStripActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Pushed to the far edge of the action row: the disclosure is available, not in
+   the way, and it costs no vertical space at all. PRIVACY.md is the only place
+   the per-event ledger lives (owner, 2026-08-19). */
+.usageStripLink {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.usageStripLink:hover {
+  text-decoration: underline;
+}
+
+.usageStripYes,
+.usageStripNo {
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.usageStripYes {
+  padding: 4px 11px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.usageStripYes:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+}
+
+/* Borderless, so declining never competes with accepting for attention. */
+.usageStripNo {
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+}
+
+.usageStripNo:hover {
+  color: var(--text-primary);
+}
+
+/* Always-reachable on/off control in the footer — the only region rendered on
+   every page, so the choice can be changed from anywhere. */
+.footerUsage {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.footerUsage:hover {
+  color: var(--accent);
+}
+
+.footerUsageDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-hint);
+}
+
+.footerUsage.isOn .footerUsageDot {
+  background: var(--accent);
+}

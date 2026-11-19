@@ -963,7 +963,7 @@ export async function loadAnnotationValues(
   return flattenContent(cdata, lookupIds);
 }
 
-// ── Status metadata (consumed by QueryItem renderer) ──
+// ── Status metadata (consumed by QueryItem renderer; `cls` is a QueryItem.module.css key) ──
 
 // Keyed by the replay status string, which the popup reads from a value it does not
 // control — so the lookup is by string rather than by the literal union.
@@ -971,22 +971,22 @@ export const STATUS_GLYPH: Record<
   string,
   { glyph: string; cls: string; title: string; showHint: boolean }
 > = {
-  pending: { glyph: '…', cls: 'mdh-q-status--pending', title: 'Replaying…', showHint: false },
-  winner: { glyph: '✓', cls: 'mdh-q-status--winner', title: 'Winning query', showHint: false },
-  empty: { glyph: '—', cls: 'mdh-q-status--empty', title: 'No results', showHint: false },
+  pending: { glyph: '…', cls: 'mdhQStatusPending', title: 'Replaying…', showHint: false },
+  winner: { glyph: '✓', cls: 'mdhQStatusWinner', title: 'Winning query', showHint: false },
+  empty: { glyph: '—', cls: 'mdhQStatusEmpty', title: 'No results', showHint: false },
   skipped: {
     glyph: '·',
-    cls: 'mdh-q-status--skipped',
+    cls: 'mdhQStatusSkipped',
     title: 'Cascade short-circuited before this query',
     showHint: true,
   },
   gated: {
     glyph: '⊘',
-    cls: 'mdh-q-status--gated',
+    cls: 'mdhQStatusGated',
     title: 'Skipped — action_condition gates this configuration',
     showHint: true,
   },
-  error: { glyph: '!', cls: 'mdh-q-status--error', title: 'Replay failed', showHint: true },
+  error: { glyph: '!', cls: 'mdhQStatusError', title: 'Replay failed', showHint: true },
 };
 
 // Evaluates a cfg's `action_condition` against the supplied annotation values.

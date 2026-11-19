@@ -30,6 +30,8 @@ import { isRateLimited, rateLimitMessage } from '../../net/rateLimit.js';
 import { openConsoleTab, runInTab } from '../utils.js';
 import { readCurrentContext } from '../tab-readers.js';
 import ConfigBlock from './ConfigBlock.jsx';
+import card from './Card.module.css';
+import styles from './MdhProvenancePanel.module.css';
 
 function RefreshIcon() {
   return (
@@ -479,16 +481,16 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
   const trimmedFilter = filter.trim();
 
   return (
-    <section class="card mdh-card" data-context="rossum">
-      <h3 class="section-title">
+    <section class={`${card.card} ${styles.mdhCard}`} data-context="rossum">
+      <h3 class={`${card.sectionTitle} ${styles.title}`}>
         <span>
-          Matching provenance <span class="beta-badge">beta</span>
+          Matching provenance <span class={card.betaBadge}>beta</span>
         </span>
-        <span class="mdh-head-actions">
+        <span class={styles.mdhHeadActions}>
           {onPin ? (
             <button
               type="button"
-              class="mdh-refresh-btn mdh-pin-btn"
+              class={`${styles.mdhRefreshBtn} mdh-pin-btn`}
               title="Open in the side panel — stays open while you work"
               onClick={onPin}
             >
@@ -497,7 +499,7 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
           ) : null}
           <button
             type="button"
-            class="mdh-refresh-btn"
+            class={styles.mdhRefreshBtn}
             title="Refresh — bypass cache and re-fetch"
             onClick={onRefresh}
           >
@@ -508,31 +510,33 @@ export default function MdhProvenancePanel({ tab, onPin }: { tab?: any; onPin?: 
       {state.kind === 'loaded' ? (
         <input
           type="search"
-          class="mdh-filter"
+          class={styles.mdhFilter}
           placeholder="Filter by target schema ID"
           value={filter}
           onInput={onFilterChange}
         />
       ) : null}
-      <div class="mdh-body">
+      <div class={styles.mdhBody}>
         {state.kind === 'loading' ? (
-          <p class="mdh-empty">Loading…</p>
+          <p class={styles.mdhEmpty}>Loading…</p>
         ) : state.kind === 'empty' ? (
-          <div class="mdh-empty-state">
-            <span class="mdh-empty-icon">
+          <div class={styles.mdhEmptyState}>
+            <span class={styles.mdhEmptyIcon}>
               <DocLookupIcon />
             </span>
-            <p class="mdh-empty-title">Open a document</p>
-            <p class="mdh-empty-text">
+            <p class={styles.mdhEmptyTitle}>Open a document</p>
+            <p class={styles.mdhEmptyText}>
               This panel reveals the Master Data Hub lookups behind it — each hook's match queries,
               with the document's own field values filled in, so you can see exactly what matched,
               and why.
             </p>
           </div>
         ) : state.kind === 'message' ? (
-          <p class={`mdh-empty${state.isError ? ' mdh-error' : ''}`}>{state.message}</p>
+          <p class={`${styles.mdhEmpty}${state.isError ? ` ${styles.mdhError}` : ''}`}>
+            {state.message}
+          </p>
         ) : visibleItems.length === 0 ? (
-          <p class="mdh-empty">
+          <p class={styles.mdhEmpty}>
             No configurations match {'“'}
             {trimmedFilter}
             {'”'}.

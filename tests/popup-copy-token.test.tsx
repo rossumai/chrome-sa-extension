@@ -2,6 +2,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import App from '../src/popup/components/App.jsx';
+import tnCss from '../src/popup/components/ToolNotice.module.css';
+import hbCss from '../src/popup/components/HeaderButtons.module.css';
 
 async function waitFor(cond: any, timeout = 2000) {
   const start = Date.now();
@@ -47,8 +49,8 @@ afterEach(() => {
 
 async function mount(url = 'https://org.rossum.app/documents') {
   render(<App tab={{ id: 2, index: 0, url }} />, document.body);
-  await waitFor(() => document.body.querySelector('.token-btn'));
-  return document.body.querySelector<HTMLButtonElement>('.token-btn')!;
+  await waitFor(() => document.body.querySelector(`.${hbCss.tokenBtn}`));
+  return document.body.querySelector<HTMLButtonElement>(`.${hbCss.tokenBtn}`)!;
 }
 
 describe('copy API token', () => {
@@ -56,7 +58,7 @@ describe('copy API token', () => {
     const btn = await mount();
     expect(btn.getAttribute('aria-label')).toBe('Copy API token');
     btn.click();
-    await waitFor(() => btn.classList.contains('copied'));
+    await waitFor(() => btn.classList.contains(hbCss.copied));
     expect(writeText).toHaveBeenCalledWith(TOKEN);
     expect(btn.textContent).toContain('Copied');
   });
@@ -64,7 +66,7 @@ describe('copy API token', () => {
   it('records a name-only usage event, never the token', async () => {
     const btn = await mount();
     btn.click();
-    await waitFor(() => btn.classList.contains('copied'));
+    await waitFor(() => btn.classList.contains(hbCss.copied));
     const sent = vi.mocked(chrome.runtime.sendMessage).mock.calls.map((c) => JSON.stringify(c));
     expect(sent.some((s) => s.includes('sa_popup_copy_token'))).toBe(true);
     expect(sent.some((s) => s.includes(TOKEN))).toBe(false);
@@ -74,18 +76,20 @@ describe('copy API token', () => {
     auth = { token: null, domain: 'https://org.rossum.app' };
     const btn = await mount();
     btn.click();
-    await waitFor(() => document.body.querySelector('.tool-notice'));
-    expect(document.body.querySelector('.tool-notice')!.textContent).toContain('Sign in');
+    await waitFor(() => document.body.querySelector(`.${tnCss.toolNotice}`));
+    expect(document.body.querySelector(`.${tnCss.toolNotice}`)!.textContent).toContain('Sign in');
     expect(writeText).not.toHaveBeenCalled();
-    expect(btn.classList.contains('copied')).toBe(false);
+    expect(btn.classList.contains(hbCss.copied)).toBe(false);
   });
 
   it('asks to reload when the tab cannot be read', async () => {
     auth = null;
     const btn = await mount();
     btn.click();
-    await waitFor(() => document.body.querySelector('.tool-notice-action'));
-    expect(document.body.querySelector('.tool-notice-action')!.textContent).toContain('Reload');
+    await waitFor(() => document.body.querySelector(`.${tnCss.toolNoticeAction}`));
+    expect(document.body.querySelector(`.${tnCss.toolNoticeAction}`)!.textContent).toContain(
+      'Reload',
+    );
     expect(writeText).not.toHaveBeenCalled();
   });
 
@@ -93,13 +97,13 @@ describe('copy API token', () => {
     writeText.mockRejectedValue(new Error('denied'));
     const btn = await mount();
     btn.click();
-    await waitFor(() => document.body.querySelector('.tool-notice'));
-    expect(document.body.querySelector('.tool-notice')!.textContent).toContain('clipboard');
-    expect(btn.classList.contains('copied')).toBe(false);
+    await waitFor(() => document.body.querySelector(`.${tnCss.toolNotice}`));
+    expect(document.body.querySelector(`.${tnCss.toolNotice}`)!.textContent).toContain('clipboard');
+    expect(btn.classList.contains(hbCss.copied)).toBe(false);
   });
 
   it('is dimmed off Rossum', async () => {
     const btn = await mount('https://acme.app.netsuite.com/app/center/card.nl');
-    expect(btn.classList.contains('dimmed')).toBe(true);
+    expect(btn.classList.contains(hbCss.dimmed)).toBe(true);
   });
 });

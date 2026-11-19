@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import MdhProvenancePanel from '../src/popup/components/MdhProvenancePanel.jsx';
+import mpCss from '../src/popup/components/MdhProvenancePanel.module.css';
 
 // Condition-based wait — never fixed timeouts (repo rule).
 async function waitFor(cond: any, timeout = 2000) {
@@ -49,9 +50,9 @@ afterEach(() => {
 describe('MDH card pin button', () => {
   it('renders no pin button when no onPin is given', async () => {
     render(<MdhProvenancePanel tab={TAB} />, root);
-    await waitFor(() => !!root.querySelector('.mdh-card'));
+    await waitFor(() => !!root.querySelector(`.${mpCss.mdhCard}`));
     expect(root.querySelector('.mdh-pin-btn')).toBeNull();
-    expect(root.querySelector('.mdh-refresh-btn')).not.toBeNull();
+    expect(root.querySelector(`.${mpCss.mdhRefreshBtn}`)).not.toBeNull();
   });
 
   it('renders the pin button and calls onPin when clicked', async () => {
@@ -64,9 +65,9 @@ describe('MDH card pin button', () => {
 
   it('keeps Refresh working alongside the pin button', async () => {
     render(<MdhProvenancePanel tab={TAB} onPin={vi.fn()} />, root);
-    await waitFor(() => !!root.querySelector('.mdh-refresh-btn:not(.mdh-pin-btn)'));
+    await waitFor(() => !!root.querySelector(`.${mpCss.mdhRefreshBtn}:not(.mdh-pin-btn)`));
     const before = vi.mocked(chrome.scripting.executeScript).mock.calls.length;
-    root.querySelector('.mdh-refresh-btn:not(.mdh-pin-btn)').click();
+    root.querySelector(`.${mpCss.mdhRefreshBtn}:not(.mdh-pin-btn)`).click();
     await waitFor(() => vi.mocked(chrome.scripting.executeScript).mock.calls.length > before);
   });
 });
