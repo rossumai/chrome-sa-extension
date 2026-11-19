@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { h, render } from 'preact';
 import PreviewPane from '../src/devtools/PreviewPane.jsx';
+import styles from '../src/devtools/PreviewPane.module.css';
 
 async function waitFor(fn: any, tries = 200) {
   for (let i = 0; i < tries; i++) {
@@ -69,7 +70,7 @@ describe('PreviewPane', () => {
       blob: blob(),
     });
     await waitFor(() => root.querySelector('a[download]')); // actions appear once the object URL is ready
-    expect(root.querySelector('.rawjson-preview-card')).not.toBeNull();
+    expect(root.querySelector('.' + styles.card)).not.toBeNull();
     expect(root.textContent).toContain('application/octet-stream');
     expect(root.textContent).toContain('2 KB');
     expect(root.textContent).toContain('x.bin');

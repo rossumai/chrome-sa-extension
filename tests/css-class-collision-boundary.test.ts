@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { sourceClassNames, globalSheetClassNames } from './support/classNames.js';
 
 // CSS-module / hand-written-class collision boundary.
@@ -33,7 +33,6 @@ const GLOBAL_SHEETS = [
   'dist/popup/tokens.css',
   'dist/popup/legacy.css',
   'dist/devtools/tokens.css',
-  'dist/devtools/legacy.css',
   'dist/sidepanel/legacy.css',
 ];
 
@@ -43,10 +42,40 @@ const GLOBAL_SHEETS = [
 const MODULE_SHEETS = ['dist/console/app.css', 'dist/popup/popup.css'];
 const OPTIONAL_MODULE_SHEETS = ['dist/sidepanel/sidepanel.css', 'dist/devtools/panel.css'];
 
+// A module sheet whose page renders only its own bundle is checked against that page's classes
+// alone: the source files its entry imports, and the global sheets its page links. A class of
+// another page can never meet it — the DevTools panel's minified `.mc` and the Inspector's
+// hand-written `mc` live in different documents. A sheet not listed here meets every class.
+const PAGE_OF_SHEET: Record<string, { entry: string; sheets: string[] }> = {
+  'dist/devtools/panel.css': {
+    entry: 'src/devtools/panel.tsx',
+    sheets: ['dist/devtools/tokens.css'],
+  },
+};
+
+// The source files an entry reaches through relative imports (`./x.js` resolves to x.ts or
+// x.tsx, `./x.jsx` to x.tsx), as cwd-relative paths. Whole-file regex, so a wrapped import counts.
+function reachableSources(entry: string): Set<string> {
+  const seen = new Set<string>();
+  const todo = [entry];
+  while (todo.length) {
+    const file = todo.pop()!;
+    if (seen.has(file)) continue;
+    seen.add(file);
+    const text = readFileSync(join(ROOT, file), 'utf8');
+    for (const m of text.matchAll(/\b(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
+      const base = join(dirname(file), m[1]).replace(/\.jsx?$/, '');
+      const hit = ['.ts', '.tsx'].map((ext) => base + ext).find((p) => existsSync(join(ROOT, p)));
+      if (hit) todo.push(hit);
+    }
+  }
+  return seen;
+}
+
 const ALLOWLIST: Record<string, { sheet: string; permanent?: true }> = {
   active: {
     sheet:
-      'src/console/legacy/shared.css, src/mdh/legacy.css, src/console/legacy.css, src/fabry/legacy.css, src/docs/theme.css, src/devtools/legacy.css',
+      'src/console/legacy/shared.css, src/mdh/legacy.css, src/console/legacy.css, src/fabry/legacy.css, src/docs/theme.css',
     permanent: true,
   },
   added: { sheet: 'src/fabry/legacy.css' },
@@ -106,7 +135,6 @@ const ALLOWLIST: Record<string, { sheet: string; permanent?: true }> = {
   row: { sheet: 'src/inspector/legacy.css' },
   run: { sheet: 'src/inspector/legacy.css, src/fabry/legacy.css' },
   running: { sheet: 'src/mdh/legacy.css, src/fabry/legacy.css' },
-  selected: { sheet: 'src/devtools/legacy.css' },
   sidebar: { sheet: 'src/mdh/legacy.css' },
   sidepanel: { sheet: 'src/sidepanel/legacy.css' },
   skipped: { sheet: 'src/fabry/legacy.css' },
@@ -173,7 +201,10 @@ describe('CSS class collision boundary', () => {
       ...OPTIONAL_MODULE_SHEETS.filter((p) => existsSync(join(ROOT, p))),
     ]) {
       const topLevel = topLevelSelectorClasses(readFileSync(join(ROOT, sheet), 'utf8'));
+      const page = PAGE_OF_SHEET[sheet];
+      const onPage = page && new Set([...reachableSources(page.entry), ...page.sheets]);
       const offenders = [...union.keys()]
+        .filter((n) => !onPage || union.get(n)!.some((f) => onPage.has(f)))
         .filter((n) => topLevel.has(n))
         .map((n) => `${n} @ ${union.get(n)!.join(', ')}`);
       expect(offenders, sheet).toEqual([]);

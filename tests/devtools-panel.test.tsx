@@ -6,6 +6,13 @@ import JsonCodeEditor from '../src/devtools/JsonCodeEditor.jsx';
 import * as store from '../src/devtools/store.js';
 import * as api from '../src/devtools/api.js';
 import * as history from '../src/devtools/history.js';
+import styles from '../src/devtools/panel.module.css';
+import shared from '../src/devtools/shared.module.css';
+import req from '../src/devtools/RequestBar.module.css';
+import rail from '../src/devtools/HistoryRail.module.css';
+import diff from '../src/devtools/DiffConfirm.module.css';
+import preview from '../src/devtools/PreviewPane.module.css';
+import vdiff from '../src/devtools/VersionDiff.module.css';
 
 async function waitFor(fn: any, tries = 100) {
   for (let i = 0; i < tries; i++) {
@@ -42,22 +49,22 @@ describe('DevTools Panel', () => {
   it('shows the hint in the default tab when no Rossum resource is detected', () => {
     store.syncPageTab(null); // permanent default tab, no resource
     const root = mount();
-    expect(root.querySelector('.rawjson-empty-hint')).not.toBeNull();
+    expect(root.querySelector('.' + shared.emptyHint)).not.toBeNull();
     // The default tab is always visible.
-    expect(root.querySelector('.rawjson-tabbar')).not.toBeNull();
-    const pageTab = root.querySelector('.rawjson-tab--page')!;
+    expect(root.querySelector('.' + styles.tabbar)).not.toBeNull();
+    const pageTab = root.querySelector('.' + styles.tabPage)!;
     expect(pageTab).not.toBeNull();
     expect(pageTab.querySelector('.rawjson-tab-label')!.textContent).toBe('Page');
     // The default tab has no close button.
-    expect(pageTab.querySelector('.rawjson-tab-close')).toBeNull();
+    expect(pageTab.querySelector('.' + styles.tabClose)).toBeNull();
   });
 
   it('shows no Save pill for a read-only tab (even when dirty)', () => {
     const t = store.openTab(RES, 'page');
     store.patchTab(t.id, { original: { id: 1 }, buffer: '{"id":2}', dirty: true, readOnly: true });
     const root = mount();
-    expect(root.querySelector('.rawjson-savepill')).toBeNull();
-    expect(root.querySelector('.rawjson-save')).toBeNull();
+    expect(root.querySelector('.' + styles.savepill)).toBeNull();
+    expect(root.querySelector('.' + styles.save)).toBeNull();
   });
 
   it('shows the Save pill with a change count only when the buffer is dirty', () => {
@@ -68,17 +75,17 @@ describe('DevTools Panel', () => {
       dirty: true,
     });
     const root = mount();
-    const pill = root.querySelector('.rawjson-savepill');
+    const pill = root.querySelector('.' + styles.savepill);
     expect(pill).not.toBeNull();
     expect(pill!.textContent.toLowerCase()).toContain('unsaved');
-    expect(root.querySelector('.rawjson-save')).not.toBeNull();
+    expect(root.querySelector('.' + styles.save)).not.toBeNull();
   });
 
   it('shows no Save pill when the tab is clean', () => {
     const t = store.openTab(RES, 'page');
     store.patchTab(t.id, { original: { name: 'A' }, buffer: '{"name":"A"}', dirty: false });
     const root = mount();
-    expect(root.querySelector('.rawjson-savepill')).toBeNull();
+    expect(root.querySelector('.' + styles.savepill)).toBeNull();
   });
 
   it('Save opens the diff overlay', async () => {
@@ -89,10 +96,9 @@ describe('DevTools Panel', () => {
       dirty: true,
     });
     const root = mount();
-    root.querySelector<HTMLElement>('.rawjson-save')!.click();
-    for (let i = 0; i < 50 && !root.querySelector('.rawjson-diff-overlay'); i++)
-      await Promise.resolve();
-    expect(root.querySelector('.rawjson-diff-overlay')).not.toBeNull();
+    root.querySelector<HTMLElement>('.' + styles.save)!.click();
+    for (let i = 0; i < 50 && !root.querySelector('.' + diff.overlay); i++) await Promise.resolve();
+    expect(root.querySelector('.' + diff.overlay)).not.toBeNull();
   });
 
   it('never renders an Undo button', () => {
@@ -124,9 +130,9 @@ describe('DevTools Panel', () => {
       readOnly: true,
     });
     const root = mount();
-    expect(root.querySelector('.rawjson-preview')).not.toBeNull();
+    expect(root.querySelector('.' + preview.preview)).not.toBeNull();
     expect(root.querySelector('.cm-editor')).toBeNull();
-    expect(root.querySelector('.rawjson-save')).toBeNull();
+    expect(root.querySelector('.' + styles.save)).toBeNull();
   });
 
   describe('tab bar', () => {
@@ -136,9 +142,11 @@ describe('DevTools Panel', () => {
       const b = store.openTab(RES2, 'link');
       store.patchTab(b.id, { original: { id: 2 } });
       const root = mount();
-      const tabEls = root.querySelectorAll('.rawjson-tab');
+      const tabEls = root.querySelectorAll('.' + styles.tab);
       expect(tabEls.length).toBe(2);
-      expect(root.querySelector('.rawjson-tab.active')!.textContent).toContain('Hook');
+      expect(root.querySelector('.' + styles.tab + '.' + styles.active)!.textContent).toContain(
+        'Hook',
+      );
     });
 
     it('clicking a tab switches the active resource shown', () => {
@@ -147,16 +155,18 @@ describe('DevTools Panel', () => {
       const b = store.openTab(RES2, 'link');
       store.patchTab(b.id, { original: { id: 2 } });
       const root = mount();
-      expect(root.querySelector('.rawjson-tab.active .rawjson-tab-label')!.textContent).toContain(
-        'Hook',
-      );
-      const tabEls = [...root.querySelectorAll('.rawjson-tab')];
+      expect(
+        root.querySelector('.' + styles.tab + '.' + styles.active + ' .rawjson-tab-label')!
+          .textContent,
+      ).toContain('Hook');
+      const tabEls = [...root.querySelectorAll('.' + styles.tab)];
       const firstTab = tabEls.find((el) => el.textContent.includes('Queue'));
       (firstTab as HTMLElement).click();
       rerender(root);
-      expect(root.querySelector('.rawjson-tab.active .rawjson-tab-label')!.textContent).toContain(
-        'Queue',
-      );
+      expect(
+        root.querySelector('.' + styles.tab + '.' + styles.active + ' .rawjson-tab-label')!
+          .textContent,
+      ).toContain('Queue');
       expect(store.activeId.value).toBe(a.id);
     });
 
@@ -167,17 +177,17 @@ describe('DevTools Panel', () => {
       store.patchTab(b.id, { original: { id: 2 } });
       const root = mount();
       // page tab: no close button
-      const pageTabEl = [...root.querySelectorAll('.rawjson-tab')].find((el) =>
+      const pageTabEl = [...root.querySelectorAll('.' + styles.tab)].find((el) =>
         el.textContent.includes('Queue'),
       );
-      expect(pageTabEl!.querySelector('.rawjson-tab-close')).toBeNull();
+      expect(pageTabEl!.querySelector('.' + styles.tabClose)).toBeNull();
       // link tab: has a close button that removes it
-      const linkTabEl = [...root.querySelectorAll('.rawjson-tab')].find((el) =>
+      const linkTabEl = [...root.querySelectorAll('.' + styles.tab)].find((el) =>
         el.textContent.includes('Hook'),
       );
-      linkTabEl!.querySelector<HTMLElement>('.rawjson-tab-close')!.click();
+      linkTabEl!.querySelector<HTMLElement>('.' + styles.tabClose)!.click();
       rerender(root);
-      expect(root.querySelectorAll('.rawjson-tab').length).toBe(1);
+      expect(root.querySelectorAll('.' + styles.tab).length).toBe(1);
       expect(store.tabs.value.length).toBe(1);
       expect(store.activeId.value).toBe(a.id);
     });
@@ -242,9 +252,9 @@ describe('DevTools Panel', () => {
       const t = store.openTab(RES, 'page');
       store.patchTab(t.id, { original: { id: 1 }, buffer: '{"id":1}' });
       const root = mount();
-      const bar = root.querySelector('.rawjson-toolbar')!;
-      expect(bar.previousElementSibling!.classList.contains('rawjson-tabbar')).toBe(true);
-      expect(root.querySelector('.rawjson-bottombar .rawjson-wrap')).toBeNull(); // requests only
+      const bar = root.querySelector('.' + styles.toolbar)!;
+      expect(bar.previousElementSibling!.classList.contains(styles.tabbar)).toBe(true);
+      expect(root.querySelector('.' + styles.bottombar + ' .rawjson-wrap')).toBeNull(); // requests only
       const btn = bar.querySelector<HTMLButtonElement>('.rawjson-wrap')!;
       expect(btn.textContent).toBe('Soft-wrap');
       expect(btn.getAttribute('aria-pressed')).toBe('false');
@@ -271,11 +281,11 @@ describe('DevTools Panel', () => {
     it('is absent on the empty page tab and on a file preview, never an empty row', () => {
       store.syncPageTab(null);
       const root = mount();
-      expect(root.querySelector('.rawjson-toolbar')).toBeNull();
+      expect(root.querySelector('.' + styles.toolbar)).toBeNull();
       const t = store.openTab(RES, 'link');
       store.patchTab(t.id, { preview: { kind: 'blob', contentType: 'application/pdf', size: 1 } });
       rerender(root);
-      expect(root.querySelector('.rawjson-toolbar')).toBeNull();
+      expect(root.querySelector('.' + styles.toolbar)).toBeNull();
     });
   });
 
@@ -285,8 +295,8 @@ describe('DevTools Panel', () => {
       store.patchTab(t.id, { original: { id: 1 } });
       store.linkMenu.value = { url: 'https://acme.rossum.app/api/v1/schemas/9', x: 10, y: 10 };
       const root = mount();
-      await waitFor(() => root.querySelector('.rawjson-linkmenu'));
-      const menu = root.querySelector<HTMLElement>('.rawjson-linkmenu')!;
+      await waitFor(() => root.querySelector('.' + styles.linkmenu));
+      const menu = root.querySelector<HTMLElement>('.' + styles.linkmenu)!;
       expect(menu).not.toBeNull();
       expect(menu.style.left).toBe('10px');
       expect(menu.style.top).toBe('10px');
@@ -308,8 +318,10 @@ describe('DevTools Panel', () => {
       store.linkMenu.value = { url, x: 10, y: 10 };
       const tabsBefore = store.tabs.value.length;
       const root = mount();
-      await waitFor(() => root.querySelector('.rawjson-linkmenu'));
-      const buttons = [...root.querySelectorAll<HTMLButtonElement>('.rawjson-linkmenu button')];
+      await waitFor(() => root.querySelector('.' + styles.linkmenu));
+      const buttons = [
+        ...root.querySelectorAll<HTMLButtonElement>('.' + styles.linkmenu + ' button'),
+      ];
       expect(buttons.map((b) => b.textContent)).toEqual(['Open in new tab', 'Copy link']);
       buttons[1].click();
       expect(writeText).toHaveBeenCalledWith(url);
@@ -360,8 +372,8 @@ describe('DevTools Panel', () => {
       store.patchTab(b.id, { original: { id: 2 } });
       store.tabMenu.value = { id: b.id, x: 5, y: 5 };
       const root = mount();
-      await waitFor(() => root.querySelector('.rawjson-tabmenu'));
-      const menu = root.querySelector<HTMLElement>('.rawjson-tabmenu')!;
+      await waitFor(() => root.querySelector('.' + styles.tabmenu));
+      const menu = root.querySelector<HTMLElement>('.' + styles.tabmenu)!;
       expect(menu).not.toBeNull();
       expect(menu.style.left).toBe('5px');
       expect(menu.style.top).toBe('5px');
@@ -383,8 +395,8 @@ describe('DevTools Panel', () => {
       store.patchTab(c.id, { original: { id: 3 } });
       store.tabMenu.value = { id: b.id, x: 5, y: 5 };
       const root = mount();
-      await waitFor(() => root.querySelector('.rawjson-tabmenu'));
-      const menu = root.querySelector('.rawjson-tabmenu');
+      await waitFor(() => root.querySelector('.' + styles.tabmenu));
+      const menu = root.querySelector('.' + styles.tabmenu);
       const closeOtherBtn = [...menu!.querySelectorAll('button')].find((btn) =>
         btn.textContent.includes('Close Other Tabs'),
       );
@@ -405,8 +417,8 @@ describe('DevTools Panel', () => {
       store.patchTab(b.id, { original: { id: 2 } });
       store.tabMenu.value = { id: b.id, x: 5, y: 5 };
       const root = mount();
-      await waitFor(() => root.querySelector('.rawjson-tabmenu'));
-      const menu = root.querySelector('.rawjson-tabmenu');
+      await waitFor(() => root.querySelector('.' + styles.tabmenu));
+      const menu = root.querySelector('.' + styles.tabmenu);
       const closeBtn = [...menu!.querySelectorAll('button')].find(
         (btn) => btn.textContent.trim() === 'Close',
       );
@@ -437,8 +449,8 @@ describe('DevTools Panel', () => {
       store.patchTab(b.id, { original: { id: 2 } });
       store.tabMenu.value = { id: a.id, x: 5, y: 5 };
       const root = mount();
-      await waitFor(() => root.querySelector('.rawjson-tabmenu'));
-      const menu = root.querySelector('.rawjson-tabmenu')!;
+      await waitFor(() => root.querySelector('.' + styles.tabmenu));
+      const menu = root.querySelector('.' + styles.tabmenu)!;
       const closeBtn = [...menu.querySelectorAll('button')].find(
         (btn) => btn.textContent.trim() === 'Close',
       );
@@ -453,7 +465,7 @@ describe('DevTools Panel', () => {
     it('right-clicking the sole default tab opens no menu (nothing to do)', () => {
       store.syncPageTab(null);
       const root = mount();
-      const pageTabEl = root.querySelector('.rawjson-tab--page');
+      const pageTabEl = root.querySelector('.' + styles.tabPage);
       pageTabEl!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
       expect(store.tabMenu.value).toBeNull();
     });
@@ -480,14 +492,14 @@ describe('DevTools Panel', () => {
       expect(store.tabMenu.value).toBeNull();
     });
 
-    it('page tab has the rawjson-tab--page class and is not draggable', () => {
+    it('page tab has the page-tab class and is not draggable', () => {
       const a = store.openTab(RES, 'page');
       store.patchTab(a.id, { original: { id: 1 } });
       const root = mount();
-      const pageTab = [...root.querySelectorAll('.rawjson-tab')].find((el) =>
+      const pageTab = [...root.querySelectorAll('.' + styles.tab)].find((el) =>
         el.textContent.includes('Queue'),
       );
-      expect(pageTab!.classList.contains('rawjson-tab--page')).toBe(true);
+      expect(pageTab!.classList.contains(styles.tabPage)).toBe(true);
       expect((pageTab as HTMLElement).draggable).toBe(false);
     });
 
@@ -497,7 +509,7 @@ describe('DevTools Panel', () => {
       const b = store.openTab(RES2, 'link');
       store.patchTab(b.id, { original: { id: 2 } });
       const root = mount();
-      const linkTab = [...root.querySelectorAll('.rawjson-tab')].find((el) =>
+      const linkTab = [...root.querySelectorAll('.' + styles.tab)].find((el) =>
         el.textContent.includes('Hook'),
       );
       expect((linkTab as HTMLElement).draggable).toBe(true);
@@ -511,7 +523,7 @@ describe('DevTools Panel', () => {
       const t = store.openTab(RES, 'page');
       store.patchTab(t.id, { original: { id: 1 } });
       const root = mount();
-      root.querySelector<HTMLElement>('.rawjson-curl')!.click();
+      root.querySelector<HTMLElement>('.' + styles.curl)!.click();
       await waitFor(() => writeText.mock.calls.length > 0);
       expect(writeText.mock.calls[0][0]).toContain('$ROSSUM_TOKEN');
       expect(writeText.mock.calls[0][0]).toContain('/api/v1/queues/1');
@@ -522,9 +534,9 @@ describe('DevTools Panel', () => {
       const t = store.openTab(RES, 'page');
       store.patchTab(t.id, { original: { id: 1 } });
       const root = mount();
-      root.querySelector<HTMLElement>('.rawjson-curl')!.click();
-      await waitFor(() => root.querySelector('.rawjson-toast'));
-      expect(root.querySelector('.rawjson-toast')!.textContent).toMatch(/curl copied/);
+      root.querySelector<HTMLElement>('.' + styles.curl)!.click();
+      await waitFor(() => root.querySelector('.' + styles.toast));
+      expect(root.querySelector('.' + styles.toast)!.textContent).toMatch(/curl copied/);
     });
 
     it('shows a failure toast (not a success one) when the clipboard write rejects', async () => {
@@ -534,9 +546,9 @@ describe('DevTools Panel', () => {
       const t = store.openTab(RES, 'page');
       store.patchTab(t.id, { original: { id: 1 } });
       const root = mount();
-      root.querySelector<HTMLElement>('.rawjson-curl')!.click();
-      await waitFor(() => root.querySelector('.rawjson-toast'));
-      const text = root.querySelector('.rawjson-toast')!.textContent;
+      root.querySelector<HTMLElement>('.' + styles.curl)!.click();
+      await waitFor(() => root.querySelector('.' + styles.toast));
+      const text = root.querySelector('.' + styles.toast)!.textContent;
       expect(text).toMatch(/copy failed/i);
       expect(text).not.toMatch(/copied$/);
     });
@@ -549,7 +561,7 @@ describe('DevTools Panel', () => {
       store.patchTab(t.id, { original: { id: 1 } });
       store.curlMenu.value = true;
       const root = mount();
-      const menuBtn = [...root.querySelectorAll('.rawjson-curlmenu button')].find((b) =>
+      const menuBtn = [...root.querySelectorAll('.' + styles.curlmenu + ' button')].find((b) =>
         /live token/i.test(b.textContent),
       );
       expect(menuBtn).not.toBeNull();
@@ -562,13 +574,13 @@ describe('DevTools Panel', () => {
   it('surfaces a request-bar error via the auto-clearing toast', async () => {
     store.syncPageTab(null);
     const root = mount();
-    const input = root.querySelector<HTMLInputElement>('.rawjson-reqbar-input')!;
+    const input = root.querySelector<HTMLInputElement>('.' + req.input)!;
     // Try to submit an invalid URL to trigger an error
     input.value = 'https://other-org.rossum.app/api/v1/queues/1';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    await waitFor(() => root.querySelector('.rawjson-toast'));
-    expect(root.querySelector('.rawjson-toast')).not.toBeNull();
+    await waitFor(() => root.querySelector('.' + styles.toast));
+    expect(root.querySelector('.' + styles.toast)).not.toBeNull();
   });
 });
 
@@ -592,10 +604,10 @@ describe('DevTools Panel history', () => {
     store.patchTab(t.id, { original: { id: 48 }, buffer: '{"id":48}' });
     withHistory('ready', 14);
     const root = mount();
-    expect(root.querySelector('.rawjson-toolbar .rawjson-hist-btn')!.textContent).toContain(
+    expect(root.querySelector('.' + styles.toolbar + ' .rawjson-hist-btn')!.textContent).toContain(
       '14 versions',
     );
-    expect(root.querySelector('.rawjson-tabbar .rawjson-hist-btn')).toBeNull();
+    expect(root.querySelector('.' + styles.tabbar + ' .rawjson-hist-btn')).toBeNull();
 
     withHistory('forbidden', 0);
     rerender(root);
@@ -621,7 +633,7 @@ describe('DevTools Panel history', () => {
       modifier_id: null,
     };
     const root = mount();
-    expect(root.querySelector('.rawjson-histdiff')).not.toBeNull();
+    expect(root.querySelector('.' + vdiff.histdiff)).not.toBeNull();
     // Same page tab (same id), another hook.
     const next = { type: 'hook', id: '51', apiPath: '/api/v1/hooks/51', label: 'Hook' };
     expect(store.syncPageTab(next as any).tab.id).toBe(t.id);
@@ -649,21 +661,21 @@ describe('DevTools Panel history', () => {
       modifier_id: null,
     };
     const root = mount();
-    expect(root.querySelector('.rawjson-histdiff')).not.toBeNull();
-    expect(root.querySelector('.rawjson-savepill')).toBeNull();
+    expect(root.querySelector('.' + vdiff.histdiff)).not.toBeNull();
+    expect(root.querySelector('.' + styles.savepill)).toBeNull();
 
     // The rail's Live row is the way back (there is no Back to live button).
     expect(root.querySelector('.rawjson-histdiff-back')).toBeNull();
     history.comparedId.value = 5;
-    const live = [...root.querySelectorAll<HTMLButtonElement>('.rawjson-hist-row')].find((b) =>
+    const live = [...root.querySelectorAll<HTMLButtonElement>('.' + rail.row)].find((b) =>
       b.textContent!.includes('Live'),
     )!;
     live.click();
     expect(history.selected.value).toBeNull();
     expect(history.comparedId.value).toBeNull();
     rerender(root);
-    expect(root.querySelector('.rawjson-histdiff')).toBeNull();
-    expect(root.querySelector('.rawjson-savepill')).not.toBeNull();
+    expect(root.querySelector('.' + vdiff.histdiff)).toBeNull();
+    expect(root.querySelector('.' + styles.savepill)).not.toBeNull();
     expect(store.tabs.value.find((x) => x.id === t.id)!.buffer).toBe('{"name":"B"}');
   });
 });

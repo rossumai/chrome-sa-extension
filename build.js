@@ -72,7 +72,6 @@ writeFileSync('dist/console/console.base.css', consoleBaseCss());
 cpSync('src/devtools/devtools.html', 'dist/devtools/devtools.html');
 cpSync('src/devtools/panel.html', 'dist/devtools/panel.html');
 cpSync('src/devtools/tokens.css', 'dist/devtools/tokens.css');
-cpSync('src/devtools/legacy.css', 'dist/devtools/legacy.css');
 // The side panel links ../popup/tokens.css and ../popup/legacy.css FIRST and only overrides the
 // popup's shell in its own legacy.css, so the shared MDH card has one source of truth.
 cpSync('src/sidepanel/sidepanel.html', 'dist/sidepanel/sidepanel.html');

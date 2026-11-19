@@ -1,0 +1,25 @@
+.histdiff {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11.5px;
+}
+.cm {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+/* The merge view underlines changed text on the new side but tints it on the old side
+   (rgba(255, 0, 0, 0.2)). Tint both, in the view's own green at the same strength. One more
+   class than its base theme's `.ͼ2.cm-merge-b .cm-changedText`, so this wins either way. */
+.cm :global(.cm-editor.cm-merge-b .cm-changedText) {
+  background: rgba(34, 187, 34, 0.2);
+}

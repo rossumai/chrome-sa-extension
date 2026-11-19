@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { track } from '../usage/track.js';
 import { formatBytes } from './contentMeta.js';
+import styles from './PreviewPane.module.css';
 
 // A DevTools tab switch unmounts and remounts this component, so a plain mount
 // effect counted the same preview again on every switch back (and missed a new
@@ -33,25 +34,23 @@ export default function PreviewPane({ preview }: { preview: any }) {
   const isPdf = /\bpdf\b/i.test(ct);
 
   return (
-    <div class="rawjson-preview">
+    <div class={styles.preview}>
       {url ? (
-        <div class="rawjson-preview-actions">
-          <a class="rawjson-preview-btn" href={url} download={preview.filename}>
+        <div class={styles.actions}>
+          <a class={styles.btn} href={url} download={preview.filename}>
             Download
           </a>
-          <a class="rawjson-preview-btn" href={url} target="_blank" rel="noopener">
+          <a class={styles.btn} href={url} target="_blank" rel="noopener">
             Open in browser tab
           </a>
         </div>
       ) : null}
-      {url && isImage ? <img class="rawjson-preview-img" src={url} alt={preview.filename} /> : null}
-      {url && isPdf ? (
-        <iframe class="rawjson-preview-pdf" src={url} title={preview.filename} />
-      ) : null}
+      {url && isImage ? <img class={styles.img} src={url} alt={preview.filename} /> : null}
+      {url && isPdf ? <iframe class={styles.pdf} src={url} title={preview.filename} /> : null}
       {!isImage && !isPdf ? (
-        <div class="rawjson-preview-card">
-          <div class="rawjson-preview-name">{preview.filename}</div>
-          <div class="rawjson-preview-meta">
+        <div class={styles.card}>
+          <div class={styles.name}>{preview.filename}</div>
+          <div class={styles.meta}>
             {ct || 'unknown type'} · {formatBytes(preview.size)}
           </div>
         </div>

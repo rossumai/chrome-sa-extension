@@ -1,0 +1,286 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+}
+/* A row: the content column (.main) and, when open, the version rail beside it. */
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+}
+/* Floating Save pill — appears over the editor only while the buffer is dirty. */
+.savepill {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 5px 6px 5px 14px;
+}
+.savepillDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+.savepillLbl {
+  font-size: 12px;
+  color: var(--fg);
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.save {
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+}
+.save[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+.tabbar {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+/* View controls for the active tab, between the tab strip and the content (the DevTools
+   tabs → toolbar → content layout). Wrap sits left; what opens something sits right. */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 6px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  flex: none;
+}
+.toolbarSpacer {
+  flex: 1;
+}
+/* A translucent grey, so one value reads as a subtle surface on both themes' --bg. */
+.toolbar button {
+  border: 0;
+  border-radius: 4px;
+  background: rgba(128, 128, 128, 0.12);
+  color: var(--fg);
+  font-size: 11px;
+  padding: 2px 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.toolbar button:hover {
+  background: rgba(128, 128, 128, 0.2);
+}
+.toolbar button[aria-pressed='true'] {
+  color: var(--accent);
+  background: rgba(66, 112, 219, 0.16);
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-right: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--fg);
+  opacity: 0.7;
+}
+.tab.active {
+  opacity: 1;
+  border-bottom: 2px solid var(--accent);
+}
+.tabPage {
+  background: rgba(128, 128, 128, 0.1);
+  border-right: 2px solid var(--border);
+}
+.tabClose {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.linkmenu {
+  position: fixed;
+  z-index: 10;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+}
+.linkmenu button {
+  border: none;
+  background: none;
+  color: var(--fg);
+  cursor: pointer;
+  padding: 6px 12px;
+  white-space: nowrap;
+  font-size: 12px;
+  text-align: left;
+}
+.linkmenu button:hover {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+}
+.tabmenu {
+  position: fixed;
+  z-index: 10;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+}
+.tabmenu button {
+  border: none;
+  background: none;
+  color: var(--fg);
+  cursor: pointer;
+  padding: 6px 12px;
+  white-space: nowrap;
+  font-size: 12px;
+  text-align: left;
+}
+.tabmenu button:hover {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+}
+/* Bottom command bar: the GET request input (left) + the copy split (right). */
+.bottombar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  position: relative;
+}
+/* Copy split-button: main = redacted curl, caret = live-token menu (opens upward). */
+/* .curlSplit is the positioning context; only the BUTTONS clip (rounded
+   corners) — the caret menu is a sibling so overflow:hidden can't clip it. */
+.curlSplit {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.curlBtns {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.curl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 4px 9px;
+  border: none;
+  background: transparent;
+  color: var(--fg, #222);
+  cursor: pointer;
+}
+.curl:hover {
+  background: var(--accent-bg, rgba(66, 112, 219, 0.12));
+}
+.curlIco {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+.curlCaret {
+  border: none;
+  border-left: 1px solid var(--border, #ccc);
+  background: transparent;
+  color: var(--fg-dim, #888);
+  padding: 0 7px;
+  cursor: pointer;
+  font-size: 11px;
+}
+.curlCaret:hover {
+  background: var(--accent-bg, rgba(66, 112, 219, 0.12));
+}
+.curlmenu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+  z-index: 40;
+}
+.curlmenu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--warning-fg, #a60);
+  font-size: 11px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.curlmenu button:hover {
+  background: var(--accent);
+  color: #fff;
+}
+.toast {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--fg, #222);
+  color: var(--bg, #fff);
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+}
+.main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}

@@ -24,6 +24,8 @@ import { rossumLinks } from './cmLinks.js';
 import { rossumNames } from './cmNames.js';
 import { resolver } from './nameResolve.js';
 import { lightHL, darkHL, surfaceTheme } from './cmTheme.js';
+import styles from './JsonCodeEditor.module.css';
+import shared from './shared.module.css';
 
 export default function JsonCodeEditor({
   tabId,
@@ -112,9 +114,9 @@ export default function JsonCodeEditor({
   }
 
   return (
-    <div class="rawjson-raw">
-      <div class="rawjson-cm" ref={parentRef}></div>
-      {parseError ? <div class="rawjson-parse-error">Invalid JSON: {parseError}</div> : null}
+    <div class={styles.raw}>
+      <div class={shared.cm} ref={parentRef}></div>
+      {parseError ? <div class={styles.parseError}>Invalid JSON: {parseError}</div> : null}
     </div>
   );
 }

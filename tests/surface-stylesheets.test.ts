@@ -69,9 +69,9 @@ describe('popup, side panel and DevTools stylesheets', () => {
       'popup/legacy.css',
       'sidepanel/legacy.css',
     ]);
-    expect(linkedSheets('devtools/panel.html').slice(0, 2)).toEqual([
+    expect(linkedSheets('devtools/panel.html')).toEqual([
       'devtools/tokens.css',
-      'devtools/legacy.css',
+      'devtools/panel.css',
     ]);
   });
 
@@ -111,7 +111,6 @@ describe('popup, side panel and DevTools stylesheets', () => {
       'popup/legacy.css',
       'sidepanel/legacy.css',
       'devtools/tokens.css',
-      'devtools/legacy.css',
     ]) {
       const head = readFileSync(join(SRC, p), 'utf8').slice(0, 2000);
       expect(head, p).toMatch(/^\/\* GLOBAL STYLESHEET/);

@@ -16,6 +16,8 @@ import { previousOf, snapshots } from './history.js';
 import { lightHL, darkHL, surfaceTheme } from './cmTheme.js';
 import { isDark } from './theme.js';
 import * as store from './store.js';
+import styles from './VersionDiff.module.css';
+import shared from './shared.module.css';
 
 // The texts are serialised once, when the snapshots arrive: they feed both the editor and
 // the no-visible-change check, and a schema snapshot can be large.
@@ -147,8 +149,8 @@ export default function VersionDiff({
   const by = (e: ChangelogEntry) => modifierLabel(e.modifier_id, names);
   const previous = loaded?.previous;
   return (
-    <div class="rawjson-histdiff">
-      <div class="rawjson-histdiff-banner">
+    <div class={styles.histdiff}>
+      <div class={styles.banner}>
         <span>
           {entry.version_event === 'create' ? (
             <span>
@@ -168,13 +170,13 @@ export default function VersionDiff({
         </span>
       </div>
       {noVisibleChange ? (
-        <div class="rawjson-empty-hint">
+        <div class={shared.emptyHint}>
           {'No visible difference — the changed values are redacted by the API.'}
         </div>
       ) : null}
-      {error ? <div class="rawjson-error">{error}</div> : null}
-      {!loaded && !error ? <div class="rawjson-empty-hint">{'Loading…'}</div> : null}
-      {loaded ? <div class="rawjson-cm rawjson-histdiff-cm" ref={parentRef}></div> : null}
+      {error ? <div class={shared.error}>{error}</div> : null}
+      {!loaded && !error ? <div class={shared.emptyHint}>{'Loading…'}</div> : null}
+      {loaded ? <div class={`${shared.cm} ${styles.cm}`} ref={parentRef}></div> : null}
     </div>
   );
 }

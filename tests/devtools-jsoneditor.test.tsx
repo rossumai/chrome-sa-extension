@@ -3,6 +3,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { h, render } from 'preact';
 import { EditorView } from 'codemirror';
 import JsonCodeEditor from '../src/devtools/JsonCodeEditor.jsx';
+import styles from '../src/devtools/JsonCodeEditor.module.css';
+import shared from '../src/devtools/shared.module.css';
+import names from '../src/devtools/cmNames.module.css';
 import * as store from '../src/devtools/store.js';
 import * as cache from '../src/devtools/resourceCache.js';
 
@@ -33,12 +36,12 @@ describe('JsonCodeEditor', () => {
   it('shows a parse error derived from the tab buffer', async () => {
     store.patchTab(tab.id, { buffer: '{ broken' });
     const root: any = mount(tab.id);
-    await waitFor(() => root.querySelector('.rawjson-parse-error'));
-    expect(root.querySelector('.rawjson-parse-error')).not.toBeNull();
+    await waitFor(() => root.querySelector('.' + styles.parseError));
+    expect(root.querySelector('.' + styles.parseError)).not.toBeNull();
   });
   it('a real doc-changed transaction patches the tab buffer and marks it dirty', async () => {
     const root: any = mount(tab.id);
-    await waitFor(() => root.querySelector('.rawjson-cm .cm-editor'));
+    await waitFor(() => root.querySelector('.' + shared.cm + ' .cm-editor'));
     expect(store.activeTab()!.dirty).toBe(false);
     const cm = root.querySelector('.cm-editor');
     const view = EditorView.findFromDOM(cm)!;
@@ -51,7 +54,7 @@ describe('JsonCodeEditor', () => {
   it('clears dirty when the edit is reverted back to the original', async () => {
     store.patchTab(tab.id, { original: { a: 1 }, buffer: '{"a":1}' });
     const root: any = mount(tab.id);
-    await waitFor(() => root.querySelector('.rawjson-cm .cm-editor'));
+    await waitFor(() => root.querySelector('.' + shared.cm + ' .cm-editor'));
     const view = EditorView.findFromDOM(root.querySelector('.cm-editor'))!;
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: '{"a":2}' } });
     await waitFor(() => store.activeTab()!.dirty === true);
@@ -61,7 +64,7 @@ describe('JsonCodeEditor', () => {
   });
   it('does not re-mark the tab dirty when the buffer is synced externally (post-save)', async () => {
     const root: any = mount(tab.id);
-    await waitFor(() => root.querySelector('.rawjson-cm .cm-editor'));
+    await waitFor(() => root.querySelector('.' + shared.cm + ' .cm-editor'));
     store.patchTab(tab.id, { dirty: false });
     // Simulate actions.saveResource writing the re-fetched JSON into the buffer:
     store.patchTab(tab.id, { buffer: '{"a":2,"modified_at":"t"}' });
@@ -72,8 +75,8 @@ describe('JsonCodeEditor', () => {
   });
   it('renders blank when the tab does not exist (defensive)', async () => {
     const root = mount('missing');
-    await waitFor(() => root.querySelector('.rawjson-cm .cm-editor'));
-    expect(root.querySelector('.rawjson-cm .cm-editor')).not.toBeNull();
+    await waitFor(() => root.querySelector('.' + shared.cm + ' .cm-editor'));
+    expect(root.querySelector('.' + shared.cm + ' .cm-editor')).not.toBeNull();
   });
   it('shows an inline dimmed name for a resolved reference in the buffer', async () => {
     cache.clear();
@@ -82,14 +85,14 @@ describe('JsonCodeEditor', () => {
       buffer: '{\n  "schema": "https://acme.rossum.app/api/v1/schemas/9"\n}',
     });
     const root: any = mount(tab.id);
-    await waitFor(() => root.querySelector('.rawjson-name'));
-    expect(root.querySelector('.rawjson-name').textContent).toBe('Sales schema');
+    await waitFor(() => root.querySelector('.' + names.name));
+    expect(root.querySelector('.' + names.name).textContent).toBe('Sales schema');
     render(null, root);
     cache.clear();
   });
   it('registers its EditorView as store.views.active on mount and clears it on unmount', async () => {
     const root: any = mount(tab.id);
-    await waitFor(() => root.querySelector('.rawjson-cm .cm-editor'));
+    await waitFor(() => root.querySelector('.' + shared.cm + ' .cm-editor'));
     expect(store.views.active).toBeTruthy();
     render(null, root); // unmount
     await waitFor(() => store.views.active === null);

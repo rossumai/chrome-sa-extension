@@ -1,0 +1,56 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 16px;
+  width: 88%;
+  max-height: 80%;
+  overflow: auto;
+}
+.leaf {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 2px 0;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+}
+.changed .after,
+.added .after {
+  color: #0a7d33;
+}
+.removed .before {
+  color: #a11;
+}
+.removedWarn {
+  color: #a15c00;
+  margin-top: 10px;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.confirm {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.cancel {
+  background: #eee;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
