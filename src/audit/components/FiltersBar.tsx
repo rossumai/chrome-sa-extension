@@ -3,6 +3,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { activeSource, filtersBySource, patchFilters } from '../store.js';
 import { SOURCES } from '../sources/index.js';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 function DebouncedInput({
   value,
@@ -27,7 +28,7 @@ function DebouncedInput({
   }, [v]);
   return (
     <input
-      class="input"
+      class={inp.input}
       // Preact 11 types <input> as one ARIA variant per input type, which a
       // union-valued `type` cannot match; the value is always a real input type.
       type={type as any}
@@ -71,7 +72,7 @@ export default function FiltersBar() {
             <span class="filter-label">{f.label}</span>
             {f.kind === 'select' ? (
               <select
-                class="input"
+                class={inp.input}
                 value={st[f.name] as string}
                 onChange={(e: any) => setFilter(f.name, e.target.value)}
               >

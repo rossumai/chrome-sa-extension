@@ -76,6 +76,7 @@ import Modal from '../src/mdh/components/Modal.jsx';
 import mstyles from '../src/ui/Modal.module.css';
 import { selectedCollection, activePanel, loading, error, opNotice } from '../src/mdh/store.js';
 import seg from '../src/ui/Segmented.module.css';
+import inp from '../src/ui/Input.module.css';
 
 const writeText = vi.fn().mockResolvedValue(undefined);
 
@@ -243,7 +244,7 @@ describe('IndexPanel — async create surfaces operation outcome', () => {
     buttonByText(root, '+ Create').click();
     await vi.waitFor(() => expect(buttonByText(root, 'Create Index')).toBeTruthy());
     (
-      root.querySelector('[role="dialog"]')!.querySelector('input.input') as HTMLInputElement
+      root.querySelector('[role="dialog"]')!.querySelector('input.' + inp.input) as HTMLInputElement
     ).value = 'new_idx';
     buttonByText(root, 'Create Index').click();
   }
@@ -488,7 +489,7 @@ describe('IndexPanel — field picker', () => {
     await Promise.resolve();
 
     (
-      root.querySelector('[role="dialog"]')!.querySelector('input.input') as HTMLInputElement
+      root.querySelector('[role="dialog"]')!.querySelector('input.' + inp.input) as HTMLInputElement
     ).value = 'code_unique';
     const submit = [...root.querySelectorAll('button')].find(
       (b) => b.textContent === 'Create Index',
@@ -577,7 +578,7 @@ describe('IndexPanel — field picker', () => {
     expect(JSON.parse(editorHandle()!.getValue()).keys).toEqual({});
 
     (
-      root.querySelector('[role="dialog"]')!.querySelector('input.input') as HTMLInputElement
+      root.querySelector('[role="dialog"]')!.querySelector('input.' + inp.input) as HTMLInputElement
     ).value = 'needs_keys';
     const submit = [...root.querySelectorAll('button')].find(
       (b) => b.textContent === 'Create Index',
@@ -586,7 +587,7 @@ describe('IndexPanel — field picker', () => {
     await Promise.resolve();
 
     expect(api.createIndex).not.toHaveBeenCalled();
-    expect(root.querySelector('.input-hint')!.textContent).toContain('at least one field');
+    expect(root.querySelector('.' + inp.hint)!.textContent).toContain('at least one field');
   });
 });
 
@@ -704,7 +705,9 @@ describe('IndexPanel — the name input', () => {
   });
 
   function dialogName(root: HTMLElement) {
-    return root.querySelector('[role="dialog"]')!.querySelector('input.input') as HTMLInputElement;
+    return root
+      .querySelector('[role="dialog"]')!
+      .querySelector('input.' + inp.input) as HTMLInputElement;
   }
 
   async function openCreate(root: HTMLElement) {
@@ -944,7 +947,7 @@ describe('IndexPanel — create modal holds its size', () => {
     await openCreate(root);
     const dialog = root.querySelector('[role="dialog"]')!;
     const pairs: [string, string][] = [
-      ['Name', 'input.input'],
+      ['Name', 'input.' + inp.input],
       ['Start from', '[data-testid="index-preset-row"]'],
     ];
     for (const [label, sel] of pairs) {

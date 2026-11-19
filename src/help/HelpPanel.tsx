@@ -3,6 +3,7 @@ import { useRef, useState } from 'preact/hooks';
 import { matchSections, type Searchable } from './geometry.js';
 import { animateScrollTop } from '../mdh/smoothScroll.js';
 import s from './Help.module.css';
+import inp from '../ui/Input.module.css';
 
 export type HelpSection = Searchable & { chip: string; body: ComponentChildren };
 
@@ -57,7 +58,7 @@ export default function HelpPanel({
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <input
-          class="input"
+          class={inp.input}
           placeholder={placeholder}
           value={query}
           onInput={(e: any) => setQuery(e.target.value)}

@@ -28,6 +28,7 @@ import { openCollectionTab } from '../openCollectionTab.js';
 import { filterCollections, splitByMatch } from '../collectionFilter.js';
 import FilterInput from '../../ui/FilterInput.jsx';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 async function loadCollections() {
   try {
@@ -284,7 +285,7 @@ function DropConfirmBody({ name }: { name: string }) {
       {messageEl}
       <input
         ref={inputRef}
-        class="input"
+        class={inp.input}
         style="width:100%"
         placeholder={`Type "${name}" to confirm`}
         value={confirmText}
@@ -296,7 +297,7 @@ function DropConfirmBody({ name }: { name: string }) {
           if (e.key === 'Enter') doSubmit();
         }}
       />
-      <div class="input-hint" style={hintMessage ? 'color: var(--danger)' : ''}>
+      <div class={inp.hint} style={hintMessage ? 'color: var(--danger)' : ''}>
         {hintMessage}
       </div>
       <ModalActions>

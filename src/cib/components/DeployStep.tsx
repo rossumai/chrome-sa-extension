@@ -5,6 +5,7 @@ import type { RefObject } from 'preact';
 import Step from './Step.jsx';
 import styles from './App.module.css';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 export default function DeployStep({
   runId,
@@ -61,7 +62,7 @@ export default function DeployStep({
             </label>
             <input
               id="cib-run"
-              class={`input ${styles.input}`}
+              class={`${inp.input} ${styles.input}`}
               type="text"
               required
               value={runId}
@@ -117,7 +118,7 @@ export default function DeployStep({
           </label>
           <input
             id="cib-installed"
-            class={`input ${styles.input}`}
+            class={`${inp.input} ${styles.input}`}
             type="text"
             placeholder="v2.0.0"
             value={installed}

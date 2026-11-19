@@ -20,6 +20,7 @@ import mstyles from '../src/ui/Modal.module.css';
 import { modalContent } from '../src/mdh/store.js';
 import { ModalBody, ModalActions, ModalField } from '../src/ui/Modal.jsx';
 import ctl from '../src/ui/controls.module.css';
+import inp from '../src/ui/Input.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -235,7 +236,7 @@ describe('promptModal', () => {
     );
     rerender(root);
 
-    const input = root.querySelector<HTMLInputElement>('input.input')!;
+    const input = root.querySelector<HTMLInputElement>('input.' + inp.input)!;
     expect(input.value).toBe('foo');
     expect(input.placeholder).toBe('new name');
     const submitBtn = root.querySelectorAll('.' + mstyles.actions + ' button')[1];
@@ -256,7 +257,7 @@ describe('promptModal', () => {
     promptModal('T', {}, spy);
     rerender(root);
 
-    const input = root.querySelector<HTMLInputElement>('input.input');
+    const input = root.querySelector<HTMLInputElement>('input.' + inp.input);
     input!.value = '  new-value  ';
     root.querySelectorAll<HTMLElement>('.' + mstyles.actions + ' button')[1].click();
 
@@ -280,11 +281,11 @@ describe('promptModal', () => {
     promptModal('T', {}, spy);
     rerender(root);
 
-    root.querySelector<HTMLInputElement>('input.input')!.value = '   ';
+    root.querySelector<HTMLInputElement>('input.' + inp.input)!.value = '   ';
     root.querySelectorAll<HTMLElement>('.' + mstyles.actions + ' button')[1].click();
     expect(spy).not.toHaveBeenCalled();
     expect(modalContent.value).not.toBeNull();
-    expect(root.querySelector('.input-hint')!.textContent).toBe('Please enter a value');
+    expect(root.querySelector('.' + inp.hint)!.textContent).toBe('Please enter a value');
   });
 
   it('Enter key submits the form', () => {
@@ -293,7 +294,7 @@ describe('promptModal', () => {
     promptModal('T', {}, spy);
     rerender(root);
 
-    const input = root.querySelector<HTMLInputElement>('input.input')!;
+    const input = root.querySelector<HTMLInputElement>('input.' + inp.input)!;
     input.value = 'typed';
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
@@ -325,7 +326,7 @@ describe('promptModal', () => {
       if (val === 'ok') closeModal();
     });
     rerender(root);
-    const input = root.querySelector<HTMLInputElement>('input.input');
+    const input = root.querySelector<HTMLInputElement>('input.' + inp.input);
     input!.value = 'ok';
     root.querySelectorAll<HTMLElement>('.' + mstyles.actions + ' button')[1].click();
     await expect(p).resolves.toBe('ok');

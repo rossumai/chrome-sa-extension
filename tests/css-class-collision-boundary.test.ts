@@ -83,7 +83,6 @@ const ALLOWLIST: Record<string, { sheet: string; permanent?: true }> = {
   inconclusive: { sheet: 'src/fabry/legacy.css' },
   indeterminate: { sheet: 'src/mdh/legacy.css' },
   info: { sheet: 'src/mdh/legacy.css' },
-  input: { sheet: 'src/console/legacy/shared.css, src/mdh/legacy.css' },
   lbl: { sheet: 'src/inspector/legacy.css' },
   loading: { sheet: 'none' },
   main: { sheet: 'src/console/legacy/shared.css' },

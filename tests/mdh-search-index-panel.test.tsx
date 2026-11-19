@@ -76,6 +76,7 @@ import { selectedCollection, activePanel, loading, error } from '../src/mdh/stor
 import { defaultPreset } from '../src/mdh/searchIndexPresets.js';
 import ctl from '../src/ui/controls.module.css';
 import seg from '../src/ui/Segmented.module.css';
+import inp from '../src/ui/Input.module.css';
 
 const writeText = vi.fn().mockResolvedValue(undefined);
 
@@ -326,8 +327,10 @@ describe('SearchIndexPanel — edit', () => {
     await vi.waitFor(() => expect(root.querySelector('.action-edit')).not.toBeNull());
     root.querySelector<HTMLElement>('.action-edit')!.click();
 
-    await vi.waitFor(() => expect(root.querySelector('[role="dialog"] .input')).not.toBeNull());
-    const nameInput = root.querySelector<HTMLInputElement>('[role="dialog"] .input')!;
+    await vi.waitFor(() =>
+      expect(root.querySelector('[role="dialog"] .' + inp.input)).not.toBeNull(),
+    );
+    const nameInput = root.querySelector<HTMLInputElement>('[role="dialog"] .' + inp.input)!;
     expect(nameInput.value).toBe('default');
     expect(nameInput.readOnly).toBe(true);
     expect(nameInput.className).toContain('input-locked');
@@ -407,7 +410,7 @@ describe('SearchIndexPanel — presets', () => {
     const root = mount();
     await Promise.resolve();
     await openCreate(root);
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'straight_through';
     const submit = [...root.querySelectorAll('button')].find(
       (b) => b.textContent === 'Create Search Index',
@@ -427,7 +430,7 @@ describe('SearchIndexPanel — presets', () => {
     const root = mount();
     await Promise.resolve();
     await openCreate(root);
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'house';
     (root.querySelector('[data-testid="preset-default"]') as HTMLElement).click();
     await Promise.resolve();
@@ -478,7 +481,7 @@ describe('SearchIndexPanel — presets', () => {
     await Promise.resolve();
     await openCreate(root);
 
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'vendor_fuzzy';
     (root.querySelector('[data-testid="preset-fuzzy"]') as HTMLElement).click();
     await vi.waitFor(() => expect(vi.mocked(api.aggregate)).toHaveBeenCalled());
@@ -592,7 +595,7 @@ describe('SearchIndexPanel — field picker', () => {
     alt.dispatchEvent(new Event('change', { bubbles: true }));
     await Promise.resolve();
 
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'vendor_fuzzy';
     const submit = [...root.querySelectorAll('button')].find(
       (b) => b.textContent === 'Create Search Index',
@@ -687,7 +690,7 @@ describe('SearchIndexPanel — dirty editor guard', () => {
     // The confirm is gone and the ordinary preset row is back.
     expect(root.querySelector('[data-testid="preset-row"]')).not.toBeNull();
 
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'vendor_fuzzy';
     const submit = [...root.querySelectorAll('button')].find(
       (b) => b.textContent === 'Create Search Index',
@@ -720,7 +723,7 @@ describe('SearchIndexPanel — dirty editor guard', () => {
     replace.click();
     await Promise.resolve();
 
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'vendor_default';
     const submit = [...root.querySelectorAll('button')].find(
       (b) => b.textContent === 'Create Search Index',
@@ -766,7 +769,7 @@ describe('SearchIndexPanel — dirty editor guard', () => {
     keepMine.click();
     await Promise.resolve();
 
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'vendor_fuzzy';
     const submit = [...root.querySelectorAll('button')].find(
       (b) => b.textContent === 'Create Search Index',
@@ -803,7 +806,7 @@ describe('SearchIndexPanel — unmatchable-definition guard', () => {
     create.click();
     await Promise.resolve();
 
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'vendor_fuzzy';
     (root.querySelector('[data-testid="preset-fuzzy"]') as HTMLElement).click();
     await Promise.resolve();
@@ -815,7 +818,7 @@ describe('SearchIndexPanel — unmatchable-definition guard', () => {
     await Promise.resolve();
 
     expect(api.putSearchIndex).not.toHaveBeenCalled();
-    expect(root.querySelector('.input-hint')!.textContent).toContain('can never match anything');
+    expect(root.querySelector('.' + inp.hint)!.textContent).toContain('can never match anything');
   });
 
   it('refuses a hand-typed definition with the same shape — the guard is general, not preset-specific', async () => {
@@ -827,7 +830,7 @@ describe('SearchIndexPanel — unmatchable-definition guard', () => {
     create.click();
     await Promise.resolve();
 
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'vendor_hand';
     // Scoped to the open dialog — see the comment on the shared handEdit() helper
     // above: an already-rendered READY card uses the same JsonEditor stub and
@@ -860,7 +863,7 @@ describe('SearchIndexPanel — unmatchable-definition guard', () => {
 
     // Untouched seed is exactly {"mappings":{"dynamic":true}} — the "Same as
     // default"-shaped case the guard must never block.
-    const name = root.querySelector('[role="dialog"] input.input') as HTMLInputElement;
+    const name = root.querySelector('[role="dialog"] input.' + inp.input) as HTMLInputElement;
     name.value = 'vendor_default';
     const submit = [...root.querySelectorAll('button')].find(
       (b) => b.textContent === 'Create Search Index',
@@ -1005,7 +1008,7 @@ describe('SearchIndexPanel — create modal holds its size', () => {
     await openCreate(root);
     const dialog = root.querySelector('[role="dialog"]')!;
     for (const [label, sel] of [
-      ['Name', 'input.input'],
+      ['Name', 'input.' + inp.input],
       ['Start from', '[data-testid="preset-row"]'],
       ['Definition', '.json-editor-stub'],
     ] as [string, string][]) {

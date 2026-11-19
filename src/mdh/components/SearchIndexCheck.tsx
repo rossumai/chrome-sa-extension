@@ -23,6 +23,7 @@ import {
   type ExplainTerm,
 } from '../searchIndexCheck.js';
 import styles from './SearchIndexBuilder.module.css';
+import inp from '../../ui/Input.module.css';
 
 // recordSummary packs to a character budget; the line also ellipsises in CSS, so
 // this only has to be generous enough for the card's usual width.
@@ -88,7 +89,7 @@ export default function SearchIndexCheck({
     <div class={styles.checkStrip}>
       <input
         data-testid="check-value"
-        class={'input ' + styles.checkInput}
+        class={`${inp.input} ` + styles.checkInput}
         placeholder="Test with a value from your documents"
         value={value}
         onInput={(e: any) => setValue(e.target.value)}

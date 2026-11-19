@@ -5,6 +5,7 @@ import { effect } from '@preact/signals';
 import { UNDO_LIMIT } from '../bulkOps.js';
 import { ModalActions } from './Modal.jsx';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 // One-click threshold below which no type-gate is required.
 const ONE_CLICK_LIMIT = 10;
@@ -86,7 +87,7 @@ export default function BulkConfirm({
             Type <strong>{count}</strong> to confirm:
           </span>
           <input
-            class="input"
+            class={inp.input}
             data-testid="bulk-confirm-input"
             value={typed.value}
             onInput={handleInput}
@@ -100,7 +101,7 @@ export default function BulkConfirm({
             Type <strong>{collection}</strong> to confirm:
           </span>
           <input
-            class="input"
+            class={inp.input}
             data-testid="bulk-confirm-input"
             value={typed.value}
             onInput={handleInput}

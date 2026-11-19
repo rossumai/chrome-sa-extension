@@ -1,6 +1,7 @@
 import { h, Fragment } from 'preact';
 import { ModalMessage, ModalActions } from './Modal.jsx';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 // Shared progress / summary components used by ImportWizard.
 // StageConfirm / StageImporting / StageDone were retired when the per-format
@@ -54,7 +55,7 @@ export function ImportProgress({ progress, onCancel }: { progress: any; onCancel
           </div>
         </div>
         {file?.filename && (
-          <div class="input-hint">
+          <div class={inp.hint}>
             {file.filename}
             {file.size != null ? ` · ${formatBytes(file.size)}` : ''}
           </div>
@@ -64,7 +65,7 @@ export function ImportProgress({ progress, onCancel }: { progress: any; onCancel
             {bits.join(' · ')}
           </div>
         )}
-        <div class="input-hint">
+        <div class={inp.hint}>
           Typically 30{'–'}60 s. You can close this {'—'} the outcome appears in{' '}
           <strong>Operation Logs</strong>.
         </div>

@@ -45,6 +45,7 @@ import MatchKeyPicker from './MatchKeyPicker.jsx';
 import { discoverLeafPaths } from '../columnDiscovery.js';
 import styles from './IndexBuilder.module.css';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 function defaultTemplate() {
   // One definition of the minimal template, shared with the Custom tab.
@@ -295,7 +296,7 @@ export default function IndexPanel() {
         <>
           <ModalBody stable>
             <ModalField label="Name">
-              <input ref={nameRef} class="input" style="width:100%" placeholder="my_index" />
+              <input ref={nameRef} class={inp.input} style="width:100%" placeholder="my_index" />
             </ModalField>
             {/* The confirm renders BELOW the tabs rather than replacing them: swapping
               a component for an element in the same slot remounts the JSON editor
@@ -352,7 +353,7 @@ export default function IndexPanel() {
                 ) : (
                   <input
                     data-testid="index-field-fallback"
-                    class="input"
+                    class={inp.input}
                     style="width:100%"
                     placeholder="field path"
                     onChange={(e: any) => setFields(e.target.value ? [e.target.value.trim()] : [])}
@@ -367,7 +368,7 @@ export default function IndexPanel() {
               </div>
             )}
             <JsonEditor value={defaultTemplate()} minHeight="160px" fill editorRef={editorRef} />
-            <div ref={hintRef} class="input-hint"></div>
+            <div ref={hintRef} class={inp.hint}></div>
           </ModalBody>
           <ModalActions footer>
             <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>

@@ -9,6 +9,7 @@ import FileDropArea, {
 import Modal, { openModal, closeModal } from '../src/mdh/components/Modal.jsx';
 import mstyles from '../src/ui/Modal.module.css';
 import ImportWizard from '../src/mdh/components/ImportWizard.jsx';
+import inp from '../src/ui/Input.module.css';
 
 function mount(node: any) {
   const root = document.createElement('div');
@@ -200,8 +201,8 @@ describe('Import wizards accept dropped files', () => {
     const area = root.querySelector('.file-input-area');
     const file = new File(['<svg/>'], 'logo.png', { type: 'image/png' });
     area!.dispatchEvent(dragEvent('drop', { files: [file] }));
-    await waitFor(() => root.querySelector('.input-hint'));
-    expect(root.querySelector('.input-hint')!.textContent).toMatch(/Expected a/);
+    await waitFor(() => root.querySelector('.' + inp.hint));
+    expect(root.querySelector('.' + inp.hint)!.textContent).toMatch(/Expected a/);
   });
 
   it('surfaces the picked file (name + shape) in the modal title', async () => {

@@ -22,6 +22,7 @@ import Sidebar from '../src/mdh/components/Sidebar.jsx';
 import { COLLECTION, LEGACY_COLLECTION } from '../src/fabry/architect/collectionNames.js';
 import fstyles from '../src/ui/FilterInput.module.css';
 import ctl from '../src/ui/controls.module.css';
+import inp from '../src/ui/Input.module.css';
 
 // A query that hits the extension's own collection and nothing the customer owns. Derived
 // rather than hardcoded, so a rename of COLLECTION cannot silently make it match 'vendors'
@@ -337,7 +338,7 @@ describe('Sidebar — filter the collection list by name', () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', 'items', 'zzz_new'] });
     const modalRoot = document.createElement('div');
     render(store.modalContent.value!.render(), modalRoot);
-    const nameInput = modalRoot.querySelector('input.input') as HTMLInputElement;
+    const nameInput = modalRoot.querySelector('input.' + inp.input) as HTMLInputElement;
     nameInput.value = 'zzz_new';
     [...modalRoot.querySelectorAll('button')]
       .find((b: any) => b.textContent === 'Create')!
@@ -369,7 +370,7 @@ describe('Sidebar — filter the collection list by name', () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['suppliers', 'items'] });
     const modalRoot = document.createElement('div');
     render(store.modalContent.value!.render(), modalRoot);
-    const nameInput = modalRoot.querySelector('input.input') as HTMLInputElement;
+    const nameInput = modalRoot.querySelector('input.' + inp.input) as HTMLInputElement;
     nameInput.value = 'suppliers';
     [...modalRoot.querySelectorAll('button')]
       .find((b: any) => b.textContent === 'Rename')!

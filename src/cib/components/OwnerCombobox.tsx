@@ -6,6 +6,7 @@
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import styles from './App.module.css';
+import inp from '../../ui/Input.module.css';
 
 export type Owner = { username: string; name: string; email: string };
 
@@ -93,7 +94,7 @@ export default function OwnerCombobox({
         <input
           id="cib-owner"
           ref={ref}
-          class={`input ${styles.input} ${styles.hasLead}`}
+          class={`${inp.input} ${styles.input} ${styles.hasLead}`}
           role="combobox"
           aria-expanded={open ? 'true' : 'false'}
           aria-controls={LIST_ID}

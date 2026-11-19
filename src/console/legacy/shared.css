@@ -225,28 +225,6 @@
 
 /* @order 26 */
 
-.input {
-  padding: 5px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-.input:focus {
-  border-color: var(--accent);
-}
-
-.input-hint {
-  font-size: 11px;
-  color: var(--danger);
-  margin-top: 4px;
-}
-
 /* The whole .modal-* system moved to the self-contained CSS Module
    src/ui/Modal.module.css. Consumers compose modals with its sub-components
    (ModalBody / ModalActions / ModalMessage / ModalFieldLabel / …). */

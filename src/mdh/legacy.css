@@ -454,12 +454,6 @@
   gap: 6px;
 }
 
-.placeholder-annotation-row .input {
-  flex: 1;
-  font-size: 11px;
-  padding: 3px 8px;
-}
-
 .placeholder-annotation-status {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1427,12 +1421,6 @@
     var(--shadow),
     0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 100;
-}
-
-.pipeline-save-inline .input {
-  width: 180px;
-  font-size: 12px;
-  padding: 4px 8px;
 }
 
 .pipeline-overflow-wrap {

@@ -8,6 +8,7 @@ import { signal } from '@preact/signals';
 import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import styles from './Modal.module.css';
 import ctl from './controls.module.css';
+import inp from './Input.module.css';
 
 // The one open modal: a title, a render function, and an optional close hook the
 // promisified helpers (confirmModal / promptModal) use to resolve.
@@ -266,7 +267,7 @@ function PromptBody({
       {message && <ModalMessage>{message}</ModalMessage>}
       <input
         ref={inputRef}
-        class="input"
+        class={inp.input}
         style="width:100%"
         placeholder={placeholder || ''}
         value={initialValue || ''}
@@ -274,7 +275,7 @@ function PromptBody({
           if (e.key === 'Enter') doSubmit();
         }}
       />
-      <div ref={hintRef} class="input-hint"></div>
+      <div ref={hintRef} class={inp.hint}></div>
       <ModalActions>
         <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
           Cancel

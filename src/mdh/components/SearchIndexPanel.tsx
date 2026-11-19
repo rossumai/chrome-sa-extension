@@ -39,6 +39,7 @@ import MatchKeyPicker from './MatchKeyPicker.jsx';
 import { discoverLeafPaths } from '../columnDiscovery.js';
 import styles from './SearchIndexBuilder.module.css';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 export default function SearchIndexPanel() {
   const [indexes, setIndexes] = useState<any[]>([]);
@@ -268,7 +269,7 @@ export default function SearchIndexPanel() {
             <ModalField label={isEdit ? 'Name (cannot be changed)' : 'Name'}>
               <input
                 ref={nameRef}
-                class={'input' + (isEdit ? ' input-locked' : '')}
+                class={inp.input + (isEdit ? ' input-locked' : '')}
                 style="width:100%"
                 placeholder="my_search_index"
                 defaultValue={initialName}
@@ -329,7 +330,7 @@ export default function SearchIndexPanel() {
                 ) : (
                   <input
                     data-testid="field-fallback"
-                    class="input"
+                    class={inp.input}
                     style="width:100%"
                     placeholder="field path"
                     onChange={(e: any) => setFields(e.target.value ? [e.target.value.trim()] : [])}
@@ -349,7 +350,7 @@ export default function SearchIndexPanel() {
             <ModalField label="Definition" grow>
               <JsonEditor value={initialJson} minHeight="160px" fill editorRef={editorRef} />
             </ModalField>
-            <div ref={hintRef} class="input-hint"></div>
+            <div ref={hintRef} class={inp.hint}></div>
           </ModalBody>
           <ModalActions footer>
             <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>

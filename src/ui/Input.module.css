@@ -1,0 +1,44 @@
+/* The Console's shared text input (.input) and the hint line under it (.hint). Moved from the
+   global src/console/legacy/shared.css, with the two MDH rules that sized it in context as
+   modifiers, all in their original relative order.
+
+   .inAnnotationRow and .inSaveInline were `.placeholder-annotation-row .input` and
+   `.pipeline-save-inline .input`; written as `.input.<modifier>` they keep that specificity, so
+   they still beat .input and still lose a tie to .input:focus.
+
+   Two MDH rules on the same elements stay global, BEFORE these in the cascade, and so keep
+   losing every tie to .input exactly as they did: .placeholder-input and .input-locked. */
+
+.input.inAnnotationRow {
+  flex: 1;
+  font-size: 11px;
+  padding: 3px 8px;
+}
+
+.input.inSaveInline {
+  width: 180px;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.input {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--danger);
+  margin-top: 4px;
+}

@@ -8,6 +8,7 @@ import { beautifyText } from '../pipelineComments.js';
 import AgentBox from './AgentBox.jsx';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 export default function PipelineEditor({
   editorRef,
@@ -176,7 +177,7 @@ export default function PipelineEditor({
           <div class="pipeline-save-inline">
             <input
               ref={saveInputRef}
-              class="input"
+              class={`${inp.input} ${inp.inSaveInline}`}
               placeholder="Query name…"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') doSave();

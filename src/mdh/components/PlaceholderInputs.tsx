@@ -3,6 +3,7 @@ import { useState } from 'preact/hooks';
 import { domain, token } from '../store.js';
 import { isJson5NumberLiteral } from '../hooks/usePipeline.js';
 import { annotationIdFromInput } from '../../rossum/annotationUrl.js';
+import inp from '../../ui/Input.module.css';
 
 // True when the typed value can be matched as the given type (drives the
 // "won't match" hint). string / null / auto / undefined accept anything.
@@ -131,7 +132,7 @@ export default function PlaceholderInputs({
       {annotRow && (
         <div class="placeholder-annotation-row">
           <input
-            class="input"
+            class={`${inp.input} ${inp.inAnnotationRow}`}
             placeholder={'Annotation ID or URL\u2026'}
             style="flex:1"
             onKeyDown={(e: any) => {
@@ -160,7 +161,7 @@ export default function PlaceholderInputs({
               {lookupNames.includes(name) ? `$$${name}` : `{${name}}`}
             </span>
             <input
-              class="input placeholder-input"
+              class={`${inp.input} placeholder-input`}
               value={value}
               onInput={(e: any) => {
                 onSetValue(name, e.target.value);

@@ -3,6 +3,7 @@
 import { h, Fragment } from 'preact';
 import Step from './Step.jsx';
 import styles from './App.module.css';
+import inp from '../../ui/Input.module.css';
 
 export default function CredentialsStep({
   coupaUrl,
@@ -50,7 +51,7 @@ export default function CredentialsStep({
         </label>
         <input
           id="cib-coupa-url"
-          class={`input ${styles.input}`}
+          class={`${inp.input} ${styles.input}`}
           type="text"
           required
           placeholder="https://example.coupahost.com"
@@ -65,7 +66,7 @@ export default function CredentialsStep({
           </label>
           <input
             id="cib-coupa-id"
-            class={`input ${styles.input}`}
+            class={`${inp.input} ${styles.input}`}
             type="text"
             required
             value={coupaId}
@@ -79,7 +80,7 @@ export default function CredentialsStep({
           <div class={styles.inputWrap}>
             <input
               id="cib-coupa-secret"
-              class={`input ${styles.input} ${styles.hasToggle}`}
+              class={`${inp.input} ${styles.input} ${styles.hasToggle}`}
               type={(showSecret ? 'text' : 'password') as 'text'}
               required
               autocomplete="off"

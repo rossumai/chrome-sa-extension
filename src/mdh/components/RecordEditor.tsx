@@ -7,6 +7,7 @@ import { stripEmptyOperators } from '../updateExpr.js';
 import * as api from '../api.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 // Builds the prefilled editor text. Both blocks have parallel hint comments
 // inside so the syntax is discoverable without bloating the modal with extra
@@ -94,7 +95,7 @@ function Body({
     <ModalBody>
       <ModalFieldLabel>{label}</ModalFieldLabel>
       <JsonEditor value={initialValue} minHeight="200px" fields={fieldsFn} editorRef={editorRef} />
-      <div ref={hintRef} class="input-hint"></div>
+      <div ref={hintRef} class={inp.hint}></div>
       <ModalActions>
         <button class={`${ctl.btn} ${ctl.btnSecondary}`} onClick={closeModal}>
           Cancel

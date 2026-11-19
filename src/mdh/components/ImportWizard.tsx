@@ -22,6 +22,7 @@ import { restoreDocs, formatRestoreSummary } from '../restoreValues.js';
 import * as api from '../api.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
 import ctl from '../../ui/controls.module.css';
+import inp from '../../ui/Input.module.css';
 
 const STAGE = { PICK: 'pick', DECIDE: 'decide', IMPORTING: 'importing', DONE: 'done' };
 const SHAPE_SAMPLE = 500;
@@ -425,7 +426,7 @@ export default function ImportWizard({
             </Fragment>
           )}
           {errorMsg && (
-            <div class="input-hint" style="color:var(--danger)">
+            <div class={inp.hint} style="color:var(--danger)">
               {errorMsg}
             </div>
           )}
@@ -500,7 +501,7 @@ export default function ImportWizard({
             />
           )}
           {errorMsg && (
-            <div class="input-hint" style="color:var(--danger)">
+            <div class={inp.hint} style="color:var(--danger)">
               {errorMsg}
             </div>
           )}

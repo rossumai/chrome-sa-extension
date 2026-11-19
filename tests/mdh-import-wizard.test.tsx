@@ -48,6 +48,7 @@ import ImportWizard from '../src/mdh/components/ImportWizard.jsx';
 import * as api from '../src/mdh/api.js';
 import { runChunkedInsert } from '../src/mdh/importFile.js';
 import seg from '../src/ui/Segmented.module.css';
+import inp from '../src/ui/Input.module.css';
 
 function mount(vnode: any) {
   const el = document.createElement('div');
@@ -109,8 +110,8 @@ describe('ImportWizard — source toggle + detection', () => {
   it('rejects an unsupported file type via the click path', async () => {
     const root = mount(<ImportWizard onSuccess={() => {}} />);
     pick(root, file('x', 'notes.txt'));
-    await waitFor(() => root.querySelector('.input-hint'));
-    expect(root.querySelector('.input-hint')!.textContent).toMatch(/Unsupported file/i);
+    await waitFor(() => root.querySelector('.' + inp.hint));
+    expect(root.querySelector('.' + inp.hint)!.textContent).toMatch(/Unsupported file/i);
   });
 
   it('switches to Clipboard, shows the JSON editor + Next, and blocks empty input', async () => {
@@ -122,7 +123,7 @@ describe('ImportWizard — source toggle + detection', () => {
     const next = await waitFor(() => root.querySelector('[data-testid="clipboard-next"]'));
     next.click();
     await waitFor(() => {
-      const hint = root.querySelector('.input-hint');
+      const hint = root.querySelector('.' + inp.hint);
       return hint && /document/i.test(hint.textContent) ? hint : null;
     });
   });
