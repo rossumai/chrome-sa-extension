@@ -1,50 +1,14 @@
-:root {
-  --bg-base: #f1f1f5;
-  --bg-card: #ffffff;
-  --bg-hover: #f0f0f5;
-  --border: #dcdce4;
-  --border-card: #e2e2ea;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 0 0 1px var(--border-card);
-  --text-primary: #1a1a24;
-  --text-secondary: #7a7a8c;
-  --text-hint: #9d9dab;
-  --accent: #4270db;
-  --accent-glow: rgba(66, 112, 219, 0.1);
-  --accent-dim: #3560c0;
-  --warning-fg: #9a5b00;
-  --warning-bg: rgba(217, 119, 6, 0.08);
-  --warning-border: rgba(217, 119, 6, 0.35);
-  --toggle-off: #c8c8d4;
-  /* The Console rail's EXP badge pair (console.css --exp-*), for the popup's app list. */
-  --exp-bg: #7c3aed;
-  --exp-fg: #ffffff;
-  --radius: 8px;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-}
+/* GLOBAL STYLESHEET, TEMPORARY: the popup's rules, split out of the former
+   src/popup/popup.css after its tokens (tokens.css). Copied to dist/popup/legacy.css and linked
+   right after the tokens by the popup and by the side panel. Deleted by its Phase 2 task of the
+   CSS Modules migration, which moves every rule into a *.module.css beside the component that
+   uses it.
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-base: #12121e;
-    --bg-card: #1a1a2e;
-    --bg-hover: #2a2a3e;
-    --border: #333348;
-    --border-card: #2a2a40;
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border-card);
-    --text-primary: #dddde8;
-    --text-secondary: #8888a0;
-    --text-hint: #6a6a80;
-    --accent: #5b8af0;
-    --accent-glow: rgba(91, 138, 240, 0.15);
-    --accent-dim: #4a78e0;
-    --warning-fg: #f0b429;
-    --warning-bg: rgba(240, 160, 75, 0.1);
-    --warning-border: rgba(240, 160, 75, 0.4);
-    --toggle-off: #444460;
-    --exp-bg: #a78bfa;
-    --exp-fg: #1e1233;
-  }
-}
+   Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
+   :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
+   their component. Any class added here must contain a hyphen — esbuild's minified CSS Module
+   names never do, so a hyphenated class can never collide with one
+   (tests/css-class-collision-boundary.test.ts). */
 
 * {
   box-sizing: border-box;
@@ -90,7 +54,6 @@ body {
                          the version/footer is always visible */
 }
 
-.accent-bar,
 .header,
 .footer {
   flex: 0 0 auto;
@@ -498,12 +461,7 @@ button.offsite-act:hover,
   color: #8c1d15;
 }
 
-/* ── accent bar ────────────────────────────────── */
-
-.accent-bar {
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-dim) 60%, transparent 100%);
-}
+/* The accent bar is styled by components/App.module.css (.accentBar). */
 
 /* ── header ────────────────────────────────────── */
 

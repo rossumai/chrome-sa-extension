@@ -1,0 +1,7 @@
+/* The thin gradient bar above the popup's header. Pinned like the header and footer: the
+   popup's #app is a height-capped flex column (see legacy.css, "popup shell"). */
+.accentBar {
+  flex: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-dim) 60%, transparent 100%);
+}

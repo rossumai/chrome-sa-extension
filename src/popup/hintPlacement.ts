@@ -1,7 +1,7 @@
 // Pure placement for the query-status hint popover.
 //
 // The popover is `position: fixed`, so these are VIEWPORT coordinates. Fixed is
-// load-bearing, not incidental: `#app` sets `overflow: hidden` (popup.css), so an
+// load-bearing, not incidental: `#app` sets `overflow: hidden` (legacy.css), so an
 // absolutely-positioned tip inside the query list would be clipped at the panel's
 // edge — exactly where a hint on the last failing query needs to appear. Verified
 // that no ancestor of `.mdh-q` sets transform/filter/perspective/will-change,

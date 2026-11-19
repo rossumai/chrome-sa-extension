@@ -1,0 +1,49 @@
+/* GLOBAL STYLESHEET: the DevTools panel's design tokens — every :root variable,
+   its dark-mode overrides, and the html/body base. Copied to dist/devtools/tokens.css and linked
+   first by panel.html.
+
+   Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
+   :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
+   their component. Any class added here must contain a hyphen — esbuild's minified CSS Module
+   names never do, so a hyphenated class can never collide with one
+   (tests/css-class-collision-boundary.test.ts). */
+
+:root {
+  --bg: #fff;
+  --fg: #1a1a1a;
+  --border: #e5e5e5;
+  --accent: #4270db;
+  --get: #1f9d57;
+  --get-bg: #e3f6ec;
+}
+:root[data-theme='dark'] {
+  --bg: #1e1e1e;
+  --fg: #e6e6e6;
+  --border: #333;
+  --get: #3fb950;
+  --get-bg: #10261a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #1e1e1e;
+    --fg: #e6e6e6;
+    --border: #333;
+    --get: #3fb950;
+    --get-bg: #10261a;
+  }
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+body {
+  font:
+    13px/1.4 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}

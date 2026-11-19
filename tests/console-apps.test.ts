@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { APPS, visibleApps } from '../src/console/apps.jsx';
 
 describe('the Console app list shared by the rail and the popup', () => {
@@ -27,12 +26,6 @@ describe('the Console app list shared by the rail and the popup', () => {
     for (const id of ['academy', 'rdc']) {
       const app = APPS.find((a) => a.id === id)!;
       expect(app.exp && app.gated).toBe(true);
-    }
-  });
-
-  it('imports no CSS, so the popup bundle cannot emit a sheet over popup.css', () => {
-    for (const file of ['src/console/apps.tsx', 'src/ui/fabryStar.ts']) {
-      expect(readFileSync(file, 'utf8')).not.toMatch(/import[^;]*\.css['"]/);
     }
   });
 });

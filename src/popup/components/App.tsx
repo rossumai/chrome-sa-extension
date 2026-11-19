@@ -18,6 +18,7 @@ import ConsoleView, { ConsoleHeaderActions } from './ConsoleView.jsx';
 import { UnlockNoticeText } from './NoticeLine.jsx';
 import { readConsoleTab } from '../consoleTab.js';
 import type { UnlockNotice } from '../offSite.js';
+import styles from './App.module.css';
 
 const STORAGE_TOGGLES = [
   'schemaAnnotationsEnabled',
@@ -282,7 +283,7 @@ export default function App({ tab }: { tab?: any }) {
 
   return (
     <Fragment>
-      <div class="accent-bar"></div>
+      <div class={styles.accentBar}></div>
 
       <header class="header">
         <div class="brand-badge">SA</div>

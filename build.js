@@ -56,7 +56,12 @@ writeFileSync('dist/manifest.json', JSON.stringify(manifest, null, 2) + '\n');
 
 cpSync('icons', 'dist/icons', { recursive: true });
 cpSync('src/popup/popup.html', 'dist/popup/popup.html');
-cpSync('src/popup/popup.css', 'dist/popup/popup.css');
+// The popup, side panel and DevTools pages link their GLOBAL sheets first — tokens.css, then
+// legacy.css (the rules not yet moved to CSS Modules; one partial each, so copied) — and then the
+// sheet esbuild emits beside each bundle from its imported *.module.css (dist/popup/popup.css).
+// The global sheets are deliberately NOT named after a bundle, so esbuild can never write over one.
+cpSync('src/popup/tokens.css', 'dist/popup/tokens.css');
+cpSync('src/popup/legacy.css', 'dist/popup/legacy.css');
 cpSync('src/console/console.html', 'dist/console/console.html');
 // The LEGACY base stylesheet: the global partials (CONSOLE_GLOBAL_PARTS, above), merged in
 // their original rule order by consoleBaseCss().
@@ -66,11 +71,12 @@ cpSync('src/console/console.html', 'dist/console/console.html');
 writeFileSync('dist/console/console.base.css', consoleBaseCss());
 cpSync('src/devtools/devtools.html', 'dist/devtools/devtools.html');
 cpSync('src/devtools/panel.html', 'dist/devtools/panel.html');
-cpSync('src/devtools/panel.css', 'dist/devtools/panel.css');
-// The side panel links ../popup/popup.css FIRST and only overrides the popup's
-// shell in sidepanel.css, so the shared MDH card has one source of truth.
+cpSync('src/devtools/tokens.css', 'dist/devtools/tokens.css');
+cpSync('src/devtools/legacy.css', 'dist/devtools/legacy.css');
+// The side panel links ../popup/tokens.css and ../popup/legacy.css FIRST and only overrides the
+// popup's shell in its own legacy.css, so the shared MDH card has one source of truth.
 cpSync('src/sidepanel/sidepanel.html', 'dist/sidepanel/sidepanel.html');
-cpSync('src/sidepanel/sidepanel.css', 'dist/sidepanel/sidepanel.css');
+cpSync('src/sidepanel/legacy.css', 'dist/sidepanel/legacy.css');
 
 const options = {
   entryPoints: {

@@ -151,7 +151,7 @@ describe('QueryItem — the hint never occupies layout', () => {
       new MouseEvent('mouseenter', { bubbles: false }),
     );
     // jsdom has no layout, so assert the contract that survives it: the element
-    // carries inline top/left. `position: fixed` itself lives in popup.css.
+    // carries inline top/left. `position: fixed` itself lives in src/popup/legacy.css.
     await seen(() => expect(r.querySelector('.mdh-q-hint')).toBeTruthy());
     const tip = r.querySelector('.mdh-q-hint');
     expect(tip.style.top).not.toBe('');

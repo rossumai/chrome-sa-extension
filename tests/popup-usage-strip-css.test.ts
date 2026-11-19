@@ -7,7 +7,7 @@ import { join } from 'path';
 // block, and all 3388 tests stayed green while the strip's link sat flush
 // against "No thanks" instead of at the far right. Reading the stylesheet as
 // text is crude, but it is the only thing in this suite that can catch it.
-const css = readFileSync(join(process.cwd(), 'src/popup/popup.css'), 'utf8');
+const css = readFileSync(join(process.cwd(), 'src/popup/legacy.css'), 'utf8');
 
 function block(selector: any) {
   const i = css.indexOf(`\n${selector} {`);

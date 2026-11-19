@@ -95,7 +95,7 @@ const INSPECTOR_ICON = (
 );
 
 // A plain SVG, not FabryMark: FabryMark imports a CSS Module, and this module is also
-// bundled into the popup, where an emitted sheet would land on dist/popup/popup.css.
+// bundled into the popup, whose emitted dist/popup/popup.css would then carry FabryMark's rules.
 const FABRY_ICON = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <path d={STAR_PATH} />

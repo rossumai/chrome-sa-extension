@@ -537,8 +537,7 @@ rest. A 24h TTL sweep purges entries that were never consumed.
   the org-name feature's cache in each tab, with Console and token per row and Enter / 1–9
   to switch (or, with none open, the recently visited organizations). On a Console tab it
   shows `ConsoleView.tsx`: that tab's org and its apps in the rail's order (both read
-  `src/console/apps.tsx`, which must import no CSS — the popup bundle would emit a sheet
-  over the copied `popup.css`). It reaches the Console tab with
+  `src/console/apps.tsx`). It reaches the Console tab with
   `chrome.extension.getViews({ type: 'tab', tabId })` and switches its app with the
   `sa-console-set-app` event (`src/popup/consoleTab.ts`). The unlock notice takes the line
   under the header off-site and the footer's left group on a site — never a footer item.
