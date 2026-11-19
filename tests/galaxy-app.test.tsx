@@ -41,6 +41,7 @@ vi.mock('../src/galaxy/index.jsx', async (importOriginal) => ({
 import App from '../src/galaxy/components/App.jsx';
 import * as store from '../src/galaxy/store.js';
 import ctl from '../src/ui/controls.module.css';
+import es from '../src/ui/EmptyState.module.css';
 
 function mount(connected: any) {
   const root = document.createElement('div');
@@ -74,9 +75,9 @@ beforeEach(() => {
 describe('Galaxy App', () => {
   it('shows a not-connected message when connected=false', () => {
     const root = mount(false);
-    expect(root.querySelector('.empty-state')).not.toBe(null);
+    expect(root.querySelector('.' + es.root)).not.toBe(null);
     expect(root.textContent).toMatch(/not connected/i);
-    expect(root.querySelector('.empty-state button')).toBeNull();
+    expect(root.querySelector('.' + es.root + ' button')).toBeNull();
     expect(sceneCalls.created).toBe(0);
   });
   it('not connected because of a 429: shows the error and a Retry that re-checks the session', () => {
@@ -85,7 +86,7 @@ describe('Galaxy App', () => {
     const root = mount(false);
     expect(root.textContent).toContain('Rossum is rate-limiting requests. Try again in 8 s.');
     expect(root.textContent).not.toMatch(/not connected/i);
-    const btn = root.querySelector<HTMLButtonElement>('.empty-state button.' + ctl.btn)!;
+    const btn = root.querySelector<HTMLButtonElement>('.' + es.root + ' button.' + ctl.btn)!;
     expect(btn.textContent).toBe('Retry');
     initGalaxy.mockClear();
     btn.click();
@@ -95,7 +96,7 @@ describe('Galaxy App', () => {
     store.error.value = 'Session expired';
     const root = mount(false);
     expect(root.textContent).toContain('Session expired');
-    expect(root.querySelector('.empty-state button')).toBeNull();
+    expect(root.querySelector('.' + es.root + ' button')).toBeNull();
   });
   it('mounts the scene and pushes graph data when connected', async () => {
     store.graph.value = {

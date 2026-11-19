@@ -10,6 +10,7 @@ import TrainerPanel from './TrainerPanel.jsx';
 import Modal from '../../ui/Modal.jsx';
 import css from '../Academy.module.css';
 import ctl from '../../ui/controls.module.css';
+import es from '../../ui/EmptyState.module.css';
 
 // store.error is set by start, restart and init; a failed write must say so.
 function ErrorStrip() {
@@ -138,10 +139,10 @@ export default function AcademyApp({ connected }: { connected: boolean | null })
     return (
       <div class="app-root">
         <div class={css.entry}>
-          <div class="empty-state">
-            <div class="empty-state-card">
-              <div class="empty-state-title">Not connected</div>
-              <p class="empty-state-body">
+          <div class={es.root}>
+            <div class={es.card}>
+              <div class={es.title}>Not connected</div>
+              <p class={es.body}>
                 {store.error.value ||
                   'Open the Console from the extension popup on a Rossum tab to start the Academy.'}
               </p>

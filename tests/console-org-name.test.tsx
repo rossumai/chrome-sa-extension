@@ -13,6 +13,7 @@ import AuditConnectionBar from '../src/audit/components/ConnectionBar.jsx';
 import * as mdhStore from '../src/mdh/store.js';
 import * as auditStore from '../src/audit/store.js';
 import type { PageInfo } from '../src/audit/api.js';
+import cb from '../src/ui/ConnectionBar.module.css';
 
 beforeEach(() => {
   connectedOrg.value = null;
@@ -103,7 +104,7 @@ describe('connection bars', () => {
     connectedOrg.value = 'Acme Corporation';
     const root = document.createElement('div');
     render(<MdhConnectionBar connected={true} />, root);
-    expect(root.querySelector('.connection-bar')!.textContent).toContain(
+    expect(root.querySelector('.' + cb.bar)!.textContent).toContain(
       'Connected to https://partner-sandbox.rossum.app · Acme Corporation',
     );
   });
@@ -112,7 +113,7 @@ describe('connection bars', () => {
     connectedOrg.value = 'Acme Corporation';
     const root = document.createElement('div');
     render(<AuditConnectionBar connected={true} />, root);
-    expect(root.querySelector('.connection-bar')!.textContent).toContain(
+    expect(root.querySelector('.' + cb.bar)!.textContent).toContain(
       'Connected to partner-sandbox.rossum.app · Acme Corporation',
     );
   });
@@ -121,16 +122,16 @@ describe('connection bars', () => {
     connectedOrg.value = null;
     const mdhRoot = document.createElement('div');
     render(<MdhConnectionBar connected={true} />, mdhRoot);
-    expect(mdhRoot.querySelector('.connection-bar')!.textContent).toContain(
+    expect(mdhRoot.querySelector('.' + cb.bar)!.textContent).toContain(
       'Connected to https://partner-sandbox.rossum.app',
     );
-    expect(mdhRoot.querySelector('.connection-bar')!.textContent).not.toContain('· ');
+    expect(mdhRoot.querySelector('.' + cb.bar)!.textContent).not.toContain('· ');
 
     const auditRoot = document.createElement('div');
     render(<AuditConnectionBar connected={true} />, auditRoot);
-    expect(auditRoot.querySelector('.connection-bar')!.textContent).toContain(
+    expect(auditRoot.querySelector('.' + cb.bar)!.textContent).toContain(
       'Connected to partner-sandbox.rossum.app',
     );
-    expect(auditRoot.querySelector('.connection-bar')!.textContent).not.toContain('· Acme');
+    expect(auditRoot.querySelector('.' + cb.bar)!.textContent).not.toContain('· Acme');
   });
 });

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { domain, selectedCollection } from '../store.js';
 import { connectedOrg } from '../../console/store.js';
 import * as cache from '../cache.js';
+import cb from '../../ui/ConnectionBar.module.css';
 
 export default function ConnectionBar({ connected }: { connected: boolean | null }) {
   const [cacheText, setCacheText] = useState('cache: empty');
@@ -34,16 +35,16 @@ export default function ConnectionBar({ connected }: { connected: boolean | null
 
   if (!connected) {
     return (
-      <div class="connection-bar">
-        <span class="connection-dot error"></span> Not connected — open a Rossum page and click Data
-        Storage in the extension popup
+      <div class={cb.bar}>
+        <span class={`${cb.dot} ${cb.error}`}></span> Not connected — open a Rossum page and click
+        Data Storage in the extension popup
       </div>
     );
   }
 
   return (
-    <div class="connection-bar">
-      <span class="connection-dot"></span> Connected to {domain.value}
+    <div class={cb.bar}>
+      <span class={cb.dot}></span> Connected to {domain.value}
       {connectedOrg.value ? ` \u00b7 ${connectedOrg.value}` : ''}
       <span class="cache-indicator">{cacheText}</span>
     </div>

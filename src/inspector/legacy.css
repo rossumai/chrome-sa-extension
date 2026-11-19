@@ -13,6 +13,20 @@
    partial are emitted by N, which is the original rule order of the former monolith. A rule's
    place in the cascade is its segment's N, not the file it sits in. */
 
+/* @order 32 */
+
+/* Moved from src/console/legacy/shared.css once the Inspector was its only global user (the
+   connection dot's pulse lives in src/ui/ConnectionBar.module.css). */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
 /* @order 38 */
 
 /* ============================================================

@@ -20,11 +20,12 @@ import * as academyStore from '../../academy/store.js';
 import * as builderStore from '../../builder/store.js';
 import * as cibStore from '../../cib/store.js';
 import * as rdcStore from '../../rdc/store.js';
+import es from '../../ui/EmptyState.module.css';
 
 function Connecting() {
   return (
     <div class="app-root">
-      <div class="empty-state">Connecting{'…'}</div>
+      <div class={es.root}>Connecting{'…'}</div>
     </div>
   );
 }

@@ -47,103 +47,12 @@
   position: relative;
 }
 
-/* @order 8 */
-
-.connection-bar {
-  padding: 6px 16px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-card);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.connection-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--success);
-  flex-shrink: 0;
-}
-
-.connection-dot.error {
-  background: var(--danger);
-}
-
-/* @order 10 */
-
-.error-banner {
-  padding: 8px 16px;
-  background: var(--danger-bg);
-  border-bottom: 1px solid var(--danger-border);
-  color: var(--danger-fg);
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  position: relative;
-}
-
-.error-banner > span {
-  flex: 1;
-}
-
-/* @order 12 */
-
-.error-banner .dismiss {
-  background: none;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0 4px;
-  opacity: 0.6;
-}
-
-.error-banner .dismiss:hover {
-  opacity: 1;
-}
-
 /* @order 14 */
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
-}
-
-.empty-state {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.empty-state-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-  max-width: 380px;
-}
-
-.empty-state-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.empty-state-body {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.5;
 }
 
 /* @order 16 */
@@ -198,23 +107,6 @@
 /* The whole .modal-* system moved to the self-contained CSS Module
    src/ui/Modal.module.css. Consumers compose modals with its sub-components
    (ModalBody / ModalActions / ModalMessage / ModalFieldLabel / …). */
-
-/* @order 32 */
-
-.connection-dot.busy {
-  background: var(--accent);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
 
 /* @order 34 */
 
@@ -325,16 +217,17 @@
    Preview columns are separate mounts now (the old pane kept a hidden preview to reveal), so
    there is nothing to substitute and pretending otherwise would print a document the reader
    is not looking at. The ⤓ PDF button is the path that always prints the rendered document,
-   in either mode and at any scope. */
+   in either mode and at any scope.
+
+   The connection bar and the error banner are hidden by the same rule in their own modules,
+   src/ui/ConnectionBar.module.css and src/ui/ErrorBanner.module.css. */
 @media print {
   body:has(.docs-pane) .app-rail,
   body:has(.docs-pane) .fabry-sidebar,
   body:has(.docs-pane) .fabry-spec-bar,
   body:has(.docs-pane) .fabry-arch-doc-warn,
   body:has(.docs-pane) .fabry-spec-review,
-  body:has(.docs-pane) .fabry-rail,
-  body:has(.docs-pane) .connection-bar,
-  body:has(.docs-pane) .error-banner {
+  body:has(.docs-pane) .fabry-rail {
     display: none !important;
   }
 

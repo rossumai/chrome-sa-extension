@@ -41,6 +41,7 @@ import FilterBar from './FilterBar.jsx';
 import { navDrawer, panelOpen, panelWide, loadPanelWide } from './panels.js';
 import s from './Builder.module.css';
 import ctl from '../../ui/controls.module.css';
+import es from '../../ui/EmptyState.module.css';
 
 // The component for each right panel (store.RightPanel); with none, the field inspector.
 const PANELS: Record<RightPanel['kind'], ComponentType> = {
@@ -90,9 +91,7 @@ export default function App({ connected }: { connected: boolean | null }) {
   if (!connected) {
     return (
       <div class="app-root">
-        <div class="empty-state">
-          {error.value || 'Open the Console from a Rossum tab to connect.'}
-        </div>
+        <div class={es.root}>{error.value || 'Open the Console from a Rossum tab to connect.'}</div>
       </div>
     );
   }
@@ -140,11 +139,11 @@ export default function App({ connected }: { connected: boolean | null }) {
           </div>
         )}
         {selectedQueueId.value == null && selectedSchemaId.value == null ? (
-          <div class="empty-state">
+          <div class={es.root}>
             {loading.value ? 'Loading queues…' : 'Pick a queue to edit its schema.'}
           </div>
         ) : !schema.value ? (
-          <div class="empty-state">{loading.value ? 'Loading schema…' : ''}</div>
+          <div class={es.root}>{loading.value ? 'Loading schema…' : ''}</div>
         ) : (
           <div class={s.editor}>
             <Toolbar onSave={() => openModal('Save schema', () => <SaveDialog />)} />

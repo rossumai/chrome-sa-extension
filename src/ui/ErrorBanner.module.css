@@ -1,0 +1,41 @@
+/* The red banner an app shows under its connection bar: .root, with the message in a <span>
+   and an optional .dismiss button. Moved from the global src/console/legacy/shared.css, rules
+   in their original order, with its line from the Architect print block. */
+
+.root {
+  padding: 8px 16px;
+  background: var(--danger-bg);
+  border-bottom: 1px solid var(--danger-border);
+  color: var(--danger-fg);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.root > span {
+  flex: 1;
+}
+
+.root .dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.root .dismiss:hover {
+  opacity: 1;
+}
+
+/* Printing an Architect specification hides the app around it (see the print block in
+   src/console/legacy/shared.css). */
+@media print {
+  :global(body:has(.docs-pane)) .root {
+    display: none !important;
+  }
+}

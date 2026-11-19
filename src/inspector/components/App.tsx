@@ -5,6 +5,7 @@ import IdInput from './IdInput.jsx';
 import RecentAnnotations from './RecentAnnotations.jsx';
 import Report from './Report.jsx';
 import PageRail from './PageRail.jsx';
+import eb from '../../ui/ErrorBanner.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   const inspect = (id: any) => {
@@ -42,7 +43,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         <div class="inspector-root">
           <IdInput onSubmit={inspect} />
           {store.loading.value && <div class="inspector-loading">Loading…</div>}
-          {store.error.value && <div class="error-banner">{store.error.value}</div>}
+          {store.error.value && <div class={eb.root}>{store.error.value}</div>}
           {!d && !store.loading.value && <RecentAnnotations onSelect={inspect} />}
           {d && (
             <button type="button" class="inspector-back" onClick={closeAnnotation}>

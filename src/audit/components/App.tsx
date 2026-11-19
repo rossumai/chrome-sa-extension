@@ -8,6 +8,7 @@ import DetailPanel from './DetailPanel.jsx';
 import Pagination from './Pagination.jsx';
 import UnavailablePanel from './UnavailablePanel.jsx';
 import FabryPanel from './FabryPanel.jsx';
+import es from '../../ui/EmptyState.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   return (
@@ -16,7 +17,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         <ConnectionBar connected={connected} />
         <ErrorBanner />
         {!connected ? (
-          <div class="empty-state">
+          <div class={es.root}>
             Not connected — open a Rossum page and click Audit Logs in the extension popup.
           </div>
         ) : availability.value === 'unavailable' ? (

@@ -6,6 +6,7 @@ import App from '../src/rdc/components/App.jsx';
 import { domain, token } from '../src/rdc/store.js';
 import type { PlanItem, Rdc } from '../src/rdc/wasm.js';
 import { rateLimitError } from '../src/net/rateLimit.js';
+import eb from '../src/ui/ErrorBanner.module.css';
 
 const outcome = {
   itemsPushed: 0,
@@ -286,7 +287,7 @@ describe('rdc App', () => {
     });
     mount(<App connected={true} dataStorage={ds as any} loadRdc={loadRdc} fetchOrgs={limited} />);
     await flush();
-    expect(root.querySelector('.error-banner')!.textContent).toBe(
+    expect(root.querySelector('.' + eb.root)!.textContent).toBe(
       'Rossum is rate-limiting requests. Try again in 7 s.',
     );
     expect(root.textContent).not.toContain('Could not read this organization');

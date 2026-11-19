@@ -32,6 +32,9 @@ import {
 import { runPlan } from '../runPlan.js';
 import { fetchUsers as defaultFetchUsers, type FetchUsers } from '../users.js';
 import styles from './App.module.css';
+import es from '../../ui/EmptyState.module.css';
+import cb from '../../ui/ConnectionBar.module.css';
+import eb from '../../ui/ErrorBanner.module.css';
 
 type Screen =
   'overview' | 'choose' | 'connect' | 'read' | 'plan' | 'review' | 'write' | 'done' | 'own';
@@ -163,8 +166,8 @@ export default function App({
     return (
       <div class="app-root">
         <main class="main">
-          <div class="connection-bar">
-            <span class="connection-dot error"></span>
+          <div class={cb.bar}>
+            <span class={`${cb.dot} ${cb.error}`}></span>
             Not connected — open a Rossum page and click Rossum Console in the extension popup
           </div>
         </main>
@@ -172,8 +175,8 @@ export default function App({
     );
 
   const bar = (
-    <div class="connection-bar">
-      <span class="connection-dot"></span>
+    <div class={cb.bar}>
+      <span class={cb.dot}></span>
       rdc (experimental) · Connected to {hostOf(domain.value)}
       {connectedOrg.value ? ` · ${connectedOrg.value}` : ''}
       {rdc ? ` · rdc ${rdc.version()}` : ''}
@@ -186,9 +189,9 @@ export default function App({
         <main class="main">
           {bar}
           {target === undefined ? (
-            <div class="empty-state">Loading{'…'}</div>
+            <div class={es.root}>Loading{'…'}</div>
           ) : (
-            <div class="error-banner">
+            <div class={eb.root}>
               <span>{targetError}</span>
             </div>
           )}

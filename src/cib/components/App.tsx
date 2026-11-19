@@ -47,6 +47,7 @@ import { loadHelpRect } from '../../help/rect.js';
 import { CIB_HELP } from '../help.jsx';
 import styles from './App.module.css';
 import ctl from '../../ui/controls.module.css';
+import cb from '../../ui/ConnectionBar.module.css';
 
 const ADMIN_GROUPS = ['admin', 'organization_group_admin'];
 // asked for on the first Check/Deploy click (optional, so a store update adds no install-time prompt);
@@ -225,8 +226,8 @@ export default function App({ connected }: { connected: boolean | null }) {
     return (
       <div class="app-root">
         <main class="main">
-          <div class="connection-bar">
-            <span class="connection-dot error"></span>
+          <div class={cb.bar}>
+            <span class={`${cb.dot} ${cb.error}`}></span>
             Not connected — open a Rossum page and click Rossum Console in the extension popup
             {helpButton}
           </div>
@@ -497,8 +498,8 @@ export default function App({ connected }: { connected: boolean | null }) {
   return (
     <div class="app-root">
       <main class="main">
-        <div class="connection-bar">
-          <span class={'connection-dot' + (busy ? ' busy' : '')}></span>
+        <div class={cb.bar}>
+          <span class={cb.dot + (busy ? ' ' + cb.busy : '')}></span>
           CIB deploy · Connected to {host(domain.value)}
           {connectedOrg.value ? ` · ${connectedOrg.value}` : ''}
           {helpButton}

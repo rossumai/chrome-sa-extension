@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { collections, loading, error } from '../store.js';
 import { showCreateModal } from './Sidebar.jsx';
 import ctl from '../../ui/controls.module.css';
+import es from '../../ui/EmptyState.module.css';
 
 // State-aware empty state for the Dataset Management main pane, shown when no
 // collection is selected in the default (collection) view. Because
@@ -15,17 +16,17 @@ import ctl from '../../ui/controls.module.css';
 export default function CollectionEmptyState({ connected }: { connected: boolean | null }) {
   if (collections.value.length > 0) {
     return (
-      <div class="empty-state">
+      <div class={es.root}>
         <p>Select a collection to get started</p>
       </div>
     );
   }
   if (loading.value || !connected || error.value) return null;
   return (
-    <div class="empty-state">
-      <div class="empty-state-card">
-        <div class="empty-state-title">No collections yet</div>
-        <p class="empty-state-body">
+    <div class={es.root}>
+      <div class={es.card}>
+        <div class={es.title}>No collections yet</div>
+        <p class={es.body}>
           Master Data Hub keeps your reference data in collections you can browse and query. This
           organization doesn't have any yet.
         </p>
