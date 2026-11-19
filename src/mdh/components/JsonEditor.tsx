@@ -411,12 +411,12 @@ export default function JsonEditor({
           if (!text) {
             if (errorEl) {
               errorEl.textContent = '';
-              containerRef.current!.classList.remove(styles.jsonEditorInvalid);
+              containerRef.current!.classList.remove(pnl.jsonEditorInvalid);
             }
           } else if (isAcceptable(text, { jsonLines: jsonLinesRef.current })) {
             if (errorEl) {
               errorEl.textContent = '';
-              containerRef.current!.classList.remove(styles.jsonEditorInvalid);
+              containerRef.current!.classList.remove(pnl.jsonEditorInvalid);
             }
             if (onValidChangeRef.current) {
               clearTimeout(validChangeTimer as any);
@@ -430,7 +430,7 @@ export default function JsonEditor({
             } catch (e: any) {
               if (errorEl) {
                 errorEl.textContent = e.message;
-                containerRef.current!.classList.add(styles.jsonEditorInvalid);
+                containerRef.current!.classList.add(pnl.jsonEditorInvalid);
               }
             }
           }
@@ -492,7 +492,7 @@ export default function JsonEditor({
       } catch (e: any) {
         if (errorEl) {
           errorEl.textContent = e.message;
-          containerRef.current!.classList.add(styles.jsonEditorInvalid);
+          containerRef.current!.classList.add(pnl.jsonEditorInvalid);
         }
       }
     }

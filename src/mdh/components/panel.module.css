@@ -47,10 +47,7 @@
   flex-shrink: 0;
 }
 
-/* The Search Indexes toolbar stacks a collection-level sync line under its title.
-   These live in the monolith rather than a CSS Module because every class that
-   panel uses is global and lives here, and .toolbar-group directly above is the
-   existing precedent for a .toolbar child. */
+/* The Search Indexes toolbar stacks a collection-level sync line under its title. */
 
 .toolbarStack {
   flex: 1;
@@ -563,6 +560,12 @@
 
 .jsonEditor :global(.cm-editor):global(.cm-focused) {
   outline: none;
+}
+
+/* Here, not in JsonEditor.module.css: it shares an element with .jsonEditor at the same
+   specificity, so it must follow it in the same module to win. */
+.jsonEditorInvalid {
+  border-color: var(--danger);
 }
 
 .jsonEditorCompact {

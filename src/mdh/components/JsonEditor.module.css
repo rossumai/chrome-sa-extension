@@ -43,10 +43,6 @@
   pointer-events: none;
 }
 
-.jsonEditorInvalid {
-  border-color: var(--danger);
-}
-
 .jsonEditorError {
   font-size: 11px;
   color: var(--danger);
