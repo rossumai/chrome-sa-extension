@@ -38,6 +38,7 @@ import {
   inspectTarget,
 } from '../src/mdh/store.js';
 import seg from '../src/ui/Segmented.module.css';
+import pg from '../src/ui/Pagination.module.css';
 
 const pagination = { hasPrev: () => false, hasNext: () => false, page: () => 1 };
 
@@ -133,7 +134,7 @@ describe('RecordList — stages view', () => {
     });
     expect(root.querySelector('.stages-view-stub')).not.toBeNull();
     expect(root.querySelector('.record-list')).toBeNull();
-    expect(root.querySelector('.pagination')).toBeNull();
+    expect(root.querySelector('.' + pg.root)).toBeNull();
   });
 
   it('switches to the Stages view in one click via the segmented switch', async () => {
@@ -183,7 +184,7 @@ describe('RecordList — stages view', () => {
 
 describe('RecordList pagination controls', () => {
   function pageButtons(root: HTMLElement) {
-    return [...root.querySelectorAll('.pagination-controls button')] as HTMLButtonElement[];
+    return [...root.querySelectorAll('.' + pg.controls + ' button')] as HTMLButtonElement[];
   }
 
   it('asks the pagination hook using the pipeline page size', () => {

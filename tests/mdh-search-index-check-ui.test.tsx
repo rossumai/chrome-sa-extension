@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import SearchIndexCheck, { CHECK_DEBOUNCE_MS } from '../src/mdh/components/SearchIndexCheck.jsx';
+import jt from '../src/ui/JsonTree.module.css';
 
 function mount(node: any) {
   const root = document.createElement('div');
@@ -270,7 +271,7 @@ describe('SearchIndexCheck — an opened hit', () => {
     const labels = [...detail.querySelectorAll('button[aria-pressed]')].map((b) => b.textContent);
     expect(labels).toEqual(['Why it scored', 'Record']);
     expect(detail.querySelector('[data-testid="check-terms"]')).not.toBeNull();
-    expect(detail.querySelector('.json-tree')).toBeNull();
+    expect(detail.querySelector('.' + jt.root)).toBeNull();
     expect(hitRow(root).querySelector('[role="button"]')!.getAttribute('aria-expanded')).toBe(
       'true',
     );
@@ -285,7 +286,7 @@ describe('SearchIndexCheck — an opened hit', () => {
         .click(),
     );
     const detail = root.querySelector('[data-testid="check-detail"]')!;
-    expect(detail.querySelector('.json-tree')!.textContent).toContain('V-1');
+    expect(detail.querySelector('.' + jt.root)!.textContent).toContain('V-1');
     expect(detail.textContent).toContain('Copy');
   });
 
@@ -319,7 +320,7 @@ describe('SearchIndexCheck — an opened hit', () => {
     );
     expect(rows[0]).toEqual(['name', 'acme', '9 of 1,200 records', '6.21', 'fuzzy']);
     expect(rows[rows.length - 1]).toContain('6.21');
-    expect(root.querySelector('[data-testid="check-detail"] .json-tree')).toBeNull();
+    expect(root.querySelector('[data-testid="check-detail"] .' + jt.root)).toBeNull();
     expect(root.querySelector('[data-testid="check-detail"]')!.textContent).not.toContain('Copy');
   });
 
@@ -390,6 +391,6 @@ describe('SearchIndexCheck — an opened hit', () => {
     ].find((b) => b.textContent === 'Why it scored')!;
     expect(why.disabled).toBe(true);
     // …and the hit opens on the record instead of an empty pane.
-    expect(root.querySelector('[data-testid="check-detail"] .json-tree')).not.toBeNull();
+    expect(root.querySelector('[data-testid="check-detail"] .' + jt.root)).not.toBeNull();
   });
 });

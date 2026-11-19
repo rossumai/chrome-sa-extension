@@ -1,0 +1,36 @@
+/* The footer under a paged list: .root spreads a summary and the .controls (prev / page /
+   next buttons). Moved from the global src/console/legacy/shared.css (MDH's record list and
+   uploads, the Audit Log), rules in their original order. */
+
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.controls button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+.controls button:disabled {
+  color: var(--text-secondary);
+  opacity: 0.4;
+  cursor: default;
+}

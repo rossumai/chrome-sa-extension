@@ -4,6 +4,7 @@ import { EJSON_TYPES, getEjsonType, formatEjsonValue, copyTextFor } from '../dis
 import { ALT_KEY } from '../platform.js';
 import SpecialText from './SpecialText.jsx';
 import type { SortFilterControls } from '../hooks/usePipeline.js';
+import jt from '../../ui/JsonTree.module.css';
 
 export const AUTO_COLLAPSE_FIELD_THRESHOLD = 50;
 
@@ -84,7 +85,7 @@ export default function JsonTree({
   collapseDepth?: number;
 } & TreeControls) {
   return (
-    <div class="json-tree">
+    <div class={jt.root}>
       {Object.entries(data).map(([key, value]) => (
         <JsonTreeRow
           key={key}

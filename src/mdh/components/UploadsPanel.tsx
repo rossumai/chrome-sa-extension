@@ -15,6 +15,7 @@ import * as api from '../api.js';
 import FlashOnChange from './FlashOnChange.jsx';
 import FilterInput from '../../ui/FilterInput.jsx';
 import ctl from '../../ui/controls.module.css';
+import pg from '../../ui/Pagination.module.css';
 
 const DEFAULT_COL_WIDTHS: Record<string, number> = {
   status: 130,
@@ -897,7 +898,7 @@ export default function UploadsPanel() {
           </table>
         )}
       </div>
-      <div class="pagination">
+      <div class={pg.root}>
         <span class="record-count">
           {loaded
             ? groups.length > 0
@@ -906,7 +907,7 @@ export default function UploadsPanel() {
             : ''}
         </span>
         <span style="flex:1" />
-        <div class="pagination-controls">
+        <div class={pg.controls}>
           <button disabled={page === 0} onClick={() => setPage(page - 1)}>
             {'\u2190'} Prev
           </button>

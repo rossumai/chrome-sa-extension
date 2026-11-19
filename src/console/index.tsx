@@ -8,6 +8,8 @@ import '../ui/Tabs.module.css';
 import '../ui/EmptyState.module.css';
 import '../ui/ConnectionBar.module.css';
 import '../ui/ErrorBanner.module.css';
+import '../ui/Pagination.module.css';
+import '../ui/JsonTree.module.css';
 import { h, render } from 'preact';
 import { effect } from '@preact/signals';
 import { activeApp, experimentalUnlocked, connectedOrg } from './store.js';

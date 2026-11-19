@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { activeSource, filtersBySource, patchFilters, pageInfo, loading, rows } from '../store.js';
 import { SOURCES } from '../sources/index.js';
+import pg from '../../ui/Pagination.module.css';
 
 export default function Pagination() {
   const key = activeSource.value;
@@ -25,9 +26,9 @@ export default function Pagination() {
   }
 
   return (
-    <div class="pagination">
+    <div class={pg.root}>
       <span>{countText}</span>
-      <div class="pagination-controls">
+      <div class={pg.controls}>
         <button disabled={!pi.hasPrev || loading.value} onClick={prev}>
           {'←'} Prev
         </button>

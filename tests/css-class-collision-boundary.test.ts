@@ -97,7 +97,6 @@ const ALLOWLIST: Record<string, { sheet: string; permanent?: true }> = {
   offsite: { sheet: 'src/popup/legacy.css' },
   ok: { sheet: 'src/mdh/legacy.css, src/inspector/legacy.css, src/fabry/legacy.css' },
   open: { sheet: 'src/mdh/legacy.css, src/docs/theme.css', permanent: true },
-  pagination: { sheet: 'src/console/legacy/shared.css' },
   panel: { sheet: 'src/mdh/legacy.css' },
   partial: { sheet: 'src/mdh/legacy.css' },
   pass: { sheet: 'src/fabry/legacy.css' },

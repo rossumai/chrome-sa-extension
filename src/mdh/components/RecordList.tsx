@@ -24,6 +24,7 @@ import type { SortFilterControls } from '../hooks/usePipeline.js';
 import type { PaginationWindow } from '../pipelineOps.js';
 import ctl from '../../ui/controls.module.css';
 import seg from '../../ui/Segmented.module.css';
+import pg from '../../ui/Pagination.module.css';
 
 export default function RecordList({
   records,
@@ -327,12 +328,12 @@ export default function RecordList({
         </div>
       )}
       {view !== 'stages' && (
-        <div class="pagination">
+        <div class={pg.root}>
           <span class="record-count">{countText}</span>
           <span class="pagination-hint">
             Click key to sort {'\u00b7'} Click value to filter {'\u00b7'} {ALT_KEY}+click to copy
           </span>
-          <div class="pagination-controls">
+          <div class={pg.controls}>
             <button
               disabled={!pageWindow || !pagination.hasPrev()}
               title={pageWindow ? undefined : NO_PAGE_WINDOW_TITLE}

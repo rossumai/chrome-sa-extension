@@ -1,0 +1,8 @@
+/* The base of an interactive JSON tree (.root): the type the MDH and Audit Log trees share.
+   Their nodes keep their own classes. Moved from the global src/console/legacy/shared.css. */
+
+.root {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}

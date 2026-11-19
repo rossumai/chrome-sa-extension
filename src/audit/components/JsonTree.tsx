@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
+import jt from '../../ui/JsonTree.module.css';
 
 const COLLAPSE_THRESHOLD = 30;
 
@@ -17,7 +18,7 @@ function ObjectNode({ obj, depth }: { obj: any; depth: number }) {
     return <span class="json-empty">{'{}'}</span>;
   }
   return (
-    <div class="json-tree">
+    <div class={jt.root}>
       <span class="json-toggle" onClick={() => setCollapsed(!collapsed)}>
         {collapsed ? `▶ {${entries.length}}` : '▼'}
       </span>
@@ -44,7 +45,7 @@ function ArrayNode({ arr, depth }: { arr: any[]; depth: number }) {
   const [collapsed, setCollapsed] = useState(depth >= 1 && arr.length > COLLAPSE_THRESHOLD);
   if (arr.length === 0) return <span class="json-empty">{'[]'}</span>;
   return (
-    <div class="json-tree">
+    <div class={jt.root}>
       <span class="json-toggle" onClick={() => setCollapsed(!collapsed)}>
         {collapsed ? `▶ [${arr.length}]` : `▼ [${arr.length}]`}
       </span>

@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { h, render } from 'preact';
 import RecordCard from '../src/mdh/components/RecordCard.jsx';
 import { selectionMode } from '../src/mdh/store.js';
+import jt from '../src/ui/JsonTree.module.css';
 
 function mount(props: any) {
   document.body.innerHTML = '';
@@ -48,7 +49,7 @@ describe('RecordCard readOnly', () => {
     expect(root.querySelector('.action-delete')).toBeNull();
     expect(root.querySelector('.action-copy')).not.toBeNull();
     // Expanded body renders the JsonTree.
-    expect(root.querySelector('.json-tree')).not.toBeNull();
+    expect(root.querySelector('.' + jt.root)).not.toBeNull();
   });
 
   it('readOnly renders JSON keys/values as non-interactive text (no sort/filter)', () => {

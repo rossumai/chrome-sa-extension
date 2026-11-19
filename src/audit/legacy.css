@@ -313,7 +313,7 @@
   padding: 6px 0 6px 14px;
 }
 
-/* Audit JSON tree leaves (inherits the shared .json-tree base) */
+/* Audit JSON tree leaves (on the shared base, src/ui/JsonTree.module.css) */
 .json-row {
   padding: 1px 0;
   line-height: 1.6;
