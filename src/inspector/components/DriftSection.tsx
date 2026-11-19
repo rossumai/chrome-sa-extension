@@ -6,6 +6,7 @@ import { driftDiff } from '../driftDiff.js';
 import EvidenceSection from './EvidenceSection.jsx';
 import ctl from '../../ui/controls.module.css';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './Inspector.module.css';
 
 // Opt-in config-drift check (spec §4.5): live validate vs the persisted messages.
 export default function DriftSection() {
@@ -45,8 +46,8 @@ export default function DriftSection() {
           <button class={`${ctl.btn} ${ctl.btnPrimary}`} disabled={running} onClick={run}>
             {running ? 'Re-evaluating…' : 'Re-evaluate against today’s config'}
           </button>
-          <div class="inspector-note">
-            Runs a live <code class="inspector-code">validate</code> (start {'→'} validate {'→'}{' '}
+          <div class={styles.note}>
+            Runs a live <code class={styles.code}>validate</code> (start {'→'} validate {'→'}{' '}
             cancel). Takes a brief reviewing lock on the annotation.
           </div>
           {err && <div class={dg.empty}>{err}</div>}
@@ -54,14 +55,14 @@ export default function DriftSection() {
       )}
       {diff && (
         <Fragment>
-          <div class="inspector-sect">Messages under today{'’'}s config</div>
+          <div class={styles.sect}>Messages under today{'’'}s config</div>
           {diff.added.map((m, i) => (
-            <div class="inspector-ev inspector-drift-add" data-evidence-id={`drift:added:${i}`}>
+            <div class={styles.ev + ' ' + styles.driftAdd} data-evidence-id={`drift:added:${i}`}>
               + {m.type}: {m.content}
             </div>
           ))}
           {diff.removed.map((m, i) => (
-            <div class="inspector-ev inspector-drift-del" data-evidence-id={`drift:removed:${i}`}>
+            <div class={styles.ev + ' ' + styles.driftDel} data-evidence-id={`drift:removed:${i}`}>
               {'−'} {m.type}: {m.content}
             </div>
           ))}
@@ -70,7 +71,7 @@ export default function DriftSection() {
               No drift {'—'} today{'’'}s config produces the same messages.
             </div>
           )}
-          <div class="inspector-note">
+          <div class={styles.note}>
             {diff.matchedRules.length} rule(s) matched in the live run. The live result is not
             persisted.
           </div>

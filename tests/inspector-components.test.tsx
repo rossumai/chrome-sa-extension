@@ -12,6 +12,7 @@ import App from '../src/inspector/components/App.jsx';
 import * as store from '../src/inspector/store.js';
 import shell from '../src/ui/AppShell.module.css';
 import dg from '../src/ui/fabry/Diagnosis.module.css';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 let root: any;
 beforeEach(() => {
@@ -27,13 +28,13 @@ afterEach(() => {
 describe('inspector components', () => {
   it('ReliabilityBadge shows only "Not recorded"; hides verified + best-effort', () => {
     render(<ReliabilityBadge level="verified" />, root);
-    expect(root.querySelector('.inspector-rb')).toBe(null);
+    expect(root.querySelector('.' + styles.rb)).toBe(null);
     render(null, root);
     render(<ReliabilityBadge level="best-effort" />, root);
-    expect(root.querySelector('.inspector-rb')).toBe(null);
+    expect(root.querySelector('.' + styles.rb)).toBe(null);
     render(null, root);
     render(<ReliabilityBadge level="unavailable" />, root);
-    expect(root.querySelector('.inspector-rb-unavailable')).toBeTruthy();
+    expect(root.querySelector('.' + styles['rb-unavailable'])).toBeTruthy();
   });
 
   it('IdInput extracts the id from a Rossum URL', () => {
@@ -51,7 +52,7 @@ describe('inspector components', () => {
     const writeText = vi.fn();
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     render(<IdLabel name={'Vendor Invoices — US'} id="3760880" prefix="queue " />, root);
-    const el: any = root.querySelector('.inspector-idlabel');
+    const el: any = root.querySelector('.' + styles.idlabel);
     expect(el.textContent).toContain('Vendor Invoices');
     expect(el.textContent).not.toContain('3760880'); // id is not shown as the label
     expect(el.getAttribute('title')).toContain('3760880'); // id is in the tooltip
@@ -61,7 +62,7 @@ describe('inspector components', () => {
 
   it('IdLabel falls back to the id when no name resolved (never a wrong name)', () => {
     render(<IdLabel name={null} id="99" prefix="user " />, root);
-    expect(root.querySelector('.inspector-idlabel').textContent).toContain('user 99');
+    expect(root.querySelector('.' + styles.idlabel).textContent).toContain('user 99');
   });
 
   it('LabelsPanel attributes an applied label to its governing rule', () => {
@@ -125,7 +126,7 @@ describe('inspector components', () => {
 
   it('FoldableCode shows short code inline, folds long code behind a toggle', () => {
     render(<FoldableCode code={'field.x > 1'} />, root);
-    expect(root.querySelector('.inspector-code')).toBeTruthy();
+    expect(root.querySelector('.' + styles.code)).toBeTruthy();
     expect(root.querySelector('.' + dg.foldBtn)).toBe(null);
     render(null, root);
     render(
@@ -137,7 +138,7 @@ describe('inspector components', () => {
       root,
     );
     expect(root.querySelector('.' + dg.foldBtn)).toBeTruthy();
-    expect(root.querySelector('.inspector-code-block')).toBe(null); // collapsed by default
+    expect(root.querySelector('.' + styles.codeBlock)).toBe(null); // collapsed by default
   });
 
   it('applied label renders as a colored tag using its real color', () => {
@@ -158,7 +159,7 @@ describe('inspector components', () => {
       },
     };
     render(<LabelsPanel />, root);
-    const tag: any = root.querySelector('.inspector-label-tag');
+    const tag: any = root.querySelector('.' + styles.labelTag);
     expect(tag).toBeTruthy();
     // jsdom normalizes #dc2626 -> rgb(220, 38, 38)
     expect(tag.getAttribute('style')).toContain('rgb(220, 38, 38)');
@@ -295,13 +296,13 @@ describe('inspector components', () => {
     expect(labels).not.toContain('Retry');
   });
 
-  it('App nests content as .app-root > main.main > .inspector-root (so it is not laid out as a flex row)', () => {
+  it('App nests content as .app-root > main.main > the Inspector root (so it is not laid out as a flex row)', () => {
     // Regression: .app-root is `display:flex` in console.css. Putting the
     // stacked report content directly on .app-root laid IdInput + report out
     // side-by-side. The content must live inside a nested column container.
     render(<App connected />, root);
     const nested: any = root.querySelector(
-      '.' + shell.root + ' > main.' + shell.main + ' > .inspector-root',
+      '.' + shell.root + ' > main.' + shell.main + ' > .' + styles.root,
     );
     expect(nested).toBeTruthy();
     expect(nested.classList.contains(shell.root)).toBe(false);

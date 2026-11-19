@@ -12,6 +12,7 @@ globalThis.requestAnimationFrame =
 
 import EvidenceSection from '../src/inspector/components/EvidenceSection.jsx';
 import dg from '../src/ui/fabry/Diagnosis.module.css';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 function mount(vnode: any) {
   const el = document.createElement('div');
@@ -32,7 +33,7 @@ describe('EvidenceSection', () => {
       </EvidenceSection>,
     );
     expect(el.textContent).toContain('Intake & origin');
-    expect(el.querySelector('.inspector-sst-loaded')).toBeTruthy();
+    expect(el.querySelector('.' + styles['sst-loaded'])).toBeTruthy();
     expect(el.querySelector('.kid')).toBeTruthy();
     expect(el.querySelector('[data-evidence-section="intake"]')).toBeTruthy();
   });
@@ -42,7 +43,7 @@ describe('EvidenceSection', () => {
         <div class="kid" />
       </EvidenceSection>,
     );
-    el.querySelector<HTMLElement>('.inspector-esec-hd')!.click();
+    el.querySelector<HTMLElement>('.' + styles.esecHd)!.click();
     expect(el.querySelector('.kid')).toBeFalsy();
   });
   it('n/a and pending render no children even when open', () => {
@@ -63,16 +64,16 @@ describe('EvidenceSection', () => {
         </EvidenceSection>,
       );
     });
-    const hd = el.querySelector('.inspector-esec-hd');
+    const hd = el.querySelector('.' + styles.esecHd);
     expect(hd.getAttribute('role')).toBe('button');
     expect(hd.getAttribute('tabindex')).toBe('0');
     expect(hd.getAttribute('aria-expanded')).toBe('true');
     act(() => hd.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
     expect(el.querySelector('.kid')).toBeFalsy(); // collapsed
-    expect(el.querySelector('.inspector-esec-hd').getAttribute('aria-expanded')).toBe('false');
+    expect(el.querySelector('.' + styles.esecHd).getAttribute('aria-expanded')).toBe('false');
     act(() =>
       el
-        .querySelector('.inspector-esec-hd')
+        .querySelector('.' + styles.esecHd)
         .dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })),
     );
     expect(el.querySelector('.kid')).toBeTruthy(); // re-expanded

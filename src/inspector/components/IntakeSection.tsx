@@ -3,6 +3,7 @@ import * as store from '../store.js';
 import { arrivalLabel } from '../evidence.js';
 import EvidenceSection from './EvidenceSection.jsx';
 import ReliabilityBadge from './ReliabilityBadge.jsx';
+import styles from './Inspector.module.css';
 
 // Arrival story: email/upload/split/archive + duplicates (spec §5.5-intake).
 export default function IntakeSection() {
@@ -21,8 +22,8 @@ export default function IntakeSection() {
       status={status}
     >
       {items.map((i: any) => (
-        <div class="inspector-ev" data-evidence-id={i.id}>
-          <span class="inspector-ev-id">{i.id}</span>
+        <div class={styles.ev} data-evidence-id={i.id}>
+          <span class={styles.evId}>{i.id}</span>
           <span>{i.fact}</span> <ReliabilityBadge level={i.reliability} />
         </div>
       ))}

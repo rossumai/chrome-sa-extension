@@ -1,4 +1,5 @@
 import { h } from 'preact';
+import styles from './Inspector.module.css';
 
 const LABEL: Record<string, string> = {
   unavailable: 'Not recorded',
@@ -13,5 +14,5 @@ export default function ReliabilityBadge({ level }: { level?: string | null }) {
   // An absent level indexes to undefined, which is falsy — the original guard already
   // covered it, so this stays a cast rather than becoming an extra runtime check.
   if (!LABEL[level as string]) return null;
-  return <span class={`inspector-rb inspector-rb-${level}`}>{LABEL[level as string]}</span>;
+  return <span class={`${styles.rb} ${styles['rb-' + level]}`}>{LABEL[level as string]}</span>;
 }

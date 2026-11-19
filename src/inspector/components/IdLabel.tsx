@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
+import styles from './Inspector.module.css';
 
 // Show a human name; keep the machine id in a hover tooltip and copy it on click.
 // Falls back to the id when no name resolved (never shows a wrong name).
@@ -27,12 +28,12 @@ export default function IdLabel({
   };
   return (
     <span
-      class={`inspector-idlabel${name ? ' has-name' : ''}`}
+      class={styles.idlabel + (name ? ' ' + styles.hasName : '')}
       title={id != null ? `id ${id} — click to copy` : undefined}
       onClick={copy}
     >
       {label}
-      {copied ? <span class="inspector-idlabel-copied">copied</span> : null}
+      {copied ? <span class={styles.idlabelCopied}>copied</span> : null}
     </span>
   );
 }

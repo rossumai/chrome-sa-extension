@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import RecentAnnotations from '../src/inspector/components/RecentAnnotations.jsx';
 import * as store from '../src/inspector/store.js';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 let root: any;
 beforeEach(() => {
@@ -18,8 +19,8 @@ afterEach(() => {
 describe('RecentAnnotations', () => {
   it('renders the empty-state callout when there are no recents', () => {
     render(<RecentAnnotations onSelect={() => {}} />, root);
-    expect(root.querySelector('.inspector-recents')).toBe(null);
-    const empty: any = root.querySelector('.inspector-recents-empty');
+    expect(root.querySelector('.' + styles.recents)).toBe(null);
+    const empty: any = root.querySelector('.' + styles.recentsEmpty);
     expect(empty).toBeTruthy();
     expect(empty.textContent).toContain('Rossum UI');
   });
@@ -41,17 +42,17 @@ describe('RecentAnnotations', () => {
     expect(root.textContent).toContain('Vendor US');
     expect(root.textContent).toContain('rejected');
     expect(root.textContent).toContain('#133641827');
-    expect(root.querySelector('.inspector-recents-clear')).toBeTruthy();
-    expect(root.querySelector('.inspector-rectable')).toBeTruthy();
+    expect(root.querySelector('.' + styles.recentsClear)).toBeTruthy();
+    expect(root.querySelector('.' + styles.rectable)).toBeTruthy();
     expect(root.querySelector('.inspector-recent-status').className).toContain(
-      'inspector-pill-rejected',
+      styles['pill-rejected'],
     );
   });
 
   it('falls back to #id and omits missing queue/status', () => {
     store.recents.value = [{ id: '55', fileName: null, queue: null, status: null, at: 1 }];
     render(<RecentAnnotations onSelect={() => {}} />, root);
-    expect(root.querySelector('.inspector-recent-name').textContent).toBe('#55');
+    expect(root.querySelector('.' + styles.recentName).textContent).toBe('#55');
     expect(root.querySelector('.inspector-recent-queue')).toBe(null);
     expect(root.querySelector('.inspector-recent-status')).toBe(null);
   });

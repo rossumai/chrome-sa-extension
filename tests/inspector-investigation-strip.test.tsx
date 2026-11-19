@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { h, render } from 'preact';
 import * as store from '../src/inspector/store.js';
 import InvestigationStrip from '../src/inspector/components/InvestigationStrip.jsx';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 function mount() {
   const el = document.createElement('div');
@@ -25,7 +26,7 @@ describe('InvestigationStrip', () => {
     };
     const el = mount();
     expect(el.textContent).toContain('3/9');
-    expect(el.querySelectorAll('.inspector-inv-st.pend').length).toBe(2);
+    expect(el.querySelectorAll('.' + styles.invSt + '.' + styles.pend).length).toBe(2);
   });
   it('attributing shows AI finding progress and live activity', () => {
     store.investigation.value = {

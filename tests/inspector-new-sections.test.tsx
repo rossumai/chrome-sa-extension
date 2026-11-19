@@ -5,6 +5,7 @@ import * as store from '../src/inspector/store.js';
 import IntakeSection from '../src/inspector/components/IntakeSection.jsx';
 import WorkflowSection from '../src/inspector/components/WorkflowSection.jsx';
 import DriftSection from '../src/inspector/components/DriftSection.jsx';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 function mount(vnode: any) {
   const el = document.createElement('div');
@@ -46,7 +47,7 @@ describe('IntakeSection', () => {
     };
     store.evidence.value = { verdict: {}, items: [] };
     const el = mount(<IntakeSection />);
-    expect(el.querySelector('.inspector-sst-na')).toBeTruthy();
+    expect(el.querySelector('.' + styles['sst-na'])).toBeTruthy();
   });
   it('_intakeLoaded not yet set → pending status, even with evidence present', () => {
     store.data.value = { annotation: { id: 1 }, blocker: null, content: null, resolved: {} };
@@ -64,7 +65,7 @@ describe('IntakeSection', () => {
       ],
     };
     const el = mount(<IntakeSection />);
-    expect(el.querySelector('.inspector-sst-pending')).toBeTruthy();
+    expect(el.querySelector('.' + styles['sst-pending'])).toBeTruthy();
   });
 });
 
@@ -99,7 +100,7 @@ describe('WorkflowSection', () => {
     };
     const el = mount(<WorkflowSection />);
     expect(el.textContent).toContain('in_review');
-    expect(el.querySelector('.inspector-wf-current')).toBeTruthy();
+    expect(el.querySelector('.' + styles.wfCurrent)).toBeTruthy();
   });
   it('_workflowLoaded not yet set → pending status, even with evidence present', () => {
     store.data.value = { annotation: { id: 1 }, blocker: null, content: null, resolved: {} };
@@ -117,7 +118,7 @@ describe('WorkflowSection', () => {
       ],
     };
     const el = mount(<WorkflowSection />);
-    expect(el.querySelector('.inspector-sst-pending')).toBeTruthy();
+    expect(el.querySelector('.' + styles['sst-pending'])).toBeTruthy();
   });
 });
 

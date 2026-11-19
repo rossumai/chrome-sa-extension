@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import * as store from '../store.js';
+import styles from './Inspector.module.css';
 
 const STEPS = [
   ['created_at', 'Created'],
@@ -13,7 +14,7 @@ const STEPS = [
 
 const CHECK = (
   <svg
-    class="inspector-step-check"
+    class={styles.stepCheck}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -67,20 +68,22 @@ export default function Timeline() {
   const lastIdx = steps.length - 1;
   const tone = statusTone(a.status);
   return (
-    <div class="inspector-tl">
-      <div class="inspector-tl-hd">Status timeline</div>
-      <ol class="inspector-steps">
+    <div class={styles.tl}>
+      <div class={styles.tlHd}>Status timeline</div>
+      <ol class={styles.steps}>
         {steps.map((s, i) => {
           const isCurrent = i === lastIdx;
           const g = i > 0 ? gap(steps[i - 1].ts, s.ts) : null;
           return (
-            <li class={`inspector-step ${isCurrent ? `current tone-${tone}` : 'done'}`}>
-              {g ? <span class="inspector-step-gap">{g}</span> : null}
-              <span class="inspector-step-dot">{isCurrent ? null : CHECK}</span>
-              <div class="inspector-step-label">{s.label}</div>
-              <div class="inspector-step-dt">{fmt(s.ts)}</div>
+            <li
+              class={`${styles.step} ${isCurrent ? `${styles.current} ${styles['tone-' + tone]}` : styles.done}`}
+            >
+              {g ? <span class={styles.stepGap}>{g}</span> : null}
+              <span class={styles.stepDot}>{isCurrent ? null : CHECK}</span>
+              <div class={styles.stepLabel}>{s.label}</div>
+              <div class={styles.stepDt}>{fmt(s.ts)}</div>
               {isCurrent ? (
-                <span class="inspector-step-now">{String(a.status).replace(/_/g, ' ')}</span>
+                <span class={styles.stepNow}>{String(a.status).replace(/_/g, ' ')}</span>
               ) : null}
             </li>
           );

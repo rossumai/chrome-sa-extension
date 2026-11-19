@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { h, render } from 'preact';
 import * as store from '../src/inspector/store.js';
 import Report from '../src/inspector/components/Report.jsx';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 function mount() {
   const el = document.createElement('div');
@@ -48,7 +49,7 @@ beforeEach(() => {
 
 // The status chip of one report section.
 const sectionStatus = (el: HTMLElement, id: string) =>
-  el.querySelector(`[data-evidence-section="${id}"] .inspector-sst`)?.textContent;
+  el.querySelector(`[data-evidence-section="${id}"] .${styles.sst}`)?.textContent;
 
 describe('Report under a 429', () => {
   it('stops gathering Extension runs when the hooks were throttled', () => {
@@ -73,10 +74,10 @@ describe('Report', () => {
     store.data.value = baseAnnotation();
     const el = mount();
     const text = el.textContent;
-    expect(el.querySelector('.inspector-rephead')).toBeTruthy();
-    expect(el.querySelector('.inspector-inv')).toBeTruthy();
-    expect(el.querySelector('.inspector-verdict')).toBeTruthy();
-    expect(el.querySelector('.inspector-diag')).toBeTruthy();
+    expect(el.querySelector('.' + styles.rephead)).toBeTruthy();
+    expect(el.querySelector('.' + styles.inv)).toBeTruthy();
+    expect(el.querySelector('.' + styles.verdict)).toBeTruthy();
+    expect(el.querySelector('.' + styles.diag)).toBeTruthy();
     for (const t of [
       'Intake & origin',
       'Blockers & messages',
@@ -98,7 +99,7 @@ describe('Report', () => {
     store.enrichment.value = { ...store.enrichment.value, hookLogs: null };
     const el = mount();
     const section = el.querySelector('[data-evidence-section="pipeline"]');
-    expect(section!.querySelector('.inspector-sst-pending')).toBeTruthy();
+    expect(section!.querySelector('.' + styles['sst-pending'])).toBeTruthy();
   });
 
   it('Extension runs section reports unavailable/sparse once hooks are loaded', () => {
@@ -106,19 +107,19 @@ describe('Report', () => {
     store.enrichment.value = { ...store.enrichment.value, hookLogs: 'unavailable' };
     let el = mount();
     let section = el.querySelector('[data-evidence-section="pipeline"]');
-    expect(section!.querySelector('.inspector-sst-unavailable')).toBeTruthy();
+    expect(section!.querySelector('.' + styles['sst-unavailable'])).toBeTruthy();
 
     store.enrichment.value = { ...store.enrichment.value, hookLogs: [] };
     el = mount();
     section = el.querySelector('[data-evidence-section="pipeline"]');
-    expect(section!.querySelector('.inspector-sst-sparse')).toBeTruthy();
+    expect(section!.querySelector('.' + styles['sst-sparse'])).toBeTruthy();
   });
 
   it('Extension runs section reports unavailable when hook logs were rate-limited', () => {
     store.data.value = baseAnnotation();
     store.enrichment.value = { ...store.enrichment.value, hookLogs: 'rate-limited' };
     const section = mount().querySelector('[data-evidence-section="pipeline"]');
-    expect(section!.querySelector('.inspector-sst-unavailable')).toBeTruthy();
+    expect(section!.querySelector('.' + styles['sst-unavailable'])).toBeTruthy();
   });
 
   it('Labels section is pending while labelsById is undefined', () => {
@@ -126,14 +127,14 @@ describe('Report', () => {
     store.data.value.resolved.labelsById = undefined;
     const el = mount();
     const section = el.querySelector('[data-evidence-section="labels"]');
-    expect(section!.querySelector('.inspector-sst-pending')).toBeTruthy();
+    expect(section!.querySelector('.' + styles['sst-pending'])).toBeTruthy();
   });
 
   it('Labels section is attributing/loaded once labelsById resolves', () => {
     store.data.value = baseAnnotation();
     const el = mount();
     const section = el.querySelector('[data-evidence-section="labels"]');
-    expect(section!.querySelector('.inspector-sst-loaded')).toBeTruthy();
+    expect(section!.querySelector('.' + styles['sst-loaded'])).toBeTruthy();
   });
 
   it('Rejection section is pending while workflow or notes enrichment is null', () => {
@@ -141,26 +142,26 @@ describe('Report', () => {
     store.enrichment.value = { ...store.enrichment.value, workflow: null };
     let el = mount();
     let section = el.querySelector('[data-evidence-section="rejection"]');
-    expect(section!.querySelector('.inspector-sst-pending')).toBeTruthy();
+    expect(section!.querySelector('.' + styles['sst-pending'])).toBeTruthy();
 
     store.enrichment.value = { ...store.enrichment.value, workflow: [], notes: null };
     el = mount();
     section = el.querySelector('[data-evidence-section="rejection"]');
-    expect(section!.querySelector('.inspector-sst-pending')).toBeTruthy();
+    expect(section!.querySelector('.' + styles['sst-pending'])).toBeTruthy();
   });
 
   it('Rejection section falls back to na once workflow + notes have loaded and no rejection evidence exists', () => {
     store.data.value = baseAnnotation();
     const el = mount();
     const section = el.querySelector('[data-evidence-section="rejection"]');
-    expect(section!.querySelector('.inspector-sst-na')).toBeTruthy();
+    expect(section!.querySelector('.' + styles['sst-na'])).toBeTruthy();
   });
 
   it('shows one rate-limit notice when the load was rate-limited', () => {
     store.data.value = baseAnnotation();
     store.rateLimited.value = { retryAfter: 20 };
     const el = mount();
-    expect(el.querySelector('.inspector-ratelimit')!.textContent).toContain(
+    expect(el.querySelector('.' + styles.ratelimit)!.textContent).toContain(
       'Rossum is rate-limiting requests. Try again in 20 s.',
     );
     store.rateLimited.value = null;
@@ -169,6 +170,6 @@ describe('Report', () => {
   it('shows no notice otherwise', () => {
     store.data.value = baseAnnotation();
     store.rateLimited.value = null;
-    expect(mount().querySelector('.inspector-ratelimit')).toBeNull();
+    expect(mount().querySelector('.' + styles.ratelimit)).toBeNull();
   });
 });

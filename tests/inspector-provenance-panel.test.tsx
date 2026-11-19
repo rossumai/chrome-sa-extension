@@ -4,6 +4,7 @@ import { h, render } from 'preact';
 import ProvenancePanel from '../src/inspector/components/ProvenancePanel.jsx';
 import { fieldKey } from '../src/inspector/orchestrate.js';
 import * as store from '../src/inspector/store.js';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 let root: any;
 beforeEach(() => {
@@ -66,10 +67,10 @@ describe('ProvenancePanel field attribution', () => {
       },
     };
     render(<ProvenancePanel />, root);
-    const el: any = root.querySelector('.inspector-table');
-    expect(el.querySelector('.inspector-conf')).toBeTruthy();
+    const el: any = root.querySelector('.' + styles.table);
+    expect(el.querySelector('.' + styles.conf)).toBeTruthy();
     expect(el.textContent).toContain('0.31');
-    expect(el.querySelector('.inspector-conf').getAttribute('title')).toMatch(
+    expect(el.querySelector('.' + styles.conf).getAttribute('title')).toMatch(
       /tick marks the automation threshold/i,
     );
   });
@@ -90,7 +91,7 @@ describe('ProvenancePanel field attribution', () => {
       resolved: { hooksById: {}, schema: null, queue: { default_score_threshold: 0.8 } },
     };
     render(<ProvenancePanel />, root);
-    const fill: any = root.querySelector('.inspector-conf i');
+    const fill: any = root.querySelector('.' + styles.conf + ' i');
     expect(fill.getAttribute('style')).toMatch(/width:\s*100%/);
   });
 });

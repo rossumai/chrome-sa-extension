@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { h, render } from 'preact';
 import * as store from '../src/inspector/store.js';
 import PageRail from '../src/inspector/components/PageRail.jsx';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 function mount() {
   const el = document.createElement('div');
@@ -36,10 +37,10 @@ describe('PageRail', () => {
       rest: [],
     };
     const el = mount();
-    const imgs = el.querySelectorAll('.inspector-page img');
+    const imgs = el.querySelectorAll('.' + styles.page + ' img');
     expect(imgs.length).toBe(2);
     expect(imgs[0].getAttribute('src')).toBe('blob:one');
-    expect(el.querySelector('.inspector-page')!.getAttribute('href')).toBe(
+    expect(el.querySelector('.' + styles.page)!.getAttribute('href')).toBe(
       'https://org.example/document/42',
     );
     expect(el.textContent).toContain('2 pages');
@@ -53,13 +54,13 @@ describe('PageRail', () => {
       rest: [{ number: 2 }, { number: 3 }, { number: 4 }, { number: 5 }, { number: 6 }],
     };
     const el = mount();
-    const btn = el.querySelector('.inspector-pagerail-more');
+    const btn = el.querySelector('.' + styles.pagerailMore);
     expect(btn!.textContent).toContain('5 more');
   });
 
   it('loading with no pages yet shows a skeleton, not nothing', () => {
     store.pagePreviews.value = { status: 'loading', total: 0, pages: [], rest: [] };
-    expect(mount().querySelector('.inspector-page-skel')).toBeTruthy();
+    expect(mount().querySelector('.' + styles.pageSkel)).toBeTruthy();
   });
 });
 

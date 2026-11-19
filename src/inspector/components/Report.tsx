@@ -15,6 +15,7 @@ import PipelinePanel from './PipelinePanel.jsx';
 import LabelsPanel from './LabelsPanel.jsx';
 import RejectedPanel from './RejectedPanel.jsx';
 import ExportPanel from './ExportPanel.jsx';
+import styles from './Inspector.module.css';
 
 function sectionStatus(section: any) {
   const ev = store.evidence.value;
@@ -51,11 +52,11 @@ export default function Report() {
       ? 'pending'
       : sectionStatus('rejection');
   return (
-    <div class="inspector-report">
+    <div class={styles.report}>
       <ReportHeader />
       <InvestigationStrip />
       {store.rateLimited.value && (
-        <div class="inspector-ratelimit" role="status">
+        <div class={styles.ratelimit} role="status">
           Some data could not be loaded. {rateLimitMessage(store.rateLimited.value)} Reopen the
           annotation to load it again.
         </div>

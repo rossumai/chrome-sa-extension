@@ -6,6 +6,7 @@ import { classifyRejection, type RejectionVerdict } from '../culprit.js';
 import ReliabilityBadge from './ReliabilityBadge.jsx';
 import CulpritChip from './CulpritChip.jsx';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './Inspector.module.css';
 
 export default function RejectedPanel() {
   const d = store.data.value;
@@ -31,29 +32,29 @@ export default function RejectedPanel() {
 
   const attr = store.attributions.value.reject;
   return (
-    <div class="inspector-panel">
+    <div class={styles.panel}>
       <div
-        class={`inspector-culprit inspector-culprit-${rej.culprit?.kind || 'none'}`}
+        class={`${styles.culprit} inspector-culprit-${rej.culprit?.kind || 'none'}`}
         data-evidence-id="reject"
       >
-        <div class="lbl">Culprit · {rej.culprit?.kind}</div>
-        <div class="name">
+        <div class={styles.lbl}>Culprit · {rej.culprit?.kind}</div>
+        <div class={styles.name}>
           {rej.culprit?.name} <ReliabilityBadge level={rej.reliability} />
         </div>
-        <div class="meta">
+        <div class={styles.meta}>
           {rej.automatic ? 'Automatic' : 'Manual'}
           {rej.when ? ` · ${rej.when}` : ''}
           {rej.current ? '' : ' · (historical — not currently rejected)'}
         </div>
       </div>
-      <div class="inspector-reason">
-        <div class="inspector-reason-label">Reason</div>
-        <div class="body">{rej.reason.text || 'Reason not recorded by the API.'}</div>
+      <div class={styles.reason}>
+        <div class={styles.reasonLabel}>Reason</div>
+        <div class={styles.body}>{rej.reason.text || 'Reason not recorded by the API.'}</div>
         <ReliabilityBadge level={rej.reason.reliability} />
       </div>
       {rej.type === 'hook' && (
-        <div class="inspector-ai-attr">
-          <div class="inspector-ai-note">
+        <div class={styles.aiAttr}>
+          <div class={styles.aiNote}>
             Which extension rejected this — reasoned by Mr. Fabry from the queue's extension code +
             logs.
           </div>
@@ -61,18 +62,16 @@ export default function RejectedPanel() {
             <div class={dg.empty}>AI attribution unavailable (agent offline).</div>
           )}
           {attr?.status === 'loading' && (
-            <div class="inspector-loading inspector-ai-phase">{attr.phase || 'thinking'}…</div>
+            <div class={styles.loading + ' ' + styles.aiPhase}>{attr.phase || 'thinking'}…</div>
           )}
           {attr?.status === 'error' && <div class={dg.empty}>AI attribution failed.</div>}
           {attr?.status === 'done' && (
-            <div class="inspector-ai-verdict">
-              <div class="ttl">
+            <div class={styles.aiVerdict}>
+              <div class={styles.ttl}>
                 <CulpritChip culprit={attr.verdict.culprit} />{' '}
                 <ReliabilityBadge level={attr.verdict.confidence} />
               </div>
-              {attr.verdict.explanation && (
-                <div class="inspector-why">{attr.verdict.explanation}</div>
-              )}
+              {attr.verdict.explanation && <div class={styles.why}>{attr.verdict.explanation}</div>}
             </div>
           )}
         </div>
