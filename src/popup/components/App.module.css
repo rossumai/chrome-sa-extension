@@ -1,7 +1,140 @@
 /* The thin gradient bar above the popup's header. Pinned like the header and footer: the
-   popup's #app is a height-capped flex column (see legacy.css, "popup shell"). */
+   popup's #app is a height-capped flex column (src/popup/page.module.css). */
 .accentBar {
   flex: 0 0 auto;
   height: 2px;
   background: linear-gradient(90deg, var(--accent) 0%, var(--accent-dim) 60%, transparent 100%);
+}
+
+:global(body.popup-wide) {
+  width: 760px;
+}
+
+.header,
+.footer {
+  flex: 0 0 auto;
+}
+:global(#app > #mainContent) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+:global(#mainContent) > .contentRow {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.contentRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.contentCol {
+  min-width: 0;
+}
+
+.contentColMdh {
+  flex: 1;
+  display: none;
+  position: relative; /* positioning context for the out-of-flow card */
+  overflow: hidden;
+}
+
+:global(body.popup-wide) .contentColMdh {
+  display: block;
+}
+
+.contentColToggles {
+  width: 380px;
+  flex-shrink: 0;
+  min-height: 0;
+  overflow-y: auto; /* scrolls only if the toggles exceed the capped row height
+                         (e.g. Experimental unlocked + lock banner); otherwise inert */
+  scrollbar-width: thin;
+}
+
+/* ── header ────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 8px;
+}
+
+.brandBadge {
+  width: 26px;
+  height: 26px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+
+.brandName {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+/* ── footer ────────────────────────────────────── */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 10px;
+}
+
+/* Version hash and the usage-data control as one left-hand group, so the footer
+   reads as (version + usage) | support instead of three separate items. */
+.footerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.version {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-hint);
+  cursor: default;
+  user-select: none;
+}
+
+.footerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footerLink:hover {
+  color: var(--accent);
+}
+
+.footerLink svg {
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+.footerLink:hover svg {
+  opacity: 1;
+  transform: translate(1px, -1px);
 }

@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 
 // The popup, side panel and DevTools pages link their GLOBAL sheets first — tokens.css, then
-// legacy.css, both copied by build.js — and then the sheet esbuild emits beside the page's bundle
+// legacy.css where one is left, both copied by build.js — and then the sheet esbuild emits beside the page's bundle
 // from its imported *.module.css. The global sheets are named so that esbuild can never write
 // over one (the emitted sheet takes the bundle's name: popup.css, sidepanel.css, panel.css).
 // These assertions read the BUILT pages, since a link to a missing sheet fails silently.
@@ -58,17 +58,10 @@ describe('popup, side panel and DevTools stylesheets', () => {
     }
   });
 
-  it('each page links its tokens, then its legacy rules', () => {
-    expect(linkedSheets('popup/popup.html').slice(0, 2)).toEqual([
-      'popup/tokens.css',
-      'popup/legacy.css',
-    ]);
-    // The side panel shares the popup's sheets first, so the MDH card has one source of truth.
-    expect(linkedSheets('sidepanel/sidepanel.html').slice(0, 3)).toEqual([
-      'popup/tokens.css',
-      'popup/legacy.css',
-      'sidepanel/legacy.css',
-    ]);
+  it('each page links its tokens, then its legacy rules where any are left', () => {
+    expect(linkedSheets('popup/popup.html').slice(0, 1)).toEqual(['popup/tokens.css']);
+    // The side panel shares the popup's tokens; the MDH card's modules ride in its own bundle sheet.
+    expect(linkedSheets('sidepanel/sidepanel.html').slice(0, 1)).toEqual(['popup/tokens.css']);
     expect(linkedSheets('devtools/panel.html').slice(0, 2)).toEqual([
       'devtools/tokens.css',
       'devtools/legacy.css',
@@ -106,13 +99,7 @@ describe('popup, side panel and DevTools stylesheets', () => {
   });
 
   it('every global sheet says it is global on purpose', () => {
-    for (const p of [
-      'popup/tokens.css',
-      'popup/legacy.css',
-      'sidepanel/legacy.css',
-      'devtools/tokens.css',
-      'devtools/legacy.css',
-    ]) {
+    for (const p of ['popup/tokens.css', 'devtools/tokens.css', 'devtools/legacy.css']) {
       const head = readFileSync(join(SRC, p), 'utf8').slice(0, 2000);
       expect(head, p).toMatch(/^\/\* GLOBAL STYLESHEET/);
       expect(head, p).toContain('must contain a hyphen');

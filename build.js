@@ -51,11 +51,11 @@ writeFileSync('dist/manifest.json', JSON.stringify(manifest, null, 2) + '\n');
 cpSync('icons', 'dist/icons', { recursive: true });
 cpSync('src/popup/popup.html', 'dist/popup/popup.html');
 // The popup, side panel and DevTools pages link their GLOBAL sheets first — tokens.css, then
-// legacy.css (the rules not yet moved to CSS Modules; one partial each, so copied) — and then the
-// sheet esbuild emits beside each bundle from its imported *.module.css (dist/popup/popup.css).
-// The global sheets are deliberately NOT named after a bundle, so esbuild can never write over one.
+// legacy.css where one is left (the rules not yet moved to CSS Modules; one partial each, so
+// copied) — and then the sheet esbuild emits beside each bundle from its imported *.module.css
+// (dist/popup/popup.css). The global sheets are deliberately NOT named after a bundle, so esbuild
+// can never write over one.
 cpSync('src/popup/tokens.css', 'dist/popup/tokens.css');
-cpSync('src/popup/legacy.css', 'dist/popup/legacy.css');
 cpSync('src/console/console.html', 'dist/console/console.html');
 // The LEGACY base stylesheet: the global partials (CONSOLE_GLOBAL_PARTS, above), merged in
 // their original rule order by consoleBaseCss().
@@ -67,10 +67,9 @@ cpSync('src/devtools/devtools.html', 'dist/devtools/devtools.html');
 cpSync('src/devtools/panel.html', 'dist/devtools/panel.html');
 cpSync('src/devtools/tokens.css', 'dist/devtools/tokens.css');
 cpSync('src/devtools/legacy.css', 'dist/devtools/legacy.css');
-// The side panel links ../popup/tokens.css and ../popup/legacy.css FIRST and only overrides the
-// popup's shell in its own legacy.css, so the shared MDH card has one source of truth.
+// The side panel links ../popup/tokens.css, then the sheet its bundle emits — which carries the
+// popup's own MDH card modules, so the card has one source of truth.
 cpSync('src/sidepanel/sidepanel.html', 'dist/sidepanel/sidepanel.html');
-cpSync('src/sidepanel/legacy.css', 'dist/sidepanel/legacy.css');
 
 const options = {
   entryPoints: {
@@ -159,13 +158,26 @@ function copyRdcWasm() {
   for (const f of ['rdc_wasm.js', 'rdc_wasm_bg.wasm']) cpSync(`${RDC_PKG}/${f}`, `dist/console/rdc/${f}`);
 }
 
+// The popup and the side panel build in a pass of their own. esbuild allocates minified CSS
+// Module names across the WHOLE build, so in one pass every popup module renamed the Console's
+// classes too (and could hand one a name a hand-written Console class still uses). Their own
+// pass keeps each surface's names independent of the other's modules.
+const OWN_PASS = ['popup/popup', 'sidepanel/sidepanel'];
+const pass = (own) => ({
+  ...options,
+  entryPoints: Object.fromEntries(
+    Object.entries(options.entryPoints).filter(([out]) => OWN_PASS.includes(out) === own),
+  ),
+});
+const passes = [pass(false), pass(true)];
+
 copyRdcWasm();
 if (isWatch) {
   // Once, up front: the watcher rebuilds JS only, so re-run `npm run build` after editing a
   // stylesheet or an HTML page.
   copyDocStylesheets();
-  esbuild.context(options).then((ctx) => ctx.watch());
+  for (const o of passes) esbuild.context(o).then((ctx) => ctx.watch());
 } else {
-  esbuild.buildSync(options);
+  for (const o of passes) esbuild.buildSync(o);
   copyDocStylesheets();
 }

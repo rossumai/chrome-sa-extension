@@ -16,6 +16,8 @@ import {
 } from '../mdh-provenance.js';
 import { getCachedReplay, setCachedReplay } from '../cache.js';
 import QueryItem from './QueryItem.jsx';
+import panel from './MdhProvenancePanel.module.css';
+import styles from './ConfigBlock.module.css';
 
 const PENDING = { status: 'pending' };
 
@@ -24,7 +26,7 @@ const PENDING = { status: 'pending' };
 function DatasetIcon() {
   return (
     <svg
-      class="mdh-q-dataset-icon"
+      class={styles.mdhQDatasetIcon}
       width="10"
       height="10"
       viewBox="0 0 24 24"
@@ -251,13 +253,13 @@ export default function ConfigBlock({
   };
 
   return (
-    <div class="mdh-cfg">
-      <div class={`mdh-cfg-head${headGated ? ' mdh-cfg-head--gated' : ''}`}>
-        <span class="mdh-q-target" title={`target_schema_id: ${cfg.target}`}>
+    <div class={styles.mdhCfg}>
+      <div class={`${styles.mdhCfgHead}${headGated ? ` ${styles.mdhCfgHeadGated}` : ''}`}>
+        <span class={styles.mdhQTarget} title={`target_schema_id: ${cfg.target}`}>
           {cfg.target}
         </span>
         <span
-          class="mdh-q-dataset"
+          class={styles.mdhQDataset}
           title={
             cfg.datasetKey
               ? `dataset: ${cfg.dataset} · key: ${cfg.datasetKey}`
@@ -265,13 +267,13 @@ export default function ConfigBlock({
           }
         >
           <DatasetIcon />
-          <span class="mdh-q-dataset-name">{cfg.dataset}</span>
+          <span class={styles.mdhQDatasetName}>{cfg.dataset}</span>
         </span>
       </div>
 
       {source ? (
         <div
-          class="mdh-cfg-source"
+          class={styles.mdhCfgSource}
           title={cfg.name ? `${source.label} · ${cfg.name}` : source.label}
         >
           <a href={source.url} target="_blank" rel="noopener noreferrer">
@@ -280,29 +282,31 @@ export default function ConfigBlock({
           {cfg.name ? ` · ${cfg.name}` : null}
         </div>
       ) : cfg.name ? (
-        <div class="mdh-cfg-source" title={cfg.name}>
+        <div class={styles.mdhCfgSource} title={cfg.name}>
           {cfg.name}
         </div>
       ) : null}
 
       {condInfo.hasCondition ? (
         <div
-          class={`mdh-cfg-cond-caption${condInfo.error ? ' mdh-cfg-cond-caption--error' : ''}`}
+          class={`${styles.mdhCfgCondCaption}${condInfo.error ? ` ${styles.mdhCfgCondCaptionError}` : ''}`}
           title={condTooltip as string | undefined}
         >
-          <code class="mdh-cfg-cond-expr">{cfg.actionCondition}</code>
+          <code class={styles.mdhCfgCondExpr}>{cfg.actionCondition}</code>
         </div>
       ) : null}
 
       {lookupResult?.noRecalculation ? (
-        <div class="mdh-cfg-note">Value set by hand — the lookup's saved result may be stale</div>
+        <div class={styles.mdhCfgNote}>
+          Value set by hand — the lookup's saved result may be stale
+        </div>
       ) : null}
 
       {showPicker ? (
-        <div class="mdh-row-picker">
-          <span class="mdh-row-label">Row</span>
+        <div class={styles.mdhRowPicker}>
+          <span class={styles.mdhRowLabel}>Row</span>
           <select
-            class="mdh-row-select"
+            class={styles.mdhRowSelect}
             value={String(rowToUse)}
             onChange={(e) => onRowChange(scope.tableSchemaId, Number(e.currentTarget.value))}
           >
@@ -310,9 +314,9 @@ export default function ConfigBlock({
               <option value={String(i)}>{i + 1}</option>
             ))}
           </select>
-          <span class="mdh-row-of">of {scope.rowCount}</span>
+          <span class={styles.mdhRowOf}>of {scope.rowCount}</span>
           <span
-            class="mdh-row-table"
+            class={styles.mdhRowTable}
             title={`These rows are the “${scope.tableSchemaId}” table — the table holding ${cfg.target}`}
           >
             {scope.tableSchemaId}
@@ -321,9 +325,9 @@ export default function ConfigBlock({
       ) : null}
 
       {cfg.queries.length === 0 ? (
-        <p class="mdh-empty">No queries.</p>
+        <p class={panel.mdhEmpty}>No queries.</p>
       ) : (
-        <ol class="mdh-query-list">
+        <ol class={styles.mdhQueryList}>
           {cfg.queries.map((q: any, i: any) => (
             <QueryItem
               key={i}

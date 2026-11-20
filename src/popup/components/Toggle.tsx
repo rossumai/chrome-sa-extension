@@ -1,4 +1,6 @@
 import { h, Fragment } from 'preact';
+import card from './Card.module.css';
+import styles from './Toggle.module.css';
 
 export default function Toggle({
   id,
@@ -16,23 +18,23 @@ export default function Toggle({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <label class="toggle">
+    <label class={styles.toggle}>
       <input
         type="checkbox"
         id={id}
         checked={!!checked}
         onChange={(e) => onChange(e.currentTarget.checked)}
       />
-      <span class="toggle-track"></span>
-      <span class="toggle-label">
+      <span class={styles.toggleTrack}></span>
+      <span class={styles.toggleLabel}>
         {label}
         {beta ? (
           <Fragment>
             {' '}
-            <span class="beta-badge">beta</span>
+            <span class={card.betaBadge}>beta</span>
           </Fragment>
         ) : null}
-        {hint ? <span class="toggle-hint">{hint}</span> : null}
+        {hint ? <span class={styles.toggleHint}>{hint}</span> : null}
       </span>
     </label>
   );

@@ -1,0 +1,189 @@
+/* ── Console button (header) ───────────────────── */
+
+.consoleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 6px 12px;
+  background: var(--accent);
+  border: 1px solid var(--accent-dim);
+  border-radius: 6px;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s;
+  box-shadow: 0 1px 3px rgba(66, 112, 219, 0.25);
+}
+
+.consoleBtn:hover {
+  background: var(--accent-dim);
+  box-shadow: 0 2px 6px rgba(66, 112, 219, 0.35);
+}
+
+.consoleBtn svg {
+  opacity: 0.7;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+.consoleBtn:hover svg {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}
+
+/* ── Header action group + Master Data Hub button ─ */
+
+.headerActions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mdhBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    opacity 0.2s;
+}
+
+.mdhBtn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  box-shadow: 0 2px 6px rgba(66, 112, 219, 0.15);
+}
+
+.mdhBtn svg {
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+.mdhBtn:hover svg {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}
+
+.mdhBtn.dimmed {
+  opacity: 0.4;
+}
+
+.mdhBtn.dimmed:hover {
+  opacity: 0.7;
+}
+
+/* ── Copy API token (header, icon only) ────────── */
+
+.tokenBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 7px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    color 0.15s,
+    opacity 0.2s;
+}
+
+.tokenBtn svg {
+  opacity: 0.65;
+}
+
+.tokenBtn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  box-shadow: 0 2px 6px rgba(66, 112, 219, 0.15);
+}
+
+.tokenBtn:hover svg,
+.tokenBtn.copied svg {
+  opacity: 1;
+}
+
+.tokenBtn.copied {
+  color: #1a7f4b;
+  border-color: rgba(26, 127, 75, 0.45);
+  background: rgba(26, 127, 75, 0.06);
+}
+
+.tokenBtn.dimmed {
+  opacity: 0.4;
+}
+
+.tokenBtn.dimmed:hover {
+  opacity: 0.7;
+}
+
+/* The tooltip, not a `title`: it also has to say "Copied" right after the click. */
+.tokenTip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #1a1a24;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.tokenBtn:hover .tokenTip,
+.tokenBtn:focus-visible .tokenTip,
+.tokenBtn.copied .tokenTip {
+  opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tokenBtn.copied {
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.4);
+    background: rgba(74, 222, 128, 0.08);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .consoleBtn {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .consoleBtn:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  .mdhBtn:hover {
+    box-shadow: 0 2px 6px rgba(91, 138, 240, 0.2);
+  }
+}

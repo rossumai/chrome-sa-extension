@@ -5,6 +5,7 @@ import { readCurrentContext } from '../tab-readers.js';
 import { fetchJson, apiPatch, extractIdFromUrl } from '../mdh-provenance.js';
 import { isLockedByOther, pickHolderName } from '../reviewingLock.js';
 import { track } from '../../usage/track.js';
+import styles from './ReviewingLockBanner.module.css';
 
 // Real IO, overridable per-call for tests (repo pattern: devtools actions.js).
 const defaultDeps = {
@@ -121,20 +122,20 @@ export default function ReviewingLockBanner({ tab, deps }: { tab?: any; deps?: a
   };
 
   return (
-    <div class="reviewing-lock-banner" role="alert">
-      <div class="rlb-row">
-        <span class="rlb-icon" aria-hidden="true">
+    <div class={styles.reviewingLockBanner} role="alert">
+      <div class={styles.rlbRow}>
+        <span class={styles.rlbIcon} aria-hidden="true">
           <LockIcon />
         </span>
-        <div class="rlb-text">
-          <span class="rlb-title">Document locked by {lock.holderName}</span>
-          <span class="rlb-sub">Read-only while they review</span>
+        <div class={styles.rlbText}>
+          <span class={styles.rlbTitle}>Document locked by {lock.holderName}</span>
+          <span class={styles.rlbSub}>Read-only while they review</span>
         </div>
-        <button class="rlb-release" onClick={onRelease} disabled={releasing}>
+        <button class={styles.rlbRelease} onClick={onRelease} disabled={releasing}>
           {releasing ? 'Unlocking…' : 'Unlock'}
         </button>
       </div>
-      {error ? <p class="rlb-error">{error}</p> : null}
+      {error ? <p class={styles.rlbError}>{error}</p> : null}
     </div>
   );
 }

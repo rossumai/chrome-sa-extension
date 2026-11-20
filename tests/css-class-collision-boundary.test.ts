@@ -31,10 +31,8 @@ const GLOBAL_SHEETS = [
   'dist/console/doc-theme.css',
   'dist/console/print.css',
   'dist/popup/tokens.css',
-  'dist/popup/legacy.css',
   'dist/devtools/tokens.css',
   'dist/devtools/legacy.css',
-  'dist/sidepanel/legacy.css',
 ];
 
 // The sheets esbuild emits from CSS Modules, one per bundle that imports any — each with its own
@@ -49,25 +47,16 @@ const ALLOWLIST: Record<string, { sheet: string; permanent?: true }> = {
     permanent: true,
   },
   anchor: { sheet: 'src/docs/theme.css', permanent: true },
-  card: { sheet: 'src/popup/legacy.css' },
-  copied: { sheet: 'src/docs/theme.css, src/popup/legacy.css', permanent: true },
-  dimmed: { sheet: 'src/popup/legacy.css' },
+  copied: { sheet: 'src/docs/theme.css', permanent: true },
   failed: {
     sheet: 'src/docs/theme.css',
     permanent: true,
   },
-  footer: { sheet: 'src/popup/legacy.css' },
-  header: { sheet: 'src/popup/legacy.css' },
-  hidden: { sheet: 'src/popup/legacy.css' },
   hljs: { sheet: 'src/docs/theme.css', permanent: true },
   loading: { sheet: 'none' },
-  offsite: { sheet: 'src/popup/legacy.css' },
   open: { sheet: 'src/docs/theme.css', permanent: true },
   selected: { sheet: 'src/devtools/legacy.css' },
-  sidepanel: { sheet: 'src/sidepanel/legacy.css' },
   toc: { sheet: 'src/docs/theme.css', permanent: true },
-  toggle: { sheet: 'src/popup/legacy.css' },
-  version: { sheet: 'src/popup/legacy.css' },
   wide: { sheet: 'src/docs/theme.css', permanent: true },
 };
 

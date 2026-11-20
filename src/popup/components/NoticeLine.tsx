@@ -4,6 +4,7 @@
 import { h, Fragment } from 'preact';
 import type { ComponentChildren } from 'preact';
 import type { UnlockNotice } from '../offSite.js';
+import off from './OffSite.module.css';
 
 export default function NoticeLine({
   notice,
@@ -13,7 +14,7 @@ export default function NoticeLine({
   children: ComponentChildren;
 }) {
   if (!notice) return <Fragment>{children}</Fragment>;
-  return <UnlockNoticeText notice={notice} class="notice-line" />;
+  return <UnlockNoticeText notice={notice} class={off.noticeLine} />;
 }
 
 export function UnlockNoticeText({ notice, class: cls }: { notice: UnlockNotice; class?: string }) {
@@ -23,12 +24,12 @@ export function UnlockNoticeText({ notice, class: cls }: { notice: UnlockNotice;
       ? 'switched to Data'
       : null;
   return (
-    <p class={`unlock-notice${cls ? ` ${cls}` : ''}`} role="status">
-      {notice.unlocked ? <span class="console-app-badge is-exp">exp</span> : null}
+    <p class={`${off.unlockNotice}${cls ? ` ${cls}` : ''}`} role="status">
+      {notice.unlocked ? <span class={`${off.consoleAppBadge} ${off.isExp}`}>exp</span> : null}
       <span class="unlock-notice-main">
         {notice.unlocked ? 'Experimental features unlocked' : 'Experimental features hidden'}
       </span>
-      {detail ? <span class="unlock-notice-detail">{detail}</span> : null}
+      {detail ? <span class={off.unlockNoticeDetail}>{detail}</span> : null}
     </p>
   );
 }

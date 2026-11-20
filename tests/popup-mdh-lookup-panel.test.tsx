@@ -5,6 +5,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import MdhProvenancePanel from '../src/popup/components/MdhProvenancePanel.jsx';
+import qiCss from '../src/popup/components/QueryItem.module.css';
+import mpCss from '../src/popup/components/MdhProvenancePanel.module.css';
+import cbCss from '../src/popup/components/ConfigBlock.module.css';
 
 async function waitFor(cond: any, timeout = 3000) {
   const start = Date.now();
@@ -144,20 +147,29 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const STATUS_KEYS = [
+  'mdhQStatusPending',
+  'mdhQStatusWinner',
+  'mdhQStatusEmpty',
+  'mdhQStatusSkipped',
+  'mdhQStatusGated',
+  'mdhQStatusError',
+];
+
 const statusClasses = () =>
-  [...root.querySelectorAll('.mdh-q-status')].map((n: any) =>
-    [...n.classList].find(
-      (c: string) => c.startsWith('mdh-q-status--') && c !== 'mdh-q-status--hinted',
-    ),
+  [...root.querySelectorAll(`.${qiCss.mdhQStatus}`)].map((n: any) =>
+    // The status modifier's module key, read back from the class. Listed, not enumerated:
+    // vitest's CSS Module object has no enumerable keys.
+    STATUS_KEYS.find((k) => n.classList.contains(qiCss[k])),
   );
 
 describe('MDH provenance — lookup fields', () => {
   it('shows a lookup-only queue instead of "No MDH matching hooks"', async () => {
     render(<MdhProvenancePanel tab={TAB} />, root);
-    await waitFor(() => root.querySelector('.mdh-cfg-source'));
+    await waitFor(() => root.querySelector(`.${cbCss.mdhCfgSource}`));
     expect(root.textContent).not.toContain('No MDH matching');
-    expect(root.querySelector('.mdh-q-target').textContent).toBe('item_uom_match');
-    const source = root.querySelector('.mdh-cfg-source');
+    expect(root.querySelector(`.${cbCss.mdhQTarget}`).textContent).toBe('item_uom_match');
+    const source = root.querySelector(`.${cbCss.mdhCfgSource}`);
     expect(source.textContent).toBe('Lookup field · UoM');
     expect(source.querySelector('a').getAttribute('href')).toBe(
       `${DOMAIN}/queues/42/settings/fields/item_uom_match`,
@@ -166,31 +178,31 @@ describe('MDH provenance — lookup fields', () => {
 
   it('reads the saved winner per row and never replays against Data Storage', async () => {
     render(<MdhProvenancePanel tab={TAB} />, root);
-    await waitFor(() => root.querySelector('.mdh-row-select'));
-    expect(statusClasses()).toEqual(['mdh-q-status--empty', 'mdh-q-status--winner']);
+    await waitFor(() => root.querySelector(`.${cbCss.mdhRowSelect}`));
+    expect(statusClasses()).toEqual(['mdhQStatusEmpty', 'mdhQStatusWinner']);
 
-    const select = root.querySelector('.mdh-row-select');
+    const select = root.querySelector(`.${cbCss.mdhRowSelect}`);
     expect(select.querySelectorAll('option')).toHaveLength(3);
     select.value = '1';
     select.dispatchEvent(new Event('change'));
-    await waitFor(() => statusClasses()[0] === 'mdh-q-status--winner');
-    expect(statusClasses()).toEqual(['mdh-q-status--winner', 'mdh-q-status--skipped']);
+    await waitFor(() => statusClasses()[0] === 'mdhQStatusWinner');
+    expect(statusClasses()).toEqual(['mdhQStatusWinner', 'mdhQStatusSkipped']);
 
     select.value = '2';
     select.dispatchEvent(new Event('change'));
-    await waitFor(() => statusClasses()[0] === 'mdh-q-status--empty');
-    expect(statusClasses()).toEqual(['mdh-q-status--empty', 'mdh-q-status--empty']);
+    await waitFor(() => statusClasses()[0] === 'mdhQStatusEmpty');
+    expect(statusClasses()).toEqual(['mdhQStatusEmpty', 'mdhQStatusEmpty']);
 
     expect(fetchMock.mock.calls.some(([u]: any) => u.includes('/data/aggregate'))).toBe(false);
   });
 
   it('opens the query with the selected row’s variable values', async () => {
     render(<MdhProvenancePanel tab={TAB} />, root);
-    await waitFor(() => root.querySelector('.mdh-row-select'));
-    const select = root.querySelector('.mdh-row-select');
+    await waitFor(() => root.querySelector(`.${cbCss.mdhRowSelect}`));
+    const select = root.querySelector(`.${cbCss.mdhRowSelect}`);
     select.value = '1';
     select.dispatchEvent(new Event('change'));
-    await waitFor(() => statusClasses()[0] === 'mdh-q-status--winner');
+    await waitFor(() => statusClasses()[0] === 'mdhQStatusWinner');
 
     root.querySelectorAll('.mdh-q-open')[0].click();
     const set = (globalThis as any).chrome.storage.local.set;
@@ -238,10 +250,14 @@ describe('MDH provenance — lookup fields', () => {
       ],
     };
     render(<MdhProvenancePanel tab={TAB} />, root);
-    await waitFor(() => root.querySelectorAll('.mdh-q-target').length === 3);
-    const targets = [...root.querySelectorAll('.mdh-q-target')].map((n: any) => n.textContent);
+    await waitFor(() => root.querySelectorAll(`.${cbCss.mdhQTarget}`).length === 3);
+    const targets = [...root.querySelectorAll(`.${cbCss.mdhQTarget}`)].map(
+      (n: any) => n.textContent,
+    );
     expect(targets).toEqual(['header_mdh', 'item_uom_match', 'item_uom_mdh']);
-    const sources = [...root.querySelectorAll('.mdh-cfg-source a')].map((n: any) => n.textContent);
+    const sources = [...root.querySelectorAll(`.${cbCss.mdhCfgSource} a`)].map(
+      (n: any) => n.textContent,
+    );
     expect(sources).toEqual(['MDH hook', 'Lookup field', 'MDH hook']);
   });
 
@@ -249,7 +265,9 @@ describe('MDH provenance — lookup fields', () => {
     schemaContent = [];
     render(<MdhProvenancePanel tab={TAB} />, root);
     // "Loading…" shares .mdh-empty, so wait for the message itself.
-    await waitFor(() => root.querySelector('.mdh-empty')?.textContent !== 'Loading…');
-    expect(root.querySelector('.mdh-empty').textContent).toBe('No MDH matching on this queue.');
+    await waitFor(() => root.querySelector(`.${mpCss.mdhEmpty}`)?.textContent !== 'Loading…');
+    expect(root.querySelector(`.${mpCss.mdhEmpty}`).textContent).toBe(
+      'No MDH matching on this queue.',
+    );
   });
 });

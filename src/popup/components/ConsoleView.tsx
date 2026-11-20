@@ -15,6 +15,8 @@ import { hostOf, type UnlockNotice } from '../offSite.js';
 import { CheckIcon, ExternalIcon, KeyIcon } from './icons.jsx';
 import { EnvChip, useRowKeys } from './OffSite.jsx';
 import NoticeLine from './NoticeLine.jsx';
+import hb from './HeaderButtons.module.css';
+import off from './OffSite.module.css';
 
 type Props = {
   tabId: number;
@@ -64,41 +66,41 @@ export default function ConsoleView({
   const host = hostOf(state?.domain || '');
   const named = org && orgNameEnabled;
   return (
-    <div class="offsite">
+    <div class={off.offsite}>
       {state?.domain ? (
-        <div class={`console-org${org?.sandbox ? ' is-sandbox' : ''}`}>
-          <span class="offsite-title">
+        <div class={`${off.consoleOrg}${org?.sandbox ? ' is-sandbox' : ''}`}>
+          <span class={off.offsiteTitle}>
             {named ? org.name : host}
-            {named && org.id !== null ? <span class="offsite-id">{org.id}</span> : null}
+            {named && org.id !== null ? <span class={off.offsiteId}>{org.id}</span> : null}
             {org && orgEnvEnabled ? <EnvChip org={org} /> : null}
           </span>
           {named ? (
-            <span class="offsite-meta">
+            <span class={off.offsiteMeta}>
               This Console is connected to <b>{host}</b>
               {org.location ? ` · ${org.location}` : null}
             </span>
           ) : null}
         </div>
       ) : null}
-      <section class="offsite-section">
+      <section class={off.offsiteSection}>
         <NoticeLine notice={notice}>
-          <h3 class="offsite-label">Switch app in this tab</h3>
+          <h3 class={off.offsiteLabel}>Switch app in this tab</h3>
         </NoticeLine>
-        <ul class="console-apps">
+        <ul class={off.consoleApps}>
           {apps.map((a, i) => (
             <li>
               <button
-                class={`console-app${a.id === state?.app ? ' is-current' : ''}${notice?.unlocked && a.gated ? ' is-new' : ''}`}
+                class={`${off.consoleApp}${a.id === state?.app ? ` ${off.isCurrent}` : ''}${notice?.unlocked && a.gated ? ` ${off.isNew}` : ''}`}
                 onClick={() => pick(i)}
                 title={a.title}
               >
-                <span class="offsite-kbd">{i + 1}</span>
-                <span class="console-app-icon">{a.icon}</span>
-                <span class="console-app-name">{a.label}</span>
-                <span class="console-app-desc">{a.description}</span>
-                {a.beta ? <span class="console-app-badge">beta</span> : null}
-                {a.exp ? <span class="console-app-badge is-exp">exp</span> : null}
-                {a.id === state?.app ? <span class="console-app-here">here</span> : null}
+                <span class={off.offsiteKbd}>{i + 1}</span>
+                <span class={off.consoleAppIcon}>{a.icon}</span>
+                <span class={off.consoleAppName}>{a.label}</span>
+                <span class={off.consoleAppDesc}>{a.description}</span>
+                {a.beta ? <span class={off.consoleAppBadge}>beta</span> : null}
+                {a.exp ? <span class={`${off.consoleAppBadge} ${off.isExp}`}>exp</span> : null}
+                {a.id === state?.app ? <span class={off.consoleAppHere}>here</span> : null}
               </button>
             </li>
           ))}
@@ -137,20 +139,20 @@ export function ConsoleHeaderActions({ tabId }: { tabId: number }) {
   };
 
   return (
-    <div class="header-actions">
+    <div class={hb.headerActions}>
       <button
-        class={`token-btn${copied ? ' copied' : ''}`}
+        class={`${hb.tokenBtn}${copied ? ` ${hb.copied}` : ''}`}
         onClick={onCopy}
         disabled={!token}
         aria-label="Copy API token"
       >
         {copied ? <CheckIcon /> : <KeyIcon />}
-        <span class="token-tip" role="status">
+        <span class={hb.tokenTip} role="status">
           {copied ? 'Copied' : token ? 'Copy API token' : 'This Console is not connected'}
         </span>
       </button>
       {domain ? (
-        <button class="console-btn" onClick={onRossum} title={`Open ${hostOf(domain)}`}>
+        <button class={hb.consoleBtn} onClick={onRossum} title={`Open ${hostOf(domain)}`}>
           <span>Rossum tab</span>
           <ExternalIcon />
         </button>

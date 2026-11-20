@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { STATUS_GLYPH } from '../mdh-provenance.js';
 import { placeHint } from '../hintPlacement.js';
+import styles from './QueryItem.module.css';
 
 let hintSeq = 0;
 
@@ -150,10 +151,10 @@ export default function QueryItem({
   };
 
   const liClass = [
-    'mdh-q',
-    status?.status === 'winner' ? 'mdh-q--winner' : '',
-    status?.status === 'skipped' ? 'mdh-q--skipped' : '',
-    status?.status === 'gated' ? 'mdh-q--gated' : '',
+    styles.mdhQ,
+    status?.status === 'winner' ? styles.mdhQWinner : '',
+    status?.status === 'skipped' ? styles.mdhQSkipped : '',
+    status?.status === 'gated' ? styles.mdhQGated : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -162,7 +163,7 @@ export default function QueryItem({
     <li class={liClass}>
       <span
         ref={dotRef}
-        class={`mdh-q-status ${meta.cls}${hasHint ? ' mdh-q-status--hinted' : ''}`}
+        class={`${styles.mdhQStatus} ${styles[meta.cls]}${hasHint ? ` ${styles.mdhQStatusHinted}` : ''}`}
         // No native `title` when a popover carries the hint — two tooltips for
         // one element is worse than either alone.
         title={hasHint ? undefined : meta.title}
@@ -175,14 +176,14 @@ export default function QueryItem({
       >
         {meta.glyph}
       </span>
-      <span class="mdh-q-num">{index + 1}.</span>
-      <span class="mdh-q-name" title={label}>
+      <span class={styles.mdhQNum}>{index + 1}.</span>
+      <span class={styles.mdhQName} title={label}>
         {label}
       </span>
-      <span class="mdh-q-actions">
+      <span class={styles.mdhQActions}>
         <button
           type="button"
-          class={`mdh-q-copy mdh-q-action${copied ? ' mdh-q-copy--ok' : ''}`}
+          class={`mdh-q-copy ${styles.mdhQAction}${copied ? ` ${styles.mdhQCopyOk}` : ''}`}
           title={
             copyFailed
               ? 'Copy failed — clipboard blocked'
@@ -194,7 +195,7 @@ export default function QueryItem({
         </button>
         <button
           type="button"
-          class="mdh-q-open mdh-q-action"
+          class={`mdh-q-open ${styles.mdhQAction}`}
           title="Open in Dataset Management with this pipeline prefilled"
           onClick={handleOpen}
         >
@@ -206,14 +207,14 @@ export default function QueryItem({
           ref={tipRef}
           id={hintId.current}
           role="tooltip"
-          class={`mdh-q-hint${status?.status === 'error' ? ' mdh-q-hint--error' : ''}`}
+          class={`${styles.mdhQHint}${status?.status === 'error' ? ` ${styles.mdhQHintError}` : ''}`}
           style={{
             top: `${tip.top}px`,
             left: `${tip.left}px`,
             visibility: tip.placed ? 'visible' : 'hidden',
           }}
         >
-          <span class="mdh-q-hint-title">{meta.title}</span>
+          <span class={styles.mdhQHintTitle}>{meta.title}</span>
           {hint}
         </span>
       ) : null}

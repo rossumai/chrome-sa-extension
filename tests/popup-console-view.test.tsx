@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import ConsoleView, { ConsoleHeaderActions } from '../src/popup/components/ConsoleView.jsx';
+import offCss from '../src/popup/components/OffSite.module.css';
+import hbCss from '../src/popup/components/HeaderButtons.module.css';
 
 async function waitFor(cond: () => unknown, timeout = 2000) {
   const start = Date.now();
@@ -83,12 +85,12 @@ function mount(props: Partial<Parameters<typeof ConsoleView>[0]> = {}) {
   });
 }
 
-const rows = () => [...document.body.querySelectorAll<HTMLButtonElement>('.console-app')];
+const rows = () => [...document.body.querySelectorAll<HTMLButtonElement>(`.${offCss.consoleApp}`)];
 
 describe('ConsoleView — the app list', () => {
   it('lists the public apps in rail order, numbered, with their full names', () => {
     mount();
-    expect(rows().map((r) => r.querySelector('.console-app-name')!.textContent)).toEqual([
+    expect(rows().map((r) => r.querySelector(`.${offCss.consoleAppName}`)!.textContent)).toEqual([
       'Data',
       'Audit',
       'CIB',
@@ -98,7 +100,7 @@ describe('ConsoleView — the app list', () => {
       'Galaxy',
     ]);
     expect(rows()[0].textContent).toContain('Dataset Management');
-    expect(rows()[6].querySelector('.offsite-kbd')!.textContent).toBe('7');
+    expect(rows()[6].querySelector(`.${offCss.offsiteKbd}`)!.textContent).toBe('7');
     expect(document.body.textContent).toContain('Switch app in this tab');
   });
 
@@ -110,7 +112,7 @@ describe('ConsoleView — the app list', () => {
 
   it("marks the tab's current app", () => {
     mount();
-    expect(rows()[1].classList.contains('is-current')).toBe(true);
+    expect(rows()[1].classList.contains(offCss.isCurrent)).toBe(true);
     expect(rows()[1].textContent).toContain('here');
   });
 
@@ -138,26 +140,26 @@ describe('ConsoleView — the app list', () => {
 describe('ConsoleView — the connected organization', () => {
   it('names the organization once it is read with the Console session', async () => {
     mount();
-    expect(document.body.querySelector('.console-org')!.textContent).toContain(
+    expect(document.body.querySelector(`.${offCss.consoleOrg}`)!.textContent).toContain(
       'partner-sandbox.rossum.app',
     );
     await waitFor(() => document.body.textContent!.includes('Example'));
-    expect(document.body.querySelector('.console-org')!.textContent).toContain('517920');
+    expect(document.body.querySelector(`.${offCss.consoleOrg}`)!.textContent).toContain('517920');
     expect(fetchMock.mock.calls[0][0]).toBe(`${DOMAIN}/api/v1/organizations`);
-    expect(document.body.querySelector('.env-chip')).toBeNull();
+    expect(document.body.querySelector(`.${offCss.envChip}`)).toBeNull();
   });
 
   it('adds the environment chip with Org env on', async () => {
     mount({ orgEnvEnabled: true });
-    await waitFor(() => document.body.querySelector('.env-chip'));
-    expect(document.body.querySelector('.env-chip')!.textContent).toBe('Sandbox');
+    await waitFor(() => document.body.querySelector(`.${offCss.envChip}`));
+    expect(document.body.querySelector(`.${offCss.envChip}`)!.textContent).toBe('Sandbox');
   });
 
   it('reads nothing with Org info off, and shows the host', async () => {
     mount({ orgNameEnabled: false });
     await new Promise((r) => setTimeout(r, 30));
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(document.body.querySelector('.console-org')!.textContent).toContain(
+    expect(document.body.querySelector(`.${offCss.consoleOrg}`)!.textContent).toContain(
       'partner-sandbox.rossum.app',
     );
   });
@@ -180,15 +182,15 @@ describe('ConsoleHeaderActions', () => {
       render(<ConsoleHeaderActions tabId={7} />, document.body);
     });
   }
-  const key = () => document.body.querySelector<HTMLButtonElement>('.token-btn')!;
-  const rossum = () => document.body.querySelector<HTMLButtonElement>('.console-btn');
+  const key = () => document.body.querySelector<HTMLButtonElement>(`.${hbCss.tokenBtn}`)!;
+  const rossum = () => document.body.querySelector<HTMLButtonElement>(`.${hbCss.consoleBtn}`);
 
   it("copies the Console tab's token", async () => {
     mountHeader();
     key().click();
     await waitFor(() => writeText.mock.calls.length > 0);
     expect(writeText).toHaveBeenCalledWith('tok-c');
-    await waitFor(() => key().classList.contains('copied'));
+    await waitFor(() => key().classList.contains(hbCss.copied));
   });
 
   it('disables the key without a token', () => {

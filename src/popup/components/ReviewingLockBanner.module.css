@@ -1,0 +1,79 @@
+/* ── Reviewing-lock banner (annotation held by another user) ── */
+.reviewingLockBanner {
+  /* Sits at the BOTTOM of #mainContent: the probe resolves after first paint,
+     so appearing down here only grows the popup — no layout shift above. Always a
+     direct child of #mainContent, a flex column, where it keeps its own height. */
+  flex: 0 0 auto;
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius);
+}
+
+.rlbRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rlbIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rlbText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rlbTitle {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rlbSub {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.rlbRelease {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 5px 12px;
+  border: 1px solid var(--warning-border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--warning-fg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rlbRelease:hover:not(:disabled) {
+  border-color: var(--warning-fg);
+}
+
+.rlbRelease:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.rlbError {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--warning-fg);
+  font-weight: 600;
+}

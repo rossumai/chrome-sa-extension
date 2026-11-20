@@ -1,6 +1,6 @@
 /* GLOBAL STYLESHEET: the popup's design tokens — every :root variable and its
-   dark-mode override. Copied to dist/popup/tokens.css; linked FIRST by the popup and by the side
-   panel, so the shared MDH card has one set of tokens.
+   dark-mode override — and the html/body base. Copied to dist/popup/tokens.css; linked FIRST by
+   the popup and by the side panel, so the shared MDH card has one set of tokens.
 
    Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
    :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
@@ -54,4 +54,20 @@
     --exp-bg: #a78bfa;
     --exp-fg: #1e1233;
   }
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  width: 380px;
+  padding: 0 0 2px;
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body {
+  height: auto;
 }

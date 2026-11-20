@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import MdhProvenancePanel from '../src/popup/components/MdhProvenancePanel.jsx';
+import cbCss from '../src/popup/components/ConfigBlock.module.css';
 
 // Condition-based wait — never fixed timeouts (repo rule).
 async function waitFor(cond: any, timeout = 3000) {
@@ -125,22 +126,24 @@ afterEach(() => {
 describe('MDH provenance with several tables in one document', () => {
   it('gives each config the row count of its own target table', async () => {
     render(<MdhProvenancePanel tab={TAB} />, root);
-    await waitFor(() => root.querySelectorAll('.mdh-row-picker').length === 2);
-    const counts: any = [...root.querySelectorAll('.mdh-row-of')].map((n) => n.textContent.trim());
+    await waitFor(() => root.querySelectorAll(`.${cbCss.mdhRowPicker}`).length === 2);
+    const counts: any = [...root.querySelectorAll(`.${cbCss.mdhRowOf}`)].map((n) =>
+      n.textContent.trim(),
+    );
     expect(counts).toEqual(['of 4', 'of 23']);
   });
 
   it('keeps the two tables selections independent', async () => {
     render(<MdhProvenancePanel tab={TAB} />, root);
-    await waitFor(() => root.querySelectorAll('.mdh-row-select').length === 2);
-    const [taxSelect, lineSelect] = root.querySelectorAll('.mdh-row-select');
+    await waitFor(() => root.querySelectorAll(`.${cbCss.mdhRowSelect}`).length === 2);
+    const [taxSelect, lineSelect] = root.querySelectorAll(`.${cbCss.mdhRowSelect}`);
 
     lineSelect.value = '11';
     lineSelect.dispatchEvent(new Event('change'));
-    await waitFor(() => root.querySelectorAll('.mdh-row-select')[1].value === '11');
+    await waitFor(() => root.querySelectorAll(`.${cbCss.mdhRowSelect}`)[1].value === '11');
 
     // Moving to line-item row 12 must NOT drag the 4-row tax config with it.
-    expect(root.querySelectorAll('.mdh-row-select')[0].value).toBe('0');
+    expect(root.querySelectorAll(`.${cbCss.mdhRowSelect}`)[0].value).toBe('0');
     expect(taxSelect.querySelectorAll('option')).toHaveLength(4);
   });
 });

@@ -1,0 +1,18 @@
+/* The page base shared by the popup and the side panel: the reset and the #app shell. Imported
+   first by both entry points (popup.tsx, sidepanel/index.tsx), so it opens each bundle's sheet.
+   The html/body base lives with the tokens in tokens.css. */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:global(#app) {
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+  overflow: hidden; /* header, lock banner and footer stay pinned; the settings
+                         area scrolls internally instead of the whole popup — so
+                         the version/footer is always visible */
+}

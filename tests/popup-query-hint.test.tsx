@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import { placeHint } from '../src/popup/hintPlacement.js';
 import QueryItem from '../src/popup/components/QueryItem.jsx';
+import qiCss from '../src/popup/components/QueryItem.module.css';
 
 // A 380px popup (the narrow default) at the 600px cap.
 const VIEW = { width: 380, height: 600 };
@@ -61,7 +62,7 @@ const seen = (fn: any) => vi.waitFor(fn, { timeout: 5000, interval: 10 });
 // (which sets visibility) only flips after the measuring effect has run, so it
 // is the honest signal that the popover is fully wired.
 const opened = (r: any) =>
-  seen(() => expect(r.querySelector('.mdh-q-hint')?.style.visibility).toBe('visible'));
+  seen(() => expect(r.querySelector(`.${qiCss.mdhQHint}`)?.style.visibility).toBe('visible'));
 
 let root: any = null;
 afterEach(() => {
@@ -107,74 +108,74 @@ describe('QueryItem — the hint never occupies layout', () => {
 
   it('shows the hint in a popover on hover, and removes it on leave', async () => {
     const r = mount({ status: ERR });
-    const status = r.querySelector('.mdh-q-status');
-    expect(r.querySelector('.mdh-q-hint')).toBeNull();
+    const status = r.querySelector(`.${qiCss.mdhQStatus}`);
+    expect(r.querySelector(`.${qiCss.mdhQHint}`)).toBeNull();
 
     status.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
-    await seen(() => expect(r.querySelector('.mdh-q-hint')).toBeTruthy());
-    const tip = r.querySelector('.mdh-q-hint');
+    await seen(() => expect(r.querySelector(`.${qiCss.mdhQHint}`)).toBeTruthy());
+    const tip = r.querySelector(`.${qiCss.mdhQHint}`);
     expect(tip.textContent).toContain('cannot be empty');
     expect(tip.textContent).toContain('Replay failed'); // the status title heads it
     expect(tip.getAttribute('role')).toBe('tooltip');
 
     status.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false }));
-    await seen(() => expect(r.querySelector('.mdh-q-hint')).toBeNull());
+    await seen(() => expect(r.querySelector(`.${qiCss.mdhQHint}`)).toBeNull());
   });
 
   it('opens on keyboard focus too, so the hint is not mouse-only', async () => {
     const r = mount({ status: ERR });
-    const status = r.querySelector('.mdh-q-status');
+    const status = r.querySelector(`.${qiCss.mdhQStatus}`);
     expect(status.getAttribute('tabindex')).toBe('0');
     status.dispatchEvent(new FocusEvent('focus'));
-    await seen(() => expect(r.querySelector('.mdh-q-hint')).toBeTruthy());
+    await seen(() => expect(r.querySelector(`.${qiCss.mdhQHint}`)).toBeTruthy());
     status.dispatchEvent(new FocusEvent('blur'));
-    await seen(() => expect(r.querySelector('.mdh-q-hint')).toBeNull());
+    await seen(() => expect(r.querySelector(`.${qiCss.mdhQHint}`)).toBeNull());
   });
 
   it('drops the native title when a popover carries the hint (no double tooltip)', () => {
     const r = mount({ status: ERR });
-    expect(r.querySelector('.mdh-q-status').getAttribute('title')).toBeNull();
+    expect(r.querySelector(`.${qiCss.mdhQStatus}`).getAttribute('title')).toBeNull();
   });
 
   it('keeps the plain title, and adds no tab stop, for a status with no hint', () => {
     const r = mount({ status: { status: 'winner' } });
-    const status = r.querySelector('.mdh-q-status');
+    const status = r.querySelector(`.${qiCss.mdhQStatus}`);
     expect(status.getAttribute('title')).toBe('Winning query');
     expect(status.getAttribute('tabindex')).toBeNull();
     status.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
-    expect(r.querySelector('.mdh-q-hint')).toBeNull();
+    expect(r.querySelector(`.${qiCss.mdhQHint}`)).toBeNull();
   });
 
   it('carries inline coordinates, which is what the fixed rule positions', async () => {
     const r = mount({ status: ERR });
-    r.querySelector('.mdh-q-status').dispatchEvent(
+    r.querySelector(`.${qiCss.mdhQStatus}`).dispatchEvent(
       new MouseEvent('mouseenter', { bubbles: false }),
     );
     // jsdom has no layout, so assert the contract that survives it: the element
-    // carries inline top/left. `position: fixed` itself lives in src/popup/legacy.css.
-    await seen(() => expect(r.querySelector('.mdh-q-hint')).toBeTruthy());
-    const tip = r.querySelector('.mdh-q-hint');
+    // carries inline top/left. `position: fixed` itself lives in QueryItem.module.css.
+    await seen(() => expect(r.querySelector(`.${qiCss.mdhQHint}`)).toBeTruthy());
+    const tip = r.querySelector(`.${qiCss.mdhQHint}`);
     expect(tip.style.top).not.toBe('');
     expect(tip.style.left).not.toBe('');
   });
 
   it('closes on scroll, so a fixed tip is never stranded away from its dot', async () => {
     const r = mount({ status: ERR });
-    r.querySelector('.mdh-q-status').dispatchEvent(
+    r.querySelector(`.${qiCss.mdhQStatus}`).dispatchEvent(
       new MouseEvent('mouseenter', { bubbles: false }),
     );
     await opened(r);
     document.dispatchEvent(new Event('scroll'));
-    await seen(() => expect(r.querySelector('.mdh-q-hint')).toBeNull());
+    await seen(() => expect(r.querySelector(`.${qiCss.mdhQHint}`)).toBeNull());
   });
 
   it('closes on Escape', async () => {
     const r = mount({ status: ERR });
-    r.querySelector('.mdh-q-status').dispatchEvent(
+    r.querySelector(`.${qiCss.mdhQStatus}`).dispatchEvent(
       new MouseEvent('mouseenter', { bubbles: false }),
     );
     await opened(r);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    await seen(() => expect(r.querySelector('.mdh-q-hint')).toBeNull());
+    await seen(() => expect(r.querySelector(`.${qiCss.mdhQHint}`)).toBeNull());
   });
 });

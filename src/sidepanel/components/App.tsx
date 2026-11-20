@@ -7,6 +7,7 @@ import { track } from '../../usage/track.js';
 import { annotationIdFromPath } from '../../rossum/annotationUrl.js';
 import { sameTarget, viewState } from '../targetTab.js';
 import DocumentStrip from './DocumentStrip.jsx';
+import styles from './App.module.css';
 
 export default function App() {
   const [tab, setTab] = useState<any>(null);
@@ -108,9 +109,9 @@ export default function App() {
 
   if (state !== 'ready') {
     return (
-      <div class="sp-empty">
-        <p class="sp-empty-title">No Rossum tab here</p>
-        <p class="sp-empty-text">
+      <div class={styles.spEmpty}>
+        <p class={styles.spEmptyTitle}>No Rossum tab here</p>
+        <p class={styles.spEmptyText}>
           Open a Rossum tab in this window to see the Master Data Hub lookups behind the document
           you have open.
         </p>

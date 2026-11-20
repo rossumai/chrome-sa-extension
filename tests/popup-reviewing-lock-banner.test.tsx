@@ -2,6 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { h, render } from 'preact';
 import ReviewingLockBanner, { probeLock } from '../src/popup/components/ReviewingLockBanner.jsx';
+import rlbCss from '../src/popup/components/ReviewingLockBanner.module.css';
 
 // Condition-based wait — never fixed timeouts (repo rule).
 async function waitFor(cond: any, timeout = 1000) {
@@ -105,16 +106,16 @@ describe('ReviewingLockBanner', () => {
     const root = mount(deps);
     await waitFor(() => deps.readCtx.mock.calls.length > 0);
     await new Promise((r) => setTimeout(r, 0));
-    expect(root.querySelector('.reviewing-lock-banner')).toBeNull();
+    expect(root.querySelector(`.${rlbCss.reviewingLockBanner}`)).toBeNull();
   });
 
   it('renders the banner: lock icon, title, sub, Unlock button — no time info', async () => {
     const root = mount(makeDeps());
-    await waitFor(() => root.querySelector('.reviewing-lock-banner'));
+    await waitFor(() => root.querySelector(`.${rlbCss.reviewingLockBanner}`));
     expect(root.textContent).toContain('Document locked by Jane Doe');
     expect(root.textContent).toContain('Read-only while they review');
-    expect(root.querySelector('.rlb-icon svg')).toBeTruthy();
-    expect(root.querySelector('.rlb-release')!.textContent).toBe('Unlock');
+    expect(root.querySelector(`.${rlbCss.rlbIcon} svg`)).toBeTruthy();
+    expect(root.querySelector(`.${rlbCss.rlbRelease}`)!.textContent).toBe('Unlock');
     // the redesign removed staleness/consequence copy
     expect(root.textContent).not.toMatch(/min|expires|session|timed out/i);
   });
@@ -122,8 +123,8 @@ describe('ReviewingLockBanner', () => {
   it('unlock success: PATCHes status, reloads the tab, closes the popup', async () => {
     const deps = makeDeps();
     const root = mount(deps);
-    await waitFor(() => root.querySelector('.rlb-release'));
-    root.querySelector<HTMLElement>('.rlb-release')!.click();
+    await waitFor(() => root.querySelector(`.${rlbCss.rlbRelease}`));
+    root.querySelector<HTMLElement>(`.${rlbCss.rlbRelease}`)!.click();
     await waitFor(() => deps.reloadTab.mock.calls.length > 0);
     expect(deps.patch).toHaveBeenCalledWith(`${DOMAIN}/api/v1/annotations/138328520`, 'tok', {
       status: 'to_review',
@@ -135,23 +136,23 @@ describe('ReviewingLockBanner', () => {
   it('unlock 403: shows the permission error and re-enables the button', async () => {
     const deps = makeDeps({ patch: vi.fn().mockRejectedValue(new Error('HTTP 403')) });
     const root = mount(deps);
-    await waitFor(() => root.querySelector('.rlb-release'));
-    root.querySelector<HTMLElement>('.rlb-release')!.click();
-    await waitFor(() => root.querySelector('.rlb-error'));
-    expect(root.querySelector('.rlb-error')!.textContent).toBe(
+    await waitFor(() => root.querySelector(`.${rlbCss.rlbRelease}`));
+    root.querySelector<HTMLElement>(`.${rlbCss.rlbRelease}`)!.click();
+    await waitFor(() => root.querySelector(`.${rlbCss.rlbError}`));
+    expect(root.querySelector(`.${rlbCss.rlbError}`)!.textContent).toBe(
       "You don't have permission to release this document.",
     );
-    expect(root.querySelector<HTMLButtonElement>('.rlb-release')!.disabled).toBe(false);
+    expect(root.querySelector<HTMLButtonElement>(`.${rlbCss.rlbRelease}`)!.disabled).toBe(false);
     expect(deps.reloadTab).not.toHaveBeenCalled();
   });
 
   it('unlock 401: shows the sign-in error', async () => {
     const deps = makeDeps({ patch: vi.fn().mockRejectedValue(new Error('HTTP 401')) });
     const root = mount(deps);
-    await waitFor(() => root.querySelector('.rlb-release'));
-    root.querySelector<HTMLElement>('.rlb-release')!.click();
-    await waitFor(() => root.querySelector('.rlb-error'));
-    expect(root.querySelector('.rlb-error')!.textContent).toBe(
+    await waitFor(() => root.querySelector(`.${rlbCss.rlbRelease}`));
+    root.querySelector<HTMLElement>(`.${rlbCss.rlbRelease}`)!.click();
+    await waitFor(() => root.querySelector(`.${rlbCss.rlbError}`));
+    expect(root.querySelector(`.${rlbCss.rlbError}`)!.textContent).toBe(
       'Sign in to Rossum in this tab first.',
     );
   });

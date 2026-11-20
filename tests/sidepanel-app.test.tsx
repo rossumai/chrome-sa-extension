@@ -2,6 +2,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import App from '../src/sidepanel/components/App.jsx';
+import mpCss from '../src/popup/components/MdhProvenancePanel.module.css';
+import dsCss from '../src/sidepanel/components/DocumentStrip.module.css';
 
 // Condition-based wait — never fixed timeouts (repo rule).
 async function waitFor(cond: any, timeout = 2000) {
@@ -71,15 +73,15 @@ afterEach(() => {
 describe('side panel App', () => {
   it('renders the MDH card and the strip for a Rossum document tab', async () => {
     render(<App />, root);
-    await waitFor(() => !!root.querySelector('.mdh-card'));
-    expect(root.querySelector('.sp-strip')).not.toBeNull();
+    await waitFor(() => !!root.querySelector(`.${mpCss.mdhCard}`));
+    expect(root.querySelector(`.${dsCss.spStrip}`)).not.toBeNull();
     expect(root.textContent).toContain('#1250417');
     expect(root.textContent).toContain('Matching provenance');
   });
 
   it('offers no pin button in the panel (that button is popup-only)', async () => {
     render(<App />, root);
-    await waitFor(() => !!root.querySelector('.mdh-card'));
+    await waitFor(() => !!root.querySelector(`.${mpCss.mdhCard}`));
     expect(root.querySelector('.mdh-pin-btn')).toBeNull();
   });
 
@@ -87,7 +89,7 @@ describe('side panel App', () => {
     activeTab = { id: 1, windowId: 7, url: 'https://example.com/' };
     render(<App />, root);
     await waitFor(() => root.textContent.includes('No Rossum tab here'));
-    expect(root.querySelector('.mdh-card')).toBeNull();
+    expect(root.querySelector(`.${mpCss.mdhCard}`)).toBeNull();
   });
 
   it('re-keys the card when the tab navigates to another document', async () => {
@@ -176,7 +178,7 @@ describe('side panel App', () => {
     listeners.updated.forEach((fn: any) => fn(1, { status: 'loading' }, activeTab));
 
     await waitFor(() => root.textContent.includes('No Rossum tab here'));
-    expect(root.querySelector('.mdh-card')).toBeNull();
+    expect(root.querySelector(`.${mpCss.mdhCard}`)).toBeNull();
   });
 
   it('falls back to the focused window when windows.getCurrent fails', async () => {
@@ -184,7 +186,7 @@ describe('side panel App', () => {
       throw new Error('no window');
     });
     render(<App />, root);
-    await waitFor(() => !!root.querySelector('.mdh-card'));
+    await waitFor(() => !!root.querySelector(`.${mpCss.mdhCard}`));
     expect(chrome.tabs.query).toHaveBeenCalledWith({ active: true, lastFocusedWindow: true });
     expect(root.textContent).toContain('#1250417');
   });
@@ -210,7 +212,7 @@ describe('side panel App', () => {
 
   it('reports the open exactly once', async () => {
     render(<App />, root);
-    await waitFor(() => !!root.querySelector('.mdh-card'));
+    await waitFor(() => !!root.querySelector(`.${mpCss.mdhCard}`));
     const opens = vi
       .mocked(chrome.runtime.sendMessage)
       .mock.calls.filter(([msg]: any) => msg?.name === 'sa_sidepanel_open');

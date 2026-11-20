@@ -1,0 +1,51 @@
+/* ── document strip ─────────────────────────────── */
+
+.spStrip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 10px 10px 0;
+  padding: 6px 9px;
+  background: var(--bg-card);
+  border-radius: 6px;
+  box-shadow: var(--shadow-card);
+  font-size: 10.5px;
+  color: var(--text-secondary);
+}
+
+.spLive {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16a34a;
+  flex: none;
+}
+
+.spStripTitle {
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spStripId {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-hint);
+  flex: none;
+}
+
+.spStripHint {
+  margin-left: auto;
+  color: var(--text-hint);
+  flex: none;
+}
+
+.spStripIdle .spStripTitle {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ── no Rossum tab in this window ───────────────── */

@@ -1,4 +1,5 @@
 import { h } from 'preact';
+import styles from './UsageStrip.module.css';
 
 const PRIVACY_URL = 'https://github.com/rossumai/rossum-sa-extension/blob/master/PRIVACY.md';
 
@@ -67,30 +68,30 @@ export default function UsageStrip({
   if (!stripVisible({ consent, reviewing })) return null;
 
   return (
-    <section class="usage-strip" aria-labelledby="usage-strip-lead">
-      <p class="usage-strip-text">
+    <section class={styles.usageStrip} aria-labelledby="usage-strip-lead">
+      <p class={styles.usageStripText}>
         <b id="usage-strip-lead">Help decide what gets built.</b> Sharing usage data shows which
         features people actually use, so effort goes where it helps — never your documents or
         customer data.
       </p>
 
-      <div class="usage-strip-actions">
+      <div class={styles.usageStripActions}>
         <button
-          class="usage-strip-yes"
+          class={styles.usageStripYes}
           data-testid="usage-strip-accept"
           onClick={() => onAnswer(true)}
         >
           Share usage data
         </button>
         <button
-          class="usage-strip-no"
+          class={styles.usageStripNo}
           data-testid="usage-strip-decline"
           onClick={() => onAnswer(false)}
         >
           No thanks
         </button>
         {/* Pushed to the far edge: available, never in the way. */}
-        <a class="usage-strip-link" href={PRIVACY_URL} target="_blank" rel="noreferrer">
+        <a class={styles.usageStripLink} href={PRIVACY_URL} target="_blank" rel="noreferrer">
           What's sent ›
         </a>
       </div>
@@ -120,7 +121,7 @@ export function UsageFooterButton({
   return (
     <button
       type="button"
-      class={`footer-usage${on ? ' is-on' : ''}`}
+      class={`${styles.footerUsage}${on ? ` ${styles.isOn}` : ''}`}
       data-testid="usage-footer-button"
       title={
         on
@@ -129,7 +130,7 @@ export function UsageFooterButton({
       }
       onClick={onToggle}
     >
-      <span class="footer-usage-dot" aria-hidden="true"></span>
+      <span class={styles.footerUsageDot} aria-hidden="true"></span>
       Usage data {on ? 'on' : 'off'}
     </button>
   );

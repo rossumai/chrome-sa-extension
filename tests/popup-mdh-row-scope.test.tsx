@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import ConfigBlock from '../src/popup/components/ConfigBlock.jsx';
 import { flattenContent } from '../src/popup/mdh-provenance.js';
+import cbCss from '../src/popup/components/ConfigBlock.module.css';
 
 // Condition-based wait — never fixed timeouts (repo rule).
 async function waitFor(cond: any, timeout = 2000) {
@@ -133,29 +134,29 @@ afterEach(() => {
 describe('row picker scope', () => {
   it('offers the tax table row count, not the bigger line-items count', async () => {
     mount(root, taxCfg());
-    await waitFor(() => !!root.querySelector('.mdh-row-picker'));
-    expect(root.querySelector('.mdh-row-of').textContent).toContain('of 4');
-    expect(root.querySelectorAll('.mdh-row-select option')).toHaveLength(4);
+    await waitFor(() => !!root.querySelector(`.${cbCss.mdhRowPicker}`));
+    expect(root.querySelector(`.${cbCss.mdhRowOf}`).textContent).toContain('of 4');
+    expect(root.querySelectorAll(`.${cbCss.mdhRowSelect} option`)).toHaveLength(4);
   });
 
   it('offers the line-items count for a line-item target', async () => {
     mount(root, lineCfg());
-    await waitFor(() => !!root.querySelector('.mdh-row-picker'));
-    expect(root.querySelector('.mdh-row-of').textContent).toContain('of 23');
-    expect(root.querySelectorAll('.mdh-row-select option')).toHaveLength(23);
+    await waitFor(() => !!root.querySelector(`.${cbCss.mdhRowPicker}`));
+    expect(root.querySelector(`.${cbCss.mdhRowOf}`).textContent).toContain('of 23');
+    expect(root.querySelectorAll(`.${cbCss.mdhRowSelect} option`)).toHaveLength(23);
   });
 
   it('names the table the rows belong to, so two configs are distinguishable', async () => {
     mount(root, taxCfg());
-    await waitFor(() => !!root.querySelector('.mdh-row-picker'));
-    expect(root.querySelector('.mdh-row-picker').textContent).toContain('tax_amounts');
+    await waitFor(() => !!root.querySelector(`.${cbCss.mdhRowPicker}`));
+    expect(root.querySelector(`.${cbCss.mdhRowPicker}`).textContent).toContain('tax_amounts');
   });
 
   it('reports the changed row against the table it belongs to', async () => {
     const onRowChange = vi.fn();
     mount(root, taxCfg(), { onRowChange });
-    await waitFor(() => !!root.querySelector('.mdh-row-select'));
-    const select: any = root.querySelector('.mdh-row-select');
+    await waitFor(() => !!root.querySelector(`.${cbCss.mdhRowSelect}`));
+    const select: any = root.querySelector(`.${cbCss.mdhRowSelect}`);
     select.value = '2';
     select.dispatchEvent(new Event('change'));
     expect(onRowChange).toHaveBeenCalledWith('tax_amounts', 2);
@@ -164,19 +165,19 @@ describe('row picker scope', () => {
   it('reads its selected row from its own table only', async () => {
     // line_items sits on row 9; the tax config must ignore that entirely.
     mount(root, taxCfg(), { rowByTable: { line_items: 9, tax_amounts: 3 } });
-    await waitFor(() => !!root.querySelector('.mdh-row-select'));
-    expect(root.querySelector('.mdh-row-select').value).toBe('3');
+    await waitFor(() => !!root.querySelector(`.${cbCss.mdhRowSelect}`));
+    expect(root.querySelector(`.${cbCss.mdhRowSelect}`).value).toBe('3');
   });
 
   it('clamps a selection that outlives its table instead of substituting empties', async () => {
     mount(root, taxCfg(), { rowByTable: { tax_amounts: 17 } });
-    await waitFor(() => !!root.querySelector('.mdh-row-select'));
-    expect(root.querySelector('.mdh-row-select').value).toBe('3');
+    await waitFor(() => !!root.querySelector(`.${cbCss.mdhRowSelect}`));
+    expect(root.querySelector(`.${cbCss.mdhRowSelect}`).value).toBe('3');
   });
 
   it('renders no picker when the tables list is unavailable', async () => {
     mount(root, taxCfg(), { tables: undefined });
-    await waitFor(() => !!root.querySelector('.mdh-cfg'));
-    expect(root.querySelector('.mdh-row-picker')).toBeNull();
+    await waitFor(() => !!root.querySelector(`.${cbCss.mdhCfg}`));
+    expect(root.querySelector(`.${cbCss.mdhRowPicker}`)).toBeNull();
   });
 });
