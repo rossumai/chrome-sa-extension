@@ -1,0 +1,77 @@
+/* The view shown when the audit endpoint refuses the session (403/404). Moved from the global
+   src/audit/legacy.css, rules in their original order. */
+
+.panel {
+  flex: 1;
+  overflow: auto;
+  padding: 32px 24px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.lead {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.causes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.causes li {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.causes strong {
+  color: var(--accent);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.raw {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.rawLabel {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.raw code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.foot {
+  color: var(--text-secondary);
+  font-size: 12px;
+}

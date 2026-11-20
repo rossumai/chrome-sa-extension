@@ -9,6 +9,7 @@ import FabryTranscript from '../../ui/fabry/FabryTranscript.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
 import type { FabryTurn } from '../store.js';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './FabryPanel.module.css';
 
 const GERUNDS = [
   'Summoning Mr. Fabry',
@@ -20,7 +21,7 @@ const GERUNDS = [
 
 function Turn({ turn }: { turn: FabryTurn }) {
   return (
-    <div class="audit-fabry-turn">
+    <div class={styles.turn}>
       <div class={dg.followupQ}>
         <span class={dg.followupRole}>{turn.question == null ? 'Latest activity' : 'You'}</span>
         {turn.question == null ? null : ' ' + turn.question}
@@ -123,33 +124,31 @@ export default function FabryPanel() {
   }, [open, stale, avail, busy, f.refreshFailedFor, sig]);
 
   return (
-    <div class="audit-fabry">
-      <div class="audit-fabry-bar">
+    <div class={styles.root + ' audit-fabry'}>
+      <div class={styles.bar}>
         <button
           type="button"
-          class="audit-fabry-toggle"
+          class={styles.toggle}
           aria-expanded={open ? 'true' : 'false'}
           onClick={toggle}
         >
-          <span class="audit-fabry-title">
-            <span class="audit-fabry-mark">
+          <span class={styles.title}>
+            <span class={styles.mark}>
               <FabryMark />
             </span>{' '}
             Audit insights
           </span>
-          <span class={dg.credit + ' audit-fabry-credit'}>by Mr. Fabry</span>
-          {!open && preview ? <span class="audit-fabry-preview">{'— ' + preview}</span> : null}
-          {!open && preview && stale ? (
-            <span class="audit-fabry-stale">{'· view changed'}</span>
-          ) : null}
+          <span class={dg.credit + ' ' + styles.credit}>by Mr. Fabry</span>
+          {!open && preview ? <span class={styles.preview}>{'— ' + preview}</span> : null}
+          {!open && preview && stale ? <span class={styles.stale}>{'· view changed'}</span> : null}
           {!open && !preview ? (
-            <span class="audit-fabry-hint">summarize &amp; ask about the loaded page</span>
+            <span class={styles.hint}>summarize &amp; ask about the loaded page</span>
           ) : null}
         </button>
         {open && lastDone ? (
           <button
             type="button"
-            class={`${dg.foldBtn} audit-fabry-tx`}
+            class={`${dg.foldBtn} ${styles.tx}`}
             onClick={() => setShowTx(true)}
           >
             View investigation
@@ -157,7 +156,7 @@ export default function FabryPanel() {
         ) : null}
       </div>
       {open && (
-        <div class="audit-fabry-body">
+        <div class={styles.body + ' audit-fabry-body'}>
           {f.turns.map((t) => (
             <Turn key={t.id} turn={t} />
           ))}

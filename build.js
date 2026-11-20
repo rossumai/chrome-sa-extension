@@ -13,9 +13,6 @@ const { cpSync, existsSync, rmSync, mkdirSync, readFileSync, writeFileSync } = r
 const CONSOLE_GLOBAL_PARTS = [
   'src/console/tokens.css',
   'src/console/legacy/shared.css',
-  'src/console/legacy.css',
-  'src/audit/legacy.css',
-  'src/galaxy/legacy.css',
 ];
 // Text before a partial's first marker (its header comment) is not emitted.
 function consoleBaseCss() {

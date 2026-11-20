@@ -2,6 +2,7 @@ import { h } from 'preact';
 import JsonTree from '../components/JsonTree.jsx';
 import ctl from '../../ui/controls.module.css';
 import txt from '../../ui/text.module.css';
+import styles from './auditLogs.module.css';
 
 const ACTIONS_BY_TYPE: Record<string, string[]> = {
   document: ['create'],
@@ -20,11 +21,22 @@ const ACTIONS_BY_TYPE: Record<string, string[]> = {
 
 function statusClass(s: any) {
   if (typeof s !== 'number') return '';
-  if (s >= 500) return 'status-5xx';
-  if (s >= 400) return 'status-4xx';
-  if (s >= 300) return 'status-3xx';
-  if (s >= 200) return 'status-2xx';
+  if (s >= 500) return styles.status5xx;
+  if (s >= 400) return styles.status4xx;
+  if (s >= 300) return styles.status3xx;
+  if (s >= 200) return styles.status2xx;
   return '';
+}
+
+// The object-type pill; a type with no colour of its own keeps the plain pill.
+const TYPE_CLASS = new Map<unknown, string>([
+  ['document', styles.typeDocument],
+  ['annotation', styles.typeAnnotation],
+  ['user', styles.typeUser],
+]);
+function typePillClass(t: unknown) {
+  const own = TYPE_CLASS.get(t);
+  return own ? styles.typePill + ' ' + own : styles.typePill;
 }
 
 export const auditLogs = {
@@ -64,34 +76,37 @@ export const auditLogs = {
     {
       key: 'timestamp',
       label: 'Timestamp',
-      cls: 'col-time ' + txt.mono,
+      cls: styles.colTime + ' ' + txt.mono,
       render: (r: any) => fmtTime(r.timestamp),
     },
-    { key: 'username', label: 'User', cls: 'col-user', render: (r: any) => r.username || dash() },
+    {
+      key: 'username',
+      label: 'User',
+      cls: styles.colUser,
+      render: (r: any) => r.username || dash(),
+    },
     {
       key: 'object_type',
       label: 'Type',
-      cls: 'col-type',
-      render: (r: any) => (
-        <span class={'type-pill type-' + (r.object_type || 'unknown')}>{r.object_type || '—'}</span>
-      ),
+      cls: styles.colType,
+      render: (r: any) => <span class={typePillClass(r.object_type)}>{r.object_type || '—'}</span>,
     },
     {
       key: 'action',
       label: 'Action',
-      cls: 'col-action ' + txt.mono,
+      cls: styles.colAction + ' ' + txt.mono,
       render: (r: any) => r.action || dash(),
     },
     {
       key: 'object',
       label: 'Object',
-      cls: 'col-id ' + txt.mono,
+      cls: styles.colId + ' ' + txt.mono,
       render: (r: any, ctx: any) => objectLink(r, ctx),
     },
     {
       key: 'status',
       label: 'Status',
-      cls: 'col-status ' + txt.mono,
+      cls: styles.colStatus + ' ' + txt.mono,
       render: (r: any) => {
         const s = r.content?.status_code;
         return <span class={statusClass(s)}>{s ?? '—'}</span>;

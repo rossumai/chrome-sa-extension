@@ -45,27 +45,22 @@ const OPTIONAL_MODULE_SHEETS = ['dist/sidepanel/sidepanel.css', 'dist/devtools/p
 
 const ALLOWLIST: Record<string, { sheet: string; permanent?: true }> = {
   active: {
-    sheet:
-      'src/console/legacy/shared.css, src/console/legacy.css, src/docs/theme.css, src/devtools/legacy.css',
+    sheet: 'src/console/legacy/shared.css, src/docs/theme.css, src/devtools/legacy.css',
     permanent: true,
   },
   anchor: { sheet: 'src/docs/theme.css', permanent: true },
   card: { sheet: 'src/popup/legacy.css' },
   copied: { sheet: 'src/docs/theme.css, src/popup/legacy.css', permanent: true },
   dimmed: { sheet: 'src/popup/legacy.css' },
-  expanded: { sheet: 'src/audit/legacy.css' },
   failed: {
     sheet: 'src/docs/theme.css',
     permanent: true,
   },
-  filter: { sheet: 'src/audit/legacy.css' },
-  filters: { sheet: 'src/audit/legacy.css' },
   footer: { sheet: 'src/popup/legacy.css' },
   header: { sheet: 'src/popup/legacy.css' },
-  hidden: { sheet: 'src/galaxy/legacy.css, src/popup/legacy.css' },
+  hidden: { sheet: 'src/popup/legacy.css' },
   hljs: { sheet: 'src/docs/theme.css', permanent: true },
   loading: { sheet: 'none' },
-  muted: { sheet: 'src/console/legacy.css' },
   offsite: { sheet: 'src/popup/legacy.css' },
   open: { sheet: 'src/docs/theme.css', permanent: true },
   selected: { sheet: 'src/devtools/legacy.css' },

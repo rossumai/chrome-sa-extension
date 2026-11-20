@@ -1,0 +1,66 @@
+/* The Audit Log's results table: its scroll box (.wrap), the empty and loading line, the table and
+   its rows (.expanded while the row's detail is open). Moved from the global src/audit/legacy.css,
+   rules in their original order. */
+
+.wrap {
+  flex: 1;
+  overflow: auto;
+  padding: 0 16px;
+  background: var(--bg-base);
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 60px 16px;
+  text-align: center;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-base);
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+  font-family: var(--font-mono);
+}
+
+.table tbody td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  font-size: 12px;
+}
+
+.row {
+  cursor: pointer;
+  background: var(--bg-card);
+  transition: background 0.1s;
+}
+
+.row:hover {
+  background: var(--bg-hover);
+}
+
+.row.expanded {
+  background: var(--bg-hover);
+}

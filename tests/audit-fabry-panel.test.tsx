@@ -24,6 +24,7 @@ vi.mock('../src/audit/index.jsx', () => ({
 import FabryPanel, { previewText } from '../src/audit/components/FabryPanel.jsx';
 import * as store from '../src/audit/store.js';
 import dg from '../src/ui/fabry/Diagnosis.module.css';
+import styles from '../src/audit/components/FabryPanel.module.css';
 
 const fireInput = (el: any, v: any) => {
   el.value = v;
@@ -51,16 +52,16 @@ function mount() {
 }
 function expandToggle(el: any) {
   act(() => {
-    el.querySelector('.audit-fabry-toggle').click();
+    el.querySelector('.' + styles.toggle).click();
   });
 }
 
 describe('FabryPanel', () => {
   it('collapsed by default: shows the toggle but no ask input or turns', () => {
     const el = mount();
-    expect(el.querySelector('.audit-fabry-toggle')).toBeTruthy();
+    expect(el.querySelector('.' + styles.toggle)).toBeTruthy();
     expect(el.querySelector('.' + aiStyles.input)).toBeFalsy();
-    expect(el.querySelector('.audit-fabry-turn')).toBeFalsy();
+    expect(el.querySelector('.' + styles.turn)).toBeFalsy();
   });
 
   it('collapsed bar shows the Fabry-generated takeaway line as the preview, dropping the rest', () => {
@@ -81,7 +82,7 @@ describe('FabryPanel', () => {
       ],
     };
     const el = mount();
-    const preview = el.querySelector('.audit-fabry-preview');
+    const preview = el.querySelector('.' + styles.preview);
     expect(preview).toBeTruthy();
     expect(preview.textContent).toContain('Quiet page: 42 events.');
     expect(preview.textContent).not.toContain('Next step');
@@ -96,7 +97,7 @@ describe('FabryPanel', () => {
       turns: [{ id: 1, question: null, text: '', reasoning: '', tools: [], state: 'streaming' }],
     };
     const el = mount();
-    const preview = el.querySelector('.audit-fabry-preview');
+    const preview = el.querySelector('.' + styles.preview);
     expect(preview).toBeTruthy();
     expect(preview.textContent).toContain('summarizing');
   });
@@ -113,14 +114,14 @@ describe('FabryPanel', () => {
     };
     const el = mount();
     expandToggle(el);
-    expect(el.querySelector('.audit-fabry-preview')).toBeFalsy();
+    expect(el.querySelector('.' + styles.preview)).toBeFalsy();
   });
 
   it('collapsed bar shows a hint (not a preview) when idle with no summary yet', () => {
     store.resetFabry();
     const el = mount();
-    expect(el.querySelector('.audit-fabry-hint')).toBeTruthy();
-    expect(el.querySelector('.audit-fabry-preview')).toBeFalsy();
+    expect(el.querySelector('.' + styles.hint)).toBeTruthy();
+    expect(el.querySelector('.' + styles.preview)).toBeFalsy();
   });
 
   it('expanding while idle triggers the lazy default summary exactly once', () => {
@@ -150,7 +151,7 @@ describe('FabryPanel', () => {
     const el = mount();
     expandToggle(el);
     expect(el.querySelector('.' + aiStyles.input)).toBeTruthy();
-    expect(el.querySelector('.audit-fabry-turn')).toBeTruthy();
+    expect(el.querySelector('.' + styles.turn)).toBeTruthy();
     expect(runDefaultSummary).not.toHaveBeenCalled();
   });
 
@@ -202,8 +203,8 @@ describe('FabryPanel', () => {
     };
     const el = mount();
     expandToggle(el);
-    const body = el.querySelector('.audit-fabry-body');
-    const turns = [...body.querySelectorAll('.audit-fabry-turn')];
+    const body = el.querySelector('.' + styles.body);
+    const turns = [...body.querySelectorAll('.' + styles.turn)];
     expect(turns.length).toBe(2);
     // The input wrapper is the body's last child, after every turn.
     expect(body.lastElementChild.querySelector('.' + aiStyles.input)).toBeTruthy();
@@ -262,14 +263,14 @@ describe('FabryPanel', () => {
     };
     const el = mount();
     // Collapsed: no "View investigation" affordance at all.
-    expect(el.querySelector('.audit-fabry-tx')).toBeFalsy();
+    expect(el.querySelector('.' + styles.tx)).toBeFalsy();
     expandToggle(el);
-    const bar = el.querySelector('.audit-fabry-bar');
-    const btn = bar.querySelector('.audit-fabry-tx');
+    const bar = el.querySelector('.' + styles.bar);
+    const btn = bar.querySelector('.' + styles.tx);
     expect(btn).toBeTruthy();
     expect(btn.textContent).toContain('View investigation');
     // Must be a sibling of the toggle button, not nested inside it.
-    const toggle = bar.querySelector('.audit-fabry-toggle');
+    const toggle = bar.querySelector('.' + styles.toggle);
     expect(toggle.contains(btn)).toBe(false);
     expect(btn.tagName).toBe('BUTTON');
     expect(toggle.tagName).toBe('BUTTON');
@@ -332,8 +333,8 @@ describe('FabryPanel — stale summary (view changed since it was computed)', ()
       ],
     };
     const el = mount();
-    expect(el.querySelector('.audit-fabry-preview')).toBeTruthy();
-    expect(el.querySelector('.audit-fabry-stale')).toBeTruthy();
+    expect(el.querySelector('.' + styles.preview)).toBeTruthy();
+    expect(el.querySelector('.' + styles.stale)).toBeTruthy();
   });
 
   it('collapsed + not stale (forView matches the live view signature): no marker', () => {
@@ -348,8 +349,8 @@ describe('FabryPanel — stale summary (view changed since it was computed)', ()
       ],
     };
     const el = mount();
-    expect(el.querySelector('.audit-fabry-preview')).toBeTruthy();
-    expect(el.querySelector('.audit-fabry-stale')).toBeFalsy();
+    expect(el.querySelector('.' + styles.preview)).toBeTruthy();
+    expect(el.querySelector('.' + styles.stale)).toBeFalsy();
   });
 
   it('expanding a stale summary calls refreshSummary, not runDefaultSummary', () => {
@@ -475,7 +476,7 @@ describe('FabryPanel — stale summary (view changed since it was computed)', ()
       ],
     };
     const el = mount();
-    const preview = el.querySelector('.audit-fabry-preview');
+    const preview = el.querySelector('.' + styles.preview);
     expect(preview.textContent).toContain('New takeaway.');
     expect(preview.textContent).not.toContain('Old takeaway.');
   });

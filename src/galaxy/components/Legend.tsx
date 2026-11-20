@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { NODE_STYLE, type NodeType } from '../graph.js';
 import { visibleTypes, toggleType } from '../store.js';
+import styles from './Legend.module.css';
 
 const LABELS = {
   organization: 'Organization',
@@ -13,19 +14,19 @@ const LABELS = {
 export default function Legend() {
   const vis = visibleTypes.value;
   return (
-    <div class="galaxy-legend">
-      <div class="galaxy-legend-title">Legend</div>
+    <div class={styles.legend}>
+      <div class={styles.title}>Legend</div>
       {(Object.keys(LABELS) as NodeType[]).map((type) => {
         const hidden = vis[type] === false;
         return (
           <button
             type="button"
-            class={'galaxy-legend-item' + (hidden ? ' hidden' : '')}
+            class={styles.item + (hidden ? ' ' + styles.hidden : '')}
             aria-pressed={hidden ? 'false' : 'true'}
             title={hidden ? `Show ${LABELS[type]}` : `Hide ${LABELS[type]}`}
             onClick={() => toggleType(type)}
           >
-            <i class="galaxy-legend-dot" style={`background:${NODE_STYLE[type].color}`}></i>
+            <i class={styles.dot} style={`background:${NODE_STYLE[type].color}`}></i>
             {LABELS[type]}
           </button>
         );

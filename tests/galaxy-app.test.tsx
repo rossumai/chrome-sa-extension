@@ -42,6 +42,7 @@ import App from '../src/galaxy/components/App.jsx';
 import * as store from '../src/galaxy/store.js';
 import ctl from '../src/ui/controls.module.css';
 import es from '../src/ui/EmptyState.module.css';
+import styles from '../src/galaxy/components/App.module.css';
 
 function mount(connected: any) {
   const root = document.createElement('div');
@@ -122,7 +123,7 @@ describe('Galaxy App', () => {
     store.loading.value = true;
     store.loadedCount.value = 42;
     const root = mount(true);
-    const countEl = root.querySelector('.galaxy-loading-count');
+    const countEl = root.querySelector('.' + styles.loadingCount);
     expect(countEl).not.toBe(null);
     expect(countEl!.textContent).toContain('42 objects loaded');
   });
@@ -130,13 +131,13 @@ describe('Galaxy App', () => {
     store.loading.value = true;
     store.loadedCount.value = 0;
     const root = mount(true);
-    expect(root.querySelector('.galaxy-loading-count')).toBe(null);
-    expect(root.querySelector('.galaxy-loading')).not.toBe(null);
+    expect(root.querySelector('.' + styles.loadingCount)).toBe(null);
+    expect(root.querySelector('.' + styles.loading)).not.toBe(null);
   });
   it('shows the error overlay with the store error message', () => {
     store.error.value = 'Boom';
     const root = mount(true);
-    expect(root.querySelector('.galaxy-error')!.textContent).toContain('Boom');
+    expect(root.querySelector('.' + styles.error)!.textContent).toContain('Boom');
   });
   it('wires scene hover/click callbacks to the store signals', () => {
     mount(true);
@@ -177,12 +178,12 @@ describe('Galaxy App', () => {
     store.error.value = 'Rossum is rate-limiting requests. Try again shortly.';
     store.retryable.value = true;
     const root = mount(true);
-    expect(root.querySelector('.galaxy-error button')!.textContent).toBe('Retry');
+    expect(root.querySelector('.' + styles.error + ' button')!.textContent).toBe('Retry');
   });
 
   it('shows no Retry button for other errors', () => {
     store.error.value = 'Boom';
     const root = mount(true);
-    expect(root.querySelector('.galaxy-error button')).toBeNull();
+    expect(root.querySelector('.' + styles.error + ' button')).toBeNull();
   });
 });

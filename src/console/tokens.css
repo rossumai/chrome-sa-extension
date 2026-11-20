@@ -50,7 +50,8 @@
   /* EXP badge: a FILLED pill, unlike every -bg/-fg pair above (which are tints
      meant to sit on a card). Violet, not --accent — the rail paints the active
      app's icon in --accent, so an accent badge reads as a second selection
-     marker. See .app-rail-exp for the measured contrast. */
+     marker. See .exp in src/console/components/Rail.module.css for the
+     measured contrast. */
   --exp-bg: #7c3aed;
   --exp-fg: #ffffff;
   --type-doc-bg: #e0f2fe;

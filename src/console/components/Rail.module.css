@@ -1,25 +1,9 @@
-/* GLOBAL STYLESHEET, TEMPORARY: the Console shell's rules (src/console/), split out of the former
-   src/console/console.css. Deleted by its Phase 2 task of the CSS Modules migration, which moves
-   every rule into a *.module.css beside the component that uses it.
+/* The Console's app-switcher rail (.rail), its buttons (.item, with the .active and .muted
+   modifiers), their icon tile and label, and the BETA / EXP badges. Moved from the global
+   src/console/legacy.css, rules in their original order, with the rail's line from the
+   Architect print block in src/console/legacy/shared.css. */
 
-   Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
-   :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
-   their component. Any class added here must contain a hyphen — esbuild's minified CSS Module
-   names never do, so a hyphenated class can never collide with one
-   (tests/css-class-collision-boundary.test.ts).
-
-   build.js assembles dist/console/console.base.css from the Console's partials
-   (CONSOLE_GLOBAL_PARTS): each "@order N" comment starts a segment, and the segments of every
-   partial are emitted by N, which is the original rule order of the former monolith. A rule's
-   place in the cascade is its segment's N, not the file it sits in. */
-
-/* @order 30 */
-
-/* ===================================================================== */
-/* App switcher rail                                                     */
-/* ===================================================================== */
-
-.app-rail {
+.rail {
   flex: none;
   width: 76px;
   background: var(--bg-sidebar);
@@ -31,7 +15,7 @@
   padding: 12px 0;
 }
 
-.app-rail-item {
+.item {
   position: relative;
   width: 60px;
   background: none;
@@ -47,12 +31,12 @@
   font-family: var(--font-sans);
 }
 
-.app-rail-item:hover {
+.item:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
 
-.app-rail-icon {
+.icon {
   width: 42px;
   height: 42px;
   border-radius: 13px;
@@ -66,16 +50,16 @@
     color 0.15s;
 }
 
-.app-rail-label {
+.label {
   font-size: 10px;
   font-weight: 600;
 }
 
-.app-rail-item.active {
+.item.active {
   color: var(--text-primary);
 }
 
-.app-rail-item.active .app-rail-icon {
+.item.active .icon {
   background: var(--accent);
   color: #fff;
 }
@@ -83,20 +67,20 @@
 /* muted: a work-in-progress app, pushed to the bottom of the rail and dimmed.
    margin-top:auto pushes it to the bottom edge; opacity is restored on
    hover/active/focus so it stays usable when intentionally reached. */
-.app-rail-item.muted {
+.item.muted {
   margin-top: auto;
   opacity: 0.2;
   transition: opacity 0.15s;
 }
 
-.app-rail-item.muted:hover,
-.app-rail-item.muted:focus-visible,
-.app-rail-item.muted.active {
+.item.muted:hover,
+.item.muted:focus-visible,
+.item.muted.active {
   opacity: 1;
 }
 
-.app-rail-beta,
-.app-rail-exp {
+.beta,
+.exp {
   position: absolute;
   top: 2px;
   right: 6px; /* sits slightly over the top-right of the icon */
@@ -129,7 +113,15 @@
    reads as a second "this one is selected" marker. Verified side by side.
    Not --accent-bg/--accent-fg either — those two are never defined in this
    file, so they would render a transparent pill. */
-.app-rail-exp {
+.exp {
   background: var(--exp-bg);
   color: var(--exp-fg);
+}
+
+/* Printing an Architect specification hides the app around it (see the print block in
+   src/console/legacy/shared.css). */
+@media print {
+  :global(body:has(.docs-pane)) .rail {
+    display: none !important;
+  }
 }

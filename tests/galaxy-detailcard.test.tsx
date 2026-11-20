@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { h, render } from 'preact';
 import DetailCard from '../src/galaxy/components/DetailCard.jsx';
 import * as store from '../src/galaxy/store.js';
+import styles from '../src/galaxy/components/DetailCard.module.css';
 
 beforeEach(() => {
   store.domain.value = 'https://acme.rossum.app';
@@ -72,24 +73,24 @@ function mount() {
 describe('DetailCard', () => {
   it('renders nothing when no node is selected', () => {
     store.selectedNodeId.value = null;
-    expect(mount().querySelector('.galaxy-detail-card')).toBe(null);
+    expect(mount().querySelector('.' + styles.card)).toBe(null);
   });
   it('shows the selected node name + type and a working Rossum link for a queue', () => {
     store.selectedNodeId.value = 'queue:100';
     const root = mount();
-    expect(root.querySelector('.galaxy-detail-card')!.textContent).toContain('Invoices');
-    const link = root.querySelector('a.galaxy-detail-link');
+    expect(root.querySelector('.' + styles.card)!.textContent).toContain('Invoices');
+    const link = root.querySelector('a.' + styles.link);
     expect(link!.getAttribute('href')).toBe('https://acme.rossum.app/queues/100');
   });
   it('hides the Rossum link for a type without a known route (workspace, v1)', () => {
     store.selectedNodeId.value = 'workspace:10';
     const root = mount();
-    expect(root.querySelector('.galaxy-detail-card')!.textContent).toContain('WS A');
-    expect(root.querySelector('a.galaxy-detail-link')).toBe(null);
+    expect(root.querySelector('.' + styles.card)!.textContent).toContain('WS A');
+    expect(root.querySelector('a.' + styles.link)).toBe(null);
   });
-  it('renders node.detail rows in .galaxy-detail-facts for a queue', () => {
+  it('renders node.detail rows in the facts list for a queue', () => {
     store.selectedNodeId.value = 'queue:100';
-    const facts = mount().querySelector('.galaxy-detail-facts');
+    const facts = mount().querySelector('.' + styles.facts);
     expect(facts).not.toBe(null);
     const pairs = [...facts!.querySelectorAll('div')].map((d) => [
       d.querySelector('dt')!.textContent,
@@ -101,7 +102,7 @@ describe('DetailCard', () => {
   });
   it('renders node.detail rows for an engine node', () => {
     store.selectedNodeId.value = 'engine:7';
-    const facts = mount().querySelector('.galaxy-detail-facts');
+    const facts = mount().querySelector('.' + styles.facts);
     expect(facts).not.toBe(null);
     const pairs = [...facts!.querySelectorAll('div')].map((d) => [
       d.querySelector('dt')!.textContent,
@@ -112,7 +113,7 @@ describe('DetailCard', () => {
   });
   it('renders node.detail rows for a workspace node', () => {
     store.selectedNodeId.value = 'workspace:10';
-    const facts = mount().querySelector('.galaxy-detail-facts');
+    const facts = mount().querySelector('.' + styles.facts);
     expect(facts).not.toBe(null);
     const pairs = [...facts!.querySelectorAll('div')].map((d) => [
       d.querySelector('dt')!.textContent,
@@ -121,7 +122,7 @@ describe('DetailCard', () => {
     expect(pairs).toContainEqual(['Queues', '3']);
     expect(pairs).toContainEqual(['Autopilot', 'On']);
   });
-  it('omits .galaxy-detail-facts when node.detail is empty', () => {
+  it('omits the facts list when node.detail is empty', () => {
     store.graph.value = {
       nodes: [
         {
@@ -137,20 +138,22 @@ describe('DetailCard', () => {
       links: [],
     };
     store.selectedNodeId.value = 'queue:99';
-    expect(mount().querySelector('.galaxy-detail-facts')).toBe(null);
+    expect(mount().querySelector('.' + styles.facts)).toBe(null);
   });
   it('produces a hook deep-link for a hook node', () => {
     store.selectedNodeId.value = 'hook:200';
-    const link = mount().querySelector('a.galaxy-detail-link');
+    const link = mount().querySelector('a.' + styles.link);
     expect(link!.getAttribute('href')).toBe('https://acme.rossum.app/settings/extensions/200');
   });
   it('clicking close clears the selection', () => {
     store.selectedNodeId.value = 'queue:100';
-    mount().querySelector<HTMLElement>('.galaxy-detail-close')!.click();
+    mount()
+      .querySelector<HTMLElement>('.' + styles.close)!
+      .click();
     expect(store.selectedNodeId.value).toBe(null);
   });
   it('renders nothing for an unknown selected id', () => {
     store.selectedNodeId.value = 'queue:99999';
-    expect(mount().querySelector('.galaxy-detail-card')).toBe(null);
+    expect(mount().querySelector('.' + styles.card)).toBe(null);
   });
 });

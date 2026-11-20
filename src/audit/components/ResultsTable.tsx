@@ -2,19 +2,20 @@ import { h } from 'preact';
 import { activeSource, rows, loading, selectedRow } from '../store.js';
 import { SOURCES } from '../sources/index.js';
 import { makeCtx } from '../ctx.js';
+import styles from './ResultsTable.module.css';
 
 export default function ResultsTable() {
   const desc = SOURCES[activeSource.value];
   const all = rows.value;
   const ctx = makeCtx();
 
-  if (loading.value && all.length === 0) return <div class="results-empty">Loading…</div>;
+  if (loading.value && all.length === 0) return <div class={styles.empty}>Loading…</div>;
   if (!loading.value && all.length === 0)
-    return <div class="results-empty">No records match the current filters.</div>;
+    return <div class={styles.empty}>No records match the current filters.</div>;
 
   return (
-    <div class="results-wrap">
-      <table class="results-table">
+    <div class={styles.wrap}>
+      <table class={styles.table}>
         <thead>
           <tr>
             {desc.columns.map((c: any) => (
@@ -26,7 +27,7 @@ export default function ResultsTable() {
           {all.map((r) => (
             <tr
               key={String(r._idx)}
-              class={'result-row' + (selectedRow.value === r._idx ? ' expanded' : '')}
+              class={styles.row + (selectedRow.value === r._idx ? ' ' + styles.expanded : '')}
               onClick={() => (selectedRow.value = selectedRow.value === r._idx ? null : r._idx)}
             >
               {desc.columns.map((c: any) => (

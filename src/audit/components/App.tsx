@@ -10,6 +10,7 @@ import UnavailablePanel from './UnavailablePanel.jsx';
 import FabryPanel from './FabryPanel.jsx';
 import es from '../../ui/EmptyState.module.css';
 import shell from '../../ui/AppShell.module.css';
+import styles from './App.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   return (
@@ -24,10 +25,10 @@ export default function App({ connected }: { connected: boolean | null }) {
         ) : availability.value === 'unavailable' ? (
           <UnavailablePanel />
         ) : (
-          <div class="audit-body">
+          <div class={styles.body}>
             {aiAvailable.value && <FabryPanel />}
             <FiltersBar />
-            <div class="audit-results-row">
+            <div class={styles.resultsRow}>
               <ResultsTable />
               <DetailPanel />
             </div>

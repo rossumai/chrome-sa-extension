@@ -1,0 +1,94 @@
+/* The Audit Log's Mr. Fabry insights band (Inspector Diagnosis identity, attached above the
+   filters). Collapsed: one line with a live preview. Expanded: chat-ordered thread, input last. The
+   band also carries the hyphenated hook classes `audit-fabry` and `audit-fabry-body`, which
+   src/ui/fabry/FabryNarrative.module.css and src/ui/aiInput.module.css name with :global() to size
+   the narrative and the ask input inside it. Moved from the global src/audit/legacy.css, rules in
+   their original order. */
+
+.root {
+  background: linear-gradient(180deg, var(--diag-grad-a), var(--diag-grad-b));
+  border-bottom: 1px solid var(--diag-border);
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 7px 0;
+  font: inherit;
+  text-align: left;
+  color: var(--diag-fg);
+}
+
+.toggle:hover .title {
+  text-decoration: underline;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 12.5px;
+  flex-shrink: 0;
+}
+
+.mark {
+  font-size: 11px;
+  margin-right: 1px;
+}
+
+.root .credit {
+  flex-shrink: 0;
+}
+
+.preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.stale {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.tx {
+  flex-shrink: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 0 12px;
+}
+
+.turn + .turn {
+  border-top: 1px dashed var(--diag-border);
+  padding-top: 10px;
+}
