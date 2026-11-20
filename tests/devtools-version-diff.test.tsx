@@ -4,6 +4,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import VersionDiff from '../src/devtools/VersionDiff.jsx';
 import * as store from '../src/devtools/store.js';
+import styles from '../src/devtools/VersionDiff.module.css';
 
 async function waitFor(fn: () => boolean, tries = 200) {
   for (let i = 0; i < tries; i++) {
@@ -64,7 +65,7 @@ describe('VersionDiff', () => {
     expect(new URL(`https://x${get.mock.calls[0][0]}`).searchParams.get('version_id')).toBe('9,5');
     expect(root.querySelector('.cm-deletedChunk, .cm-changedLine')).not.toBeNull();
     expect(root.textContent).toContain('Jane Doe');
-    expect(root.querySelector('.rawjson-histdiff-banner a')).toBeNull(); // Diff ↗ lives on the rail row
+    expect(root.querySelector('.' + styles.banner + ' a')).toBeNull(); // Diff ↗ lives on the rail row
   });
 
   it('finds the previous version with a query when it is not loaded', async () => {
@@ -123,7 +124,7 @@ describe('VersionDiff', () => {
     );
     const onCompared = mount(e(49), [e(45, { modifier_id: 8 })], get);
     await waitFor(() => root.textContent!.includes('John Roe'));
-    const banner = root.querySelector('.rawjson-histdiff-banner')!.textContent!;
+    const banner = root.querySelector('.' + styles.banner)!.textContent!;
     expect(banner).toMatch(/^Changes from .+ by Jane Doe, against the version from .+ by John Roe/);
     expect(banner).not.toMatch(/v\d+/);
     expect(onCompared).toHaveBeenCalledWith(45);
@@ -136,9 +137,7 @@ describe('VersionDiff', () => {
     const get = vi.fn(async () => ({ results: [{ ...created, snapshot: snap(30) }] }));
     const onCompared = mount(created, [], get);
     await waitFor(() => !!root.querySelector('.cm-editor'));
-    expect(root.querySelector('.rawjson-histdiff-banner')!.textContent).toMatch(
-      /^Created .+ by Jane Doe/,
-    );
+    expect(root.querySelector('.' + styles.banner)!.textContent).toMatch(/^Created .+ by Jane Doe/);
     expect(onCompared).toHaveBeenCalledWith(null);
   });
 

@@ -1,0 +1,8 @@
+/* The resolved-name widget cmNames.ts draws after a Rossum URL in the editor. */
+.name {
+  opacity: 0.55;
+  font-style: italic;
+  margin-left: 1.5em;
+  user-select: none;
+  color: var(--fg);
+}

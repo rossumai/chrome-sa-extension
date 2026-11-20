@@ -58,13 +58,13 @@ describe('popup, side panel and DevTools stylesheets', () => {
     }
   });
 
-  it('each page links its tokens, then its legacy rules where any are left', () => {
+  it('each page links its tokens first', () => {
     expect(linkedSheets('popup/popup.html').slice(0, 1)).toEqual(['popup/tokens.css']);
     // The side panel shares the popup's tokens; the MDH card's modules ride in its own bundle sheet.
     expect(linkedSheets('sidepanel/sidepanel.html').slice(0, 1)).toEqual(['popup/tokens.css']);
-    expect(linkedSheets('devtools/panel.html').slice(0, 2)).toEqual([
+    expect(linkedSheets('devtools/panel.html')).toEqual([
       'devtools/tokens.css',
-      'devtools/legacy.css',
+      'devtools/panel.css',
     ]);
   });
 
@@ -99,7 +99,7 @@ describe('popup, side panel and DevTools stylesheets', () => {
   });
 
   it('every global sheet says it is global on purpose', () => {
-    for (const p of ['popup/tokens.css', 'devtools/tokens.css', 'devtools/legacy.css']) {
+    for (const p of ['popup/tokens.css', 'devtools/tokens.css']) {
       const head = readFileSync(join(SRC, p), 'utf8').slice(0, 2000);
       expect(head, p).toMatch(/^\/\* GLOBAL STYLESHEET/);
       expect(head, p).toContain('must contain a hyphen');

@@ -3,6 +3,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { h, render } from 'preact';
 import HistoryRail from '../src/devtools/HistoryRail.jsx';
+import styles from '../src/devtools/HistoryRail.module.css';
 
 async function waitFor(fn: () => boolean, tries = 200) {
   for (let i = 0; i < tries; i++) {
@@ -54,8 +55,8 @@ describe('HistoryRail', () => {
     }));
     mount({ get, onSelect });
     // Live + both versions: nothing is filtered out, status-only changes included.
-    await waitFor(() => root.querySelectorAll('.rawjson-hist-row').length === 3);
-    const rows = root.querySelectorAll<HTMLButtonElement>('.rawjson-hist-row');
+    await waitFor(() => root.querySelectorAll('.' + styles.row).length === 3);
+    const rows = root.querySelectorAll<HTMLButtonElement>('.' + styles.row);
     expect(rows[2].textContent).toContain('status');
     expect(rows[0].textContent).toContain('Live');
     expect(rows[1].textContent).toContain('Jane Doe');
@@ -87,10 +88,10 @@ describe('HistoryRail', () => {
         : page(full(), 'more'),
     );
     mount({ get });
-    await waitFor(() => root.querySelector('.rawjson-hist-more') !== null);
-    root.querySelector<HTMLButtonElement>('.rawjson-hist-more')!.click();
-    await waitFor(() => root.querySelectorAll('.rawjson-hist-row').length === 22);
-    expect(root.querySelector('.rawjson-hist-more')).toBeNull();
+    await waitFor(() => root.querySelector('.' + styles.more) !== null);
+    root.querySelector<HTMLButtonElement>('.' + styles.more)!.click();
+    await waitFor(() => root.querySelectorAll('.' + styles.row).length === 22);
+    expect(root.querySelector('.' + styles.more)).toBeNull();
   });
 
   it('a double-click on Load more makes one request', async () => {
@@ -101,13 +102,13 @@ describe('HistoryRail', () => {
         : Promise.resolve(page(full(), 'more')),
     );
     mount({ get });
-    await waitFor(() => root.querySelector('.rawjson-hist-more') !== null);
-    const more = root.querySelector<HTMLButtonElement>('.rawjson-hist-more')!;
+    await waitFor(() => root.querySelector('.' + styles.more) !== null);
+    const more = root.querySelector<HTMLButtonElement>('.' + styles.more)!;
     more.click();
     more.click();
     expect(get).toHaveBeenCalledTimes(2); // page 1, then page 2 once
     release(page([e(1)], null));
-    await waitFor(() => root.querySelectorAll('.rawjson-hist-row').length === 22);
+    await waitFor(() => root.querySelectorAll('.' + styles.row).length === 22);
     expect(get).toHaveBeenCalledTimes(2);
   });
 
@@ -122,8 +123,8 @@ describe('HistoryRail', () => {
       return Promise.resolve(page(full(), 'more'));
     });
     mount({ get });
-    await waitFor(() => root.querySelector('.rawjson-hist-more') !== null);
-    root.querySelector<HTMLButtonElement>('.rawjson-hist-more')!.click();
+    await waitFor(() => root.querySelector('.' + styles.more) !== null);
+    root.querySelector<HTMLButtonElement>('.' + styles.more)!.click();
     await waitFor(() => get.mock.calls.length === 2); // page 1, then the page 2 held open
     render(
       <HistoryRail
@@ -136,22 +137,22 @@ describe('HistoryRail', () => {
       />,
       root,
     );
-    await waitFor(() => root.querySelectorAll('.rawjson-hist-row').length === 2); // Live + v900
+    await waitFor(() => root.querySelectorAll('.' + styles.row).length === 2); // Live + v900
     release(page([e(1), e(0)], null));
     await new Promise((r) => setTimeout(r, 20));
     // The old object's page 2 landed after the switch and added nothing.
-    expect(root.querySelectorAll('.rawjson-hist-row').length).toBe(2);
+    expect(root.querySelectorAll('.' + styles.row).length).toBe(2);
   });
 
   it('renders 20 of a 30-row page and reveals the rest without a request', async () => {
     const thirty = Array.from({ length: 30 }, (_, i) => e(200 + i));
     const get = vi.fn(async () => page(thirty, null));
     mount({ get });
-    await waitFor(() => root.querySelectorAll('.rawjson-hist-row').length === 21); // Live + 20
-    root.querySelector<HTMLButtonElement>('.rawjson-hist-more')!.click();
-    await waitFor(() => root.querySelectorAll('.rawjson-hist-row').length === 31);
+    await waitFor(() => root.querySelectorAll('.' + styles.row).length === 21); // Live + 20
+    root.querySelector<HTMLButtonElement>('.' + styles.more)!.click();
+    await waitFor(() => root.querySelectorAll('.' + styles.row).length === 31);
     expect(get).toHaveBeenCalledTimes(1);
-    expect(root.querySelector('.rawjson-hist-more')).toBeNull();
+    expect(root.querySelector('.' + styles.more)).toBeNull();
   });
 });
 
@@ -159,15 +160,15 @@ describe('HistoryRail compared label', () => {
   it('labels the version the selected one is diffed against', async () => {
     const get = vi.fn(async () => ({ pagination: { next: null }, results: [e(3), e(2), e(1)] }));
     mount({ get, selectedId: 3, comparedId: 2 });
-    await waitFor(() => root.querySelectorAll('.rawjson-hist-row').length === 4);
-    const rows = [...root.querySelectorAll('.rawjson-hist-row')];
-    expect(rows.map((r) => !!r.querySelector('.rawjson-hist-tag'))).toEqual([
+    await waitFor(() => root.querySelectorAll('.' + styles.row).length === 4);
+    const rows = [...root.querySelectorAll('.' + styles.row)];
+    expect(rows.map((r) => !!r.querySelector('.' + styles.tag))).toEqual([
       false, // Live
       false, // v3, the selected one
       true, // v2, compared
       false,
     ]);
-    expect(rows[1].classList.contains('selected')).toBe(true);
+    expect(rows[1].classList.contains(styles.selected)).toBe(true);
   });
 });
 
@@ -175,10 +176,12 @@ describe('HistoryRail Diff link', () => {
   it("puts Diff ↗ on the selected version's row only, to Rossum's page for that version", async () => {
     const get = vi.fn(async () => ({ pagination: { next: null }, results: [e(3), e(2)] }));
     mount({ get, selectedId: 3 });
-    await waitFor(() => root.querySelectorAll('.rawjson-hist-row').length === 3);
-    const links = [...root.querySelectorAll<HTMLAnchorElement>('a.rawjson-hist-diff')];
+    await waitFor(() => root.querySelectorAll('.' + styles.row).length === 3);
+    const links = [...root.querySelectorAll<HTMLAnchorElement>('a.' + styles.diff)];
     expect(links).toHaveLength(1);
-    expect(links[0].closest('.rawjson-hist-item')!.querySelector('.selected')).not.toBeNull();
+    expect(
+      links[0].closest('.' + styles.item)!.querySelector('.' + styles.selected),
+    ).not.toBeNull();
     expect(links[0].href).toBe(
       'https://org.rossum.app/settings/configuration-changelog/3?objectType=hook&objectId=48',
     );
@@ -195,10 +198,10 @@ describe('HistoryRail first page', () => {
     );
     const entries = Array.from({ length: 20 }, (_, i) => e(100 + i));
     mount({ get, firstPage: { entries, total: 21 } });
-    expect(root.querySelectorAll('.rawjson-hist-row').length).toBe(21); // Live + 20, at once
+    expect(root.querySelectorAll('.' + styles.row).length).toBe(21); // Live + 20, at once
     expect(get).not.toHaveBeenCalled();
-    root.querySelector<HTMLButtonElement>('.rawjson-hist-more')!.click(); // total says a page 2
-    await waitFor(() => root.querySelectorAll('.rawjson-hist-row').length === 22);
+    root.querySelector<HTMLButtonElement>('.' + styles.more)!.click(); // total says a page 2
+    await waitFor(() => root.querySelectorAll('.' + styles.row).length === 22);
     expect(get).toHaveBeenCalledTimes(1);
   });
 });

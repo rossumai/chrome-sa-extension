@@ -3,6 +3,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { h, render } from 'preact';
 import DiffConfirm from '../src/devtools/DiffConfirm.jsx';
+import styles from '../src/devtools/DiffConfirm.module.css';
 
 function mount(props: any) {
   const root = document.createElement('div');
@@ -21,7 +22,7 @@ describe('DiffConfirm', () => {
       onCancel: () => {},
     });
     expect(root.textContent).toContain('name');
-    root.querySelector<HTMLElement>('.rawjson-confirm')!.click();
+    root.querySelector<HTMLElement>('.' + styles.confirm)!.click();
     expect(onConfirm).toHaveBeenCalled();
   });
   it('warns about removed top-level keys', () => {

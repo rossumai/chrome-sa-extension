@@ -1,0 +1,24 @@
+/* Shared by more than one DevTools panel component: the panel shell (panel.tsx), the JSON
+   editor (JsonCodeEditor.tsx) and the version diff (VersionDiff.tsx). */
+.error {
+  background: #fdecec;
+  color: #a11;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f3caca;
+  white-space: pre-wrap;
+}
+.emptyHint {
+  padding: 24px;
+  color: #777;
+  text-align: center;
+}
+.cm {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+/* Every CodeMirror editor in the panel (third-party DOM, so global). */
+:global(.cm-editor) {
+  height: 100%;
+  font-size: 11px;
+}

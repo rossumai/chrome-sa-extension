@@ -1,6 +1,7 @@
 // src/devtools/DiffConfirm.tsx
 import { h } from 'preact';
 import { diffObjects } from './diff.js';
+import styles from './DiffConfirm.module.css';
 
 export default function DiffConfirm({
   original,
@@ -21,21 +22,21 @@ export default function DiffConfirm({
   const d = diffObjects(original, edited);
   const empty = d.leaves.length === 0 && d.removed.length === 0;
   return (
-    <div class="rawjson-diff-overlay">
-      <div class="rawjson-diff-card">
+    <div class={styles.overlay}>
+      <div class={styles.card}>
         <h4 class="rawjson-diff-title">Review changes</h4>
         {empty ? (
           <div class="rawjson-diff-empty">No changes to save.</div>
         ) : (
           <div class="rawjson-diff-list">
             {d.leaves.map((l) => (
-              <div class={`rawjson-diff-leaf rawjson-diff-${l.kind}`}>
+              <div class={`${styles.leaf} ${styles[l.kind]}`}>
                 <code class="rawjson-diff-path">{l.path}</code>
-                <span class="rawjson-diff-before">
+                <span class={styles.before}>
                   {l.kind === 'added' ? '—' : JSON.stringify(l.before)}
                 </span>
                 <span class="rawjson-diff-arrow">→</span>
-                <span class="rawjson-diff-after">
+                <span class={styles.after}>
                   {l.kind === 'removed' ? '—' : JSON.stringify(l.after)}
                 </span>
               </div>
@@ -43,20 +44,20 @@ export default function DiffConfirm({
           </div>
         )}
         {d.removed.length ? (
-          <div class="rawjson-diff-removed-warn">
+          <div class={styles.removedWarn}>
             Removed top-level keys are NOT applied (PATCH can't delete keys): {d.removed.join(', ')}
           </div>
         ) : null}
         {notes.map((n) => (
-          <div class="rawjson-diff-removed-warn" key={n}>
+          <div class={styles.removedWarn} key={n}>
             {n}
           </div>
         ))}
-        <div class="rawjson-diff-actions">
-          <button class="rawjson-cancel" onClick={onCancel} disabled={saving}>
+        <div class={styles.actions}>
+          <button class={styles.cancel} onClick={onCancel} disabled={saving}>
             Cancel
           </button>
-          <button class="rawjson-confirm" onClick={onConfirm} disabled={saving || empty}>
+          <button class={styles.confirm} onClick={onConfirm} disabled={saving || empty}>
             {saving ? 'Saving…' : 'Confirm & save'}
           </button>
         </div>

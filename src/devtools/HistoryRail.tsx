@@ -7,6 +7,7 @@ import { listEntries, resolveUsers } from '../changelog/api.js';
 import { relativeAgo } from '../changelog/feed.js';
 import { modifierLabel, versionPageUrl } from '../changelog/names.js';
 import type { HistoryRef } from './history.js';
+import styles from './HistoryRail.module.css';
 
 const VISIBLE = 20;
 
@@ -107,33 +108,33 @@ export default function HistoryRail({
   };
 
   return (
-    <aside class="rawjson-rail">
+    <aside class={styles.rail}>
       <button
-        class={`rawjson-hist-row${selectedId == null ? ' selected' : ''}`}
+        class={`${styles.row}${selectedId == null ? ' ' + styles.selected : ''}`}
         onClick={() => onSelect(null)}
       >
         <b>Live</b>
-        <span class="rawjson-hist-meta">editable</span>
+        <span class={styles.meta}>editable</span>
       </button>
       {rows.slice(0, shown).map((e) => (
         // A link cannot sit inside a button, so the row's button and the selected version's
         // link to Rossum's own page are siblings.
-        <div class="rawjson-hist-item" key={e.version_id}>
+        <div class={styles.item} key={e.version_id}>
           <button
-            class={`rawjson-hist-row${selectedId === e.version_id ? ' selected' : ''}`}
+            class={`${styles.row}${selectedId === e.version_id ? ' ' + styles.selected : ''}`}
             onClick={() => onSelect(e)}
           >
             <span>
               {relativeAgo(e.version_created_at)} · {modifierLabel(e.modifier_id, names)}
-              {e.version_id === comparedId ? <span class="rawjson-hist-tag">compared</span> : null}
+              {e.version_id === comparedId ? <span class={styles.tag}>compared</span> : null}
             </span>
-            <span class="rawjson-hist-meta">
+            <span class={styles.meta}>
               {e.version_event === 'update' ? e.changed_fields.join(', ') : e.version_event}
             </span>
           </button>
           {selectedId === e.version_id ? (
             <a
-              class="rawjson-hist-diff"
+              class={styles.diff}
               href={versionPageUrl(domain, e)}
               target="_blank"
               rel="noopener noreferrer"
@@ -144,9 +145,9 @@ export default function HistoryRail({
           ) : null}
         </div>
       ))}
-      {failed ? <div class="rawjson-hist-meta">Could not load versions.</div> : null}
+      {failed ? <div class={styles.meta}>Could not load versions.</div> : null}
       {hasHidden || nextPage != null ? (
-        <button class="rawjson-hist-more" onClick={loadMore}>
+        <button class={styles.more} onClick={loadMore}>
           Load more
         </button>
       ) : null}

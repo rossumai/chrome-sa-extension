@@ -2,6 +2,7 @@
 import { h } from 'preact';
 import { useState, useRef } from 'preact/hooks';
 import { suggest, shortPath } from './catalog.js';
+import styles from './RequestBar.module.css';
 
 export default function RequestBar({ onSubmit }: { onSubmit: (path: string) => void }) {
   const [value, setValue] = useState('');
@@ -57,14 +58,14 @@ export default function RequestBar({ onSubmit }: { onSubmit: (path: string) => v
   };
 
   return (
-    <div class="rawjson-reqbar">
-      <span class="rawjson-reqbar-method">GET</span>
-      <span class="rawjson-reqbar-prefix" aria-hidden="true">
+    <div class={styles.reqbar}>
+      <span class={styles.method}>GET</span>
+      <span class={styles.prefix} aria-hidden="true">
         /api/v1/
       </span>
       <input
         ref={inputRef}
-        class="rawjson-reqbar-input"
+        class={styles.input}
         type="text"
         spellcheck={false}
         placeholder={'queues?page_size=100  —  type to search endpoints'}
@@ -78,22 +79,22 @@ export default function RequestBar({ onSubmit }: { onSubmit: (path: string) => v
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 120)}
       />
-      <button class="rawjson-reqbar-go" title="Go" onClick={() => fire()}>
+      <button class={styles.go} title="Go" onClick={() => fire()}>
         {'→'}
       </button>
       {open && items.length ? (
-        <ul class="rawjson-reqbar-suggest">
+        <ul class={styles.suggest}>
           {items.map((e, i) => (
             <li
               key={e.pathTemplate + e.kind}
-              class={`rawjson-reqbar-item${i === hi ? ' active' : ''}`}
+              class={`${styles.item}${i === hi ? ' ' + styles.active : ''}`}
               onMouseDown={(ev) => {
                 ev.preventDefault();
                 pick(e);
               }}
             >
-              <span class="rawjson-reqbar-item-path">{shortPath(e.pathTemplate)}</span>
-              <span class="rawjson-reqbar-item-desc">{e.description}</span>
+              <span class={styles.itemPath}>{shortPath(e.pathTemplate)}</span>
+              <span class={styles.itemDesc}>{e.description}</span>
             </li>
           ))}
         </ul>

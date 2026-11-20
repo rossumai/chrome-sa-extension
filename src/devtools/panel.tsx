@@ -26,6 +26,9 @@ import { buildCurl } from './curl.js';
 import { buildPatchBody } from './diff.js';
 import { isAnnotationContentPath, changedTables } from './annotationContent.js';
 import * as history from './history.js';
+import styles from './panel.module.css';
+import shared from './shared.module.css';
+import reqbar from './RequestBar.module.css';
 
 const deps = {
   getJson: api.getJson,
@@ -67,19 +70,19 @@ export function Panel() {
     const handleMouseDown = (e: any) => {
       if (
         store.linkMenu.value &&
-        !(e.target && e.target.closest && e.target.closest('.rawjson-linkmenu'))
+        !(e.target && e.target.closest && e.target.closest('.' + styles.linkmenu))
       ) {
         store.linkMenu.value = null;
       }
       if (
         store.tabMenu.value &&
-        !(e.target && e.target.closest && e.target.closest('.rawjson-tabmenu'))
+        !(e.target && e.target.closest && e.target.closest('.' + styles.tabmenu))
       ) {
         store.tabMenu.value = null;
       }
       if (
         store.curlMenu.value &&
-        !(e.target && e.target.closest && e.target.closest('.rawjson-curl-split'))
+        !(e.target && e.target.closest && e.target.closest('.' + styles.curlSplit))
       ) {
         store.curlMenu.value = false;
       }
@@ -114,7 +117,7 @@ export function Panel() {
         store.toggleLineWrap();
       }
       if ((e.metaKey || e.ctrlKey) && (e.key === 'l' || e.key === 'L')) {
-        const el = document.querySelector<HTMLInputElement>('.rawjson-reqbar-input');
+        const el = document.querySelector<HTMLInputElement>('.' + reqbar.input);
         if (el) {
           e.preventDefault();
           e.stopImmediatePropagation();
@@ -206,7 +209,7 @@ export function Panel() {
     store.linkMenu.value ? (
       <div
         key="linkmenu"
-        class="rawjson-linkmenu"
+        class={styles.linkmenu}
         style={`left:${store.linkMenu.value.x}px;top:${store.linkMenu.value.y}px`}
       >
         <button
@@ -230,7 +233,7 @@ export function Panel() {
     store.tabMenu.value && menuTab ? (
       <div
         key="tabmenu"
-        class="rawjson-tabmenu"
+        class={styles.tabmenu}
         style={`left:${store.tabMenu.value.x}px;top:${store.tabMenu.value.y}px`}
       >
         {menuTab.source !== 'page' ? (
@@ -256,18 +259,18 @@ export function Panel() {
   // invariant keeps it, so in production `tabs` is never empty and this is dead.
   if (!active) {
     return (
-      <div class="rawjson-panel">
-        <div class="rawjson-empty-hint">{HINT}</div>
+      <div class={styles.panel}>
+        <div class={shared.emptyHint}>{HINT}</div>
         {menus}
       </div>
     );
   }
 
   return (
-    <div class="rawjson-panel">
+    <div class={styles.panel}>
       <TabBar tabs={tabsList} activeId={active.id} />
       {showToolbar ? (
-        <div class="rawjson-toolbar">
+        <div class={styles.toolbar}>
           <button
             class="rawjson-wrap"
             aria-pressed={store.lineWrap.value}
@@ -276,17 +279,17 @@ export function Panel() {
           >
             Soft-wrap
           </button>
-          <span class="rawjson-toolbar-spacer"></span>
+          <span class={styles.toolbarSpacer}></span>
           {historyButton}
         </div>
       ) : null}
-      {active.error ? <div class="rawjson-error">{active.error}</div> : null}
-      <div class="rawjson-body">
-        <div class="rawjson-main">
+      {active.error ? <div class={shared.error}>{active.error}</div> : null}
+      <div class={styles.body}>
+        <div class={styles.main}>
           {!active.resource ? (
-            <div class="rawjson-empty-hint">{HINT}</div>
+            <div class={shared.emptyHint}>{HINT}</div>
           ) : active.loading ? (
-            <div class="rawjson-empty-hint">{'Loading…'}</div>
+            <div class={shared.emptyHint}>{'Loading…'}</div>
           ) : active.preview ? (
             <PreviewPane key={active.id} preview={active.preview} />
           ) : showingVersion ? (
@@ -311,11 +314,11 @@ export function Panel() {
           !active.readOnly &&
           active.dirty &&
           !showingVersion ? (
-            <div class="rawjson-savepill">
-              <span class="rawjson-savepill-dot" aria-hidden="true"></span>
-              <span class="rawjson-savepill-lbl">{savePillLabel(active)}</span>
+            <div class={styles.savepill}>
+              <span class={styles.savepillDot} aria-hidden="true"></span>
+              <span class={styles.savepillLbl}>{savePillLabel(active)}</span>
               <button
-                class="rawjson-save"
+                class={styles.save}
                 disabled={active.saving}
                 onClick={() => requestDiff(active.id)}
               >
@@ -340,7 +343,7 @@ export function Panel() {
           />
         ) : null}
       </div>
-      <div class="rawjson-bottombar">
+      <div class={styles.bottombar}>
         <RequestBar
           onSubmit={(raw) => {
             track('sa_devtools_request_bar');
@@ -350,15 +353,15 @@ export function Panel() {
           }}
         />
         {active.resource && active.resource.apiPath ? (
-          <span class="rawjson-curl-split">
-            <span class="rawjson-curl-btns">
+          <span class={styles.curlSplit}>
+            <span class={styles.curlBtns}>
               <button
-                class="rawjson-curl"
+                class={styles.curl}
                 title="Copy as curl (token redacted)"
                 onClick={() => copyCurl(active.resource!.apiPath, false)}
               >
                 <svg
-                  class="rawjson-curl-ico"
+                  class={styles.curlIco}
                   viewBox="0 0 16 16"
                   fill="none"
                   stroke="currentColor"
@@ -371,7 +374,7 @@ export function Panel() {
                 curl
               </button>
               <button
-                class="rawjson-curl-caret"
+                class={styles.curlCaret}
                 title="More copy options"
                 onClick={() => {
                   store.curlMenu.value = !store.curlMenu.value;
@@ -381,7 +384,7 @@ export function Panel() {
               </button>
             </span>
             {store.curlMenu.value ? (
-              <div class="rawjson-curlmenu">
+              <div class={styles.curlmenu}>
                 <button
                   onClick={() => {
                     copyCurl(active.resource!.apiPath, true);
@@ -396,7 +399,7 @@ export function Panel() {
         ) : null}
       </div>
       {menus}
-      {store.toast.value ? <div class="rawjson-toast">{store.toast.value.message}</div> : null}
+      {store.toast.value ? <div class={styles.toast}>{store.toast.value.message}</div> : null}
       {active.diffPreview ? (
         <DiffConfirm
           original={active.original}
@@ -423,11 +426,11 @@ let draggedId: string | null = null;
 function TabBar({ tabs, activeId }: { tabs: any[]; activeId?: string | null }) {
   if (!tabs.length) return null;
   return (
-    <div class="rawjson-tabbar">
+    <div class={styles.tabbar}>
       {tabs.map((t) => (
         <span
           key={t.id}
-          class={`rawjson-tab${t.id === activeId ? ' active' : ''}${t.source === 'page' ? ' rawjson-tab--page' : ''}`}
+          class={`${styles.tab}${t.id === activeId ? ' ' + styles.active : ''}${t.source === 'page' ? ' ' + styles.tabPage : ''}`}
           draggable={t.source === 'link'}
           onDragStart={() => {
             draggedId = t.id;
@@ -453,7 +456,7 @@ function TabBar({ tabs, activeId }: { tabs: any[]; activeId?: string | null }) {
           </span>
           {t.source === 'link' ? (
             <button
-              class="rawjson-tab-close"
+              class={styles.tabClose}
               onClick={(e) => {
                 e.stopPropagation();
                 store.closeTab(t.id);

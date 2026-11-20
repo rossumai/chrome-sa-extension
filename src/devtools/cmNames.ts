@@ -1,6 +1,7 @@
 import { ViewPlugin, Decoration, WidgetType, EditorView } from '@codemirror/view';
 import { StateEffect, RangeSetBuilder } from '@codemirror/state';
 import { rossumUrlRe } from './cmLinks.js';
+import styles from './cmNames.module.css';
 
 const refreshNames = StateEffect.define();
 
@@ -16,7 +17,7 @@ class NameWidget extends WidgetType {
   }
   toDOM() {
     const s = document.createElement('span');
-    s.className = 'rawjson-name';
+    s.className = styles.name;
     s.textContent = this.name;
     return s;
   }
@@ -93,7 +94,7 @@ export function rossumNames(
   return [
     plugin,
     EditorView.theme({
-      '.rawjson-name': {
+      ['.' + styles.name]: {
         opacity: '0.55',
         fontStyle: 'italic',
         marginLeft: '1.5em',

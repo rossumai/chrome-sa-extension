@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { EditorView } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import { rossumNames } from '../src/devtools/cmNames.js';
+import styles from '../src/devtools/cmNames.module.css';
 
 function mountDoc(
   doc: any,
@@ -28,7 +29,7 @@ describe('cmNames', () => {
   it('renders a dimmed name widget at the line end for a resolved link', () => {
     const url = 'https://acme.rossum.app/api/v1/queues/3';
     const view = mountDoc(line(url), () => ({ status: 'done', name: 'Invoices EU' }));
-    const w = view.dom.querySelector('.rawjson-name');
+    const w = view.dom.querySelector('.' + styles.name);
     expect(w).not.toBeNull();
     expect(w!.textContent).toBe('Invoices EU');
     view.destroy();
@@ -37,7 +38,7 @@ describe('cmNames', () => {
     const url = 'https://acme.rossum.app/api/v1/queues/3';
     const ensure = vi.fn();
     const view = mountDoc(line(url), () => ({ status: 'none', name: null }), ensure);
-    expect(view.dom.querySelector('.rawjson-name')).toBeNull();
+    expect(view.dom.querySelector('.' + styles.name)).toBeNull();
     expect(ensure).toHaveBeenCalledWith(url, expect.any(Function));
     view.destroy();
   });
@@ -48,7 +49,7 @@ describe('cmNames', () => {
       () => null,
       ensure,
     );
-    expect(view.dom.querySelector('.rawjson-name')).toBeNull();
+    expect(view.dom.querySelector('.' + styles.name)).toBeNull();
     expect(ensure).not.toHaveBeenCalled();
     view.destroy();
   });
@@ -57,7 +58,7 @@ describe('cmNames', () => {
       status: 'done',
       name: null,
     }));
-    expect(view.dom.querySelector('.rawjson-name')).toBeNull();
+    expect(view.dom.querySelector('.' + styles.name)).toBeNull();
     view.destroy();
   });
   it('shows the name after async resolution (ensure → refresh effect → rebuild)', async () => {
@@ -70,9 +71,9 @@ describe('cmNames', () => {
       setTimeout(cb, 0);
     }; // resolve, then notify
     const view = mountDoc(line(url), nameFor, ensure);
-    expect(view.dom.querySelector('.rawjson-name')).toBeNull(); // not yet resolved
-    await waitFor(() => view.dom.querySelector('.rawjson-name'));
-    expect(view.dom.querySelector('.rawjson-name')!.textContent).toBe('Later');
+    expect(view.dom.querySelector('.' + styles.name)).toBeNull(); // not yet resolved
+    await waitFor(() => view.dom.querySelector('.' + styles.name));
+    expect(view.dom.querySelector('.' + styles.name)!.textContent).toBe('Later');
     view.destroy();
   });
   it('joins multiple names on one line with a middot', () => {
@@ -83,7 +84,7 @@ describe('cmNames', () => {
       status: 'done',
       name: u.endsWith('5') ? 'Alpha' : 'Beta',
     }));
-    expect(view.dom.querySelector('.rawjson-name')!.textContent).toBe('Alpha · Beta');
+    expect(view.dom.querySelector('.' + styles.name)!.textContent).toBe('Alpha · Beta');
     view.destroy();
   });
 });

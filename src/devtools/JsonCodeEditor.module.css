@@ -1,0 +1,11 @@
+.raw {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.parseError {
+  color: #a11;
+  margin-top: 6px;
+  padding: 4px 8px;
+}
