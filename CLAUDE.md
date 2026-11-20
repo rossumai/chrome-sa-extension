@@ -363,7 +363,16 @@ opened, because its form, log and a deploy in flight live in component state.
   `${domain}/svc/rossum-agent/api/v1` (the `tools.rossum.cloud` service was retired on
   2026-11-03 and its chats were not migrated). Chats are scoped by the exact
   `X-Rossum-Api-Url` string, an unknown chat id answers 200 with no messages (never 404), and
-  the service has no personas. There is **no 👍/👎
+  the service has no personas. **Two agents**, picked per message by `agent_id`
+  (`streamMessage({ agent })`): the default `rossum` agent has the Rossum tools and skills;
+  `sa-extension` (since 2026-11-20) has NO tools and no skills and answers only from the
+  prompt — asked about the org, it writes a fake tool call as text and invents the result. So
+  only callers whose prompt carries all their data send it: the MDH query and verify, MDH
+  explain-empty, the Builder's hook and schema assistants, Architect titles and the Audit Log
+  summary. The Builder's field and rule assistants write TxScript and stay on `rossum` for its
+  skills. All agents share one chat history. **TODO**: once `sa-extension` gets tools of its
+  own, move every caller to it and stop building the whole context into the prompt (schema
+  fields, samples, audit rows, hook settings). There is **no 👍/👎
   feedback**: `PUT /feedback`'s `turn_index` addresses the raw stored history while
   `GET /chats` drops text-less tool-only steps, so a thread index mis-targets feedback on any
   tool-using turn (live-confirmed 2026-07-13). The plumbing was kept dormant for a year and

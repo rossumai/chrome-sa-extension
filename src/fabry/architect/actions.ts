@@ -222,6 +222,7 @@ export async function generateTitle(id: string) {
     const chatId = await agentApi.createChat();
     const acc = newAcc();
     await agentApi.streamMessage(chatId, title.buildTitlePrompt(d.text), {
+      agent: 'sa-extension',
       onEvent: (e: unknown) => foldEvents(acc, [e]),
     });
     const t = title.parseTitle(replyText(acc));

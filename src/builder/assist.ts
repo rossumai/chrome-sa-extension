@@ -72,11 +72,14 @@ export async function runAssist({
   chatId,
   content,
   signal,
+  agent,
 }: {
   agentApi: any;
   chatId: string | null;
   content: string;
   signal?: AbortSignal;
+  /** See StreamOptions.agent in src/agent/agentApi.ts. */
+  agent?: 'sa-extension';
 }): Promise<{ chatId: string; text: string }> {
   if (content.length > MAX_PROMPT) {
     throw new Error(
@@ -88,6 +91,7 @@ export async function runAssist({
   const acc = newAcc();
   await agentApi.streamMessage(id, content, {
     signal,
+    agent,
     onEvent: (ev: unknown) => foldEvents(acc, [ev]),
   });
   return { chatId: id, text: replyText(acc) };

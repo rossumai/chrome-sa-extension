@@ -233,6 +233,7 @@ async function generate(agentApi: any, chatId: string, content: string, signal?:
   const acc = newAcc();
   await agentApi.streamMessage(chatId, content, {
     signal,
+    agent: 'sa-extension',
     onEvent: (ev: unknown) => foldEvents(acc, [ev]),
   });
   const raw = replyText(acc);
@@ -245,6 +246,7 @@ async function semanticVerify(agentApi: any, chatId: string, ctx: any, signal?: 
   const acc = newAcc();
   await agentApi.streamMessage(chatId, buildVerifyPrompt(ctx), {
     signal,
+    agent: 'sa-extension',
     onEvent: (ev: unknown) => foldEvents(acc, [ev]),
   });
   const raw = replyText(acc);

@@ -19,6 +19,16 @@ export type StreamOptions = {
    * createChat and tests/fabry-write-boundary.test.js.
    */
   mcpMode?: 'read-write';
+  /**
+   * The agent that runs THIS turn, sent as `agent_id`. Omitted = the service's default
+   * `rossum` agent, with its Rossum tools and skills. `'sa-extension'` is the extension's
+   * own agent: NO tools and no skills, so it answers only from the prompt (asked about the
+   * org, it invents a tool call as text — measured 2026-11-20). Pass it only from a prompt
+   * that carries all its data. Chats are shared between agents, so a chat may mix both.
+   * TODO: the sa-extension agent is meant to get its own tools; once it has them, move the
+   * tool-using callers to it and send less context in the prompts that build it all here.
+   */
+  agent?: 'sa-extension';
 };
 
 // Set by init() from the connected domain. Chats are scoped by the exact X-Rossum-Api-Url
@@ -90,7 +100,7 @@ export async function createChat(): Promise<string> {
 export async function streamMessage(
   chatId: string,
   content: string,
-  { onEvent = () => {}, signal, images, mcpMode }: StreamOptions = {},
+  { onEvent = () => {}, signal, images, mcpMode, agent }: StreamOptions = {},
 ): Promise<void> {
   const ctrl = new AbortController();
   const onAbort = () => ctrl.abort();
@@ -118,6 +128,7 @@ export async function streamMessage(
         content,
         ...(images && images.length ? { images } : {}),
         ...(mcpMode ? { mcp_mode: mcpMode } : {}),
+        ...(agent ? { agent_id: agent } : {}),
       }),
       signal: ctrl.signal,
     });

@@ -64,6 +64,8 @@ describe('Mr. Fabry in the rule editor', () => {
     expect(store.assistRev.value).toBe(rev + 1);
     await askRuleAssistant('make it a warning');
     expect(agentApi.createChat).toHaveBeenCalledTimes(1);
+    // TxScript needs the default agent's skills (see assistTurn).
+    expect(vi.mocked(agentApi.streamMessage).mock.calls[0][2]!.agent).toBeUndefined();
   });
 
   it('a reply without a rule leaves the draft and shows the error', async () => {
@@ -145,6 +147,7 @@ describe('Mr. Fabry on a field', () => {
     fabryReply('```json\n{"formula": "field.amount * 2"}\n```');
     await askFieldAssistant(key('check'), 'twice the amount');
     expect(rowOf(store.work.value, 'check').node.formula).toBe('field.amount * 2');
+    expect(vi.mocked(agentApi.streamMessage).mock.calls[0][2]!.agent).toBeUndefined();
     expect(store.history.value.past.length).toBe(1);
     expect(store.fieldAssist.value.error).toBeNull();
   });
@@ -233,6 +236,7 @@ describe('Mr. Fabry on the whole schema', () => {
     );
     vi.mocked(api.validateSchema).mockResolvedValue({});
     await askSchemaFabry('Add a PO number');
+    expect(vi.mocked(agentApi.streamMessage).mock.calls[0][2]!.agent).toBe('sa-extension');
     expect(store.history.value.past.length).toBe(1);
     expect(flatten(store.work.value).map((r) => r.node.id)).toEqual(['s', 'doc_id', 'po']);
     const sent = vi.mocked(api.validateSchema).mock.calls[0];

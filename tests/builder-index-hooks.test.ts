@@ -123,6 +123,7 @@ describe('hook mode (MDH)', () => {
     };
     fabryReply('```json\n' + JSON.stringify(proposed) + '\n```');
     await askHookAssistant('match on ghost instead');
+    expect(vi.mocked(agentApi.streamMessage).mock.calls[0][2]!.agent).toBe('sa-extension');
     expect(JSON.parse(store.hookEditor.value!.draft)).toEqual(proposed);
     expect(store.hookAssist.value.warnings.join(' ')).toContain('ghost');
     discardHook();

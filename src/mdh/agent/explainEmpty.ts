@@ -244,6 +244,7 @@ export async function runExplainEmpty({
   const acc = newAcc();
   await agentApi.streamMessage(chatId, prompt, {
     signal,
+    agent: 'sa-extension',
     onEvent: (ev: unknown) => {
       foldEvents(acc, [ev]);
       if (!signal?.aborted) onText(replyText(acc));

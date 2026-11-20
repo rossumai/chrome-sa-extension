@@ -170,6 +170,20 @@ describe('streamMessage images option', () => {
   });
 });
 
+describe('streamMessage agent option', () => {
+  it('sends agent_id only when an agent is chosen', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(streamResponse(['data: [DONE]\n\n']));
+    global.fetch = fetchMock;
+    await agentApi.streamMessage('c1', 'hi', { onEvent: () => {}, agent: 'sa-extension' });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      content: 'hi',
+      agent_id: 'sa-extension',
+    });
+    await agentApi.streamMessage('c1', 'hi', { onEvent: () => {} });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ content: 'hi' });
+  });
+});
+
 describe('base URL', () => {
   it('derives the agent base from the connected domain', async () => {
     const fetchMock = vi

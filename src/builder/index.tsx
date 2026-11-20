@@ -150,7 +150,12 @@ async function assistTurn(
   const seq = ++assistSeq[who];
   const current = () => seq === assistSeq[who];
   try {
-    const res = await runAssist({ agentApi, chatId, content });
+    // The hook and schema assistants answer from the prompt alone. The field and rule ones
+    // write TxScript and stay on the default agent, whose TxScript skills they need: on
+    // `sa-extension` a rule summed `.all_values` without `default_to` and a formula called
+    // `date()` on a date (2/2 live runs each, 2026-11-20).
+    const agent = who === 'hook' || who === 'schema' ? ('sa-extension' as const) : undefined;
+    const res = await runAssist({ agentApi, chatId, content, agent });
     if (current() && stillOpen()) await onReply(res, current);
   } catch (err: any) {
     if (current()) onError(err?.message || 'Mr. Fabry is not available');

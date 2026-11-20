@@ -131,6 +131,7 @@ async function streamTurn(
   let lastText = '';
   await agentApi.streamMessage(chatId, content, {
     signal,
+    agent: 'sa-extension',
     onEvent: (ev: unknown) => {
       foldEvents(acc, [ev]);
       if (acc.status && acc.status !== lastStatus) {
