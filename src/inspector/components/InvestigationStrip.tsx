@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import * as store from '../store.js';
+import styles from './Inspector.module.css';
 
 function stageState(stage: any, self: any) {
   const order = ['gathering', 'attributing', 'synthesizing', 'complete'];
@@ -13,9 +14,9 @@ function stageState(stage: any, self: any) {
 
 function Pill({ state, label, note }: { state?: string; label: string; note?: string | null }) {
   return (
-    <span class={`inspector-inv-st ${state}`}>
-      <span class="inspector-inv-ic">{state === 'done' ? '✓' : ''}</span> {label}
-      {note ? <span class="inspector-inv-note"> {note}</span> : null}
+    <span class={`${styles.invSt} ${styles[state as string]}`}>
+      <span class={styles.invIc}>{state === 'done' ? '✓' : ''}</span> {label}
+      {note ? <span class={styles.invNote}> {note}</span> : null}
     </span>
   );
 }
@@ -35,12 +36,12 @@ export default function InvestigationStrip() {
       (i: any) => i.reliability === 'unavailable',
     ).length;
     return (
-      <div class="inspector-inv">
-        <span class="inspector-inv-st done">
-          <span class="inspector-inv-ic">{'✓'}</span> Investigation{' '}
+      <div class={styles.inv}>
+        <span class={styles.invSt + ' ' + styles.done}>
+          <span class={styles.invIc}>{'✓'}</span> Investigation{' '}
           {inv.stage === 'agent-offline' ? 'finished (AI offline)' : 'complete'}
         </span>
-        <span class="inspector-inv-act">
+        <span class={styles.invAct}>
           {inv.sourcesTotal} sources {'·'} {ai.length} attribution{ai.length === 1 ? '' : 's'}
           {unavailable ? ` · ${unavailable} unavailable` : ''}
         </span>
@@ -48,22 +49,22 @@ export default function InvestigationStrip() {
     );
   }
   return (
-    <div class="inspector-inv">
+    <div class={styles.inv}>
       <Pill
         state={stageState(inv.stage, 'gathering')}
         label="Gather"
         note={`${inv.sourcesDone}/${inv.sourcesTotal}`}
       />
-      <span class="inspector-inv-sep">{'›'}</span>
+      <span class={styles.invSep}>{'›'}</span>
       <Pill
         state={stageState(inv.stage, 'attributing')}
         label="Attribute"
         note={ai.length ? `${aiDone} of ${ai.length}` : ''}
       />
-      <span class="inspector-inv-sep">{'›'}</span>
+      <span class={styles.invSep}>{'›'}</span>
       <Pill state={stageState(inv.stage, 'synthesizing')} label="Synthesize" />
       {activity ? (
-        <span class="inspector-inv-act">
+        <span class={styles.invAct}>
           {activity}
           {'…'}
         </span>

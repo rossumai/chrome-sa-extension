@@ -6,6 +6,7 @@ import { exportHookCandidates } from '../culprit.js';
 import ReliabilityBadge from './ReliabilityBadge.jsx';
 import CulpritChip from './CulpritChip.jsx';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './Inspector.module.css';
 
 export default function ExportPanel() {
   const d = store.data.value;
@@ -64,40 +65,38 @@ export default function ExportPanel() {
   const attr = store.attributions.value.export;
 
   return (
-    <div class="inspector-panel">
-      <div class="inspector-kv" data-evidence-id="export">
-        <div class="inspector-kv-k">Outcome</div>
+    <div class={styles.panel}>
+      <div class={styles.kv} data-evidence-id="export">
+        <div class={styles.kvK}>Outcome</div>
         <div class="inspector-kv-v">
-          <span class="inspector-pill inspector-pill-failed_export">failed export</span>
+          <span class={styles.pill + ' ' + styles['pill-failed_export']}>failed export</span>
         </div>
-        <div class="inspector-kv-k">Failed at</div>
+        <div class={styles.kvK}>Failed at</div>
         <div class="inspector-kv-v">{a.export_failed_at || 'unknown'}</div>
-        <div class="inspector-kv-k">Export extension</div>
+        <div class={styles.kvK}>Export extension</div>
         <div class="inspector-kv-v">
           {culprit} <ReliabilityBadge level={culpritBadge} />
         </div>
-        <div class="inspector-kv-k">Error</div>
+        <div class={styles.kvK}>Error</div>
         <div class="inspector-kv-v">{errText}</div>
       </div>
       {!failing && candidates.length > 1 && attr && (
-        <div class="inspector-ai-attr">
-          <div class="inspector-ai-note">
+        <div class={styles.aiAttr}>
+          <div class={styles.aiNote}>
             Which export extension failed — reasoned by Mr. Fabry from the queue's export extensions
             + logs.
           </div>
           {attr.status === 'loading' && (
-            <div class="inspector-loading inspector-ai-phase">{attr.phase || 'thinking'}…</div>
+            <div class={styles.loading + ' ' + styles.aiPhase}>{attr.phase || 'thinking'}…</div>
           )}
           {attr.status === 'error' && <div class={dg.empty}>AI attribution failed.</div>}
           {attr.status === 'done' && attr.verdict && (
-            <div class="inspector-ai-verdict">
-              <div class="ttl">
+            <div class={styles.aiVerdict}>
+              <div class={styles.ttl}>
                 <CulpritChip culprit={attr.verdict.culprit} />{' '}
                 <ReliabilityBadge level={attr.verdict.confidence} />
               </div>
-              {attr.verdict.explanation && (
-                <div class="inspector-why">{attr.verdict.explanation}</div>
-              )}
+              {attr.verdict.explanation && <div class={styles.why}>{attr.verdict.explanation}</div>}
             </div>
           )}
         </div>

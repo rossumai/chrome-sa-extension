@@ -7,6 +7,7 @@ import DiagnosisPanel from '../src/inspector/components/DiagnosisPanel.jsx';
 import narrativeStyles from '../src/ui/fabry/FabryNarrative.module.css';
 import aiStyles from '../src/ui/aiInput.module.css';
 import dg from '../src/ui/fabry/Diagnosis.module.css';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 function mount() {
   const el = document.createElement('div');
@@ -106,7 +107,7 @@ describe('FollowupThread', () => {
       followups: [],
       error: null,
     };
-    expect(mount().querySelector('.inspector-ask input')).toBeTruthy();
+    expect(mount().querySelector('.' + styles.ask + ' input')).toBeTruthy();
     store.synthesis.value = {
       status: 'done',
       text: 'Done.',
@@ -114,7 +115,7 @@ describe('FollowupThread', () => {
       tools: [],
       error: null,
     };
-    expect(mount().querySelector('.inspector-ask')).toBeFalsy();
+    expect(mount().querySelector('.' + styles.ask)).toBeFalsy();
   });
   it('renders the Q&A thread with citations and disables the input while streaming', () => {
     store.synthesis.value = {
@@ -133,8 +134,8 @@ describe('FollowupThread', () => {
     const qs = el.querySelectorAll('.' + dg.followupQ);
     expect(qs.length).toBe(2);
     expect(qs[0].textContent).toContain('why empty?');
-    expect(el.querySelector('.inspector-followup .' + narrativeStyles.cite)).toBeTruthy();
-    expect(el.querySelector<HTMLButtonElement>('.inspector-ask input')!.disabled).toBe(true);
+    expect(el.querySelector('.' + styles.followup + ' .' + narrativeStyles.cite)).toBeTruthy();
+    expect(el.querySelector<HTMLButtonElement>('.' + styles.ask + ' input')!.disabled).toBe(true);
     expect(el.querySelector('.' + aiStyles.loader)).toBeTruthy();
   });
 });

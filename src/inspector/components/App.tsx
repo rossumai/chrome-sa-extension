@@ -8,6 +8,7 @@ import PageRail from './PageRail.jsx';
 import eb from '../../ui/ErrorBanner.module.css';
 import shell from '../../ui/AppShell.module.css';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './Inspector.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   const inspect = (id: any) => {
@@ -19,7 +20,7 @@ export default function App({ connected }: { connected: boolean | null }) {
     return (
       <div class={shell.root}>
         <main class={shell.main}>
-          <div class="inspector-root">
+          <div class={styles.root}>
             <div class={dg.empty}>
               {store.error.value || (
                 <Fragment>
@@ -42,18 +43,18 @@ export default function App({ connected }: { connected: boolean | null }) {
   return (
     <div class={shell.root}>
       <main class={shell.main}>
-        <div class="inspector-root">
+        <div class={styles.root}>
           <IdInput onSubmit={inspect} />
-          {store.loading.value && <div class="inspector-loading">Loading…</div>}
+          {store.loading.value && <div class={styles.loading}>Loading…</div>}
           {store.error.value && <div class={eb.root}>{store.error.value}</div>}
           {!d && !store.loading.value && <RecentAnnotations onSelect={inspect} />}
           {d && (
-            <button type="button" class="inspector-back" onClick={closeAnnotation}>
+            <button type="button" class={styles.back} onClick={closeAnnotation}>
               {'←'} All annotations
             </button>
           )}
           {d && (
-            <div class="inspector-layout">
+            <div class={styles.layout}>
               <Report />
               <PageRail />
             </div>

@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import * as store from '../store.js';
 import IdLabel from './IdLabel.jsx';
+import styles from './Inspector.module.css';
 
 function idFromUrl(u: any) {
   const m = String(u || '').match(/\/(\d+)\/?$/);
@@ -19,10 +20,10 @@ export default function Overview() {
   const a = d.annotation;
   const r = d.resolved;
   return (
-    <div class="inspector-ovh">
-      <div class="inspector-ovh-main">
-        <div class="inspector-ovh-id">#{a.id}</div>
-        <div class="inspector-ovh-sub">
+    <div class={styles.ovh}>
+      <div class={styles.ovhMain}>
+        <div class={styles.ovhId}>#{a.id}</div>
+        <div class={styles.ovhSub}>
           {a.queue ? (
             <IdLabel name={r.queue?.name} id={idFromUrl(a.queue)} prefix="queue " />
           ) : (
@@ -30,12 +31,12 @@ export default function Overview() {
           )}
           {a.prediction?.source ? ` · ${a.prediction.source}` : ''}
         </div>
-        <div class="inspector-chips">
-          <span class="inspector-chip">
+        <div class={styles.chips}>
+          <span class={styles.chip}>
             automated: <b>{String(!!a.automated)}</b>
           </span>
           {a.modifier ? (
-            <span class="inspector-chip">
+            <span class={styles.chip}>
               modifier:{' '}
               <IdLabel
                 name={userDisplayName(r.usersById?.[idFromUrl(a.modifier) as string])}
@@ -45,12 +46,12 @@ export default function Overview() {
             </span>
           ) : null}
           {a.schema ? (
-            <span class="inspector-chip">
+            <span class={styles.chip}>
               schema: <IdLabel name={r.schema?.name} id={idFromUrl(a.schema)} prefix="schema " />
             </span>
           ) : null}
           {a.document ? (
-            <span class="inspector-chip">
+            <span class={styles.chip}>
               document:{' '}
               <IdLabel
                 name={r.document?.original_file_name}
@@ -61,7 +62,7 @@ export default function Overview() {
           ) : null}
         </div>
       </div>
-      <span class={`inspector-pill inspector-pill-${a.status}`}>{a.status}</span>
+      <span class={`${styles.pill} ${styles['pill-' + a.status] ?? ''}`}>{a.status}</span>
     </div>
   );
 }

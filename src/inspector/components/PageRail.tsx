@@ -2,6 +2,7 @@ import { h } from 'preact';
 import * as store from '../store.js';
 import { loadAllPagePreviews } from '../index.jsx';
 import { buildDeeplink } from '../../audit/deeplink.js';
+import styles from './Inspector.module.css';
 
 // Sticky right rail with small previews of the document pages. Thumbnails are
 // blob object URLs (see loadPagePreviews); clicking one opens the annotation in
@@ -14,13 +15,13 @@ export default function PageRail() {
   const href = buildDeeplink(store.domain.value, 'annotation', store.annotationId.value);
   const remaining = (pv.total || 0) - pv.pages.length;
   return (
-    <aside class="inspector-pagerail">
-      <div class="inspector-pagerail-hd">
+    <aside class={styles.pagerail}>
+      <div class={styles.pagerailHd}>
         Document{pv.total ? ` · ${pv.total} page${pv.total === 1 ? '' : 's'}` : ''}
       </div>
       {pv.pages.map((p: any) => (
         <a
-          class="inspector-page"
+          class={styles.page}
           href={href || undefined}
           target="_blank"
           rel="noreferrer"
@@ -35,18 +36,18 @@ export default function PageRail() {
             />
           ) : (
             <div
-              class="inspector-page-skel"
+              class={styles.pageSkel}
               style={p.width && p.height ? `aspect-ratio:${p.width} / ${p.height}` : 'height:120px'}
             />
           )}
-          <span class="inspector-page-num">{p.number}</span>
+          <span class={styles.pageNum}>{p.number}</span>
         </a>
       ))}
       {pv.status === 'loading' && pv.pages.length === 0 ? (
-        <div class="inspector-page-skel" style="height:120px" />
+        <div class={styles.pageSkel} style="height:120px" />
       ) : null}
       {pv.status === 'done' && remaining > 0 ? (
-        <button type="button" class="inspector-pagerail-more" onClick={() => loadAllPagePreviews()}>
+        <button type="button" class={styles.pagerailMore} onClick={() => loadAllPagePreviews()}>
           Load {remaining} more page{remaining === 1 ? '' : 's'}
         </button>
       ) : null}

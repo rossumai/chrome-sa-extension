@@ -4,6 +4,7 @@ import { h, render } from 'preact';
 import * as store from '../src/inspector/store.js';
 import ReportHeader from '../src/inspector/components/ReportHeader.jsx';
 import VerdictCard from '../src/inspector/components/VerdictCard.jsx';
+import styles from '../src/inspector/components/Inspector.module.css';
 
 function mount(vnode: any) {
   const el = document.createElement('div');
@@ -20,7 +21,7 @@ describe('ReportHeader', () => {
       resolved: { usersById: {}, hooksById: {} },
     };
     const el = mount(<ReportHeader />);
-    expect(el.querySelector('.inspector-rephead')).toBeTruthy();
+    expect(el.querySelector('.' + styles.rephead)).toBeTruthy();
     expect(el.textContent).toContain('#9');
     expect(el.textContent).toContain('Created');
   });
@@ -51,7 +52,7 @@ describe('VerdictCard', () => {
       },
     };
     const el = mount(<VerdictCard />);
-    expect(el.querySelector('.inspector-verdict.sev-danger')).toBeTruthy();
+    expect(el.querySelector('.' + styles.verdict + '.' + styles['sev-danger'])).toBeTruthy();
     expect(el.textContent).toContain('Not automated');
     expect(el.textContent).toContain('PO required');
   });

@@ -1,6 +1,7 @@
 import { h, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './Inspector.module.css';
 
 const STATUS_LABEL: Record<string, string> = {
   loaded: 'loaded',
@@ -32,9 +33,9 @@ export default function EvidenceSection({
   const [open, setOpen] = useState(defaultOpen);
   const showBody = open && status !== 'pending' && status !== 'na';
   return (
-    <div class="inspector-esec" data-evidence-section={id}>
+    <div class={styles.esec} data-evidence-section={id}>
       <div
-        class="inspector-esec-hd"
+        class={styles.esecHd}
         role="button"
         tabIndex={0}
         aria-expanded={open}
@@ -46,20 +47,20 @@ export default function EvidenceSection({
           }
         }}
       >
-        <span class="inspector-esec-tri">{open ? '▾' : '▸'}</span>
-        <span class="inspector-esec-nm">{title}</span>
-        {count != null ? <span class="inspector-esec-cnt">{count}</span> : null}
-        <span class={`inspector-sst inspector-sst-${status}`}>
+        <span class={styles.esecTri}>{open ? '▾' : '▸'}</span>
+        <span class={styles.esecNm}>{title}</span>
+        {count != null ? <span class={styles.esecCnt}>{count}</span> : null}
+        <span class={`${styles.sst} ${styles['sst-' + status] ?? ''}`}>
           {STATUS_LABEL[status] || status}
         </span>
       </div>
       {open && status === 'pending' && (
-        <div class="inspector-esec-bd">
+        <div class={styles.esecBd}>
           <div class={dg.skel} />
           <div class={dg.skel} style="width:70%" />
         </div>
       )}
-      {showBody && <div class="inspector-esec-bd">{children}</div>}
+      {showBody && <div class={styles.esecBd}>{children}</div>}
     </div>
   );
 }

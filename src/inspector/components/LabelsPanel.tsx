@@ -7,13 +7,14 @@ import CulpritChip from './CulpritChip.jsx';
 import ReliabilityBadge from './ReliabilityBadge.jsx';
 import FoldableCode from './FoldableCode.jsx';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './Inspector.module.css';
 
 // Render a label with its real color, as a tag (Rossum labels carry only a
 // color hex — no shape attribute — so this is the conventional label shape).
 function LabelChip({ name, color }: { name?: string; color?: string }) {
   const style = color ? `background:${color};color:${contrastText(color)}` : undefined;
   return (
-    <span class={`inspector-label-tag${color ? '' : ' nocolor'}`} style={style}>
+    <span class={styles.labelTag + (color ? '' : ' ' + styles.noColor)} style={style}>
       {name}
     </span>
   );
@@ -25,20 +26,19 @@ function AiLabelAttribution({ label }: { label: any }) {
   const key = `label:${label.id}`;
   const attr = store.attributions.value[key];
   if (!store.aiAvailable.value)
-    return <span class="inspector-label-why">AI attribution unavailable</span>;
+    return <span class={styles.labelWhy}>AI attribution unavailable</span>;
   if (!attr || attr.status === 'loading')
     return (
-      <span class="inspector-label-why inspector-loading inspector-ai-phase">
+      <span class={styles.labelWhy + ' ' + styles.loading + ' ' + styles.aiPhase}>
         {(attr && attr.phase) || 'thinking'}…
       </span>
     );
-  if (attr.status === 'error')
-    return <span class="inspector-label-why">AI attribution failed</span>;
+  if (attr.status === 'error') return <span class={styles.labelWhy}>AI attribution failed</span>;
   const v = attr.verdict;
   return (
-    <span class="inspector-ai-verdict-inline">
+    <span class={styles.aiVerdictInline}>
       <CulpritChip culprit={v.culprit} /> <ReliabilityBadge level={v.confidence} />
-      {v.explanation && <span class="inspector-why">{v.explanation}</span>}
+      {v.explanation && <span class={styles.why}>{v.explanation}</span>}
     </span>
   );
 }
@@ -51,8 +51,7 @@ export default function LabelsPanel() {
   }, [store.annotationId.value]);
 
   if (!d) return null;
-  if (d.resolved.labelsById === undefined)
-    return <div class="inspector-loading">Loading labels…</div>;
+  if (d.resolved.labelsById === undefined) return <div class={styles.loading}>Loading labels…</div>;
 
   const { applied, notApplied } = labelAttribution({
     annotation: d.annotation,
@@ -65,22 +64,22 @@ export default function LabelsPanel() {
   const hasLabelAutomation = (d.resolved.labelRules || []).length > 0;
 
   return (
-    <div class="inspector-panel">
-      <div class="inspector-sect">Applied labels ({applied.length})</div>
+    <div class={styles.panel}>
+      <div class={styles.sect}>Applied labels ({applied.length})</div>
       {applied.length === 0 && <div class={dg.empty}>No labels applied to this annotation.</div>}
       {applied.map((l: any) => {
         if (l.rule) {
           return (
-            <div class="inspector-bcard" data-evidence-id={`label:${l.id}`}>
-              <div class="ttl">
+            <div class={styles.bcard} data-evidence-id={`label:${l.id}`}>
+              <div class={styles.ttl}>
                 <LabelChip name={l.name} color={l.color} />
-                <span class="inspector-label-why">
+                <span class={styles.labelWhy}>
                   applied by rule <b>{l.rule.name}</b>
                 </span>
                 <ReliabilityBadge level="verified" />
               </div>
               {l.rule.trigger ? (
-                <div class="inspector-why">
+                <div class={styles.why}>
                   fires when: <FoldableCode code={l.rule.trigger} />
                 </div>
               ) : null}
@@ -88,8 +87,8 @@ export default function LabelsPanel() {
           );
         }
         return (
-          <div class="inspector-bcard" data-evidence-id={`label:${l.id}`}>
-            <div class="ttl">
+          <div class={styles.bcard} data-evidence-id={`label:${l.id}`}>
+            <div class={styles.ttl}>
               <LabelChip name={l.name} color={l.color} /> <AiLabelAttribution label={l} />
             </div>
           </div>
@@ -98,20 +97,20 @@ export default function LabelsPanel() {
 
       {notApplied.length > 0 && (
         <div>
-          <div class="inspector-sect" style="margin-top:18px">
+          <div class={styles.sect} style="margin-top:18px">
             Governed by a rule but not applied ({notApplied.length})
           </div>
           {notApplied.map((l) => (
-            <div class="inspector-bcard" data-evidence-id={`label-not:${l.id}`}>
-              <div class="ttl">
+            <div class={styles.bcard} data-evidence-id={`label-not:${l.id}`}>
+              <div class={styles.ttl}>
                 <LabelChip name={l.name} color={l.color} />
-                <span class="inspector-label-why">
+                <span class={styles.labelWhy}>
                   not applied — rule <b>{l.rule.name}</b> did not fire
                 </span>
                 <ReliabilityBadge level={l.reliability} />
               </div>
               {l.rule.trigger ? (
-                <div class="inspector-why">
+                <div class={styles.why}>
                   would apply when: <FoldableCode code={l.rule.trigger} />
                 </div>
               ) : null}
@@ -121,7 +120,7 @@ export default function LabelsPanel() {
       )}
 
       {!hasLabelAutomation && (
-        <div class="inspector-note">
+        <div class={styles.note}>
           {applied.length > 0
             ? 'No queue rule governs labels — see the attribution shown for each applied label above.'
             : 'No queue rule governs labels on this queue.'}

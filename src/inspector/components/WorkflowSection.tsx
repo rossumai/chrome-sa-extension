@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import * as store from '../store.js';
 import EvidenceSection from './EvidenceSection.jsx';
+import styles from './Inspector.module.css';
 
 // Approval-workflow state: run status + ordered steps, current step marked.
 export default function WorkflowSection() {
@@ -20,10 +21,10 @@ export default function WorkflowSection() {
     >
       {items.map((i: any) => (
         <div
-          class={`inspector-ev${i.data?.current ? ' inspector-wf-current' : ''}`}
+          class={styles.ev + (i.data?.current ? ' ' + styles.wfCurrent : '')}
           data-evidence-id={i.id}
         >
-          <span class="inspector-ev-id">{i.id}</span>
+          <span class={styles.evId}>{i.id}</span>
           {i.fact}
         </div>
       ))}

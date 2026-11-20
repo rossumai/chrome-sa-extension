@@ -7,6 +7,7 @@ import FabryNarrative from '../../ui/fabry/FabryNarrative.jsx';
 import FabryTranscript from '../../ui/fabry/FabryTranscript.jsx';
 import FabryMark from '../../ui/FabryMark.jsx';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './Inspector.module.css';
 
 function flashEvidence(id: any, section: any) {
   const el =
@@ -14,10 +15,10 @@ function flashEvidence(id: any, section: any) {
     (section ? document.querySelector(`[data-evidence-section="${section}"]`) : null);
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  el.classList.remove('inspector-ev-flash');
+  el.classList.remove(styles.evFlash);
   // restart the animation on repeated clicks
   void (el as HTMLElement).offsetWidth;
-  el.classList.add('inspector-ev-flash');
+  el.classList.add(styles.evFlash);
 }
 
 // Resolve a [e:<id>] citation to the evidence item — chips flash/scroll the anchor.
@@ -50,9 +51,9 @@ function FollowupThread({ syn }: { syn: any }) {
     askFabry(q);
   };
   return (
-    <div class="inspector-followups">
+    <div class={styles.followups}>
       {followups.map((f: any) => (
-        <div class="inspector-followup">
+        <div class={styles.followup}>
           <div class={dg.followupQ}>
             <span class={dg.followupRole}>You</span> {f.q}
           </div>
@@ -69,7 +70,7 @@ function FollowupThread({ syn }: { syn: any }) {
       ))}
       <FabryInput
         size="sm"
-        className="inspector-ask"
+        className={styles.ask}
         value={input}
         onInput={setInput}
         onSubmit={send}
@@ -91,17 +92,15 @@ export default function DiagnosisPanel() {
   const waiting = !syn;
 
   return (
-    <div class="inspector-diag">
-      <div class="inspector-diag-hd">
+    <div class={styles.diag}>
+      <div class={styles.diagHd}>
         <FabryMark /> Diagnosis <span class={dg.credit}>by Mr. Fabry</span>
         {waiting ? (
-          <span class="inspector-diag-phase">starts after attribution finishes{'…'}</span>
+          <span class={styles.diagPhase}>starts after attribution finishes{'…'}</span>
         ) : null}
-        {syn?.status === 'streaming' ? (
-          <span class="inspector-diag-phase">writing{'…'}</span>
-        ) : null}
+        {syn?.status === 'streaming' ? <span class={styles.diagPhase}>writing{'…'}</span> : null}
         {syn?.status === 'done' ? (
-          <span class="inspector-diag-phase">
+          <span class={styles.diagPhase}>
             <button type="button" class={dg.foldBtn} onClick={() => setShowTranscript(true)}>
               View investigation
             </button>

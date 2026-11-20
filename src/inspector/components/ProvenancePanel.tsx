@@ -7,6 +7,7 @@ import { fieldKey } from '../orchestrate.js';
 import { fieldThresholds } from '../evidence.js';
 import CulpritChip from './CulpritChip.jsx';
 import dg from '../../ui/fabry/Diagnosis.module.css';
+import styles from './Inspector.module.css';
 
 // Clamp to the track: rir_confidence/threshold are documented in [0,1], but a
 // malformed value must not paint outside the 64px bar (the tick overhangs by design).
@@ -60,7 +61,7 @@ export default function ProvenancePanel() {
     const precise = matchConfigsForField(schemaId, hooks);
     if (precise.length) {
       return (
-        <span class="inspector-label-why">
+        <span class={styles.labelWhy}>
           {' '}
           via{' '}
           {precise.map((m, i) => (
@@ -75,7 +76,7 @@ export default function ProvenancePanel() {
     }
     if (allMatchers)
       return (
-        <span class="inspector-label-why">
+        <span class={styles.labelWhy}>
           {' '}
           via <b>{allMatchers}</b> (no config names this field)
         </span>
@@ -88,14 +89,14 @@ export default function ProvenancePanel() {
     if (!a) return null;
     if (a.status === 'loading')
       return (
-        <span class="inspector-label-why inspector-loading inspector-ai-phase">
+        <span class={styles.labelWhy + ' ' + styles.loading + ' ' + styles.aiPhase}>
           {' '}
           {a.phase || 'thinking'}…
         </span>
       );
     if (a.status === 'done' && a.verdict && a.verdict.culprit)
       return (
-        <span class="inspector-label-why">
+        <span class={styles.labelWhy}>
           {' '}
           <CulpritChip culprit={a.verdict.culprit} />
         </span>
@@ -104,9 +105,9 @@ export default function ProvenancePanel() {
   }
 
   return (
-    <div class="inspector-panel">
-      <div class="inspector-sect">Where each value came from</div>
-      <table class="inspector-table">
+    <div class={styles.panel}>
+      <div class={styles.sect}>Where each value came from</div>
+      <table class={styles.table}>
         <thead>
           <tr>
             <th>Field</th>
@@ -120,10 +121,10 @@ export default function ProvenancePanel() {
             const threshold = bySchemaId[p.schemaId] ?? defaultThreshold;
             return (
               <tr data-evidence-id={`field:${p.schemaId}`}>
-                <td class="fname">{p.schemaId}</td>
+                <td class={styles.fname}>{p.schemaId}</td>
                 <td>{p.value == null ? '' : String(p.value)}</td>
                 <td>
-                  <span class={`inspector-sb inspector-sb-${p.primary}`}>
+                  <span class={`${styles.sb} ${styles['sb-' + p.primary] ?? ''}`}>
                     {SRC_LABEL[p.primary] || p.primary}
                   </span>
                   {p.primary === 'data_matching' ? matchSource(p.schemaId) : null}
@@ -137,7 +138,7 @@ export default function ProvenancePanel() {
                   {p.confidence != null ? (
                     <span>
                       <span
-                        class="inspector-conf"
+                        class={styles.conf}
                         title={
                           threshold != null
                             ? `Extraction confidence ${p.confidence.toFixed(2)}. The tick marks the automation threshold (${threshold}) — at or above it the field can automate; below it blocks automation. Threshold source: field score_threshold, else the queue default.`
@@ -148,7 +149,7 @@ export default function ProvenancePanel() {
                           style={`width:${pct(p.confidence)}%;background:${threshold != null && p.confidence < threshold ? 'var(--danger)' : 'var(--success)'}`}
                         />
                         {threshold != null ? (
-                          <span class="thr" style={`left:${pct(threshold)}%`} />
+                          <span class={styles.thr} style={`left:${pct(threshold)}%`} />
                         ) : null}
                       </span>
                       {p.confidence.toFixed(2)}
@@ -165,11 +166,11 @@ export default function ProvenancePanel() {
           })}
         </tbody>
       </table>
-      <div class="inspector-note">
+      <div class={styles.note}>
         <b>engine</b> extraction · <b>manual edit</b> a person · <b>formula</b> schema formula ·{' '}
         <b>connector</b>/<b>rule</b>/<b>dataset match</b> written by an extension, rule, or matching
         connector (e.g. MDH). Source comes from each field's{' '}
-        <code class="inspector-code">validation_sources</code>.
+        <code class={styles.code}>validation_sources</code>.
       </div>
     </div>
   );
