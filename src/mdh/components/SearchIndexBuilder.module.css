@@ -54,7 +54,7 @@
 }
 
 /* A failed request is not the same quiet outcome as a genuine miss, and reads
-   as distinct from .checkMeta via --danger-fg — the token console.css defines
+   as distinct from .checkMeta via --danger-fg — the token src/console/tokens.css defines
    for exactly this (both the light and dark blocks carry the full --danger /
    --danger-hover / --danger-bg / --danger-fg / --danger-border family). */
 .checkError {

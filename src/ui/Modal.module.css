@@ -3,7 +3,8 @@
    presentational sub-components exported by Modal.jsx (ModalBody/ModalActions/…),
    so these names are private to the module. Content-width overrides key off the
    consumer's own (global) content class via :has(:global(...)). Design tokens stay
-   central in console.css; .btn-* / form classes are NOT modal's and stay global. */
+   central in src/console/tokens.css; buttons and form controls are not the modal's —
+   they live in src/ui/controls.module.css. */
 
 .overlay {
   position: fixed;

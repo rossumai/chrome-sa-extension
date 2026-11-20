@@ -181,8 +181,8 @@ export function JsonPreview({ docs }: { docs: any[] }) {
   );
 }
 
-// Shared "this is a state, not a value" vocabulary (house rule: console.css
-// .csv-cell-* — muted + italic, and a parenthesized word is the written
+// Shared "this is a state, not a value" vocabulary (house rule: ImportControls.module.css
+// .csvCell* — muted + italic, and a parenthesized word is the written
 // signal that a cell describes an absence/emptiness rather than holding a
 // real value). `null` is deliberately NOT part of this vocabulary: it is a
 // real type name (shape.ts#typeOf returns 'null' for it), so it renders

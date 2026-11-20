@@ -2,7 +2,7 @@
    CSS as a co-located CSS Module (see docs/superpowers/specs/2026-07-14-fabry-mark-shared-icon-design.md).
    esbuild scopes these class names at build time; consumers reference the imported
    `styles` object, never these literal names. Design tokens (--accent, etc.) stay
-   central in console.css for now — this module owns only its own rules. */
+   central in src/console/tokens.css — this module owns only its own rules. */
 
 .mark {
   display: inline-block;

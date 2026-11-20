@@ -1,6 +1,6 @@
 /* Self-contained styles for the Fabry markdown subsystem: FabryMarkdown + its
    MermaidBlock share this module (one cohesive renderer). Design tokens
-   (--bg-code, --info-fg, etc.) stay central in console.css. The `hl-*` keys are
+   (--bg-code, --info-fg, etc.) stay central in src/console/tokens.css. The `hl-*` keys are
    the syntax-highlight palette; FabryMarkdown builds them as styles['hl-' + tokenType]. */
 
 .md p {
@@ -173,7 +173,7 @@
 }
 
 /* Scrollbars for the scrollable markdown surfaces (the .fabry-main chat scrollbar
-   stays in console.css since that surface isn't part of this component). */
+   stays in src/fabry/components/App.module.css since that surface isn't part of this component). */
 .code::-webkit-scrollbar,
 .mermaid::-webkit-scrollbar,
 .tablewrap::-webkit-scrollbar {

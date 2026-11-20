@@ -2,7 +2,7 @@
 //
 // Extracted from printDoc.js (2026-08-19) so the printed specification and the on-screen unified
 // view share ONE concatenator. It deliberately returns DATA rather than chrome — print draws SVG
-// state badges, the screen draws console.css pills — so only the assembly is shared and the two
+// state badges, the screen draws SpecView.module.css pills — so only the assembly is shared and the two
 // presentations cannot drift.
 import { wrapStandaloneImages } from './render.js';
 import { sanitizeHtml } from './sanitize.js';

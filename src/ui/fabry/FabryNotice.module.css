@@ -1,5 +1,5 @@
 /* Self-contained styles for the Fabry fallback notice (spec §6). Design tokens
-   (--danger-fg, --font-mono, etc.) stay central in console.css. */
+   (--danger-fg, --font-mono, etc.) stay central in src/console/tokens.css. */
 .notice {
   margin: 8px 0;
   padding: 9px 12px;

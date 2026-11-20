@@ -1,7 +1,7 @@
 // src/ui/FabryMark.tsx
 // The shared "Mr. Fabry" identity mark: a filled four-point star. One source of
 // truth for every in-app Fabry surface (chat, audit, inspector, MDH input, the
-// Console rail). Fill is `currentColor` (via .fabry-mark in console.css), so the
+// Console rail). Fill is `currentColor` (via .mark in FabryMark.module.css), so the
 // mark inherits each surface's color — including the rail's white-when-active.
 // `animated` (default) adds a slow blue→indigo→violet color cycle; the rail passes
 // animated={false} for a static mark. Colors + reduced-motion handling live in CSS.

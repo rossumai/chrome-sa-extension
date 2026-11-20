@@ -25,7 +25,7 @@
   --warning-bg: rgba(217, 119, 6, 0.08);
   --warning-border: rgba(217, 119, 6, 0.35);
   --toggle-off: #c8c8d4;
-  /* The Console rail's EXP badge pair (console.css --exp-*), for the popup's app list. */
+  /* The Console rail's EXP badge pair (src/console/tokens.css --exp-*), for the popup's app list. */
   --exp-bg: #7c3aed;
   --exp-fg: #ffffff;
   --radius: 8px;

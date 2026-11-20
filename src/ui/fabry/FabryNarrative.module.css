@@ -1,5 +1,5 @@
 /* Self-contained styles for the Fabry narrative renderer (takeaway + bullets +
-   citation chips + streaming caret). Design tokens stay central in console.css. */
+   citation chips + streaming caret). Design tokens stay central in src/console/tokens.css. */
 .list {
   margin: 0 0 8px;
   padding-left: 18px;

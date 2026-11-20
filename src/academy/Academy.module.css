@@ -1,6 +1,6 @@
 /* src/academy/Academy.module.css — component-owned; esbuild emits it into
    dist/console/app.css. Colours come from the Console's shared tokens in
-   src/console/console.css, so dark mode follows them. The client's teal is the
+   src/console/tokens.css, so dark mode follows them. The client's teal is the
    one fixed colour: it is Acme's, and it carries white text in both modes. */
 .root {
   display: grid;

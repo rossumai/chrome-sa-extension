@@ -116,7 +116,7 @@
 }
 
 /* Assets on paper. Colour literals, like every other rule in this file: paper has no theme, and
-   the design tokens console.css owns never reach this page — it links the three document
+   the design tokens src/console/tokens.css owns never reach this page — it links the three document
    stylesheets, not the Console's.
 
    An asset whose bytes could not be baked into the page says so WHERE THE PICTURE WOULD HAVE BEEN,

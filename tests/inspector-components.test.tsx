@@ -296,9 +296,9 @@ describe('inspector components', () => {
     expect(labels).not.toContain('Retry');
   });
 
-  it('App nests content as .app-root > main.main > the Inspector root (so it is not laid out as a flex row)', () => {
-    // Regression: .app-root is `display:flex` in console.css. Putting the
-    // stacked report content directly on .app-root laid IdInput + report out
+  it('App nests content as the AppShell root > main > the Inspector root (so it is not laid out as a flex row)', () => {
+    // Regression: the AppShell root is `display:flex` (AppShell.module.css). Putting the
+    // stacked report content directly on that root laid IdInput + report out
     // side-by-side. The content must live inside a nested column container.
     render(<App connected />, root);
     const nested: any = root.querySelector(
