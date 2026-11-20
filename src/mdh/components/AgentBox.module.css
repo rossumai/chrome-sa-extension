@@ -1,0 +1,210 @@
+/* The AI-input subsystem (.nl-search-input base + loading border, the gerund
+   loader, and their keyframes) moved to the self-contained CSS Module
+   src/ui/aiInput.module.css (shared by FabryInput + GerundLoader). */
+
+/* NOTE: the Fabry mark (src/ui/FabryMark.module.css) and the AI-input primitive
+   (src/ui/aiInput.module.css — input/spark/loader/row) are self-contained CSS
+   Modules. Only AgentBox's own MDH layout (.agent-box / .agent-footer / .agent-chat-*)
+   stays here. */
+
+/* Agent surface ("Mr. Fabry") — AgentBox's own layout around the shared <FabryInput>:
+   a footer lifecycle slot (hidden idle → phase tracker running → result line done). */
+
+.agentBox {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 0;
+}
+
+/* .nl-search-wrapper / .agent-input-row (+ sparkle clearance) / .agent-spark (+ loading
+   twinkle) / the gradient focus ring all moved to src/ui/aiInput.module.css — FabryInput
+   owns the AI-input primitive. .agent-box + .agent-footer stay (AgentBox's own layout). */
+
+/* Footer lifecycle slot (only rendered while running or once a result exists). */
+
+.agentFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 15px;
+}
+
+.agentPhases {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.agentPhase {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  opacity: 0.45;
+  transition:
+    opacity 0.25s,
+    color 0.25s;
+}
+
+.agentPhase i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.agentPhase.active {
+  opacity: 1;
+  color: #8b5cf6;
+}
+
+.agentPhase.done {
+  opacity: 0.8;
+}
+
+.agentResult {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  min-width: 0;
+  flex: 1;
+}
+
+.agentResultOk {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.agentResultErr {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.agentResultSum {
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.agentResultMeta {
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.agentResultMsg {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.agentTranscriptLink {
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 10px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: var(--font-sans);
+}
+
+.agentTranscriptLink:hover {
+  color: var(--accent-hover, var(--accent));
+}
+
+/* Transcript modal (opened from "View transcript") */
+
+.agentChat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+.agentChatTurn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.agentChatRole {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.agentChatText {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.agentChatUser .agentChatText {
+  font-weight: 500;
+}
+
+.agentChatSystem .agentChatText {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.agentChatAssistantBody {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.agentChatReasoning {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-left: 2px solid var(--border);
+  padding-left: 8px;
+}
+
+.agentChatCode {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-code);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+/* Interactive transcript modal: scrolling transcript + a "continue this chat" input. */
+
+.agentChatModal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agentChatContinue {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}

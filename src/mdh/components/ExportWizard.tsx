@@ -11,6 +11,8 @@ import { flattenDoc } from '../flatten.js';
 import { displayValue } from '../displayValue.js';
 import * as api from '../api.js';
 import ctl from '../../ui/controls.module.css';
+import fmtCss from '../formats/formats.module.css';
+import styles from './ExportWizard.module.css';
 
 // Scope labels carry the live record counts so the all-vs-filtered choice is
 // impossible to overlook — the numbers ARE the semantic difference.
@@ -191,7 +193,7 @@ export default function ExportWizard({
   ];
 
   return (
-    <ModalBody class="export-wizard">
+    <ModalBody class={`export-wizard ${fmtCss.exportWizard}`}>
       <ModalField label="Scope">
         <Segmented
           value={scope}
@@ -204,7 +206,7 @@ export default function ExportWizard({
         {/* Explains why the "Current filter" option above is disabled, so it belongs
             inside that field rather than floating between two of them. */}
         {!filterState.available && filterState.reason && (
-          <div class="import-shape-neutral" style="margin-top:4px">
+          <div class={styles.importShapeNeutral} style="margin-top:4px">
             {filterState.reason}
           </div>
         )}
@@ -222,23 +224,23 @@ export default function ExportWizard({
       </ModalField>
 
       {fmt.OptionsControls && (
-        <div class="csv-toolbar">
+        <div class={fmtCss.csvToolbar}>
           <fmt.OptionsControls opts={effOpts} setOpt={setOpt} />
         </div>
       )}
 
-      <div class="csv-export-preview" data-testid="export-preview">
+      <div class={fmtCss.csvExportPreview} data-testid="export-preview">
         {preview.loading ? (
-          <div class="csv-export-preview-note">Building preview{'…'}</div>
+          <div class={fmtCss.csvExportPreviewNote}>Building preview{'…'}</div>
         ) : preview.error ? (
-          <div class="csv-export-preview-note">Preview unavailable</div>
+          <div class={fmtCss.csvExportPreviewNote}>Preview unavailable</div>
         ) : preview.sample.length === 0 ? (
-          <div class="csv-export-preview-note">No rows to preview</div>
+          <div class={fmtCss.csvExportPreviewNote}>No rows to preview</div>
         ) : fmt.previewKind === 'grid' ? (
           <Fragment>
             <PreviewCaption sample={preview.sample} columns={columns} />
-            <div class="csv-preview-scroll">
-              <table class="csv-preview-table">
+            <div class={fmtCss.csvPreviewScroll}>
+              <table class={fmtCss.csvPreviewTable}>
                 {effOpts.header && columns && (
                   <thead>
                     <tr>
@@ -266,7 +268,7 @@ export default function ExportWizard({
         ) : (
           <Fragment>
             <PreviewCaption sample={preview.sample} columns={fmt.needsColumns ? columns : null} />
-            <pre class="csv-export-preview-text">
+            <pre class={fmtCss.csvExportPreviewText}>
               {fmt.needsColumns && cols.loading
                 ? 'Building preview…'
                 : fmt.needsColumns && !columns
@@ -350,7 +352,7 @@ export default function ExportWizard({
 
 function PreviewCaption({ sample, columns }: { sample: any[]; columns?: string[] | null }) {
   return (
-    <div class="csv-export-preview-caption">
+    <div class={fmtCss.csvExportPreviewCaption}>
       Preview {'·'} first {sample.length} row{sample.length === 1 ? '' : 's'}
       {columns ? (
         <Fragment>
@@ -375,6 +377,6 @@ function cellPreview(v: any) {
   if (v === undefined) return <AbsentValue />;
   if (v === null) return <NullValue />;
   if (v === '') return <EmptyValue />;
-  if (typeof v === 'object') return <span class="csv-cell-string">{displayValue(v)}</span>;
+  if (typeof v === 'object') return <span class={fmtCss.csvCellString}>{displayValue(v)}</span>;
   return <ScalarValue value={v} />;
 }

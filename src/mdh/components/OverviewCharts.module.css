@@ -1,0 +1,164 @@
+/* ===== Overview "Charts" panel — storage treemap =====
+   Data colors (blue→teal→yellow index-overhead scale) are fixed hex so they read
+   the same in light/dark; everything else uses theme tokens. */
+
+.overviewCharts {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.overviewChartsBody {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 12px 14px 14px;
+}
+
+.ocCol {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ocColMap {
+  flex: 1.45 1 360px;
+}
+
+.ocLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+  min-height: 24px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.ocScaleToggle {
+  margin-left: auto;
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ocScaleToggle button {
+  border: 0;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 10px;
+  padding: 3px 9px;
+  cursor: pointer;
+}
+
+.ocScaleToggle button + button {
+  border-left: 1px solid var(--border);
+}
+
+.ocScaleToggle button:hover {
+  color: var(--text-primary);
+}
+
+.ocScaleToggle button.isActive {
+  background: var(--accent);
+  color: #fff;
+}
+
+.ocTreemap {
+  position: relative;
+  width: 100%;
+}
+
+.ocTile {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 5px 6px;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid var(--bg-card);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  outline: 0 solid transparent;
+}
+
+.ocTile.isOther {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.ocTile.isHover {
+  outline: 2px solid var(--text-primary);
+  z-index: 2;
+}
+
+.ocTileName {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ocTileName.isLg {
+  font-size: 12px;
+}
+
+.ocTileSub {
+  font-size: 9px;
+  opacity: 0.85;
+}
+
+.ocLegend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  font-size: 9px;
+  color: var(--text-secondary);
+}
+
+.ocLegendBar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #4270db, #19b89a, #f5c518);
+}
+
+.ocNote {
+  margin-top: 7px;
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.ocPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 24px 0;
+}
+
+.ocTooltip {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}

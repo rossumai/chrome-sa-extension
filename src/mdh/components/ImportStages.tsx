@@ -2,6 +2,7 @@ import { h, Fragment } from 'preact';
 import { ModalMessage, ModalActions } from './Modal.jsx';
 import ctl from '../../ui/controls.module.css';
 import inp from '../../ui/Input.module.css';
+import styles from './ImportStages.module.css';
 
 // Shared progress / summary components used by ImportWizard.
 // StageConfirm / StageImporting / StageDone were retired when the per-format
@@ -49,9 +50,9 @@ export function ImportProgress({ progress, onCancel }: { progress: any; onCancel
           {label}
           {'…'}
         </ModalMessage>
-        <div class="import-progress">
-          <div class="import-progress-track">
-            <div class="import-progress-fill indeterminate"></div>
+        <div class={styles.importProgress}>
+          <div class={styles.importProgressTrack}>
+            <div class={`${styles.importProgressFill} ${styles.indeterminate}`}></div>
           </div>
         </div>
         {file?.filename && (
@@ -61,7 +62,7 @@ export function ImportProgress({ progress, onCancel }: { progress: any; onCancel
           </div>
         )}
         {bits.length > 0 && (
-          <div class="import-progress-status" data-testid="import-progress-status">
+          <div class={styles.importProgressStatus} data-testid="import-progress-status">
             {bits.join(' · ')}
           </div>
         )}
@@ -86,11 +87,11 @@ export function ImportProgress({ progress, onCancel }: { progress: any; onCancel
         {label}
         {'…'}
       </ModalMessage>
-      <div class="import-progress">
-        <div class="import-progress-track">
-          <div class="import-progress-fill" style={`width:${pct}%`}></div>
+      <div class={styles.importProgress}>
+        <div class={styles.importProgressTrack}>
+          <div class={styles.importProgressFill} style={`width:${pct}%`}></div>
         </div>
-        <div class="import-progress-counts">
+        <div class={styles.importProgressCounts}>
           <span>
             {processed.toLocaleString()} / {total.toLocaleString()}
           </span>
@@ -123,19 +124,19 @@ export function ImportSummary({
       const action = result.kind === 'replace' ? 'replace' : 'update';
       return (
         <Fragment>
-          <div class="import-result-header partial">
-            <span class="import-result-icon">{'○'}</span>
+          <div class={`${styles.importResultHeader} ${styles.partial}`}>
+            <span class={styles.importResultIcon}>{'○'}</span>
             <span>
               Cancelled
               {fileMeta?.name && (
-                <span class="import-result-filename">
+                <span class={styles.importResultFilename}>
                   {' '}
                   {'·'} {fileMeta.name}
                 </span>
               )}
             </span>
           </div>
-          <ul class="import-result-list">
+          <ul class={styles.importResultList}>
             <li>
               Stopped waiting for the server. If the upload already reached the server it may still{' '}
               {action} the collection in the background.
@@ -151,19 +152,19 @@ export function ImportSummary({
     }
     return (
       <Fragment>
-        <div class="import-result-header success">
-          <span class="import-result-icon">{'✓'}</span>
+        <div class={`${styles.importResultHeader} ${styles.success}`}>
+          <span class={styles.importResultIcon}>{'✓'}</span>
           <span>
             Import complete
             {fileMeta?.name && (
-              <span class="import-result-filename">
+              <span class={styles.importResultFilename}>
                 {' '}
                 {'·'} {fileMeta.name}
               </span>
             )}
           </span>
         </div>
-        <ul class="import-result-list">
+        <ul class={styles.importResultList}>
           <li>
             Uploaded <strong>{(result.sent || 0).toLocaleString()}</strong> row
             {result.sent === 1 ? '' : 's'} {'—'} the server {verb} the collection.
@@ -190,19 +191,19 @@ export function ImportSummary({
   const appliedVerb = kind === 'replace' ? 'Replaced' : kind === 'update' ? 'Updated' : null;
   return (
     <Fragment>
-      <div class={`import-result-header ${ok ? 'success' : 'partial'}`}>
-        <span class="import-result-icon">{ok ? '✓' : cancelled ? '○' : '⚠'}</span>
+      <div class={`${styles.importResultHeader} ${ok ? styles.success : styles.partial}`}>
+        <span class={styles.importResultIcon}>{ok ? '✓' : cancelled ? '○' : '⚠'}</span>
         <span>
           {cancelled ? 'Cancelled' : ok ? 'Import complete' : 'Import partially complete'}
           {fileMeta?.name && (
-            <span class="import-result-filename">
+            <span class={styles.importResultFilename}>
               {' '}
               {'·'} {fileMeta.name}
             </span>
           )}
         </span>
       </div>
-      <ul class="import-result-list">
+      <ul class={styles.importResultList}>
         {kind === 'overwrite' && deleted > 0 && (
           <li>
             Deleted <strong>{deleted.toLocaleString()}</strong> existing record
@@ -231,7 +232,7 @@ export function ImportSummary({
           <li style="color:var(--danger)">
             <strong>{failedBatches.length}</strong> operation{failedBatches.length === 1 ? '' : 's'}{' '}
             failed
-            <ul class="import-failure-list">
+            <ul class={styles.importFailureList}>
               {failedBatches.slice(0, 5).map((b: any, i: any) => (
                 <li key={i}>
                   {b.count > 0 && typeof b.startIdx === 'number' ? (

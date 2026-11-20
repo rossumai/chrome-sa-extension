@@ -1,0 +1,12 @@
+.sidebarResizer {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.sidebarResizer:hover,
+.sidebarResizer.dragging {
+  background: var(--accent);
+}

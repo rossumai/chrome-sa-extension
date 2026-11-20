@@ -4,6 +4,9 @@ import { h } from 'preact';
 import { render } from 'preact';
 import ImportConfirm from '../src/mdh/components/ImportConfirm.jsx';
 import { deriveShape } from '../src/mdh/shape.js';
+import importConfirmCss from '../src/mdh/components/ImportConfirm.module.css';
+import specialTextCss from '../src/mdh/components/SpecialText.module.css';
+import importControlsCss from '../src/mdh/components/ImportControls.module.css';
 
 function mount(vnode: any) {
   const el = document.createElement('div');
@@ -283,7 +286,7 @@ describe('ImportConfirm', () => {
     expect(root.querySelector<HTMLButtonElement>('[data-testid="import-go"]')!.disabled).toBe(true);
     const err = root.querySelector('[data-testid="import-shape-error"]')!;
     expect(err).toBeTruthy();
-    expect(err.classList.contains('import-error')).toBe(true); // danger-styled, not the info box
+    expect(err.classList.contains(importConfirmCss.importError)).toBe(true); // danger-styled, not the info box
     expect(err.getAttribute('role')).toBe('alert');
     expect(err.textContent).toMatch(/blocked/i);
     expect(err.textContent).toMatch(/region/); // the missing field is named
@@ -311,7 +314,7 @@ describe('ImportConfirm', () => {
     expect(err.textContent).toMatch(/only by leading\/trailing whitespace/i);
     expect(err.textContent).toMatch(/"sku·"/); // file side, marked
     expect(err.textContent).toMatch(/"sku"/); // existing side
-    expect(err.querySelector('.mdh-special-space')).toBeTruthy();
+    expect(err.querySelector(`.${specialTextCss.mdhSpecialSpace}`)).toBeTruthy();
     expect(root.querySelector<HTMLButtonElement>('[data-testid="import-go"]')!.disabled).toBe(true);
   });
 
@@ -372,13 +375,19 @@ describe('ImportConfirm', () => {
     );
     const err = root.querySelector('[data-testid="import-shape-error"]')!;
     const extraRow = err.querySelector('[data-testid="ledger-row"][data-path="extra"]')!;
-    expect(extraRow.querySelector('.import-ledger-cell-collection')!.textContent).toMatch(
-      /\(absent\)/,
-    );
-    expect(extraRow.querySelector('.import-ledger-cell-file')!.textContent).toMatch(/number/);
+    expect(
+      extraRow.querySelector(`.${importConfirmCss.importLedgerCellCollection}`)!.textContent,
+    ).toMatch(/\(absent\)/);
+    expect(
+      extraRow.querySelector(`.${importConfirmCss.importLedgerCellFile}`)!.textContent,
+    ).toMatch(/number/);
     const atRow = err.querySelector('[data-testid="ledger-row"][data-path="at"]')!;
-    expect(atRow.querySelector('.import-ledger-cell-collection')!.textContent).toMatch(/date/i);
-    expect(atRow.querySelector('.import-ledger-cell-file')!.textContent).toMatch(/string/i);
+    expect(
+      atRow.querySelector(`.${importConfirmCss.importLedgerCellCollection}`)!.textContent,
+    ).toMatch(/date/i);
+    expect(atRow.querySelector(`.${importConfirmCss.importLedgerCellFile}`)!.textContent).toMatch(
+      /string/i,
+    );
     expect(err.textContent).not.toMatch(/date → string/);
     expect(err.textContent).not.toMatch(/in the file, not in the collection/i);
   });
@@ -390,8 +399,12 @@ describe('ImportConfirm', () => {
     );
     const err = root.querySelector('[data-testid="import-shape-error"]')!;
     const row = err.querySelector('[data-testid="ledger-row"][data-path="region"]')!;
-    expect(row.querySelector('.import-ledger-cell-collection')!.textContent).toMatch(/string/i);
-    expect(row.querySelector('.import-ledger-cell-file')!.textContent).toMatch(/\(absent\)/);
+    expect(
+      row.querySelector(`.${importConfirmCss.importLedgerCellCollection}`)!.textContent,
+    ).toMatch(/string/i);
+    expect(row.querySelector(`.${importConfirmCss.importLedgerCellFile}`)!.textContent).toMatch(
+      /\(absent\)/,
+    );
     expect(err.textContent).not.toMatch(/in the collection, not in the file/i);
   });
 
@@ -416,7 +429,9 @@ describe('ImportConfirm', () => {
     );
     const err = root.querySelector('[data-testid="import-shape-error"]')!;
 
-    const headers = [...err.querySelectorAll('.import-ledger th')].map((th) => th.textContent);
+    const headers = [...err.querySelectorAll(`.${importConfirmCss.importLedger} th`)].map(
+      (th) => th.textContent,
+    );
     expect(headers).toEqual(['Field', 'In the collection', 'In the file']);
 
     const groupHeadings = [...err.querySelectorAll('.import-ledger-group-row')].map(
@@ -462,7 +477,9 @@ describe('ImportConfirm', () => {
     );
     const err = root.querySelector('[data-testid="import-shape-error"]');
     const wsRow = err!.querySelector('[data-testid="ledger-row"][data-kind="whitespace"]');
-    expect(wsRow!.querySelector('.import-ledger-tag')!.textContent).toBe('spelling');
+    expect(wsRow!.querySelector(`.${importConfirmCss.importLedgerTag}`)!.textContent).toBe(
+      'spelling',
+    );
     // No finding in this fixture produces an absent cell on both sides at
     // once, but every missing/unexpected row has exactly one — assert it is
     // rendered via the shared muted+italic AbsentValue vocabulary (the same
@@ -474,7 +491,9 @@ describe('ImportConfirm', () => {
       <ImportConfirm {...base} shape={shape2} shapeCount={1} docs={[{ sku: 'B2' }]} />,
     );
     const missingRow = root2.querySelector('[data-testid="ledger-row"][data-path="region"]');
-    const absent = missingRow!.querySelector('.import-ledger-cell-file .csv-cell-missing');
+    const absent = missingRow!.querySelector(
+      `.${importConfirmCss.importLedgerCellFile} .${importControlsCss.csvCellMissing}`,
+    );
     expect(absent).toBeTruthy();
     expect(absent!.textContent).toBe('(absent)');
   });

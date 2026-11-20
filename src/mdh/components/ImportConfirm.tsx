@@ -11,6 +11,7 @@ import MatchKeyPicker from './MatchKeyPicker.jsx';
 import PlanSummary from './PlanSummary.jsx';
 import SpecialText from './SpecialText.jsx';
 import ctl from '../../ui/controls.module.css';
+import styles from './ImportConfirm.module.css';
 
 const MODE_SEG = [
   { value: 'insert', label: 'Insert' },
@@ -212,24 +213,24 @@ export default function ImportConfirm({
 
       {/* Shape validation: silent pass, loud fail, in-card override. */}
       {restoreSummary && (
-        <div class="import-shape-line" data-testid="import-restore-summary">
+        <div class={styles.importShapeLine} data-testid="import-restore-summary">
           {restoreSummary}
         </div>
       )}
       {shapeLoading && (
-        <div class="import-shape-line" data-testid="import-shape-loading">
+        <div class={styles.importShapeLine} data-testid="import-shape-loading">
           Checking shape{'…'}
         </div>
       )}
       {!shapeLoading && shapeCheck?.ok && (
-        <div class="import-shape-line ok" data-testid="import-shape-ok">
+        <div class={`${styles.importShapeLine} ${styles.ok}`} data-testid="import-shape-ok">
           {'✓'} Shape matches {'·'} {sampleNoteShort}
         </div>
       )}
       {!shapeLoading && shapeCheck && !shapeCheck.ok && (
-        <div class="import-error" data-testid="import-shape-error" role="alert">
-          <div class="import-error-head">
-            <span class="import-error-icon" aria-hidden="true">
+        <div class={styles.importError} data-testid="import-shape-error" role="alert">
+          <div class={styles.importErrorHead}>
+            <span class={styles.importErrorIcon} aria-hidden="true">
               {'⚠'}
             </span>
             <span>
@@ -239,9 +240,9 @@ export default function ImportConfirm({
               existing records.
             </span>
           </div>
-          <div class="import-ledger-panel">
-            <div class="import-ledger-scroll">
-              <table class="import-ledger">
+          <div class={styles.importLedgerPanel}>
+            <div class={styles.importLedgerScroll}>
+              <table class={styles.importLedger}>
                 <thead>
                   <tr>
                     <th>Field</th>
@@ -262,17 +263,17 @@ export default function ImportConfirm({
                       // rows hold spellings, not types, so they stay neutral too.
                       const collectionClass =
                         row.kind === 'type' && row.file !== null
-                          ? 'import-ledger-cell-collection import-ledger-type-collection'
-                          : 'import-ledger-cell-collection';
+                          ? `${styles.importLedgerCellCollection} ${styles.importLedgerTypeCollection}`
+                          : styles.importLedgerCellCollection;
                       const fileClass =
                         row.kind === 'type' && row.collection !== null
-                          ? 'import-ledger-cell-file import-ledger-type-file'
-                          : 'import-ledger-cell-file';
+                          ? `${styles.importLedgerCellFile} ${styles.importLedgerTypeFile}`
+                          : styles.importLedgerCellFile;
                       return (
                         <Fragment key={`${row.kind}:${row.path}`}>
                           {grouped && isFirstOfRoot && (
                             <tr class="import-ledger-group-row">
-                              <td class="import-ledger-group-cell" colSpan={3}>
+                              <td class={styles.importLedgerGroupCell} colSpan={3}>
                                 <SpecialText value={row.root} />
                               </td>
                             </tr>
@@ -286,13 +287,13 @@ export default function ImportConfirm({
                             <td
                               class={
                                 grouped
-                                  ? 'import-ledger-cell-field import-ledger-cell-field-indent'
-                                  : 'import-ledger-cell-field'
+                                  ? `${styles.importLedgerCellField} ${styles.importLedgerCellFieldIndent}`
+                                  : styles.importLedgerCellField
                               }
                             >
                               <FieldName name={row.path} />
                               {row.kind === 'whitespace' && (
-                                <span class="import-ledger-tag">spelling</span>
+                                <span class={styles.importLedgerTag}>spelling</span>
                               )}
                             </td>
                             <td class={collectionClass}>
@@ -310,7 +311,7 @@ export default function ImportConfirm({
               </table>
             </div>
             {flatCauses.length > 0 && (
-              <div class="import-ledger-flat" data-testid="import-shape-flat-causes">
+              <div class={styles.importLedgerFlat} data-testid="import-shape-flat-causes">
                 {flatCauses.length} field{flatCauses.length === 1 ? '' : 's'} arrived flat{': '}
                 {flatCauses.map((c, i) => (
                   <Fragment key={c.root}>
@@ -322,12 +323,12 @@ export default function ImportConfirm({
             )}
           </div>
           {shapeCheck.whitespace.length > 0 && (
-            <div class="import-error-hint">
+            <div class={styles.importErrorHint}>
               Columns marked {'·'} differ only by leading/trailing whitespace.
             </div>
           )}
-          <div class="import-shape-note">{sampleNote}</div>
-          <label class="import-error-ack">
+          <div class={styles.importShapeNote}>{sampleNote}</div>
+          <label class={styles.importErrorAck}>
             <input
               type="checkbox"
               data-testid="shape-override"
@@ -436,9 +437,9 @@ export default function ImportConfirm({
       </PlanSummary>
 
       {isUpdate && keys.length > 0 && missingKeyRows > 0 && (
-        <div class="import-error" data-testid="import-key-guard" role="alert">
-          <div class="import-error-head">
-            <span class="import-error-icon" aria-hidden="true">
+        <div class={styles.importError} data-testid="import-key-guard" role="alert">
+          <div class={styles.importErrorHead}>
+            <span class={styles.importErrorIcon} aria-hidden="true">
               {'⚠'}
             </span>
             <span>

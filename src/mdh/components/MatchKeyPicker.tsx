@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { useState, useRef, useLayoutEffect } from 'preact/hooks';
+import styles from './MatchKeyPicker.module.css';
 
 const PAD = 8,
   GAP = 4,
@@ -107,14 +108,14 @@ export default function MatchKeyPicker({
     : '';
 
   return (
-    <div class="match-key-picker" data-testid="match-keys">
-      <div class="match-key-chips">
+    <div class={styles.matchKeyPicker} data-testid="match-keys">
+      <div class={styles.matchKeyChips}>
         {keys.map((k) => (
-          <span class="match-key-chip" key={k}>
+          <span class={styles.matchKeyChip} key={k}>
             {k}
             <button
               type="button"
-              class="match-key-chip-x"
+              class={styles.matchKeyChipX}
               aria-label={`Remove ${k}`}
               onClick={() => remove(k)}
             >
@@ -124,7 +125,7 @@ export default function MatchKeyPicker({
         ))}
         <input
           ref={inputRef}
-          class="match-key-input"
+          class={styles.matchKeyInput}
           type="text"
           value={query}
           placeholder={
@@ -147,11 +148,11 @@ export default function MatchKeyPicker({
         />
       </div>
       {open && box && (
-        <div class="match-key-suggest" data-testid="match-key-suggest" style={boxStyle}>
+        <div class={styles.matchKeySuggest} data-testid="match-key-suggest" style={boxStyle}>
           {suggestions.map((p, i) => (
             <button
               type="button"
-              class={`match-key-suggest-item${i === active ? ' active' : ''}`}
+              class={`${styles.matchKeySuggestItem}${i === active ? ` ${styles.active}` : ''}`}
               key={p}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => add(p)}

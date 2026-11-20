@@ -5,6 +5,9 @@ import { act } from 'preact/test-utils';
 import RecordTable from '../src/mdh/components/RecordTable.jsx';
 import { selectionMode, selectedIds } from '../src/mdh/store.js';
 import { copyTextFor } from '../src/mdh/displayValue.js';
+import jv from '../src/mdh/components/jsonValues.module.css';
+import recordTableCss from '../src/mdh/components/RecordTable.module.css';
+import specialTextCss from '../src/mdh/components/SpecialText.module.css';
 
 function renderTable(props = {}) {
   const root = document.createElement('div');
@@ -65,7 +68,7 @@ describe('RecordTable', () => {
     });
     // Should have a checkbox column header + 2 data columns = 3 ths
     expect(root.querySelectorAll('thead th').length).toBe(3);
-    const checkboxes = root.querySelectorAll('.record-checkbox');
+    const checkboxes = root.querySelectorAll(`.${jv.recordCheckbox}`);
     expect(checkboxes.length).toBe(2);
 
     // Click first checkbox to select the first record
@@ -76,8 +79,8 @@ describe('RecordTable', () => {
 
     // The first row should gain the selected class
     const rows = root.querySelectorAll('tbody tr');
-    expect(rows[0].classList.contains('record-table-row-selected')).toBe(true);
-    expect(rows[1].classList.contains('record-table-row-selected')).toBe(false);
+    expect(rows[0].classList.contains(jv.recordTableRowSelected)).toBe(true);
+    expect(rows[1].classList.contains(jv.recordTableRowSelected)).toBe(false);
 
     // Click again to deselect
     await act(() => {
@@ -104,12 +107,12 @@ describe('RecordTable', () => {
     });
 
     // Should render the badge with [2] array display
-    const badge = root.querySelector('.record-table-badge');
+    const badge = root.querySelector(`.${jv.recordTableBadge}`);
     expect(badge).not.toBeNull();
     expect(badge.textContent).toContain('[2]');
 
     // No nested tree rendered yet
-    expect(root.querySelector('.record-table-nested')).toBeNull();
+    expect(root.querySelector(`.${recordTableCss.recordTableNested}`)).toBeNull();
 
     // Click the badge to expand
     await act(() => {
@@ -117,7 +120,7 @@ describe('RecordTable', () => {
     });
 
     // Nested tree should now be present
-    const nested = root.querySelector('.record-table-nested');
+    const nested = root.querySelector(`.${recordTableCss.recordTableNested}`);
     expect(nested).not.toBeNull();
     // JsonTree renders rows — should contain the items' content
     expect(nested.textContent.length).toBeGreaterThan(0);
@@ -127,7 +130,9 @@ describe('RecordTable', () => {
   it('renders a sort badge with ↑ for ascending sort; th does NOT get old color classes', () => {
     const root = renderTable({ sortState: { name: 1 } });
     const nameHeader = root.querySelectorAll('thead th')[1];
-    const badge = nameHeader.querySelector('.record-table-sort-badge.asc');
+    const badge = nameHeader.querySelector(
+      `.${recordTableCss.recordTableSortBadge}.${recordTableCss.asc}`,
+    );
     expect(badge).not.toBeNull();
     expect(badge!.textContent).toBe('↑');
     // Full-header color classes should not be present
@@ -135,13 +140,15 @@ describe('RecordTable', () => {
     expect(nameHeader.classList.contains('record-table-th-desc')).toBe(false);
     // Other headers should have no badge
     const idHeader = root.querySelectorAll('thead th')[0];
-    expect(idHeader.querySelector('.record-table-sort-badge')).toBeNull();
+    expect(idHeader.querySelector(`.${recordTableCss.recordTableSortBadge}`)).toBeNull();
   });
 
   it('renders a sort badge with ↓ for descending sort; th does NOT get old color classes', () => {
     const root = renderTable({ sortState: { name: -1 } });
     const nameHeader = root.querySelectorAll('thead th')[1];
-    const badge = nameHeader.querySelector('.record-table-sort-badge.desc');
+    const badge = nameHeader.querySelector(
+      `.${recordTableCss.recordTableSortBadge}.${recordTableCss.desc}`,
+    );
     expect(badge).not.toBeNull();
     expect(badge!.textContent).toBe('↓');
     expect(nameHeader.classList.contains('record-table-th-asc')).toBe(false);
@@ -174,9 +181,9 @@ describe('RecordTable', () => {
     const ths = root.querySelectorAll('thead th');
     // 3 data columns; the last column is the auto-fill filler and is not resizable.
     expect(ths.length).toBe(3);
-    expect(ths[0].querySelector('.col-resizer')).not.toBeNull();
-    expect(ths[1].querySelector('.col-resizer')).not.toBeNull();
-    expect(ths[2].querySelector('.col-resizer')).toBeNull();
+    expect(ths[0].querySelector(`.${jv.colResizer}`)).not.toBeNull();
+    expect(ths[1].querySelector(`.${jv.colResizer}`)).not.toBeNull();
+    expect(ths[2].querySelector(`.${jv.colResizer}`)).toBeNull();
   });
 
   // --- Filtered value highlight ---
@@ -185,14 +192,14 @@ describe('RecordTable', () => {
     // First row name cell value should be highlighted
     const rows = root.querySelectorAll('tbody tr');
     const firstRowNameCell = rows[0].querySelectorAll('td')[1];
-    const valueSpan = firstRowNameCell.querySelector('.record-table-value');
+    const valueSpan = firstRowNameCell.querySelector(`.${jv.recordTableValue}`);
     expect(valueSpan).not.toBeNull();
-    expect(valueSpan!.classList.contains('json-tree-value-filtered')).toBe(true);
+    expect(valueSpan!.classList.contains(jv.jsonTreeValueFiltered)).toBe(true);
     // Non-filtered column (_id) should not have the class
     const firstRowIdCell = rows[0].querySelectorAll('td')[0];
-    const idValueSpan = firstRowIdCell.querySelector('.record-table-value');
+    const idValueSpan = firstRowIdCell.querySelector(`.${jv.recordTableValue}`);
     expect(idValueSpan).not.toBeNull();
-    expect(idValueSpan!.classList.contains('json-tree-value-filtered')).toBe(false);
+    expect(idValueSpan!.classList.contains(jv.jsonTreeValueFiltered)).toBe(false);
   });
 
   // --- EJSON compact type tags ---
@@ -210,13 +217,13 @@ describe('RecordTable', () => {
     });
     // Table uses the shared compact .value-type-tag, not the wide .json-tree-badge.
     expect(root.querySelector('.json-tree-badge')).toBeNull();
-    const tags = root.querySelectorAll('.value-type-tag');
+    const tags = root.querySelectorAll(`.${jv.valueTypeTag}`);
     const tagTexts = Array.from(tags).map((t: any) => t.textContent);
     expect(tagTexts).toContain('oid');
     expect(tagTexts).toContain('date');
     // The tag keeps the type color class and exposes the full type name on hover.
     const oidTag: any = Array.from(tags).find((t: any) => t.textContent === 'oid');
-    expect(oidTag.classList.contains('json-tree-value-oid')).toBe(true);
+    expect(oidTag.classList.contains(jv.jsonTreeValueOid)).toBe(true);
     expect(oidTag.getAttribute('title')).toBe('ObjectId');
     const dateTag: any = Array.from(tags).find((t: any) => t.textContent === 'date');
     expect(dateTag.getAttribute('title')).toBe('Date');
@@ -225,9 +232,9 @@ describe('RecordTable', () => {
     expect(root.textContent).toContain('2020-01-01T00:00:00.000Z');
     // The tag is shown AFTER the value in the table too.
     const idCell = root.querySelectorAll('tbody td')[0];
-    const kids = [...idCell.querySelector('.record-table-cell-inner').children];
-    const valIdx = kids.findIndex((k) => k.classList.contains('record-table-value'));
-    const tagIdx = kids.findIndex((k) => k.classList.contains('value-type-tag'));
+    const kids = [...idCell.querySelector(`.${jv.recordTableCellInner}`).children];
+    const valIdx = kids.findIndex((k) => k.classList.contains(jv.recordTableValue));
+    const tagIdx = kids.findIndex((k) => k.classList.contains(jv.valueTypeTag));
     expect(valIdx).toBeGreaterThanOrEqual(0);
     expect(tagIdx).toBeGreaterThan(valIdx);
   });
@@ -244,7 +251,7 @@ describe('RecordTable', () => {
     // Each data cell should have exactly one copy button inside the cell-inner wrapper
     const tds = root.querySelectorAll('tbody td');
     expect(tds.length).toBe(1);
-    const copyBtn = tds[0].querySelector('.record-table-cell-inner > .json-tree-copy-btn');
+    const copyBtn = tds[0].querySelector(`.${jv.recordTableCellInner} > .${jv.jsonTreeCopyBtn}`);
     expect(copyBtn).not.toBeNull();
 
     // Click the copy button and check clipboard was called with the plain value
@@ -265,7 +272,7 @@ describe('RecordTable', () => {
       });
     });
     const tds = root.querySelectorAll('tbody td');
-    const copyBtn = tds[0].querySelector('.record-table-cell-inner > .json-tree-copy-btn');
+    const copyBtn = tds[0].querySelector(`.${jv.recordTableCellInner} > .${jv.jsonTreeCopyBtn}`);
     expect(copyBtn).not.toBeNull();
 
     await act(async () => {
@@ -286,7 +293,7 @@ describe('RecordTable', () => {
     // Check EJSON cell (_id) has copy button inside cell-inner wrapper
     const tds = root.querySelectorAll('tbody td');
     const idCell = tds[0];
-    const idCopyBtn = idCell.querySelector('.record-table-cell-inner > .json-tree-copy-btn');
+    const idCopyBtn = idCell.querySelector(`.${jv.recordTableCellInner} > .${jv.jsonTreeCopyBtn}`);
     expect(idCopyBtn).not.toBeNull();
 
     // Click EJSON copy button — should write the ObjectId value
@@ -302,7 +309,9 @@ describe('RecordTable', () => {
 
     // Check complex cell (items) has copy button inside cell-inner wrapper
     const itemsCell = tds[1];
-    const itemsCopyBtn = itemsCell.querySelector('.record-table-cell-inner > .json-tree-copy-btn');
+    const itemsCopyBtn = itemsCell.querySelector(
+      `.${jv.recordTableCellInner} > .${jv.jsonTreeCopyBtn}`,
+    );
     expect(itemsCopyBtn).not.toBeNull();
 
     // Click complex copy button — should write the JSON string
@@ -319,7 +328,9 @@ describe('RecordTable', () => {
       records: [{ _id: '1', name: 'a\u00a0b' }],
       columns: ['_id', 'name'],
     });
-    const span = root.querySelector('.mdh-special.mdh-special-space');
+    const span = root.querySelector(
+      `.${specialTextCss.mdhSpecial}.${specialTextCss.mdhSpecialSpace}`,
+    );
     expect(span).not.toBeNull();
     expect(span!.getAttribute('title')).toBe('U+00A0 NO-BREAK SPACE');
   });
@@ -329,7 +340,7 @@ describe('RecordTable', () => {
       records: [{ _id: '1', name: 'z'.repeat(50) }],
       columns: ['_id', 'name'],
     });
-    expect(root.querySelectorAll('.mdh-special').length).toBe(0);
+    expect(root.querySelectorAll(`.${specialTextCss.mdhSpecial}`).length).toBe(0);
     // The full 50 chars are in the DOM (no JS 20-char cap); CSS clips visually.
     expect(root.textContent).toContain('z'.repeat(50));
     expect(root.textContent).not.toContain('z'.repeat(20) + '...');
@@ -339,7 +350,7 @@ describe('RecordTable', () => {
   it('renders null with the null color class', () => {
     const root = renderTable({ records: [{ _id: '1', val: null }], columns: ['_id', 'val'] });
     const cell = root.querySelectorAll('tbody td')[1];
-    const span = cell.querySelector('.record-table-value.json-tree-value-null');
+    const span = cell.querySelector(`.${jv.recordTableValue}.${jv.jsonTreeValueNull}`);
     expect(span).not.toBeNull();
     expect(span!.textContent).toBe('null');
   });
@@ -354,13 +365,13 @@ describe('RecordTable', () => {
     expect(secondRowNameCell.textContent).not.toContain('undefined');
     expect(secondRowNameCell.querySelector('[title="field omitted"]')).not.toBeNull();
     // Nothing to copy for a missing field.
-    expect(secondRowNameCell.querySelector('.json-tree-copy-btn')).toBeNull();
+    expect(secondRowNameCell.querySelector(`.${jv.jsonTreeCopyBtn}`)).toBeNull();
   });
 
   it('renders an empty string as (empty) in the null style', () => {
     const root = renderTable({ records: [{ _id: '1', val: '' }], columns: ['_id', 'val'] });
     const cell = root.querySelectorAll('tbody td')[1];
-    const span = cell.querySelector('.record-table-value.json-tree-value-null');
+    const span = cell.querySelector(`.${jv.recordTableValue}.${jv.jsonTreeValueNull}`);
     expect(span).not.toBeNull();
     expect(span!.textContent).toBe('(empty)');
   });
@@ -371,11 +382,11 @@ describe('RecordTable', () => {
       columns: ['_id', 'n', 'b'],
     });
     const tds = root.querySelectorAll('tbody td');
-    expect(tds[1].querySelector('.record-table-value.json-tree-value-number')!.textContent).toBe(
-      '42',
-    );
-    expect(tds[2].querySelector('.record-table-value.json-tree-value-bool')!.textContent).toBe(
-      'true',
-    );
+    expect(
+      tds[1].querySelector(`.${jv.recordTableValue}.${jv.jsonTreeValueNumber}`)!.textContent,
+    ).toBe('42');
+    expect(
+      tds[2].querySelector(`.${jv.recordTableValue}.${jv.jsonTreeValueBool}`)!.textContent,
+    ).toBe('true');
   });
 });

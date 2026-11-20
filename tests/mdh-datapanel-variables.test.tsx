@@ -64,6 +64,8 @@ vi.mock('../src/mdh/components/RecordList.jsx', () => ({
 import * as api from '../src/mdh/api.js';
 import DataPanel from '../src/mdh/components/DataPanel.jsx';
 import { selectedCollection, records, skip, limit, loading, error } from '../src/mdh/store.js';
+import placeholderInputsCss from '../src/mdh/components/PlaceholderInputs.module.css';
+import pd from '../src/mdh/components/PipelineDebug.module.css';
 
 let validTimer: any = null;
 // Mimic JsonEditor's updateListener: always fire onChange; if the text parses,
@@ -129,15 +131,20 @@ describe('DataPanel variables → debug + query', () => {
     await waitFor(() => mock.text !== '', 'the [collection] effect to seed the default pipeline');
 
     typeInEditor('[{"$match":{"amount":"{amount}"}}]');
-    await waitFor(() => root.querySelector('.placeholder-input'), 'the Variables input to appear');
+    await waitFor(
+      () => root.querySelector(`.${placeholderInputsCss.placeholderInput}`),
+      'the Variables input to appear',
+    );
     // Ran right away with the unfilled variable defaulting to an empty string.
     await waitFor(() => ranWith('"amount":""'), 'the query to run with an empty value');
 
-    const input = root.querySelector<HTMLInputElement>('.placeholder-input')!;
+    const input = root.querySelector<HTMLInputElement>(
+      `.${placeholderInputsCss.placeholderInput}`,
+    )!;
     expect(input, 'Variables input should appear').not.toBeNull();
     expect(root.querySelector('.pipeline-debug-hint'), 'no hint is ever shown').toBeNull();
     expect(
-      root.querySelector('.pipeline-debug-input-row'),
+      root.querySelector(`.${pd.pipelineDebugInputRow}`),
       'debug shows immediately',
     ).not.toBeNull();
 
@@ -157,14 +164,19 @@ describe('DataPanel variables → debug + query', () => {
     await waitFor(() => mock.text !== '', 'the [collection] effect to seed the default pipeline');
 
     typeInEditor('[{"$match":{"vendor":"{vendor}"}}]');
-    await waitFor(() => root.querySelector('.placeholder-input'), 'the Variables input to appear');
+    await waitFor(
+      () => root.querySelector(`.${placeholderInputsCss.placeholderInput}`),
+      'the Variables input to appear',
+    );
     await waitFor(() => ranWith('"vendor":""'), 'the query to run with an empty value');
 
-    const input = root.querySelector<HTMLInputElement>('.placeholder-input')!;
+    const input = root.querySelector<HTMLInputElement>(
+      `.${placeholderInputsCss.placeholderInput}`,
+    )!;
     expect(input, 'Variables input should appear').not.toBeNull();
     expect(root.querySelector('.pipeline-debug-hint'), 'no hint is ever shown').toBeNull();
     expect(
-      root.querySelector('.pipeline-debug-input-row'),
+      root.querySelector(`.${pd.pipelineDebugInputRow}`),
       'debug shows immediately',
     ).not.toBeNull();
 
@@ -186,7 +198,10 @@ describe('DataPanel variables → debug + query', () => {
     typeInEditor(
       '[{"$match":{"LINE DESC":"BLUE WIDGET {part_no} LARGE"}},{"$sort":{"_id":-1}},{"$skip":0},{"$limit":50}]',
     );
-    await waitFor(() => root.querySelector('.placeholder-input'), 'a variable input to appear');
+    await waitFor(
+      () => root.querySelector(`.${placeholderInputsCss.placeholderInput}`),
+      'a variable input to appear',
+    );
     // Runs immediately with the unfilled var → emptied substitution (two spaces).
     await waitFor(
       () => ranWith('BLUE WIDGET  LARGE'),
@@ -194,13 +209,18 @@ describe('DataPanel variables → debug + query', () => {
     );
 
     expect(
-      root.querySelector('.placeholder-input'),
+      root.querySelector(`.${placeholderInputsCss.placeholderInput}`),
       'a variable input should appear',
     ).not.toBeNull();
     expect(root.querySelector('.pipeline-debug-hint'), 'no unresolved hint').toBeNull();
-    expect(root.querySelector('.pipeline-debug-input-row'), 'debug should render').not.toBeNull();
+    expect(
+      root.querySelector(`.${pd.pipelineDebugInputRow}`),
+      'debug should render',
+    ).not.toBeNull();
 
-    const input = root.querySelector<HTMLInputElement>('.placeholder-input')!;
+    const input = root.querySelector<HTMLInputElement>(
+      `.${placeholderInputsCss.placeholderInput}`,
+    )!;
     input.value = 'XYZ';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await waitFor(() => ranWith('BLUE WIDGET XYZ LARGE'), 'the filled embedded query to run');
@@ -219,13 +239,15 @@ describe('DataPanel variables → debug + query', () => {
 
     typeInEditor('[{"$match":{"tags":"{categories | split(\',\')}"}}]');
     await waitFor(
-      () => root.querySelector('.placeholder-input'),
+      () => root.querySelector(`.${placeholderInputsCss.placeholderInput}`),
       'a variable input to appear for the split placeholder',
     );
 
-    const input = root.querySelector<HTMLInputElement>('.placeholder-input')!;
+    const input = root.querySelector<HTMLInputElement>(
+      `.${placeholderInputsCss.placeholderInput}`,
+    )!;
     expect(input, 'a variable input should appear for the split placeholder').not.toBeNull();
-    expect(root.querySelector('.pipeline-debug-input-row'), 'debug shows').not.toBeNull();
+    expect(root.querySelector(`.${pd.pipelineDebugInputRow}`), 'debug shows').not.toBeNull();
 
     // The user types the raw, comma-joined value — exactly what the field holds.
     input.value = 'food,drink';

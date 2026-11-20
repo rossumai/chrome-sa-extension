@@ -43,6 +43,8 @@ import { operatorColonOffset } from '../stageLink.js';
 import { computeMinimalChange } from '../editorDiff.js';
 import { animateScrollTop, revealScrollTop } from '../smoothScroll.js';
 import { makeCompletionSource } from '../pipelineCompletions.js';
+import styles from './JsonEditor.module.css';
+import pnl from './panel.module.css';
 // Re-exported for PipelineEditor.jsx / DataPanel.jsx, which import it from here.
 export { extractFieldNames } from '../pipelineCompletions.js';
 
@@ -132,7 +134,7 @@ function stageRangesFor(state: any) {
 // The tinted background behind the stage the Stages-view connector points at.
 // Set from outside via editorRef.highlightStage(); see StageLinkOverlay.jsx.
 const setLinkedStage = StateEffect.define(); // payload: entryIndex | null
-const linkedLine = Decoration.line({ class: 'cm-linked-stage' });
+const linkedLine = Decoration.line({ class: styles.cmLinkedStage });
 
 // Pure (state only, no view): the line decorations for one top-level stage.
 // Decoration.none for a null index, an index with no stage (the buffer doesn't
@@ -405,16 +407,16 @@ export default function JsonEditor({
         if (update.docChanged) {
           if (onChangeRef.current) (onChangeRef.current as any)();
           const text = update.state.doc.toString().trim();
-          const errorEl = containerRef.current?.querySelector('.json-editor-error');
+          const errorEl = containerRef.current?.querySelector(`.${styles.jsonEditorError}`);
           if (!text) {
             if (errorEl) {
               errorEl.textContent = '';
-              containerRef.current!.classList.remove('json-editor-invalid');
+              containerRef.current!.classList.remove(pnl.jsonEditorInvalid);
             }
           } else if (isAcceptable(text, { jsonLines: jsonLinesRef.current })) {
             if (errorEl) {
               errorEl.textContent = '';
-              containerRef.current!.classList.remove('json-editor-invalid');
+              containerRef.current!.classList.remove(pnl.jsonEditorInvalid);
             }
             if (onValidChangeRef.current) {
               clearTimeout(validChangeTimer as any);
@@ -428,7 +430,7 @@ export default function JsonEditor({
             } catch (e: any) {
               if (errorEl) {
                 errorEl.textContent = e.message;
-                containerRef.current!.classList.add('json-editor-invalid');
+                containerRef.current!.classList.add(pnl.jsonEditorInvalid);
               }
             }
           }
@@ -484,13 +486,13 @@ export default function JsonEditor({
     // Initial validation
     const text = value.trim();
     if (text && !isAcceptable(text, { jsonLines: jsonLinesRef.current })) {
-      const errorEl = containerRef.current?.querySelector('.json-editor-error');
+      const errorEl = containerRef.current?.querySelector(`.${styles.jsonEditorError}`);
       try {
         JSON5.parse(text);
       } catch (e: any) {
         if (errorEl) {
           errorEl.textContent = e.message;
-          containerRef.current!.classList.add('json-editor-invalid');
+          containerRef.current!.classList.add(pnl.jsonEditorInvalid);
         }
       }
     }
@@ -539,7 +541,7 @@ export default function JsonEditor({
         },
         getParsed: () => JSON5.parse(viewRef.current!.state.doc.toString()),
         getError: () =>
-          containerRef.current?.querySelector('.json-editor-error')?.textContent || '',
+          containerRef.current?.querySelector(`.${styles.jsonEditorError}`)?.textContent || '',
         // The box that visually CLIPS this editor, so a caller measuring a stage's
         // position can tell whether that stage is actually on screen. Needed
         // because coordsAtPos (see stageScreenRect) happily reports coordinates
@@ -549,7 +551,7 @@ export default function JsonEditor({
         // The INTERSECTION of the container and CodeMirror's scroller, because
         // which of the two clips depends on the layout: in the data panel the
         // outer `.json-editor` is the scroller (`.data-panel-left .json-editor`
-        // in src/mdh/legacy.css) and
+        // in panel.module.css) and
         // `.cm-scroller`'s rect is the full content height, so the container
         // wins; if a layout ever makes `.cm-scroller` the scroller, its rect is
         // the tighter one and wins instead. null before mount.
@@ -588,7 +590,7 @@ export default function JsonEditor({
           // behaviour option and always teleports. That means computing the
           // target ourselves — and scrolling the element that ACTUALLY scrolls:
           // `.cm-scroller` has zero range in this layout (`.data-panel-left
-          // .json-editor` in src/mdh/legacy.css makes
+          // .json-editor` in panel.module.css makes
           // the outer `.json-editor` the scroller, and the generic
           // `.json-editor .cm-editor { flex: 1 }` has no `min-height: 0`, so
           // `.cm-scroller`'s `height: 100%` never resolves). Writing
@@ -646,13 +648,13 @@ export default function JsonEditor({
   }, [editorRef]);
 
   const cls =
-    (compact ? 'json-editor json-editor-compact' : 'json-editor') +
-    (fill ? ' json-editor-fill' : '');
+    (compact ? `${pnl.jsonEditor} ${pnl.jsonEditorCompact}` : pnl.jsonEditor) +
+    (fill ? ` ${pnl.jsonEditorFill}` : '');
   const style = compact ? {} : { minHeight };
 
   return (
     <div class={cls} style={style} ref={containerRef}>
-      <div class="json-editor-error"></div>
+      <div class={styles.jsonEditorError}></div>
     </div>
   );
 }

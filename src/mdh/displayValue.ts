@@ -1,3 +1,4 @@
+import jv from './components/jsonValues.module.css';
 // src/mdh/displayValue.ts
 // Shared single-value renderer. Used by JsonTree (expanded view) and
 // recordSummary (collapsed preview). Kept as a plain .js module so it can
@@ -8,15 +9,15 @@
 // the `num` tag — the value + color already read as a number; the precise BSON
 // subtype stays available via `label` (shown as the tag's tooltip).
 export const EJSON_TYPES: Record<string, { label: string; short: string; css: string }> = {
-  $oid: { label: 'ObjectId', short: 'oid', css: 'json-tree-value-oid' },
-  $date: { label: 'Date', short: 'date', css: 'json-tree-value-date' },
-  $numberLong: { label: 'Long', short: 'num', css: 'json-tree-value-number' },
-  $numberInt: { label: 'Int', short: 'num', css: 'json-tree-value-number' },
-  $numberDouble: { label: 'Double', short: 'num', css: 'json-tree-value-number' },
-  $numberDecimal: { label: 'Decimal', short: 'num', css: 'json-tree-value-number' },
-  $binary: { label: 'Binary', short: 'bin', css: 'json-tree-value-null' },
-  $regex: { label: 'Regex', short: 're', css: 'json-tree-value-string' },
-  $timestamp: { label: 'Timestamp', short: 'ts', css: 'json-tree-value-date' },
+  $oid: { label: 'ObjectId', short: 'oid', css: jv.jsonTreeValueOid },
+  $date: { label: 'Date', short: 'date', css: jv.jsonTreeValueDate },
+  $numberLong: { label: 'Long', short: 'num', css: jv.jsonTreeValueNumber },
+  $numberInt: { label: 'Int', short: 'num', css: jv.jsonTreeValueNumber },
+  $numberDouble: { label: 'Double', short: 'num', css: jv.jsonTreeValueNumber },
+  $numberDecimal: { label: 'Decimal', short: 'num', css: jv.jsonTreeValueNumber },
+  $binary: { label: 'Binary', short: 'bin', css: jv.jsonTreeValueNull },
+  $regex: { label: 'Regex', short: 're', css: jv.jsonTreeValueString },
+  $timestamp: { label: 'Timestamp', short: 'ts', css: jv.jsonTreeValueDate },
 };
 
 export function getEjsonType(value: unknown): string | null {

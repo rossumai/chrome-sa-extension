@@ -77,6 +77,8 @@ import { defaultPreset } from '../src/mdh/searchIndexPresets.js';
 import ctl from '../src/ui/controls.module.css';
 import seg from '../src/ui/Segmented.module.css';
 import inp from '../src/ui/Input.module.css';
+import pnl from '../src/mdh/components/panel.module.css';
+import searchIndexPanelCss from '../src/mdh/components/SearchIndexPanel.module.css';
 
 const writeText = vi.fn().mockResolvedValue(undefined);
 
@@ -136,8 +138,8 @@ describe('SearchIndexPanel — copy is put-ready', () => {
     vi.mocked(api.listSearchIndexes).mockResolvedValue([listedIndex()] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.action-copy')).not.toBeNull());
-    root.querySelector<HTMLElement>('.action-copy')!.click();
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.actionCopy}`)).not.toBeNull());
+    root.querySelector<HTMLElement>(`.${pnl.actionCopy}`)!.click();
 
     const expected = JSON.stringify(
       { mappings: { dynamic: false, fields: { name: { type: 'string' } } } },
@@ -150,14 +152,14 @@ describe('SearchIndexPanel — copy is put-ready', () => {
 
 describe('SearchIndexPanel — runtime state is in badges, not JSON', () => {
   function badgeTexts(root: any) {
-    return [...root.querySelectorAll('.index-badge')].map((b) => b.textContent.toLowerCase());
+    return [...root.querySelectorAll(`.${pnl.indexBadge}`)].map((b) => b.textContent.toLowerCase());
   }
 
   it('shows a "not queryable" badge when queryable is false', async () => {
     vi.mocked(api.listSearchIndexes).mockResolvedValue([listedIndex({ queryable: false })] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.action-copy')).not.toBeNull());
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.actionCopy}`)).not.toBeNull());
     expect(badgeTexts(root).some((t) => t.includes('not queryable'))).toBe(true);
   });
 
@@ -165,7 +167,7 @@ describe('SearchIndexPanel — runtime state is in badges, not JSON', () => {
     vi.mocked(api.listSearchIndexes).mockResolvedValue([listedIndex({ queryable: true })] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.action-copy')).not.toBeNull());
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.actionCopy}`)).not.toBeNull());
     expect(badgeTexts(root).some((t) => t.includes('queryable'))).toBe(false);
   });
 });
@@ -174,7 +176,7 @@ describe('SearchIndexPanel — runtime state is in badges, not JSON', () => {
 // and carries the meaning in a title, so a badge and a support answer match.
 describe('SearchIndexPanel — V2 statuses', () => {
   function badgeTexts(root: any) {
-    return [...root.querySelectorAll('.index-badge')].map((b) => b.textContent.toLowerCase());
+    return [...root.querySelectorAll(`.${pnl.indexBadge}`)].map((b) => b.textContent.toLowerCase());
   }
 
   it('renders PENDING_CREATE as "pending create" with an explanatory title', async () => {
@@ -183,9 +185,11 @@ describe('SearchIndexPanel — V2 statuses', () => {
     ] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.index-badge')).not.toBeNull());
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.indexBadge}`)).not.toBeNull());
     expect(badgeTexts(root)).toContain('pending create');
-    expect(root.querySelector('.index-badge-pending')!.getAttribute('title')).toContain('engine');
+    expect(root.querySelector(`.${pnl.indexBadgePending}`)!.getAttribute('title')).toContain(
+      'engine',
+    );
   });
 
   it('drops through deleteSearchIndex', async () => {
@@ -193,8 +197,8 @@ describe('SearchIndexPanel — V2 statuses', () => {
     vi.mocked(api.deleteSearchIndex).mockResolvedValue({ message: 'deleted', type: 'info' });
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.action-delete')).not.toBeNull());
-    root.querySelector<HTMLElement>('.action-delete')!.click();
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.actionDelete}`)).not.toBeNull());
+    root.querySelector<HTMLElement>(`.${pnl.actionDelete}`)!.click();
 
     await vi.waitFor(() =>
       expect(api.deleteSearchIndex).toHaveBeenCalledWith('vendors', 'default'),
@@ -215,9 +219,9 @@ describe('SearchIndexPanel — reconcile', () => {
     const root = mount();
 
     await vi.waitFor(() =>
-      expect(root.querySelector('.toolbar-sync')!.textContent).toContain('2 indexes'),
+      expect(root.querySelector(`.${pnl.toolbarSync}`)!.textContent).toContain('2 indexes'),
     );
-    expect(root.querySelector('.toolbar-sync')!.textContent).toContain('1 in progress');
+    expect(root.querySelector(`.${pnl.toolbarSync}`)!.textContent).toContain('1 in progress');
   });
 
   it('shows a spinner while work is in flight and a plain dot once settled', async () => {
@@ -226,18 +230,18 @@ describe('SearchIndexPanel — reconcile', () => {
     ] as any);
     const working = mount();
     await vi.waitFor(() =>
-      expect(working.querySelector('.toolbar-sync')!.textContent).toContain('in progress'),
+      expect(working.querySelector(`.${pnl.toolbarSync}`)!.textContent).toContain('in progress'),
     );
-    expect(working.querySelector('.toolbar-sync .spin')).not.toBeNull();
-    expect(working.querySelector('.toolbar-sync .dot')).toBeNull();
+    expect(working.querySelector(`.${pnl.toolbarSync} .${pnl.spin}`)).not.toBeNull();
+    expect(working.querySelector(`.${pnl.toolbarSync} .${pnl.dot}`)).toBeNull();
 
     vi.mocked(api.listSearchIndexes).mockResolvedValue([listedIndex()] as any);
     const settled = mount();
     await vi.waitFor(() =>
-      expect(settled.querySelector('.toolbar-sync')!.textContent).toContain('in sync'),
+      expect(settled.querySelector(`.${pnl.toolbarSync}`)!.textContent).toContain('in sync'),
     );
-    expect(settled.querySelector('.toolbar-sync .dot')).not.toBeNull();
-    expect(settled.querySelector('.toolbar-sync .spin')).toBeNull();
+    expect(settled.querySelector(`.${pnl.toolbarSync} .${pnl.dot}`)).not.toBeNull();
+    expect(settled.querySelector(`.${pnl.toolbarSync} .${pnl.spin}`)).toBeNull();
   });
 
   it('settles a transitional index to READY on its own, with no user action', async () => {
@@ -264,9 +268,9 @@ describe('SearchIndexPanel — card detail', () => {
     vi.mocked(api.listSearchIndexes).mockResolvedValue([listedIndex()] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.record-card')).not.toBeNull());
-    expect(root.querySelector('.record-card-body')).not.toBeNull();
-    expect(root.querySelector('.record-summary')!.textContent).toContain('1 field: name');
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.recordCard}`)).not.toBeNull());
+    expect(root.querySelector(`.${pnl.recordCardBody}`)).not.toBeNull();
+    expect(root.querySelector(`.${pnl.recordSummary}`)!.textContent).toContain('1 field: name');
   });
 
   it('shows the version and when it was declared', async () => {
@@ -277,8 +281,8 @@ describe('SearchIndexPanel — card detail', () => {
     ] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.index-card-meta')).not.toBeNull());
-    const meta = root.querySelector('.index-card-meta')!.textContent;
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.indexCardMeta}`)).not.toBeNull());
+    const meta = root.querySelector(`.${pnl.indexCardMeta}`)!.textContent;
     expect(meta).toContain('v2');
     expect(meta).toContain('declared');
   });
@@ -289,8 +293,8 @@ describe('SearchIndexPanel — card detail', () => {
     ] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.record-card')).not.toBeNull());
-    expect(root.querySelector('.index-card-meta')).toBeNull();
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.recordCard}`)).not.toBeNull());
+    expect(root.querySelector(`.${pnl.indexCardMeta}`)).toBeNull();
   });
 
   it('says the previous version is still serving when a failed index is queryable', async () => {
@@ -299,8 +303,8 @@ describe('SearchIndexPanel — card detail', () => {
     ] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.record-card-notice')).not.toBeNull());
-    const notice = root.querySelector('.record-card-notice')!.textContent;
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.recordCardNotice}`)).not.toBeNull());
+    const notice = root.querySelector(`.${pnl.recordCardNotice}`)!.textContent;
     expect(notice).toContain('v2');
     expect(notice).toContain('still serving');
   });
@@ -311,8 +315,8 @@ describe('SearchIndexPanel — card detail', () => {
     ] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.record-card')).not.toBeNull());
-    expect(root.querySelector('.record-card-notice')).toBeNull();
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.recordCard}`)).not.toBeNull());
+    expect(root.querySelector(`.${pnl.recordCardNotice}`)).toBeNull();
     // the existing badge already tells the true story here
     expect(root.textContent).toContain('not queryable');
   });
@@ -324,8 +328,8 @@ describe('SearchIndexPanel — edit', () => {
     vi.mocked(api.putSearchIndex).mockResolvedValue({ message: 'declared', type: 'info' });
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.action-edit')).not.toBeNull());
-    root.querySelector<HTMLElement>('.action-edit')!.click();
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.actionEdit}`)).not.toBeNull());
+    root.querySelector<HTMLElement>(`.${pnl.actionEdit}`)!.click();
 
     await vi.waitFor(() =>
       expect(root.querySelector('[role="dialog"] .' + inp.input)).not.toBeNull(),
@@ -333,7 +337,7 @@ describe('SearchIndexPanel — edit', () => {
     const nameInput = root.querySelector<HTMLInputElement>('[role="dialog"] .' + inp.input)!;
     expect(nameInput.value).toBe('default');
     expect(nameInput.readOnly).toBe(true);
-    expect(nameInput.className).toContain('input-locked');
+    expect(nameInput.className).toContain(searchIndexPanelCss.inputLocked);
 
     root.querySelector<HTMLElement>('[role="dialog"] .' + ctl.btnPrimary)!.click();
     await vi.waitFor(() =>
@@ -351,8 +355,8 @@ describe('SearchIndexPanel — edit', () => {
     ] as any);
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.record-card-notice')).not.toBeNull());
-    expect(root.querySelector('.record-card-notice .' + ctl.btn)!.textContent).toContain(
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.recordCardNotice}`)).not.toBeNull());
+    expect(root.querySelector(`.${pnl.recordCardNotice} .` + ctl.btn)!.textContent).toContain(
       'Edit definition',
     );
   });
@@ -521,8 +525,8 @@ describe('SearchIndexPanel — presets', () => {
     // mocked listSearchIndexes() to resolve and flow through a state update —
     // more than one microtask tick, so this waits on the condition rather than
     // assuming a fixed number of `await Promise.resolve()` flushes it.
-    await vi.waitFor(() => expect(root.querySelector('.action-edit')).not.toBeNull());
-    const edit = root.querySelector('.action-edit') as HTMLElement;
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.actionEdit}`)).not.toBeNull());
+    const edit = root.querySelector(`.${pnl.actionEdit}`) as HTMLElement;
     edit.click();
     await Promise.resolve();
     expect(root.querySelector('[data-testid="preset-row"]')).toBeNull();
@@ -901,7 +905,7 @@ describe('SearchIndexPanel — check', () => {
     const root = mount();
     // Wait for the card itself, then assert the row is absent from it —
     // otherwise this passes vacuously before the list has even rendered.
-    await vi.waitFor(() => expect(root.querySelector('.record-card')).not.toBeNull());
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.recordCard}`)).not.toBeNull());
     expect(valueInput(root)).toBeNull();
     expect(root.querySelector('[data-testid="check-unavailable"]')!.textContent).toContain('READY');
   });

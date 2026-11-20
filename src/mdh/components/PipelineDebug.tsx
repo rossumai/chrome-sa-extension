@@ -1,27 +1,28 @@
 import { h } from 'preact';
 import { selectedCollection } from '../store.js';
 import useStageCounts from '../hooks/useStageCounts.js';
+import pd from './PipelineDebug.module.css';
 
 // A stage/input whose measured end-to-end latency exceeds this is flagged slow
 // (the timing turns orange). Matches the threshold the record-list footer used
 // before the slow-query warning moved here from the footer.
 const SLOW_QUERY_MS = 1000;
 const timeCls = (ms: number) =>
-  'pipeline-debug-time' + (ms > SLOW_QUERY_MS ? ' pipeline-debug-time-slow' : '');
+  pd.pipelineDebugTime + (ms > SLOW_QUERY_MS ? ` ${pd.pipelineDebugTimeSlow}` : '');
 
 // Map a stage/input count result ({count} | {error} | undefined) to the count
 // cell's text + class. Shared by the per-stage rows and the 0th input row.
 function countCell(info: any) {
-  if (!info) return { text: '…', cls: 'pipeline-debug-count' };
+  if (!info) return { text: '…', cls: pd.pipelineDebugCount };
   if (info.error) {
     return {
       text: info.error.status ? `HTTP ${info.error.status}` : 'error',
-      cls: 'pipeline-debug-count pipeline-debug-error',
+      cls: `${pd.pipelineDebugCount} ${pd.pipelineDebugError}`,
     };
   }
   return {
     text: `${info.count.toLocaleString()} docs`,
-    cls: 'pipeline-debug-count' + (info.count === 0 ? ' pipeline-debug-zero' : ''),
+    cls: pd.pipelineDebugCount + (info.count === 0 ? ` ${pd.pipelineDebugZero}` : ''),
   };
 }
 
@@ -62,19 +63,19 @@ export default function PipelineDebug({
   let displayNo = 0;
 
   return (
-    <div class="pipeline-debug">
-      <div class="placeholder-label">Aggregate Pipeline Debug</div>
-      <div class="pipeline-debug-stage-wrap">
+    <div class={pd.pipelineDebug}>
+      <div class={pd.placeholderLabel}>Aggregate Pipeline Debug</div>
+      <div class={pd.pipelineDebugStageWrap}>
         <div
-          class="pipeline-debug-row pipeline-debug-input-row"
+          class={`${pd.pipelineDebugRow} ${pd.pipelineDebugInputRow}`}
           onClick={inspectInput}
           title="All documents in the collection — the input to stage 1. Click to preview the first few raw documents."
         >
-          <span class="pipeline-stage-toggle-spacer" />
-          <span class="pipeline-debug-num">0.</span>
-          <span class="pipeline-debug-stage">input</span>
-          <span class="pipeline-debug-preview">all records (pipeline input)</span>
-          <span class="pipeline-debug-arrow">{'→'}</span>
+          <span class={pd.pipelineStageToggleSpacer} />
+          <span class={pd.pipelineDebugNum}>0.</span>
+          <span class={pd.pipelineDebugStage}>input</span>
+          <span class={pd.pipelineDebugPreview}>all records (pipeline input)</span>
+          <span class={pd.pipelineDebugArrow}>{'→'}</span>
           <span class={inputCell.cls}>{inputCell.text}</span>
           {inputInfo?.ms != null && (
             <span class={timeCls(inputInfo.ms)} title={inputTimingTitle}>
@@ -83,9 +84,9 @@ export default function PipelineDebug({
           )}
         </div>
         {inputInfo?.error && (
-          <div class="pipeline-debug-error-detail" onClick={(e) => e.stopPropagation()}>
-            <div class="pipeline-debug-error-msg">{inputInfo.error.message}</div>
-            <div class="pipeline-debug-error-hint">
+          <div class={pd.pipelineDebugErrorDetail} onClick={(e) => e.stopPropagation()}>
+            <div class={pd.pipelineDebugErrorMsg}>{inputInfo.error.message}</div>
+            <div class={pd.pipelineDebugErrorHint}>
               Couldn{'’'}t read the collection{'’'}s documents.
             </div>
           </div>
@@ -99,7 +100,7 @@ export default function PipelineDebug({
         const toggle = (
           <input
             type="checkbox"
-            class={'pipeline-stage-toggle' + (entry.disabled ? ' pipeline-stage-toggle-off' : '')}
+            class={pd.pipelineStageToggle + (entry.disabled ? ' pipeline-stage-toggle-off' : '')}
             checked={!entry.disabled}
             title={entry.disabled ? 'Enable stage' : 'Disable stage'}
             onClick={(e) => {
@@ -111,13 +112,13 @@ export default function PipelineDebug({
 
         if (entry.disabled) {
           return (
-            <div class="pipeline-debug-stage-wrap" key={entryIndex}>
-              <div class="pipeline-debug-row pipeline-debug-disabled">
+            <div class={pd.pipelineDebugStageWrap} key={entryIndex}>
+              <div class={`${pd.pipelineDebugRow} ${pd.pipelineDebugDisabled}`}>
                 {toggle}
-                <span class="pipeline-debug-num">{'–'}</span>
-                <span class="pipeline-debug-stage">{stageKey}</span>
-                <span class="pipeline-debug-preview">{preview}</span>
-                <span class="pipeline-debug-disabled-badge">disabled</span>
+                <span class={pd.pipelineDebugNum}>{'–'}</span>
+                <span class={pd.pipelineDebugStage}>{stageKey}</span>
+                <span class={pd.pipelineDebugPreview}>{preview}</span>
+                <span class={pd.pipelineDebugDisabledBadge}>disabled</span>
               </div>
             </div>
           );
@@ -131,13 +132,13 @@ export default function PipelineDebug({
         const { text: countText, cls: countCls } = countCell(info);
 
         return (
-          <div class="pipeline-debug-stage-wrap" key={entryIndex}>
-            <div class="pipeline-debug-row" onClick={() => inspectStage(myActiveIdx)}>
+          <div class={pd.pipelineDebugStageWrap} key={entryIndex}>
+            <div class={pd.pipelineDebugRow} onClick={() => inspectStage(myActiveIdx)}>
               {toggle}
-              <span class="pipeline-debug-num">{myDisplayNo}.</span>
-              <span class="pipeline-debug-stage">{stageKey}</span>
-              <span class="pipeline-debug-preview">{preview}</span>
-              <span class="pipeline-debug-arrow">{'→'}</span>
+              <span class={pd.pipelineDebugNum}>{myDisplayNo}.</span>
+              <span class={pd.pipelineDebugStage}>{stageKey}</span>
+              <span class={pd.pipelineDebugPreview}>{preview}</span>
+              <span class={pd.pipelineDebugArrow}>{'→'}</span>
               <span class={countCls}>{countText}</span>
               {info?.ms != null && (
                 <span class={timeCls(info.ms)} title={timingTitle}>
@@ -146,9 +147,9 @@ export default function PipelineDebug({
               )}
             </div>
             {info?.error && (
-              <div class="pipeline-debug-error-detail" onClick={(e) => e.stopPropagation()}>
-                <div class="pipeline-debug-error-msg">{info.error.message}</div>
-                <div class="pipeline-debug-error-hint">
+              <div class={pd.pipelineDebugErrorDetail} onClick={(e) => e.stopPropagation()}>
+                <div class={pd.pipelineDebugErrorMsg}>{info.error.message}</div>
+                <div class={pd.pipelineDebugErrorHint}>
                   Edit this stage in the pipeline editor above. Errors only show here when a stage
                   fails — they are not the same as a stage that legitimately matches zero documents.
                 </div>

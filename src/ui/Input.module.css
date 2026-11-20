@@ -6,8 +6,9 @@
    `.pipeline-save-inline .input`; written as `.input.<modifier>` they keep that specificity, so
    they still beat .input and still lose a tie to .input:focus.
 
-   Two MDH rules on the same elements stay global, BEFORE these in the cascade, and so keep
-   losing every tie to .input exactly as they did: .placeholder-input and .input-locked. */
+   Two MDH rules on the same elements, .placeholderInput (PlaceholderInputs) and .inputLocked
+   (SearchIndexPanel), are emitted AFTER these but wrapped in :where(), so they keep losing
+   every tie to .input exactly as they did when they were global and came first. */
 
 .input.inAnnotationRow {
   flex: 1;

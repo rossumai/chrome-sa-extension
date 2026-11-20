@@ -23,6 +23,8 @@ import { COLLECTION, LEGACY_COLLECTION } from '../src/fabry/architect/collection
 import fstyles from '../src/ui/FilterInput.module.css';
 import ctl from '../src/ui/controls.module.css';
 import inp from '../src/ui/Input.module.css';
+import sb from '../src/mdh/components/Sidebar.module.css';
+import menuCss from '../src/mdh/components/toolbarMenu.module.css';
 
 // A query that hits the extension's own collection and nothing the customer owns. Derived
 // rather than hardcoded, so a rename of COLLECTION cannot silently make it match 'vendors'
@@ -55,7 +57,7 @@ async function mount() {
 }
 
 const names = (root: any) =>
-  [...root.querySelectorAll('.collection-item-name')].map((e) => e.textContent);
+  [...root.querySelectorAll(`.${sb.collectionItemName}`)].map((e) => e.textContent);
 const input = (root: any) => root.querySelector('input.' + fstyles.input) as HTMLInputElement;
 const clearBtn = (root: any) => root.querySelector('.' + fstyles.clear);
 
@@ -89,18 +91,18 @@ describe('Sidebar — filter the collection list by name', () => {
       result: ['acme_po_north_uat', 'acme_supplier_north_uat', 'acme_supplier_master'],
     });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 3);
-    expect(root.querySelector('.sidebar-count')!.textContent).toBe('(3)');
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 3);
+    expect(root.querySelector(`.${sb.sidebarCount}`)!.textContent).toBe('(3)');
 
     await type(root, 'supplier');
     expect(names(root)).toEqual(['acme_supplier_master', 'acme_supplier_north_uat']);
-    expect(root.querySelector('.sidebar-count')!.textContent).toBe('(2 / 3)');
+    expect(root.querySelector(`.${sb.sidebarCount}`)!.textContent).toBe('(2 / 3)');
   });
 
   it('matches case-insensitively and anywhere in the name', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['Vendors', 'items_uat'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
 
     await type(root, 'DOR');
     expect(names(root)).toEqual(['Vendors']);
@@ -109,7 +111,7 @@ describe('Sidebar — filter the collection list by name', () => {
   it('clears with the × button, restoring the full list', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', 'items'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
 
     // no × offered until there is something to clear
     expect(clearBtn(root)).toBe(null);
@@ -132,7 +134,7 @@ describe('Sidebar — filter the collection list by name', () => {
   it('clears on Escape', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', 'items'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
 
     await type(root, 'vend');
     expect(names(root)).toEqual(['vendors']);
@@ -146,11 +148,11 @@ describe('Sidebar — filter the collection list by name', () => {
   it('says so when nothing matches, instead of showing an unexplained empty list', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', 'items'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
 
     await type(root, 'zzz');
-    expect(root.querySelectorAll('.collection-item')).toHaveLength(0);
-    const empty = root.querySelector('.collection-filter-empty')!;
+    expect(root.querySelectorAll(`.${sb.collectionItem}`)).toHaveLength(0);
+    const empty = root.querySelector(`.${sb.collectionFilterEmpty}`)!;
     expect(empty).toBeTruthy();
     expect(empty.textContent).toMatch(/zzz/);
   });
@@ -168,32 +170,32 @@ describe('Sidebar — filter the collection list by name', () => {
   it('narrows the extension-collections group too, and opens it so a match is visible', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', COLLECTION] });
     const root = await mount();
-    await waitFor(() => root.querySelector('.collection-hidden-group'));
+    await waitFor(() => root.querySelector(`.${sb.collectionHiddenGroup}`));
     // collapsed to start with
-    expect(root.querySelector('.collection-hidden-group .collection-item')).toBe(null);
+    expect(root.querySelector(`.${sb.collectionHiddenGroup} .${sb.collectionItem}`)).toBe(null);
 
     await type(root, GROUP_QUERY);
-    const group = root.querySelector('.collection-hidden-group')!;
+    const group = root.querySelector(`.${sb.collectionHiddenGroup}`)!;
     expect(group).toBeTruthy();
-    expect(group.querySelector('.collection-hidden-toggle')!.getAttribute('aria-expanded')).toBe(
-      'true',
-    );
     expect(
-      [...group.querySelectorAll('.collection-item-name')].map((e: any) => e.textContent),
+      group.querySelector(`.${sb.collectionHiddenToggle}`)!.getAttribute('aria-expanded'),
+    ).toBe('true');
+    expect(
+      [...group.querySelectorAll(`.${sb.collectionItemName}`)].map((e: any) => e.textContent),
     ).toEqual([COLLECTION]);
     // the customer's own collection does not match, so the main list is empty
     expect(
-      root.querySelectorAll('.collection-list')[0].querySelectorAll('.collection-item'),
+      root.querySelectorAll(`.${sb.collectionList}`)[0].querySelectorAll(`.${sb.collectionItem}`),
     ).toHaveLength(0);
   });
 
   it('hides the group entirely when the filter excludes all of ours', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', COLLECTION] });
     const root = await mount();
-    await waitFor(() => root.querySelector('.collection-hidden-group'));
+    await waitFor(() => root.querySelector(`.${sb.collectionHiddenGroup}`));
 
     await type(root, 'vend');
-    expect(root.querySelector('.collection-hidden-group')).toBe(null);
+    expect(root.querySelector(`.${sb.collectionHiddenGroup}`)).toBe(null);
     expect(names(root)).toEqual(['vendors']);
   });
 
@@ -204,7 +206,7 @@ describe('Sidebar — filter the collection list by name', () => {
     (chrome.storage.local as any).set = setSpy;
     try {
       const root = await mount();
-      await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+      await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
       await type(root, 'vend');
       expect(setSpy).not.toHaveBeenCalled();
     } finally {
@@ -215,12 +217,14 @@ describe('Sidebar — filter the collection list by name', () => {
   it('emphasises the matched run inside each name, and only that run', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['acme_supplier_north_uat'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 1);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 1);
     // nothing emphasised while the list is unfiltered
-    expect(root.querySelector('.collection-item-hit')).toBe(null);
+    expect(root.querySelector(`.${sb.collectionItemHit}`)).toBe(null);
 
     await type(root, 'SUPP');
-    const hits = [...root.querySelectorAll('.collection-item-hit')].map((e: any) => e.textContent);
+    const hits = [...root.querySelectorAll(`.${sb.collectionItemHit}`)].map(
+      (e: any) => e.textContent,
+    );
     // the name's own casing survives, not the query's
     expect(hits).toEqual(['supp']);
     // and the row still reads as the whole, unaltered name
@@ -230,10 +234,10 @@ describe('Sidebar — filter the collection list by name', () => {
   it('emphasises every occurrence in a name', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['uat_x_uat'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 1);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 1);
 
     await type(root, 'uat');
-    expect(root.querySelectorAll('.collection-item-hit')).toHaveLength(2);
+    expect(root.querySelectorAll(`.${sb.collectionItemHit}`)).toHaveLength(2);
     expect(names(root)).toEqual(['uat_x_uat']);
   });
 
@@ -249,12 +253,12 @@ describe('Sidebar — filter the collection list by name', () => {
   it('emphasises matches inside the extension-collections group as well', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', COLLECTION] });
     const root = await mount();
-    await waitFor(() => root.querySelector('.collection-hidden-group'));
+    await waitFor(() => root.querySelector(`.${sb.collectionHiddenGroup}`));
 
     await type(root, GROUP_QUERY);
-    const group = root.querySelector('.collection-hidden-group')!;
+    const group = root.querySelector(`.${sb.collectionHiddenGroup}`)!;
     expect(
-      [...group.querySelectorAll('.collection-item-hit')].map((e: any) => e.textContent),
+      [...group.querySelectorAll(`.${sb.collectionItemHit}`)].map((e: any) => e.textContent),
     ).toEqual([GROUP_QUERY]);
   });
 
@@ -263,9 +267,9 @@ describe('Sidebar — filter the collection list by name', () => {
       result: ['vendors', COLLECTION, LEGACY_COLLECTION],
     });
     const root = await mount();
-    await waitFor(() => root.querySelector('.collection-hidden-group'));
+    await waitFor(() => root.querySelector(`.${sb.collectionHiddenGroup}`));
     const groupCount = () =>
-      root.querySelector('.collection-hidden-group .sidebar-count')!.textContent;
+      root.querySelector(`.${sb.collectionHiddenGroup} .${sb.sidebarCount}`)!.textContent;
     expect(groupCount()).toBe('(2)');
 
     // a query that hits exactly one of the two extension collections
@@ -282,11 +286,11 @@ describe('Sidebar — filter the collection list by name', () => {
   it('does not let the caret write a preference it cannot honour while filtering', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', COLLECTION] });
     const root = await mount();
-    await waitFor(() => root.querySelector('.collection-hidden-group'));
+    await waitFor(() => root.querySelector(`.${sb.collectionHiddenGroup}`));
     expect(store.showHiddenCollections.value).toBe(false);
 
     await type(root, GROUP_QUERY);
-    const toggle = root.querySelector('.collection-hidden-toggle')!;
+    const toggle = root.querySelector(`.${sb.collectionHiddenToggle}`)!;
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
 
     const setSpy = vi.fn();
@@ -297,9 +301,9 @@ describe('Sidebar — filter the collection list by name', () => {
       await tick();
       expect(setSpy).not.toHaveBeenCalled();
       expect(store.showHiddenCollections.value).toBe(false);
-      expect(root.querySelector('.collection-hidden-toggle')!.getAttribute('aria-expanded')).toBe(
-        'true',
-      );
+      expect(
+        root.querySelector(`.${sb.collectionHiddenToggle}`)!.getAttribute('aria-expanded'),
+      ).toBe('true');
     } finally {
       (chrome.storage.local as any).set = realSet;
     }
@@ -308,12 +312,12 @@ describe('Sidebar — filter the collection list by name', () => {
   it('keeps the caret working once the filter is cleared', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', COLLECTION] });
     const root = await mount();
-    await waitFor(() => root.querySelector('.collection-hidden-group'));
+    await waitFor(() => root.querySelector(`.${sb.collectionHiddenGroup}`));
 
     await type(root, GROUP_QUERY);
     await type(root, '');
     root
-      .querySelector('.collection-hidden-toggle')!
+      .querySelector(`.${sb.collectionHiddenToggle}`)!
       .dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await tick();
     expect(store.showHiddenCollections.value).toBe(true);
@@ -324,7 +328,7 @@ describe('Sidebar — filter the collection list by name', () => {
   it('clears the filter when a collection is created, so the new selection is on screen', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', 'items'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
     await type(root, 'vend');
     expect(names(root)).toEqual(['vendors']);
 
@@ -354,7 +358,7 @@ describe('Sidebar — filter the collection list by name', () => {
   it('clears the filter when a collection is renamed, for the same reason', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', 'items'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
     await type(root, 'vend');
 
     // open the row's kebab menu and pick Rename
@@ -362,7 +366,7 @@ describe('Sidebar — filter the collection list by name', () => {
       .querySelector('.collection-action-menu-btn')!
       .dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await tick();
-    [...root.querySelectorAll('.toolbar-menu-item')]
+    [...root.querySelectorAll(`.${menuCss.toolbarMenuItem}`)]
       .find((b: any) => b.textContent === 'Rename')!
       .dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await waitFor(() => store.modalContent.value);
@@ -388,21 +392,21 @@ describe('Sidebar — filter the collection list by name', () => {
   it('marks the filtering sidebar and an empty main list, the hooks the layout fix needs', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', COLLECTION] });
     const root = await mount();
-    await waitFor(() => root.querySelector('.collection-hidden-group'));
-    const aside = root.querySelector('aside.sidebar')!;
-    const mainList = () => root.querySelectorAll('.collection-list')[0];
-    expect(aside.className).not.toContain('sidebar-filtering');
-    expect(mainList().className).not.toContain('is-empty');
+    await waitFor(() => root.querySelector(`.${sb.collectionHiddenGroup}`));
+    const aside = root.querySelector(`aside.${sb.sidebar}`)!;
+    const mainList = () => root.querySelectorAll(`.${sb.collectionList}`)[0];
+    expect(aside.className).not.toContain(sb.sidebarFiltering);
+    expect(mainList().className).not.toContain(sb.isEmpty);
 
     // only the extension collection matches, so the main list renders no rows
     await type(root, GROUP_QUERY);
-    expect(aside.className).toContain('sidebar-filtering');
-    expect(mainList().className).toContain('is-empty');
+    expect(aside.className).toContain(sb.sidebarFiltering);
+    expect(mainList().className).toContain(sb.isEmpty);
 
     // a filtered list WITH rows keeps flex: 1, so it must not be marked empty
     await type(root, 'vend');
-    expect(aside.className).toContain('sidebar-filtering');
-    expect(mainList().className).not.toContain('is-empty');
+    expect(aside.className).toContain(sb.sidebarFiltering);
+    expect(mainList().className).not.toContain(sb.isEmpty);
   });
 
   // Finding 5 of the review: the Escape handler used to stopPropagation, which silently
@@ -410,7 +414,7 @@ describe('Sidebar — filter the collection list by name', () => {
   it('lets Escape reach document-level listeners as well as clearing the filter', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', 'items'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
     await type(root, 'vend');
 
     // The container has to be IN the document for anything to bubble to it — a detached
@@ -434,7 +438,7 @@ describe('Sidebar — filter the collection list by name', () => {
   it('treats a whitespace-only query as no filter at all, consistently', async () => {
     vi.mocked(api.listCollections).mockResolvedValue({ result: ['vendors', 'items'] });
     const root = await mount();
-    await waitFor(() => root.querySelectorAll('.collection-item').length === 2);
+    await waitFor(() => root.querySelectorAll(`.${sb.collectionItem}`).length === 2);
 
     await type(root, '   ');
     expect(names(root)).toEqual(['items', 'vendors']);

@@ -10,6 +10,8 @@ import Modal, { openModal, closeModal } from '../src/mdh/components/Modal.jsx';
 import mstyles from '../src/ui/Modal.module.css';
 import ImportWizard from '../src/mdh/components/ImportWizard.jsx';
 import inp from '../src/ui/Input.module.css';
+import importWizardCss from '../src/mdh/components/ImportWizard.module.css';
+import fileDropAreaCss from '../src/mdh/components/FileDropArea.module.css';
 
 function mount(node: any) {
   const root = document.createElement('div');
@@ -78,10 +80,10 @@ describe('FileDropArea component', () => {
         }}
         onReject={() => {}}
       >
-        <div class="file-input-label">Click to select a CSV file</div>
+        <div class={importWizardCss.fileInputLabel}>Click to select a CSV file</div>
       </FileDropArea>,
     );
-    const area = root.querySelector('.file-input-area');
+    const area = root.querySelector(`.${fileDropAreaCss.fileInputArea}`);
     const file = new File(['a,b\n1,2'], 'data.csv', { type: 'text/csv' });
     const ev = dragEvent('drop', { files: [file] });
     area!.dispatchEvent(ev);
@@ -105,7 +107,7 @@ describe('FileDropArea component', () => {
         <div>pick</div>
       </FileDropArea>,
     );
-    const area = root.querySelector('.file-input-area');
+    const area = root.querySelector(`.${fileDropAreaCss.fileInputArea}`);
     const file = new File(['x'], 'notes.txt', { type: 'text/plain' });
     area!.dispatchEvent(dragEvent('drop', { files: [file] }));
     expect(got).toBeNull();
@@ -118,12 +120,12 @@ describe('FileDropArea component', () => {
         <div>pick</div>
       </FileDropArea>,
     );
-    const area = root.querySelector('.file-input-area')!;
+    const area = root.querySelector(`.${fileDropAreaCss.fileInputArea}`)!;
     area.dispatchEvent(dragEvent('dragenter', { files: [] }));
-    await waitFor(() => area.classList.contains('drag-over'));
+    await waitFor(() => area.classList.contains(fileDropAreaCss.dragOver));
     area.dispatchEvent(dragEvent('dragleave'));
-    await waitFor(() => !area.classList.contains('drag-over'));
-    expect(area.classList.contains('drag-over')).toBe(false);
+    await waitFor(() => !area.classList.contains(fileDropAreaCss.dragOver));
+    expect(area.classList.contains(fileDropAreaCss.dragOver)).toBe(false);
   });
 
   it('ignores a drag that carries no files (e.g. dragging page content)', async () => {
@@ -132,10 +134,10 @@ describe('FileDropArea component', () => {
         <div>pick</div>
       </FileDropArea>,
     );
-    const area = root.querySelector('.file-input-area')!;
+    const area = root.querySelector(`.${fileDropAreaCss.fileInputArea}`)!;
     area.dispatchEvent(dragEvent('dragenter', { types: ['text/plain'] }));
     await new Promise((r) => setTimeout(r, 40));
-    expect(area.classList.contains('drag-over')).toBe(false);
+    expect(area.classList.contains(fileDropAreaCss.dragOver)).toBe(false);
   });
 
   it('click path forwards the file WITHOUT extension validation (back-compat)', () => {
@@ -189,7 +191,7 @@ describe('Modal overlay mis-drop guard', () => {
 describe('Import wizards accept dropped files', () => {
   it('CSV wizard: dropping a .csv advances past the pick stage', async () => {
     const root = mount(<ImportWizard onSuccess={() => {}} />);
-    const area = root.querySelector('.file-input-area');
+    const area = root.querySelector(`.${fileDropAreaCss.fileInputArea}`);
     const file = new File(['name,age\nAlice,30'], 'people.csv', { type: 'text/csv' });
     area!.dispatchEvent(dragEvent('drop', { files: [file] }));
     await waitFor(() => root.querySelector('[data-testid="parse-strip"]'));
@@ -198,7 +200,7 @@ describe('Import wizards accept dropped files', () => {
 
   it('wizard: dropping a wrong-type file shows a friendly rejection', async () => {
     const root = mount(<ImportWizard onSuccess={() => {}} />);
-    const area = root.querySelector('.file-input-area');
+    const area = root.querySelector(`.${fileDropAreaCss.fileInputArea}`);
     const file = new File(['<svg/>'], 'logo.png', { type: 'image/png' });
     area!.dispatchEvent(dragEvent('drop', { files: [file] }));
     await waitFor(() => root.querySelector('.' + inp.hint));
@@ -209,7 +211,7 @@ describe('Import wizards accept dropped files', () => {
     // Render through the real Modal so the wizard's title update reaches the header.
     openModal('Import', () => <ImportWizard onSuccess={() => {}} />);
     const root = mount(<Modal />);
-    const area = root.querySelector('.file-input-area');
+    const area = root.querySelector(`.${fileDropAreaCss.fileInputArea}`);
     const file = new File(['name,age\nAlice,30'], 'people.csv', { type: 'text/csv' });
     area!.dispatchEvent(dragEvent('drop', { files: [file] }));
     await waitFor(() => root.querySelector('.' + mstyles.title + ' [data-testid="source-strip"]'));

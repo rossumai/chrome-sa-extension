@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { loading } from '../store.js';
+import styles from './LoadingOverlay.module.css';
 
 const SHOW_DELAY = 300;
 
@@ -17,8 +18,8 @@ export default function LoadingOverlay() {
   }, [isLoading]);
 
   return (
-    <div class={'loading-overlay' + (visible ? ' loading-overlay-visible' : '')}>
-      <div class="spinner"></div>
+    <div class={styles.loadingOverlay + (visible ? ` ${styles.loadingOverlayVisible}` : '')}>
+      <div class={styles.spinner}></div>
     </div>
   );
 }

@@ -16,6 +16,9 @@ import FlashOnChange from './FlashOnChange.jsx';
 import FilterInput from '../../ui/FilterInput.jsx';
 import ctl from '../../ui/controls.module.css';
 import pg from '../../ui/Pagination.module.css';
+import styles from './UploadsPanel.module.css';
+import jv from './jsonValues.module.css';
+import pnl from './panel.module.css';
 
 const DEFAULT_COL_WIDTHS: Record<string, number> = {
   status: 130,
@@ -64,17 +67,19 @@ function ErrorText({
     setOverflow(el.scrollHeight - el.clientHeight > 1);
   }, [msg]);
   return (
-    <span class="uploads-error-text">
+    <span class={styles.uploadsErrorText}>
       <span
         ref={ref}
-        class={'uploads-error-text-msg' + (isExpanded ? '' : ' uploads-error-text-msg--clamped')}
+        class={
+          styles.uploadsErrorTextMsg + (isExpanded ? '' : ` ${styles.uploadsErrorTextMsgClamped}`)
+        }
       >
         {msg}
       </span>
       {(overflow || isExpanded) && (
         <button
           type="button"
-          class="uploads-error-toggle"
+          class={styles.uploadsErrorToggle}
           onClick={(e) => {
             e.stopPropagation();
             onToggle();
@@ -152,9 +157,9 @@ function duration(startedStr: any, updatedStr: any, status: any) {
 
 function statusClass(status: any) {
   const s = (status || '').toUpperCase();
-  if (s === 'FINISHED') return 'finished';
-  if (s === 'FAILED') return 'failed';
-  return 'running';
+  if (s === 'FINISHED') return styles.finished;
+  if (s === 'FAILED') return styles.failed;
+  return styles.running;
 }
 
 function fileSize(bytes: any) {
@@ -290,12 +295,12 @@ function ActivitySparkline({ buckets, range }: { buckets: any[]; range?: any }) 
 
   return (
     <div
-      class="uploads-sparkline-host"
+      class={styles.uploadsSparklineHost}
       onMouseLeave={() => setHover(null)}
       title={`Activity \u00b7 ${range.label}`}
     >
       <svg
-        class="uploads-sparkline"
+        class={styles.uploadsSparkline}
         width={W}
         height={H}
         viewBox={`0 0 ${W} ${H}`}
@@ -341,7 +346,7 @@ function ActivitySparkline({ buckets, range }: { buckets: any[]; range?: any }) 
         })}
       </svg>
       {hover !== null && (
-        <div class="uploads-sparkline-tip" style={`left:${hover * (barW + GAP) + barW / 2}px`}>
+        <div class={styles.uploadsSparklineTip} style={`left:${hover * (barW + GAP) + barW / 2}px`}>
           {formatBucketTooltip(buckets[hover], range)}
         </div>
       )}
@@ -462,7 +467,7 @@ export default function UploadsPanel() {
     const target = e.currentTarget;
     const startX = e.clientX;
     const startW = colWidthsRef.current[key];
-    target.classList.add('dragging');
+    target.classList.add(jv.dragging);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
 
@@ -472,7 +477,7 @@ export default function UploadsPanel() {
       setColWidths(colWidthsRef.current);
     }
     function onUp() {
-      target.classList.remove('dragging');
+      target.classList.remove(jv.dragging);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       document.removeEventListener('mousemove', onMove);
@@ -631,22 +636,23 @@ export default function UploadsPanel() {
           ? `${op.error_type}: ${op.message}`
           : op.message
         : null;
-    const rowClass = (isSub ? 'uploads-row-sub ' : '') + (errMsg ? 'uploads-row-has-error' : '');
-    const errRowClass = (isSub ? 'uploads-row-sub ' : '') + 'uploads-row-error';
+    const rowClass =
+      (isSub ? `${styles.uploadsRowSub} ` : '') + (errMsg ? styles.uploadsRowHasError : '');
+    const errRowClass = (isSub ? `${styles.uploadsRowSub} ` : '') + styles.uploadsRowError;
     return (
       <Fragment key={op._id}>
         <tr class={rowClass}>
           <td>
-            <span class={`op-status-badge ${statusClass(op.status)}`}>
+            <span class={`${styles.opStatusBadge} ${statusClass(op.status)}`}>
               {(op.status || 'unknown').toLowerCase()}
             </span>
           </td>
           <td>{op.type || '\u2014'}</td>
-          <td class="uploads-cell-dataset">
+          <td class={styles.uploadsCellDataset}>
             {op.dataset_name ? (
               <a
                 href="#"
-                class="uploads-dataset-link"
+                class={styles.uploadsDatasetLink}
                 title={`Open ${op.dataset_name}`}
                 onClick={(e) => {
                   e.preventDefault();
@@ -659,7 +665,7 @@ export default function UploadsPanel() {
               '\u2014'
             )}
           </td>
-          <td class="uploads-cell-file" title={fileMeta?.filename}>
+          <td class={styles.uploadsCellFile} title={fileMeta?.filename}>
             {fileMeta?.filename || '\u2014'}
           </td>
           <td>
@@ -674,7 +680,7 @@ export default function UploadsPanel() {
         {errMsg && (
           <tr class={errRowClass}>
             <td colspan={'8' as any}>
-              <div class="uploads-error-inner">{renderErrorText(op._id, errMsg)}</div>
+              <div class={styles.uploadsErrorInner}>{renderErrorText(op._id, errMsg)}</div>
             </td>
           </tr>
         )}
@@ -688,7 +694,7 @@ export default function UploadsPanel() {
       const op = ops[0];
       const failed = (op.status || '').toUpperCase() === 'FAILED';
       return (
-        <tbody key={op._id} class={failed ? 'uploads-row-failed' : ''}>
+        <tbody key={op._id} class={failed ? styles.uploadsRowFailed : ''}>
           {renderOpRows(op, false)}
         </tbody>
       );
@@ -705,27 +711,30 @@ export default function UploadsPanel() {
           : first.message
         : null;
     return (
-      <tbody key={groupId} class={'uploads-group-tbody' + (failed ? ' uploads-row-failed' : '')}>
+      <tbody
+        key={groupId}
+        class={'uploads-group-tbody' + (failed ? ` ${styles.uploadsRowFailed}` : '')}
+      >
         <tr
-          class={'uploads-row-group' + (errMsg ? ' uploads-row-has-error' : '')}
+          class={styles.uploadsRowGroup + (errMsg ? ` ${styles.uploadsRowHasError}` : '')}
           onClick={() => toggleGroup(groupId)}
           title={isExpanded ? 'Collapse group' : `Expand ${ops.length} similar operations`}
         >
           <td>
-            <span class={`op-status-badge ${statusClass(summary.status)}`}>
+            <span class={`${styles.opStatusBadge} ${statusClass(summary.status)}`}>
               {(summary.status || 'unknown').toLowerCase()}
             </span>
-            <span class="uploads-group-count">
+            <span class={styles.uploadsGroupCount}>
               {ops.length}
               {'\u00d7'}
             </span>
           </td>
           <td>{summary.type || '\u2014'}</td>
-          <td class="uploads-cell-dataset">
+          <td class={styles.uploadsCellDataset}>
             {summary.dataset ? (
               <a
                 href="#"
-                class="uploads-dataset-link"
+                class={styles.uploadsDatasetLink}
                 title={`Open ${summary.dataset}`}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -739,7 +748,7 @@ export default function UploadsPanel() {
               '\u2014'
             )}
           </td>
-          <td class="uploads-cell-file" title={summary.filename}>
+          <td class={styles.uploadsCellFile} title={summary.filename}>
             {summary.filename || '\u2014'}
           </td>
           <td>
@@ -754,9 +763,9 @@ export default function UploadsPanel() {
           <td>{summary.totalMs != null ? formatDuration(summary.totalMs) : '\u2014'}</td>
         </tr>
         {errMsg && (
-          <tr class="uploads-row-error">
+          <tr class={styles.uploadsRowError}>
             <td colspan={'8' as any}>
-              <div class="uploads-error-inner">{renderErrorText(first._id, errMsg)}</div>
+              <div class={styles.uploadsErrorInner}>{renderErrorText(first._id, errMsg)}</div>
             </td>
           </tr>
         )}
@@ -768,21 +777,24 @@ export default function UploadsPanel() {
   const showCountLabel = `${filtered.length} ops in ${groups.length} ${groups.length === 1 ? 'group' : 'groups'}`;
 
   return (
-    <div class="panel uploads-panel">
-      <div class="uploads-stats">
+    <div class={`${pnl.panel} ${pnl.uploadsPanel}`}>
+      <div class={pnl.uploadsStats}>
         <button
-          class={'uploads-stat-chip' + (statusFilter === 'All' ? ' active' : '')}
+          class={pnl.uploadsStatChip + (statusFilter === 'All' ? ` ${pnl.active}` : '')}
           onClick={() => setStatusFilter('All')}
           title={stats.isSearching ? `${stats.total} matching · ${stats.gTotal} total` : undefined}
         >
           {stats.isSearching ? 'Matching' : 'Total'}{' '}
           <b>
             <FlashOnChange value={stats.total} />
-            {stats.isSearching && <span class="uploads-stat-of"> / {stats.gTotal}</span>}
+            {stats.isSearching && <span class={pnl.uploadsStatOf}> / {stats.gTotal}</span>}
           </b>
         </button>
         <button
-          class={'uploads-stat-chip tone-success' + (statusFilter === 'FINISHED' ? ' active' : '')}
+          class={
+            `${pnl.uploadsStatChip} ${pnl.toneSuccess}` +
+            (statusFilter === 'FINISHED' ? ` ${pnl.active}` : '')
+          }
           onClick={() => setStatusFilter('FINISHED')}
           title={
             stats.isSearching ? `${stats.finished} matching · ${stats.gFinished} total` : undefined
@@ -791,11 +803,14 @@ export default function UploadsPanel() {
           Finished{' '}
           <b>
             <FlashOnChange value={stats.finished} />
-            {stats.isSearching && <span class="uploads-stat-of"> / {stats.gFinished}</span>}
+            {stats.isSearching && <span class={pnl.uploadsStatOf}> / {stats.gFinished}</span>}
           </b>
         </button>
         <button
-          class={'uploads-stat-chip tone-danger' + (statusFilter === 'FAILED' ? ' active' : '')}
+          class={
+            `${pnl.uploadsStatChip} ${pnl.toneDanger}` +
+            (statusFilter === 'FAILED' ? ` ${pnl.active}` : '')
+          }
           onClick={() => setStatusFilter('FAILED')}
           title={
             stats.isSearching ? `${stats.failed} matching · ${stats.gFailed} total` : undefined
@@ -804,11 +819,14 @@ export default function UploadsPanel() {
           Failed{' '}
           <b>
             <FlashOnChange value={stats.failed} />
-            {stats.isSearching && <span class="uploads-stat-of"> / {stats.gFailed}</span>}
+            {stats.isSearching && <span class={pnl.uploadsStatOf}> / {stats.gFailed}</span>}
           </b>
         </button>
         <button
-          class={'uploads-stat-chip tone-warning' + (statusFilter === 'RUNNING' ? ' active' : '')}
+          class={
+            `${pnl.uploadsStatChip} ${pnl.toneWarning}` +
+            (statusFilter === 'RUNNING' ? ` ${pnl.active}` : '')
+          }
           onClick={() => setStatusFilter('RUNNING')}
           title={
             stats.isSearching ? `${stats.running} matching · ${stats.gRunning} total` : undefined
@@ -817,11 +835,11 @@ export default function UploadsPanel() {
           Running{' '}
           <b>
             <FlashOnChange value={stats.running} />
-            {stats.isSearching && <span class="uploads-stat-of"> / {stats.gRunning}</span>}
+            {stats.isSearching && <span class={pnl.uploadsStatOf}> / {stats.gRunning}</span>}
           </b>
         </button>
         {allOperations.length > 0 && bucketRange && (
-          <div class="uploads-sparkline-wrap">
+          <div class={pnl.uploadsSparklineWrap}>
             <ActivitySparkline buckets={buckets} range={bucketRange} />
           </div>
         )}
@@ -829,7 +847,7 @@ export default function UploadsPanel() {
         {/* No `active`: unlike the sidebar this filter genuinely matches on a bare space, so
             a non-empty value IS engaged — the primitive's default. */}
         <FilterInput
-          className="uploads-ops-filter"
+          className={styles.uploadsOpsFilter}
           value={search}
           onInput={setSearch}
           onClear={() => setSearch('')}
@@ -842,7 +860,7 @@ export default function UploadsPanel() {
       </div>
 
       {pendingVisibleCount > 0 && (
-        <button class="uploads-new-float" onClick={applyPending} title="Click to refresh">
+        <button class={styles.uploadsNewFloat} onClick={applyPending} title="Click to refresh">
           <svg
             width="12"
             height="12"
@@ -863,7 +881,7 @@ export default function UploadsPanel() {
           </span>
         </button>
       )}
-      <div class="uploads-table-wrap">
+      <div class={styles.uploadsTableWrap}>
         {pageSlice.length === 0 ? (
           <div style="padding:16px;color:var(--text-secondary);font-size:12px">
             {loaded
@@ -873,7 +891,7 @@ export default function UploadsPanel() {
               : ''}
           </div>
         ) : (
-          <table class="uploads-table">
+          <table class={jv.uploadsTable}>
             <colgroup>
               {COL_KEYS.map((k) => (
                 <col key={k} style={`width:${colWidths[k]}px`} />
@@ -885,7 +903,7 @@ export default function UploadsPanel() {
                   <th key={k}>
                     {COL_LABELS[k]}
                     <span
-                      class="col-resizer"
+                      class={jv.colResizer}
                       title="Drag to resize · double-click to reset"
                       onMouseDown={(e) => startColResize(k, e)}
                       onClick={resetColWidths}

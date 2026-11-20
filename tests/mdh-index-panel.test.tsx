@@ -77,6 +77,8 @@ import mstyles from '../src/ui/Modal.module.css';
 import { selectedCollection, activePanel, loading, error, opNotice } from '../src/mdh/store.js';
 import seg from '../src/ui/Segmented.module.css';
 import inp from '../src/ui/Input.module.css';
+import pnl from '../src/mdh/components/panel.module.css';
+import matchKeyPickerCss from '../src/mdh/components/MatchKeyPicker.module.css';
 
 const writeText = vi.fn().mockResolvedValue(undefined);
 
@@ -105,12 +107,12 @@ function buttonByText(root: any, text: any) {
 }
 
 function cardByName(root: any, name: any) {
-  return [...root.querySelectorAll('.record-card')].find(
-    (c) => c.querySelector('.record-summary strong')?.textContent === name,
+  return [...root.querySelectorAll(`.${pnl.recordCard}`)].find(
+    (c) => c.querySelector(`.${pnl.recordSummary} strong`)?.textContent === name,
   );
 }
 function badgeTexts(el: any) {
-  return [...el.querySelectorAll('.index-badge')].map((b) => b.textContent.toLowerCase());
+  return [...el.querySelectorAll(`.${pnl.indexBadge}`)].map((b) => b.textContent.toLowerCase());
 }
 
 function editorHandle() {
@@ -137,8 +139,8 @@ describe('IndexPanel — copy is create-ready', () => {
     });
     const root = mount();
 
-    await vi.waitFor(() => expect(root.querySelector('.action-copy')).not.toBeNull());
-    root.querySelector<HTMLElement>('.action-copy')!.click();
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.actionCopy}`)).not.toBeNull());
+    root.querySelector<HTMLElement>(`.${pnl.actionCopy}`)!.click();
 
     expect(writeText).toHaveBeenCalledWith(
       JSON.stringify(
@@ -154,8 +156,8 @@ describe('IndexPanel — copy is create-ready', () => {
       result: [{ v: 2, key: { a: 1 }, name: 'a_1' }],
     });
     const root = mount();
-    await vi.waitFor(() => expect(root.querySelector('.action-copy')).not.toBeNull());
-    root.querySelector<HTMLElement>('.action-copy')!.click();
+    await vi.waitFor(() => expect(root.querySelector(`.${pnl.actionCopy}`)).not.toBeNull());
+    root.querySelector<HTMLElement>(`.${pnl.actionCopy}`)!.click();
     const parsed = JSON.parse(writeText.mock.calls[0][0]);
     expect(parsed).toEqual({ indexName: 'a_1', keys: { a: 1 } });
     expect(parsed).not.toHaveProperty('v');
@@ -215,7 +217,7 @@ describe('IndexPanel — size from $collStats', () => {
     await vi.waitFor(() =>
       expect(cardByName(root, 'products_alt1_idx').textContent).toContain('296 KB'),
     );
-    expect(root.querySelector('.toolbar')!.textContent).toContain('20,581');
+    expect(root.querySelector(`.${pnl.toolbar}`)!.textContent).toContain('20,581');
   });
 
   it('degrades silently when $collStats fails', async () => {
@@ -227,7 +229,7 @@ describe('IndexPanel — size from $collStats', () => {
 
     await vi.waitFor(() => expect(cardByName(root, 'a_1')).toBeTruthy());
     expect(error.value).toBeNull();
-    expect(cardByName(root, 'a_1').querySelector('.index-card-meta')).toBeNull();
+    expect(cardByName(root, 'a_1').querySelector(`.${pnl.indexCardMeta}`)).toBeNull();
   });
 });
 
@@ -822,7 +824,7 @@ describe('IndexPanel — single-field presets constrain the picker', () => {
     input.value = path;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     const item = await vi.waitFor(() => {
-      const n = [...dialog.querySelectorAll('.match-key-suggest-item')].find(
+      const n = [...dialog.querySelectorAll(`.${matchKeyPickerCss.matchKeySuggestItem}`)].find(
         (b) => b.textContent === path,
       ) as HTMLElement | undefined;
       if (!n) throw new Error(`no suggestion for ${path}`);
@@ -833,7 +835,7 @@ describe('IndexPanel — single-field presets constrain the picker', () => {
   }
 
   function chips(root: HTMLElement) {
-    return [...root.querySelectorAll('.match-key-chip')].map((c) =>
+    return [...root.querySelectorAll(`.${matchKeyPickerCss.matchKeyChip}`)].map((c) =>
       c.textContent!.replace(/[×✕x]\s*$/, '').trim(),
     );
   }

@@ -1,0 +1,41 @@
+/* Non-error operation notice — same shape/placement as .error-banner. */
+
+.opNoticeBanner {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.opNoticeBanner > span {
+  flex: 1;
+}
+
+.opNoticeBanner.info {
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border-bottom-color: var(--info-border);
+}
+
+.opNoticeBanner.warning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border-bottom-color: var(--warning-border);
+}
+
+.opNoticeBanner .dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.opNoticeBanner .dismiss:hover {
+  opacity: 1;
+}

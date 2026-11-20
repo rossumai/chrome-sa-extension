@@ -46,6 +46,7 @@ import { discoverLeafPaths } from '../columnDiscovery.js';
 import styles from './IndexBuilder.module.css';
 import ctl from '../../ui/controls.module.css';
 import inp from '../../ui/Input.module.css';
+import pnl from './panel.module.css';
 
 function defaultTemplate() {
   // One definition of the minimal template, shared with the Custom tab.
@@ -414,10 +415,10 @@ export default function IndexPanel() {
     : '';
 
   return (
-    <div class="panel">
-      <div class="toolbar">
+    <div class={pnl.panel}>
+      <div class={pnl.toolbar}>
         <span style="flex:1;font-weight:500">
-          Indexes{metaLabel ? <span class="panel-meta">{metaLabel}</span> : null}
+          Indexes{metaLabel ? <span class={pnl.panelMeta}>{metaLabel}</span> : null}
         </span>
         <button
           class={`${ctl.btn} ${ctl.btnSuccess} ${ctl.btnSm}`}
@@ -443,7 +444,7 @@ export default function IndexPanel() {
           {summary}
         </div>
       )}
-      <div class="index-list">
+      <div class={pnl.indexList}>
         {indexes.length === 0 ? (
           <div style="padding:16px;color:var(--text-secondary);font-size:12px">No indexes</div>
         ) : (
@@ -452,15 +453,15 @@ export default function IndexPanel() {
             const name = isObj ? idx.name || '(unnamed)' : String(idx);
             const isDefault = name === '_id_';
             const badges = [];
-            if (isDefault) badges.push({ text: 'default', cls: 'index-badge-default' });
-            if (isObj && idx.unique) badges.push({ text: 'unique', cls: 'index-badge-unique' });
+            if (isDefault) badges.push({ text: 'default', cls: pnl.indexBadgeDefault });
+            if (isObj && idx.unique) badges.push({ text: 'unique', cls: pnl.indexBadgeUnique });
             if (isObj && idx.sparse) badges.push({ text: 'sparse' });
             if (isObj && idx.expireAfterSeconds != null)
               badges.push({ text: `TTL: ${idx.expireAfterSeconds}s` });
             const type = isObj ? classifyIndexType(idx.key) : null;
             if (type && type !== 'single') badges.push({ text: type });
             if (redundant.has(name))
-              badges.push({ text: 'redundant?', cls: 'index-badge-warning' });
+              badges.push({ text: 'redundant?', cls: pnl.indexBadgeWarning });
             const sizeMeta = formatBytes(indexSizes[name]);
             return (
               <IndexCard

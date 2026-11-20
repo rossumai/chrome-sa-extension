@@ -9,6 +9,8 @@ import { previewMatch, runBulkUpdate, selectionToFilter, UNDO_LIMIT } from '../b
 import { stripEmptyOperators, trivialSetDiff } from '../updateExpr.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
 import ctl from '../../ui/controls.module.css';
+import styles from './BulkUpdate.module.css';
+import bulkCss from './bulk.module.css';
 
 const PREVIEW_DEBOUNCE_MS = 400;
 
@@ -77,9 +79,9 @@ export function diffJsonContent(doc: any, diff: any) {
       const entry = diff[k];
       if (entry.removed) {
         out.push(
-          <span class="sample-card-line-removed" key={`r-${k}`}>
+          <span class={styles.sampleCardLineRemoved} key={`r-${k}`}>
             {`  ${JSON.stringify(k)}: `}
-            <span class="sample-card-diff-from sample-card-diff-strike">
+            <span class={`${styles.sampleCardDiffFrom} ${styles.sampleCardDiffStrike}`}>
               {JSON.stringify(entry.from)}
             </span>
             {trail}
@@ -87,11 +89,11 @@ export function diffJsonContent(doc: any, diff: any) {
         );
       } else {
         out.push(
-          <span class="sample-card-line-changed" key={`c-${k}`}>
+          <span class={styles.sampleCardLineChanged} key={`c-${k}`}>
             {`  ${JSON.stringify(k)}: `}
-            <span class="sample-card-diff-from">{JSON.stringify(entry.from)}</span>
+            <span class={styles.sampleCardDiffFrom}>{JSON.stringify(entry.from)}</span>
             {' → '}
-            <span class="sample-card-diff-to">{JSON.stringify(entry.to)}</span>
+            <span class={styles.sampleCardDiffTo}>{JSON.stringify(entry.to)}</span>
             {trail}
           </span>,
         );
@@ -106,9 +108,9 @@ export function diffJsonContent(doc: any, diff: any) {
     const lineIdx = docKeys.length + i;
     const trail = lineIdx < totalLines - 1 ? ',\n' : '\n';
     out.push(
-      <span class="sample-card-line-added" key={`a-${k}`}>
+      <span class={styles.sampleCardLineAdded} key={`a-${k}`}>
         {`  ${JSON.stringify(k)}: `}
-        <span class="sample-card-diff-to">{JSON.stringify(diff[k].to)}</span>
+        <span class={styles.sampleCardDiffTo}>{JSON.stringify(diff[k].to)}</span>
         {trail}
       </span>,
     );
@@ -247,7 +249,7 @@ function Body({
     <ModalBody rootRef={rootRef}>
       <ModalFieldLabel>Filter:</ModalFieldLabel>
       {isSelection ? (
-        <pre class="bulk-filter-readonly-pre">{JSON.stringify(effectiveFilter, null, 2)}</pre>
+        <pre class={bulkCss.bulkFilterReadonlyPre}>{JSON.stringify(effectiveFilter, null, 2)}</pre>
       ) : (
         <JsonEditor
           value={filterJson}
@@ -269,37 +271,39 @@ function Body({
         onValidChange={handleUpdateValidChange}
       />
 
-      <div class="bulk-preview">
-        {previewing && <div class="bulk-preview-loading">{'Previewing…'}</div>}
-        {previewError && <div class="bulk-preview-error">{previewError}</div>}
+      <div class={bulkCss.bulkPreview}>
+        {previewing && <div class={bulkCss.bulkPreviewLoading}>{'Previewing…'}</div>}
+        {previewError && <div class={bulkCss.bulkPreviewError}>{previewError}</div>}
         {!previewing && !previewError && (
-          <div data-testid="bulk-preview-count" class="bulk-preview-count">
+          <div data-testid="bulk-preview-count" class={bulkCss.bulkPreviewCount}>
             {count} record{count !== 1 ? 's' : ''} match
           </div>
         )}
         {sample.length > 0 && sample.length < (count as number) && (
-          <div class="bulk-preview-sample-note">
+          <div class={bulkCss.bulkPreviewSampleNote}>
             Preview shows a sample of the first {sample.length}{' '}
             {sample.length === 1 ? 'record' : 'records'} below — the operation will apply to all{' '}
             {count!.toLocaleString()}.
           </div>
         )}
         {sample.length > 0 && (
-          <div class="sample-cards">
+          <div class={bulkCss.sampleCards}>
             {sample.map((doc, i) => {
               const diff = trivialSetDiff(updateValue, doc);
               const hasChanges = diff && Object.keys(diff).length > 0;
               return (
-                <div class="sample-card">
-                  <div class="sample-card-header">
+                <div class={bulkCss.sampleCard}>
+                  <div class={bulkCss.sampleCardHeader}>
                     Document {i + 1}
                     {!diff && (
-                      <span class="sample-card-header-meta sample-card-diff-opaque">
+                      <span
+                        class={`${bulkCss.sampleCardHeaderMeta} ${bulkCss.sampleCardDiffOpaque}`}
+                      >
                         will apply update expression
                       </span>
                     )}
                   </div>
-                  <pre class="sample-card-body">
+                  <pre class={bulkCss.sampleCardBody}>
                     {hasChanges ? diffJsonContent(doc, diff) : JSON.stringify(doc, null, 2)}
                   </pre>
                 </div>
@@ -307,10 +311,10 @@ function Body({
             })}
           </div>
         )}
-        <div class="bulk-undo-note">{undoNote}</div>
+        <div class={bulkCss.bulkUndoNote}>{undoNote}</div>
       </div>
 
-      {resultMsg && <div class="bulk-result">{resultMsg}</div>}
+      {resultMsg && <div class={bulkCss.bulkResult}>{resultMsg}</div>}
 
       <BulkConfirm
         count={count as number}

@@ -23,6 +23,7 @@ import * as api from '../api.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
 import ctl from '../../ui/controls.module.css';
 import inp from '../../ui/Input.module.css';
+import styles from './ImportWizard.module.css';
 
 const STAGE = { PICK: 'pick', DECIDE: 'decide', IMPORTING: 'importing', DONE: 'done' };
 const SHAPE_SAMPLE = 500;
@@ -405,8 +406,8 @@ export default function ImportWizard({
               onReject={setErrorMsg}
               inputTestid="import-file-input"
             >
-              <div class="file-input-label">Drop a file here or click to choose</div>
-              <div class="file-input-info" style="margin-top:4px">
+              <div class={styles.fileInputLabel}>Drop a file here or click to choose</div>
+              <div class={styles.fileInputInfo} style="margin-top:4px">
                 JSON {'·'} JSONL {'·'} CSV {'·'} Excel {'·'} XML
               </div>
             </FileDropArea>
@@ -450,7 +451,7 @@ export default function ImportWizard({
       {stage === STAGE.DECIDE && parsed && (
         <Fragment>
           {fmt?.ConfigureControls && (
-            <div class="parse-strip" data-testid="parse-strip">
+            <div class={styles.parseStrip} data-testid="parse-strip">
               <fmt.ConfigureControls opts={opts} setOpt={setOpt} parsed={parsed} />
             </div>
           )}

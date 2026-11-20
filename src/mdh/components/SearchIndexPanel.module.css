@@ -1,0 +1,11 @@
+.recordCardNoticeText {
+  flex: 1;
+}
+
+/* The name field in the Edit Search Index modal: the name is the resource
+   identity, so it is shown and not editable. */
+
+:where(.inputLocked) {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}

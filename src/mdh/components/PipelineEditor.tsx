@@ -9,6 +9,8 @@ import AgentBox from './AgentBox.jsx';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
 import ctl from '../../ui/controls.module.css';
 import inp from '../../ui/Input.module.css';
+import styles from './PipelineEditor.module.css';
+import menuCss from './toolbarMenu.module.css';
 
 export default function PipelineEditor({
   editorRef,
@@ -43,7 +45,7 @@ export default function PipelineEditor({
   useEffect(() => {
     if (!overflowOpen) return;
     function onClick(e: any) {
-      if (!e.target.closest('.pipeline-overflow-wrap')) setOverflowOpen(false);
+      if (!e.target.closest(`.${styles.pipelineOverflowWrap}`)) setOverflowOpen(false);
     }
     document.addEventListener('click', onClick);
     return () => document.removeEventListener('click', onClick);
@@ -53,8 +55,8 @@ export default function PipelineEditor({
   useEffect(() => {
     if (!showSaveInput) return;
     function onMouseDown(e: any) {
-      if (e.target.closest('.pipeline-save-inline')) return;
-      if (e.target.closest('.pipeline-save-btn')) return;
+      if (e.target.closest(`.${styles.pipelineSaveInline}`)) return;
+      if (e.target.closest(`.${styles.pipelineSaveBtn}`)) return;
       setShowSaveInput(false);
     }
     function onScroll() {
@@ -117,18 +119,18 @@ export default function PipelineEditor({
 
   return (
     <div style="display:flex;flex-direction:column;flex:1;min-height:0">
-      <div class="pipeline-header">
-        <span class="split-pane-label">Aggregate Pipeline</span>
-        <div class="pipeline-header-actions">
+      <div class={styles.pipelineHeader}>
+        <span class={styles.splitPaneLabel}>Aggregate Pipeline</span>
+        <div class={styles.pipelineHeaderActions}>
           <button
-            class={'pipeline-save-btn' + (savedState ? ' pipeline-save-btn-active' : '')}
+            class={styles.pipelineSaveBtn + (savedState ? ` ${styles.pipelineSaveBtnActive}` : '')}
             title={savedState ? 'Remove from saved queries' : 'Save current query'}
             onClick={handleSave}
           >
             {savedState ? '\u2605' : '\u2606'}
           </button>
           <button
-            class="pipeline-action-btn"
+            class={styles.pipelineActionBtn}
             title="Open saved queries and query history"
             onClick={(e) => {
               const r = e.currentTarget.getBoundingClientRect();
@@ -140,15 +142,15 @@ export default function PipelineEditor({
             Library {'\u25BE'}
           </button>
           <button
-            class="pipeline-action-btn"
+            class={styles.pipelineActionBtn}
             title="Reset sort, filter, and pipeline to the default"
             onClick={onReset}
           >
             Reset
           </button>
-          <div class="pipeline-overflow-wrap">
+          <div class={styles.pipelineOverflowWrap}>
             <button
-              class="pipeline-action-btn pipeline-overflow-btn"
+              class={`${styles.pipelineActionBtn} ${styles.pipelineOverflowBtn}`}
               title="More actions"
               onClick={(e) => {
                 e.stopPropagation();
@@ -159,9 +161,9 @@ export default function PipelineEditor({
               {'\u22EF'}
             </button>
             {overflowOpen && (
-              <div class="toolbar-more-menu">
+              <div class={`toolbar-more-menu ${menuCss.toolbarMoreMenu}`}>
                 <button
-                  class="toolbar-menu-item"
+                  class={menuCss.toolbarMenuItem}
                   onClick={() => {
                     setOverflowOpen(false);
                     beautify();
@@ -174,7 +176,7 @@ export default function PipelineEditor({
           </div>
         </div>
         {showSaveInput && (
-          <div class="pipeline-save-inline">
+          <div class={styles.pipelineSaveInline}>
             <input
               ref={saveInputRef}
               class={`${inp.input} ${inp.inSaveInline}`}
@@ -191,7 +193,7 @@ export default function PipelineEditor({
         )}
       </div>
       {libraryOpen && popupPos && (
-        <div class="query-panel-backdrop" onClick={() => setLibraryOpen(false)}>
+        <div class={styles.queryPanelBackdrop} onClick={() => setLibraryOpen(false)}>
           <div
             style={`position:fixed;top:${popupPos.top}px;left:${popupPos.left}px;z-index:1000`}
             onClick={(e) => e.stopPropagation()}

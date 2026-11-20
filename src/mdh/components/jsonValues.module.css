@@ -1,0 +1,474 @@
+/* The MDH value renderers that share one set of rules: the record JSON tree (JsonTree), the
+   record and uploads tables (RecordTable, UploadsPanel) and the EJSON value classes
+   (displayValue.ts). Moved from the global src/mdh/legacy.css in its original rule order. */
+
+.jsonTreeNested {
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+  margin-left: 4px;
+}
+
+.jsonTreeRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  padding: 1px 0;
+}
+
+.jsonTreeKey {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 4px;
+  cursor: pointer;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 500;
+  transition:
+    background 0.1s,
+    border-color 0.1s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.jsonTreeKey:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+/* Read-only key (Stages view): same look as an interactive key, but inert. */
+
+.jsonTreeKeyStatic {
+  cursor: default;
+}
+
+.jsonTreeKeyStatic:hover {
+  background: none;
+  border-color: transparent;
+}
+
+.jsonTreeKeyAsc {
+  background: var(--success) !important;
+  color: #fff !important;
+  border-color: var(--success) !important;
+}
+
+.jsonTreeKeyDesc {
+  background: var(--danger) !important;
+  color: #fff !important;
+  border-color: var(--danger) !important;
+}
+
+.jsonTreeKeyAsc:hover {
+  background: var(--success-hover) !important;
+  border-color: var(--success-hover) !important;
+}
+
+.jsonTreeKeyDesc:hover {
+  background: var(--danger-hover) !important;
+  border-color: var(--danger-hover) !important;
+}
+
+.jsonTreeSep {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.jsonTreeValueOid {
+  color: #8b5cf6;
+}
+
+.jsonTreeValueDate {
+  color: #0d9488;
+}
+
+@media (prefers-color-scheme: dark) {
+  .jsonTreeValueOid {
+    color: #a78bfa;
+  }
+  .jsonTreeValueDate {
+    color: #5eead4;
+  }
+}
+
+.jsonTreeValue {
+  color: var(--text-code);
+  word-break: break-word;
+  min-width: 0;
+}
+
+.jsonTreeValueClickable {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 3px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left; /* <button> defaults to center — keep long wrapped values left-aligned */
+  transition:
+    background 0.1s,
+    border-color 0.1s;
+}
+
+.jsonTreeValueClickable:hover {
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
+
+.jsonTreeValueFiltered {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+  border-radius: 3px;
+}
+
+.jsonTreeValueString {
+  color: var(--success);
+}
+
+.jsonTreeValueNumber {
+  color: var(--warning);
+}
+
+.jsonTreeValueBool {
+  color: var(--accent);
+}
+
+.jsonTreeValueNull {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.jsonTreeValueArray {
+  color: var(--text-secondary);
+}
+
+.jsonTreeToggle {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.jsonTreeArrayItem {
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+  margin-left: 4px;
+  margin-bottom: 2px;
+}
+
+.jsonTreeArrayIndex {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+/* Per-row copy button: an icon-only affordance that stays out of the way
+   until the row is hovered, briefly turns green when the value has been
+   copied. */
+
+.jsonTreeCopyBtn {
+  /* Always laid out (reserves its slot) but hidden until the row is hovered, so
+     revealing it never reflows / re-wraps the value next to it ("jumps"). */
+  display: inline-flex;
+  align-items: center;
+  visibility: hidden;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 3px;
+  margin-left: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-secondary);
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.jsonTreeRow:hover > .jsonTreeCopyBtn {
+  visibility: visible;
+}
+
+.jsonTreeCopyBtn:hover {
+  opacity: 1;
+  background: var(--bg-hover);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.jsonTreeCopyBtnSuccess {
+  visibility: visible !important; /* stay shown briefly after copy, even off-hover */
+  align-items: center;
+  opacity: 1 !important;
+  background: var(--bg-hover) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Brief outline flash for Alt+click on a key or value — gives feedback
+   that the keyboard shortcut wrote to the clipboard, without permanently
+   altering the button's appearance. */
+
+.jsonTreeFlash {
+  animation: jsonTreeCopyFlash 700ms ease-out;
+}
+
+@keyframes jsonTreeCopyFlash {
+  0% {
+    box-shadow: 0 0 0 2px var(--text-secondary);
+  }
+  60% {
+    box-shadow: 0 0 0 2px var(--text-secondary);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}
+
+.uploadsTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  table-layout: fixed;
+}
+
+.uploadsTable th {
+  text-align: left;
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--text-secondary);
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 1;
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.uploadsTable td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-light, var(--border));
+}
+
+.uploadsTable th:first-child,
+.uploadsTable td:first-child {
+  padding-left: 12px;
+}
+
+.uploadsTable th:last-child,
+.uploadsTable td:last-child {
+  padding-right: 12px;
+}
+
+.uploadsTable tbody:hover tr {
+  background: color-mix(in srgb, var(--bg-hover) 35%, var(--bg-card));
+}
+
+.uploadsTable .colResizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 7px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 2;
+  background: transparent;
+  transition: background-color 80ms ease-in-out;
+}
+
+.uploadsTable .colResizer:hover {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.uploadsTable .colResizer.dragging {
+  background: var(--accent);
+}
+
+.uploadsTable th:last-child .colResizer {
+  display: none;
+}
+
+.recordCheckbox {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+/* .inspector-modal* migrated to the self-contained CSS Module
+   src/ui/fabry/FabryTranscript.module.css (the only renderer of the transcript modal). */
+
+/* Record table view */
+
+.recordTableWrap {
+  width: 100%;
+  overflow: auto;
+}
+
+/* width:100% (not just min-width) is required for table-layout:fixed to actually
+   engage: the explicit <col> widths then become authoritative, so columns stretch
+   to fill when there's room, stay at their width and let the wrap scroll when
+   crowded, and (crucially) long cell content clips with an ellipsis instead of
+   expanding the column. In the default state every <col> is DEFAULT_COL_WIDTH and
+   they stretch equally; after a manual resize the JS-computed widths take over
+   (RecordTable: every non-last column explicit, the last column a computed filler
+   that fills the pane exactly — no trailing gap, never narrower than the pane,
+   wrap scrolls when the non-last columns overflow). */
+
+.recordTable {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.recordTable thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: normal;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.recordTable thead th:hover {
+  background: var(--bg-hover);
+}
+
+.recordTable tbody tr:nth-child(even) {
+  background: var(--bg-sidebar);
+}
+
+.recordTable tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.recordTable tbody td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.recordTableCellInner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.recordTableCellInner > .recordTableValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Reserve the copy button's space always (visibility, not display) so revealing
+   it on hover doesn't reflow the cell value and make columns appear to jump. */
+
+.recordTableCellInner > .jsonTreeCopyBtn {
+  display: inline-flex;
+  align-items: center;
+  visibility: hidden;
+}
+
+.recordTable tbody td:hover > .recordTableCellInner > .jsonTreeCopyBtn,
+.recordTableCellInner > .jsonTreeCopyBtn.jsonTreeCopyBtnSuccess {
+  visibility: visible;
+}
+
+.recordTableBadge {
+  display: inline-block;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* Shared compact EJSON type mini-badge, used everywhere a value's BSON type is
+   shown (the dense Table view and the JSON tree / record cards). A small boxed
+   tint — its own pill so it reads as a label, not part of the value. The text +
+   tint both derive from the value's type color via the co-applied
+   json-tree-value-* class (currentColor), so each type keeps its own hue. The
+   full type name is on the tag's title (hover). In the Table the
+   .record-table-cell-inner flex `gap` spaces it; the JSON tree rows have no gap,
+   so add explicit margins there. */
+
+.valueTypeTag {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  cursor: default;
+}
+
+.jsonTreeRow .valueTypeTag {
+  margin: 0 4px;
+}
+
+.recordTable .colResizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 7px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 2;
+  background: transparent;
+  transition: background-color 80ms ease-in-out;
+}
+
+.recordTable .colResizer:hover {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.recordTable .colResizer.dragging {
+  background: var(--accent);
+}
+
+.recordTable td.recordTableCellClickable {
+  cursor: pointer;
+}
+
+.recordTableValue {
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+.recordTable td.recordTableCellExpanded {
+  white-space: normal;
+  max-width: none;
+  overflow: visible;
+}
+
+.recordTable tbody tr.recordTableRowSelected {
+  background: var(--bg-hover);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.recordTableCheck {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}

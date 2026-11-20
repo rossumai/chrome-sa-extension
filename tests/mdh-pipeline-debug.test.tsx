@@ -7,6 +7,7 @@ vi.mock('../src/mdh/api.js');
 import * as api from '../src/mdh/api.js';
 import PipelineDebug from '../src/mdh/components/PipelineDebug.jsx';
 import { selectedCollection } from '../src/mdh/store.js';
+import pd from '../src/mdh/components/PipelineDebug.module.css';
 // Wrap a plain stage array as all-enabled entries, the shape usePipeline hands the panel.
 const stagesToEntries = (arr: any) =>
   Array.isArray(arr) ? arr.map((stage) => ({ disabled: false, stage })) : [];
@@ -62,7 +63,7 @@ async function waitFor(condition: any, description = 'condition', timeoutMs = 20
 const stageCountCells = (root: any) =>
   [
     ...root.querySelectorAll(
-      '.pipeline-debug-row:not(.pipeline-debug-input-row) .pipeline-debug-count',
+      `.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow}) .${pd.pipelineDebugCount}`,
     ),
   ].map((el) => el.textContent);
 
@@ -153,13 +154,13 @@ describe('PipelineDebug', () => {
     // Wait for the input count to commit and the stage 1 count to leave its '…' state.
     await waitFor(
       () =>
-        root.querySelector('.pipeline-debug-input-row')?.textContent.includes('4,242') &&
+        root.querySelector(`.${pd.pipelineDebugInputRow}`)?.textContent.includes('4,242') &&
         stageCountCells(root)[0] &&
         !stageCountCells(root)[0].includes('…'),
       'input + stage counts rendered',
     );
 
-    const inputRow = root.querySelector('.pipeline-debug-input-row');
+    const inputRow = root.querySelector(`.${pd.pipelineDebugInputRow}`);
     expect(inputRow).not.toBeNull();
     expect(inputRow.textContent).toContain('0.');
     expect(inputRow.textContent).toContain('4,242');
@@ -175,9 +176,9 @@ describe('PipelineDebug', () => {
       pipeline: [{ $match: { vendor: 'NOPE' } }],
       onInspectStage: (i: any) => inspected.push(i),
     });
-    await waitFor(() => root.querySelector('.pipeline-debug-input-row'), 'input row rendered');
+    await waitFor(() => root.querySelector(`.${pd.pipelineDebugInputRow}`), 'input row rendered');
 
-    root.querySelector('.pipeline-debug-input-row').click();
+    root.querySelector(`.${pd.pipelineDebugInputRow}`).click();
     expect(inspected).toEqual([-1]);
   });
 
@@ -190,11 +191,12 @@ describe('PipelineDebug', () => {
     });
     await waitFor(
       () =>
-        root.querySelectorAll('.pipeline-debug-row:not(.pipeline-debug-input-row)').length === 2,
+        root.querySelectorAll(`.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow})`)
+          .length === 2,
       'stage rows rendered',
     );
 
-    root.querySelectorAll('.pipeline-debug-row:not(.pipeline-debug-input-row)')[1].click();
+    root.querySelectorAll(`.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow})`)[1].click();
     expect(inspected).toEqual([1]);
   });
 
@@ -271,9 +273,9 @@ describe('PipelineDebug', () => {
 
   it('renders nothing when pipeline is empty or null', () => {
     const root1 = mount({ pipeline: null });
-    expect(root1.querySelector('.pipeline-debug')).toBe(null);
+    expect(root1.querySelector(`.${pd.pipelineDebug}`)).toBe(null);
     const root2 = mount({ pipeline: [] });
-    expect(root2.querySelector('.pipeline-debug')).toBe(null);
+    expect(root2.querySelector(`.${pd.pipelineDebug}`)).toBe(null);
     expect(api.aggregate).not.toHaveBeenCalled();
   });
 
@@ -285,15 +287,16 @@ describe('PipelineDebug', () => {
     await waitFor(
       () =>
         root.querySelectorAll(
-          '.pipeline-debug-row:not(.pipeline-debug-input-row) .pipeline-debug-time',
-        ).length === 2 && root.querySelector('.pipeline-debug-input-row .pipeline-debug-time'),
+          `.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow}) .${pd.pipelineDebugTime}`,
+        ).length === 2 &&
+        root.querySelector(`.${pd.pipelineDebugInputRow} .${pd.pipelineDebugTime}`),
       'per-stage + input timing rendered',
     );
 
     // Per-stage timing is cumulative wall-clock; assert on the stage rows only.
     const times = [
       ...root.querySelectorAll(
-        '.pipeline-debug-row:not(.pipeline-debug-input-row) .pipeline-debug-time',
+        `.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow}) .${pd.pipelineDebugTime}`,
       ),
     ];
     expect(times).toHaveLength(2);
@@ -305,12 +308,12 @@ describe('PipelineDebug', () => {
     }
 
     // The 0th input row also shows its own ($collStats) timing.
-    const inputTime = root.querySelector('.pipeline-debug-input-row .pipeline-debug-time');
+    const inputTime = root.querySelector(`.${pd.pipelineDebugInputRow} .${pd.pipelineDebugTime}`);
     expect(inputTime).not.toBeNull();
     expect(inputTime.textContent).toMatch(/^\d+ms$/);
 
     // Fast (sub-second) timings must NOT be flagged slow.
-    expect(root.querySelector('.pipeline-debug-time-slow')).toBeNull();
+    expect(root.querySelector(`.${pd.pipelineDebugTimeSlow}`)).toBeNull();
   });
 
   it('flags a stage timing as slow (orange) when its latency exceeds 1s', async () => {
@@ -330,16 +333,16 @@ describe('PipelineDebug', () => {
       await waitFor(
         () =>
           root.querySelector(
-            '.pipeline-debug-row:not(.pipeline-debug-input-row) .pipeline-debug-time-slow',
+            `.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow}) .${pd.pipelineDebugTimeSlow}`,
           ),
         'a slow-flagged stage timing to render',
       );
       const slow = root.querySelector(
-        '.pipeline-debug-row:not(.pipeline-debug-input-row) .pipeline-debug-time-slow',
+        `.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow}) .${pd.pipelineDebugTimeSlow}`,
       );
       expect(slow).not.toBeNull();
       // It is still the timing element, just additionally flagged.
-      expect(slow.classList.contains('pipeline-debug-time')).toBe(true);
+      expect(slow.classList.contains(pd.pipelineDebugTime)).toBe(true);
       expect(slow.textContent).toMatch(/^\d+ms$/);
     } finally {
       performance.now = realNow;
@@ -354,13 +357,13 @@ describe('PipelineDebug', () => {
     await waitFor(
       () =>
         root.querySelector(
-          '.pipeline-debug-row:not(.pipeline-debug-input-row) .pipeline-debug-time',
+          `.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow}) .${pd.pipelineDebugTime}`,
         ),
       'error-row timing rendered',
     );
 
     const time = root.querySelector(
-      '.pipeline-debug-row:not(.pipeline-debug-input-row) .pipeline-debug-time',
+      `.${pd.pipelineDebugRow}:not(.${pd.pipelineDebugInputRow}) .${pd.pipelineDebugTime}`,
     );
     expect(time).not.toBeNull();
     expect(time.textContent).toMatch(/^\d+ms$/);
@@ -436,7 +439,7 @@ describe('PipelineDebug — disabled stages', () => {
     for (const [, pl] of stageCalls) {
       expect(JSON.stringify(pl)).not.toContain('$sort');
     }
-    expect(root.querySelector('.pipeline-debug-disabled')).not.toBeNull();
+    expect(root.querySelector(`.${pd.pipelineDebugDisabled}`)).not.toBeNull();
   });
 
   it('clicking a row toggle calls onToggleStage with the entry index', async () => {
@@ -448,11 +451,11 @@ describe('PipelineDebug — disabled stages', () => {
     const calls: any = [];
     const root = mount({ entries, onToggleStage: (i: any) => calls.push(i) });
     await waitFor(
-      () => root.querySelectorAll('.pipeline-stage-toggle').length === 2,
+      () => root.querySelectorAll(`.${pd.pipelineStageToggle}`).length === 2,
       'toggles rendered',
     );
 
-    root.querySelectorAll('.pipeline-stage-toggle')[1].click();
+    root.querySelectorAll(`.${pd.pipelineStageToggle}`)[1].click();
     expect(calls).toEqual([1]);
   });
 });

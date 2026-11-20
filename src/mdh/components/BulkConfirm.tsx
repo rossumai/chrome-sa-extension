@@ -6,6 +6,7 @@ import { UNDO_LIMIT } from '../bulkOps.js';
 import { ModalActions } from './Modal.jsx';
 import ctl from '../../ui/controls.module.css';
 import inp from '../../ui/Input.module.css';
+import styles from './BulkConfirm.module.css';
 
 // One-click threshold below which no type-gate is required.
 const ONE_CLICK_LIMIT = 10;
@@ -80,10 +81,10 @@ export default function BulkConfirm({
   const submitDisabled = disabled || !gateOk;
 
   return (
-    <div class="bulk-confirm">
+    <div class={styles.bulkConfirm}>
       {mode === 'count' && (
-        <label class="bulk-confirm-row">
-          <span class="bulk-confirm-label">
+        <label class={styles.bulkConfirmRow}>
+          <span class={styles.bulkConfirmLabel}>
             Type <strong>{count}</strong> to confirm:
           </span>
           <input
@@ -96,8 +97,8 @@ export default function BulkConfirm({
         </label>
       )}
       {mode === 'name' && (
-        <label class="bulk-confirm-row">
-          <span class="bulk-confirm-label">
+        <label class={styles.bulkConfirmRow}>
+          <span class={styles.bulkConfirmLabel}>
             Type <strong>{collection}</strong> to confirm:
           </span>
           <input
@@ -110,7 +111,9 @@ export default function BulkConfirm({
         </label>
       )}
       {mode === 'blocked' && (
-        <div class="bulk-confirm-row bulk-confirm-blocked">Waiting for record count{'…'}</div>
+        <div class={`${styles.bulkConfirmRow} ${styles.bulkConfirmBlocked}`}>
+          Waiting for record count{'…'}
+        </div>
       )}
       <ModalActions>
         <button

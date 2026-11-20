@@ -1,0 +1,27 @@
+@keyframes ops-value-flash {
+  0% {
+    background: rgba(66, 112, 219, 0.55);
+    color: #fff;
+  }
+  40% {
+    background: rgba(66, 112, 219, 0.25);
+    color: inherit;
+  }
+  100% {
+    background: transparent;
+    color: inherit;
+  }
+}
+
+.flashValue {
+  display: inline-block;
+  padding: 0 3px;
+  border-radius: 3px;
+  animation: ops-value-flash 1.1s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flashValue {
+    animation: none;
+  }
+}

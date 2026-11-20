@@ -1,5 +1,6 @@
 import { h, Fragment, type ComponentChildren } from 'preact';
 import { useState, useRef } from 'preact/hooks';
+import styles from './FileDropArea.module.css';
 
 // Shared picker box for the MDH file-import modals. Renders the hidden file
 // input + the dashed `.file-input-area`, owns click-to-open, drag-over
@@ -108,7 +109,7 @@ export default function FileDropArea({
         data-testid={inputTestid}
       />
       <div
-        class={`file-input-area${dragging ? ' drag-over' : ''}`}
+        class={`${styles.fileInputArea}${dragging ? ` ${styles.dragOver}` : ''}`}
         onClick={() => inputRef.current && inputRef.current.click()}
         onDragEnter={onDragEnter}
         onDragOver={onDragOver}

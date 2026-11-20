@@ -3,6 +3,8 @@ import { useState, useEffect } from 'preact/hooks';
 import { hoveredStage, editorHoverStage, caretStage, stagesAutoscroll } from '../store.js';
 import { computeStageLink, edgeArrowPath } from '../stageLink.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
+import sv from './StagesView.module.css';
+import styles from './StageLinkOverlay.module.css';
 
 /** The slice of the editor handle this overlay drives — every call below is optional-
  *  chained, so the parts are optional here too and a stub need only provide what it uses. */
@@ -97,7 +99,7 @@ export default function StageLinkOverlay({
       // section into view — but the editor stopped doing that, so the link would
       // simply be missing. Now it ends at the pane's edge under an arrow saying
       // which way the stage lies (owner request 2026-08-14).
-      const pane = el.closest?.('.pipeline-inspect-scroll');
+      const pane = el.closest?.(`.${sv.pipelineInspectScroll}`);
       const editorRect = editorRef.current?.stageScreenRect?.(cur.entryIndex);
       const panelRect = panelRef.current?.getBoundingClientRect?.();
       // Same treatment for the editor end, and for the same reason: CodeMirror
@@ -152,17 +154,17 @@ export default function StageLinkOverlay({
   const arrow = edgeArrowPath(pts.x2, pts.y2, pts.edge);
   const startArrow = edgeArrowPath(pts.x1, pts.y1, pts.startEdge);
   return (
-    <svg class="stage-link-overlay" aria-hidden="true">
-      <path class="stage-link-line" d={pts.d} />
+    <svg class={styles.stageLinkOverlay} aria-hidden="true">
+      <path class={styles.stageLinkLine} d={pts.d} />
       {startArrow ? (
-        <path class="stage-link-arrow" d={startArrow} />
+        <path class={styles.stageLinkArrow} d={startArrow} />
       ) : (
-        <circle class="stage-link-dot" cx={pts.x1} cy={pts.y1} r="3" />
+        <circle class={styles.stageLinkDot} cx={pts.x1} cy={pts.y1} r="3" />
       )}
       {arrow ? (
-        <path class="stage-link-arrow" d={arrow} />
+        <path class={styles.stageLinkArrow} d={arrow} />
       ) : (
-        <circle class="stage-link-dot" cx={pts.x2} cy={pts.y2} r="3" />
+        <circle class={styles.stageLinkDot} cx={pts.x2} cy={pts.y2} r="3" />
       )}
     </svg>
   );

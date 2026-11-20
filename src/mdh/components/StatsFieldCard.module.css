@@ -1,0 +1,294 @@
+.statsFieldName {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.statsFieldParent {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.statsDistSpecial {
+  font-style: italic;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+.statsDistObject {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+/* ── Stats Visual Enhancements ──────────────────── */
+
+@keyframes stats-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.statsFcard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  scroll-margin-top: 12px;
+}
+
+.statsFcard.isFlagged {
+  border-color: var(--warning-border);
+}
+
+.statsFcard.isTarget {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.statsFcard.isDimmed {
+  opacity: 0.4;
+  transition: opacity 0.12s ease;
+}
+
+.statsFcard.isDimmed:hover {
+  opacity: 1;
+}
+
+.statsFcardH {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statsFcardH .statsFieldName {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statsTchip {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border: 1px solid var(--info-border);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statsTchip.isNum {
+  background: #eef9f1;
+  color: var(--success-fg);
+  border-color: #bfe8cb;
+}
+
+.statsTchip.isDate {
+  background: var(--type-user-bg);
+  color: var(--type-user-fg);
+  border-color: #ddd1fb;
+}
+
+.statsTchip.isMix {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border-color: var(--warning-border);
+}
+
+.statsIdxChip {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.statsFcardMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.statsFcardMeta b {
+  font-weight: 600;
+}
+
+/* top-values mini bars */
+
+.statsTv {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.statsTvRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  font-size: 11px;
+  padding: 1px 0;
+}
+
+.statsTvRow.isClickable {
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.statsTvRow.isClickable:hover {
+  background: var(--bg-hover);
+}
+
+.statsTvRow.isClickable:hover .statsTvVal {
+  text-decoration: underline;
+}
+
+.statsTvRow .statsTvBar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 3px;
+}
+
+.statsTvRow .statsTvVal {
+  position: relative;
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: 5px;
+}
+
+.statsTvRow .statsTvCount {
+  position: relative;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.statsTvRow.isPlaceholder .statsTvBar {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.statsTvRow.isPlaceholder .statsTvVal {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.statsTvRow.isPlaceholder .statsTvCount {
+  color: var(--danger);
+}
+
+/* range / span bar */
+
+.statsRangebar {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.statsRangebarTrack {
+  position: relative;
+  height: 6px;
+  background: var(--bg-hover);
+  border-radius: 3px;
+  margin: 7px 4px 2px;
+}
+
+.statsRangebarTrack .statsRangebarSeg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 3px;
+}
+
+.statsRangebarTrack .statsRangebarAvg {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 12px;
+  background: var(--accent);
+}
+
+.statsRangebarEnds {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+/* badges */
+
+/* Field-card issue messages (bottom of card) — badges are reserved for the header chips. */
+
+.statsMsgs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.statsMsg {
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 5px 8px;
+  border-radius: var(--radius);
+}
+
+.statsMsg b {
+  font-weight: 600;
+}
+
+.statsMsg.isError {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border: 1px solid var(--danger-border);
+}
+
+.statsMsg.isWarn {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border: 1px solid var(--warning-border);
+}
+
+@media (prefers-color-scheme: dark) {
+  .statsTchip.isNum {
+    background: rgba(34, 136, 62, 0.18);
+    color: #6ee7a0;
+    border-color: rgba(34, 136, 62, 0.4);
+  }
+  .statsTchip.isDate {
+    background: rgba(91, 33, 182, 0.25);
+    color: #c4b5fd;
+    border-color: rgba(91, 33, 182, 0.5);
+  }
+}

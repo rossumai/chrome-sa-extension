@@ -1,0 +1,18 @@
+.tabAlert {
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+  line-height: 0;
+}
+
+.tabAlertIcon {
+  display: block;
+}
+
+.tabAlertWarning {
+  fill: var(--warning);
+}
+
+.tabAlertDanger {
+  fill: var(--danger);
+}

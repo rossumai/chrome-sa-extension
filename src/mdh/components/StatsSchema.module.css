@@ -1,0 +1,151 @@
+.statsShapeBaseline {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.statsShapeCols {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.statsShapeCol {
+  flex: 1;
+  /* 180px, not 150: measured against the longest realistic header
+     ("Shape 1 · most common" over "19 fields · 8,214 · 71%"), below which the
+     shape label wraps and the header grows from 52px to 85px. The container
+     already has overflow-x: auto, so several shapes in a narrow panel now
+     scroll — which also keeps the columns aligned, and that alignment is the
+     whole point of showing them side by side. */
+  min-width: 180px;
+  /* 260px: measured as the width at which the longest realistic field name
+     (33 characters) stops being clipped — the rows are nowrap inside an
+     overflow: hidden column, so a name that does not fit is cut. Past 260 the
+     extra width buys nothing, and with only two shapes flex: 1 would otherwise
+     stretch each column across half the panel. */
+  max-width: 260px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.statsShapeColH {
+  padding: 7px 10px;
+  background: var(--bg-code);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statsShapeColH b {
+  font-size: 12px;
+}
+
+.statsShapeColMeta {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.statsShapeCol ul {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+}
+
+.statsShapeCol li {
+  padding: 1px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.statsShapeCol li .statsShapeMark {
+  width: 9px;
+  flex: none;
+  text-align: center;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.statsShapeCol li.isAdd {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.statsShapeCol li.isAdd .statsShapeMark {
+  color: var(--success-fg);
+}
+
+.statsShapeCol li.isGone {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  text-decoration: line-through;
+}
+
+.statsShapeCol li.isGone .statsShapeMark {
+  color: var(--danger-fg);
+}
+
+.statsSchemaMore {
+  padding: 1px 10px;
+}
+
+.statsSchemaMore button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  padding: 2px 4px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.statsSchemaMore button:hover {
+  color: var(--accent-hover);
+}
+
+.statsSchemaChev {
+  /* Flex centres the element boxes, not the glyphs inside them, and U+25BE's
+     ink sits ~1.2px below the label's ink centre in this repo's mono stack
+     (measured from canvas actualBoundingBox metrics). U+2304, used before,
+     sat 3.7px low — a nudge that large would not survive a font substitution,
+     which is why the glyph changed rather than the offset growing. */
+  position: relative;
+  top: -1px;
+  line-height: 1;
+}
+
+.statsShapeRecords {
+  margin-top: 4px;
+  align-self: flex-start;
+  font: inherit;
+  font-size: 10.5px;
+  padding: 2px 8px;
+  cursor: pointer;
+  color: var(--accent);
+  background: var(--bg-card);
+  /* --info-border, not --accent-border: undefined in this stylesheet. */
+  border: 1px solid var(--info-border);
+  border-radius: 5px;
+}
+
+.statsShapeRecords:hover {
+  background: var(--accent);
+  color: #fff;
+}

@@ -17,6 +17,7 @@ import OverviewPanel from './OverviewPanel.jsx';
 import UndoToast from './UndoToast.jsx';
 import CollectionEmptyState from './CollectionEmptyState.jsx';
 import shell from '../../ui/AppShell.module.css';
+import styles from './App.module.css';
 
 export default function App({ connected }: { connected: boolean | null }) {
   return (
@@ -30,15 +31,15 @@ export default function App({ connected }: { connected: boolean | null }) {
         <LoadingOverlay />
         <Modal />
         {activeView.value === 'operations' ? (
-          <div class="main-content">
+          <div class={styles.mainContent}>
             <UploadsPanel />
           </div>
         ) : activeView.value === 'overview' ? (
-          <div class="main-content">
+          <div class={styles.mainContent}>
             <OverviewPanel />
           </div>
         ) : selectedCollection.value ? (
-          <div class="main-content">
+          <div class={styles.mainContent}>
             <TabBar />
             {activePanel.value === 'data' && <DataPanel />}
             {activePanel.value === 'stats' && <StatsPanel />}

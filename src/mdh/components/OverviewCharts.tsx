@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'preact/hooks';
 import { buildTreemap, TOP_N, SCALE_MODES } from '../overviewCharts.js';
+import styles from './OverviewCharts.module.css';
 
 const CHART_H = 240;
 // Fallback width so the treemap renders immediately on first paint even before
@@ -146,17 +147,17 @@ export default function OverviewCharts({
   }
 
   return (
-    <div class="overview-charts">
-      <div class="overview-charts-body">
-        <div class="oc-col oc-col-map">
-          <div class="oc-label">
+    <div class={styles.overviewCharts}>
+      <div class={styles.overviewChartsBody}>
+        <div class={`${styles.ocCol} ${styles.ocColMap}`}>
+          <div class={styles.ocLabel}>
             <span>Storage map</span>
-            <span class="oc-scale-toggle">
+            <span class={styles.ocScaleToggle}>
               {SCALE_MODES.map((m) => (
                 <button
                   key={m}
                   type="button"
-                  class={mode === m ? 'is-active' : ''}
+                  class={mode === m ? styles.isActive : ''}
                   title={SCALE_TITLE[m]}
                   onClick={() => pickMode(m)}
                 >
@@ -166,9 +167,9 @@ export default function OverviewCharts({
             </span>
           </div>
 
-          <div class="oc-treemap" ref={tmRef} style={{ height: `${CHART_H}px` }}>
+          <div class={styles.ocTreemap} ref={tmRef} style={{ height: `${CHART_H}px` }}>
             {tiles.length === 0 ? (
-              <div class="oc-placeholder" style={{ height: `${CHART_H}px` }}>
+              <div class={styles.ocPlaceholder} style={{ height: `${CHART_H}px` }}>
                 {settled ? 'No storage data' : `Charting${'…'}`}
               </div>
             ) : (
@@ -196,9 +197,9 @@ export default function OverviewCharts({
                   <div
                     key={t.name}
                     class={
-                      'oc-tile' +
-                      (t.isOther ? ' is-other' : '') +
-                      (hovered === t.name ? ' is-hover' : '')
+                      styles.ocTile +
+                      (t.isOther ? ` ${styles.isOther}` : '') +
+                      (hovered === t.name ? ` ${styles.isHover}` : '')
                     }
                     style={{
                       left: `${t.x}px`,
@@ -218,10 +219,12 @@ export default function OverviewCharts({
                     }}
                   >
                     {showLabel && (
-                      <div class={'oc-tile-name' + (t.w > 120 ? ' is-lg' : '')}>{t.name}</div>
+                      <div class={styles.ocTileName + (t.w > 120 ? ` ${styles.isLg}` : '')}>
+                        {t.name}
+                      </div>
                     )}
                     {showLabel && showSub && (
-                      <div class="oc-tile-sub">{formatBytes(t.footprint)}</div>
+                      <div class={styles.ocTileSub}>{formatBytes(t.footprint)}</div>
                     )}
                   </div>
                 );
@@ -229,17 +232,17 @@ export default function OverviewCharts({
             )}
           </div>
 
-          <div class="oc-legend">
+          <div class={styles.ocLegend}>
             <span>data-heavy</span>
-            <div class="oc-legend-bar" />
+            <div class={styles.ocLegendBar} />
             <span>index-heavy</span>
           </div>
-          <div class="oc-note">{SCALE_NOTE[mode]}</div>
+          <div class={styles.ocNote}>{SCALE_NOTE[mode]}</div>
         </div>
 
         {tip && (
           <div
-            class="oc-tooltip"
+            class={styles.ocTooltip}
             ref={tipRef}
             style={{ left: `${tip.x + 14}px`, top: `${tip.y + 14}px` }}
           >

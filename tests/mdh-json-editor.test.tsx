@@ -12,6 +12,7 @@ import { readFileSync } from 'fs';
 import { h, render, Fragment } from 'preact';
 import JsonEditor from '../src/mdh/components/JsonEditor.jsx';
 import type { JsonEditorHandle } from '../src/mdh/components/JsonEditor.jsx';
+import pnl from '../src/mdh/components/panel.module.css';
 
 function mount() {
   const root = document.createElement('div');
@@ -80,25 +81,29 @@ describe('JsonEditor — fill', () => {
 
   it('opts the container into the fill rule', () => {
     const root = mountEditor({ value: '{}', fill: true });
-    expect(root.querySelector('.json-editor')!.classList.contains('json-editor-fill')).toBe(true);
+    expect(root.querySelector(`.${pnl.jsonEditor}`)!.classList.contains(pnl.jsonEditorFill)).toBe(
+      true,
+    );
   });
 
   it('is off by default, so every other consumer keeps growing with its content', () => {
     const root = mountEditor({ value: '{}' });
-    expect(root.querySelector('.json-editor')!.classList.contains('json-editor-fill')).toBe(false);
+    expect(root.querySelector(`.${pnl.jsonEditor}`)!.classList.contains(pnl.jsonEditorFill)).toBe(
+      false,
+    );
   });
 
   it('composes with compact rather than replacing it', () => {
     const root = mountEditor({ value: '{}', compact: true, fill: true });
-    const cls = root.querySelector('.json-editor')!.className;
-    expect(cls).toContain('json-editor-compact');
-    expect(cls).toContain('json-editor-fill');
+    const cls = root.querySelector(`.${pnl.jsonEditor}`)!.className;
+    expect(cls).toContain(pnl.jsonEditorCompact);
+    expect(cls).toContain(pnl.jsonEditorFill);
   });
 
   // The class alone does nothing: `.cm-scroller`'s height: 100% only resolves
   // once .cm-editor may shrink below its content, and that rule is the opt-in.
   it('keeps the rule the class depends on', () => {
-    const css = readFileSync('src/mdh/legacy.css', 'utf8');
-    expect(css).toMatch(/\.json-editor-fill \.cm-editor\s*\{[^}]*min-height:\s*0/);
+    const css = readFileSync('src/mdh/components/panel.module.css', 'utf8');
+    expect(css).toMatch(/\.jsonEditorFill :global\(\.cm-editor\)\s*\{[^}]*min-height:\s*0/);
   });
 });

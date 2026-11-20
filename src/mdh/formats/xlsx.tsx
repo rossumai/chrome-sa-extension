@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { parseXlsx } from '../xlsx.js';
 import { Segmented, Toggle } from '../components/ImportControls.jsx';
+import fmtCss from './formats.module.css';
 
 // The options bag every format's Configure controls edit, plus its setter.
 type ControlsProps = { opts: Record<string, any>; setOpt: (key: string, value: any) => void };
@@ -22,14 +23,14 @@ const EMPTY_SEG = [
 function ConfigureControls({ opts, setOpt, parsed }: ControlsProps & { parsed?: any }) {
   const sheets = parsed?.sheets || [];
   return (
-    <div class="csv-toolbar">
+    <div class={fmtCss.csvToolbar}>
       {sheets.length > 1 && (
-        <span class="csv-tb-item">
-          <span class="csv-tb-k" title="Which worksheet to import.">
+        <span class={fmtCss.csvTbItem}>
+          <span class={fmtCss.csvTbK} title="Which worksheet to import.">
             Sheet
           </span>
           <select
-            class="xlsx-sheet-select"
+            class={fmtCss.xlsxSheetSelect}
             data-testid="xlsx-sheet"
             value={opts.sheet ?? sheets[0]}
             onChange={(e: any) => setOpt('sheet', e.target.value)}
@@ -42,8 +43,8 @@ function ConfigureControls({ opts, setOpt, parsed }: ControlsProps & { parsed?: 
           </select>
         </span>
       )}
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="Use row 1 as field names.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="Use row 1 as field names.">
           First row is a header
         </span>
         <Toggle
@@ -53,9 +54,9 @@ function ConfigureControls({ opts, setOpt, parsed }: ControlsProps & { parsed?: 
           title="Use row 1 as field names."
         />
       </span>
-      <span class="csv-tb-item">
+      <span class={fmtCss.csvTbItem}>
         <span
-          class="csv-tb-k"
+          class={fmtCss.csvTbK}
           title="Rebuild objects and arrays the export flattened, and match values to the types this collection already uses."
         >
           Restore structure {'&'} types
@@ -67,8 +68,8 @@ function ConfigureControls({ opts, setOpt, parsed }: ControlsProps & { parsed?: 
           title="Rebuild what the export flattened."
         />
       </span>
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="What an empty cell becomes.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="What an empty cell becomes.">
           Empty cell {'→'}
         </span>
         <Segmented
@@ -79,8 +80,8 @@ function ConfigureControls({ opts, setOpt, parsed }: ControlsProps & { parsed?: 
           onChange={(v) => setOpt('emptyMode', v)}
         />
       </span>
-      <span class="csv-tb-item">
-        <span class="csv-tb-k" title="Strip leading/trailing whitespace around text cells.">
+      <span class={fmtCss.csvTbItem}>
+        <span class={fmtCss.csvTbK} title="Strip leading/trailing whitespace around text cells.">
           Trim values
         </span>
         <Toggle

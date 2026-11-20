@@ -7,6 +7,7 @@ import JsonEditor from './JsonEditor.jsx';
 import CopyButton from '../../ui/CopyButton.jsx';
 import styles from './SearchIndexBuilder.module.css';
 import SearchIndexCheck from './SearchIndexCheck.jsx';
+import pnl from './panel.module.css';
 
 export default function IndexCard({
   name,
@@ -56,25 +57,25 @@ export default function IndexCard({
   return (
     <div
       class={
-        'record-card' +
-        (expanded ? ' record-card-expanded' : '') +
+        pnl.recordCard +
+        (expanded ? ` ${pnl.recordCardExpanded}` : '') +
         (cardClass ? ' ' + cardClass : '')
       }
     >
       <div
-        class="record-card-header"
+        class={pnl.recordCardHeader}
         style="cursor:pointer"
         onClick={(e: any) => {
-          if (!e.target.closest('.record-actions')) setExpanded(!expanded);
+          if (!e.target.closest(`.${pnl.recordActions}`)) setExpanded(!expanded);
         }}
       >
-        <span class="record-chevron">{expanded ? '\u25BC' : '\u25B6'}</span>
-        <span class="record-summary">
+        <span class={pnl.recordChevron}>{expanded ? '\u25BC' : '\u25B6'}</span>
+        <span class={pnl.recordSummary}>
           <strong>{name}</strong>
           {summary ? <span style="margin-left:8px">{summary}</span> : null}
           {badges.map(({ text, cls, title }) => (
             <span
-              class={'index-badge' + (cls ? ' ' + cls : '')}
+              class={pnl.indexBadge + (cls ? ' ' + cls : '')}
               style="margin-left:6px"
               title={title || undefined}
             >
@@ -82,24 +83,27 @@ export default function IndexCard({
             </span>
           ))}
         </span>
-        {meta && <span class="index-card-meta">{meta}</span>}
-        <span class="record-actions">
+        {meta && <span class={pnl.indexCardMeta}>{meta}</span>}
+        <span class={pnl.recordActions}>
           {onEdit && (
-            <button class="action-edit" onClick={onEdit}>
+            <button class={pnl.actionEdit} onClick={onEdit}>
               Edit
             </button>
           )}
           {definition && (
-            <CopyButton className="action-copy" text={() => JSON.stringify(definition, null, 2)} />
+            <CopyButton
+              className={pnl.actionCopy}
+              text={() => JSON.stringify(definition, null, 2)}
+            />
           )}
           {canDrop && onDrop && (
-            <button class="action-delete" onClick={handleDrop}>
+            <button class={pnl.actionDelete} onClick={handleDrop}>
               Del
             </button>
           )}
         </span>
       </div>
-      {notice && <div class="record-card-notice">{notice}</div>}
+      {notice && <div class={pnl.recordCardNotice}>{notice}</div>}
       {onCheck ? (
         <SearchIndexCheck onCheck={onCheck} />
       ) : (
@@ -110,7 +114,7 @@ export default function IndexCard({
         )
       )}
       {expanded && definition && (
-        <div class="record-card-body">
+        <div class={pnl.recordCardBody}>
           <JsonEditor value={JSON.stringify(definition, null, 2)} compact readOnly minHeight="0" />
         </div>
       )}

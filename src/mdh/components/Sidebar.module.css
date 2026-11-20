@@ -1,0 +1,320 @@
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 10px 8px;
+}
+
+.sidebarTitleGroup {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.sidebarTitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+
+.sidebarHeaderActions {
+  display: flex;
+  gap: 2px;
+}
+
+/* Collections name filter — the sidebar's own layout around the shared <FilterInput>; the
+   box itself is owned by src/ui/FilterInput.module.css. */
+
+.collectionFilter {
+  padding: 0 10px 8px;
+}
+
+.collectionFilterEmpty {
+  padding: 4px 12px 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.collectionList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.collectionItem {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  margin: 0 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-radius: var(--radius);
+  transition:
+    background 0.1s,
+    color 0.1s;
+  position: relative;
+}
+
+.collectionItem:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.collectionItem.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.collectionItem.active:hover {
+  background: var(--accent-hover);
+}
+
+.collectionItemName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* The run a name filter matched. Weight and one step of contrast, nothing more: across
+   ninety rows a heavy bold reads as noise rather than as a hint. On the selected row the
+   colour is inherited, since white-on-accent already has all the contrast there is. */
+
+.collectionItemHit {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.collectionItem.active .collectionItemHit {
+  color: inherit;
+}
+
+.collectionItemActions {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: inherit;
+  padding-left: 4px;
+}
+
+.collectionItem:hover .collectionItemActions {
+  opacity: 1;
+}
+
+.collectionItem.active .collectionItemActions {
+  opacity: 0.7;
+}
+
+.collectionItem.active:hover .collectionItemActions {
+  opacity: 1;
+}
+
+.collectionItem.menuOpen .collectionItemActions {
+  opacity: 1;
+}
+
+.collectionItem.menuOpen {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.collectionItem.active.menuOpen {
+  background: var(--accent-hover);
+  color: #fff;
+}
+
+.collectionActionBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.1s,
+    color 0.1s;
+}
+
+.collectionActionBtn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
+}
+
+.collectionItem.active .collectionActionBtn {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.collectionItem.active .collectionActionBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .collectionActionBtn:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.collectionActionMenu {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow:
+    var(--shadow),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 140px;
+  z-index: 50;
+  padding: 4px 0;
+}
+
+.sidebarCount {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.sidebarFooter {
+  border-top: 1px solid var(--border);
+  padding: 6px 0;
+}
+
+.sidebarNavItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  margin: 0 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-radius: var(--radius);
+  transition:
+    background 0.1s,
+    color 0.1s;
+}
+
+.sidebarNavItem:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebarNavItem.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.sidebarNavItem.active:hover {
+  background: var(--accent-hover);
+}
+
+/* This extension's own collections: an expandable group pinned BELOW the customer's list
+   (owner, 2026-08-18). `margin-top: auto` is what pins it — the sidebar is a flex column, so
+   the group sits at the bottom however short the list above it is, instead of floating
+   directly under the last row. */
+
+.collectionHiddenGroup {
+  flex: none;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+}
+
+/* `margin-top: auto` parks the group at the foot of the sidebar, which is right when it is a
+   footer under a full list. While filtering it can hold the ONLY match, and three rules then
+   conspire to strand that row ~500px below the box that produced it: the empty main list
+   absorbs the slack as `flex: 1`, and the auto margin pushes the group past it. So when a
+   filter is active AND the main list is empty, the list stops growing and the group loses its
+   margin — with the slack handed to the nav footer instead, which keeps it pinned to the
+   bottom rather than floating up under the group. Only that case changes; a filtered list
+   WITH rows keeps `flex: 1`, since it owns the scroll range. */
+
+.sidebarFiltering .collectionList.isEmpty {
+  flex: none;
+}
+
+.sidebarFiltering .collectionList.isEmpty ~ .collectionHiddenGroup {
+  margin-top: 0;
+}
+
+.sidebarFiltering .collectionList.isEmpty ~ .sidebarFooter {
+  margin-top: auto;
+}
+
+/* Inert while filtering (the group is force-open there), so it should not read as clickable.
+   Kept at full opacity: it is still the label for rows that are on screen. */
+
+.collectionHiddenToggle:disabled {
+  cursor: default;
+}
+
+.collectionHiddenToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 12px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: left;
+  letter-spacing: 0.02em;
+}
+
+.collectionHiddenToggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.collectionHiddenCaret {
+  flex: none;
+  width: 9px;
+  opacity: 0.8;
+}
+
+.collectionHiddenLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Open: the rows scroll on their own rather than growing the group without bound, and are
+   tinted so it is obvious these are not the customer's datasets. */
+
+.collectionHiddenGroup.open > .collectionList {
+  max-height: 176px;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  background: var(--bg-hover);
+}

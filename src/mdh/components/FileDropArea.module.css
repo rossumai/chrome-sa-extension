@@ -1,0 +1,18 @@
+.fileInputArea {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.fileInputArea:hover {
+  border-color: var(--accent);
+}
+
+.fileInputArea.dragOver {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}

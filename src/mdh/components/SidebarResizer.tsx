@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
+import styles from './SidebarResizer.module.css';
 
 export default function SidebarResizer() {
   const resizerRef = useRef<HTMLDivElement | null>(null);
@@ -19,7 +20,7 @@ export default function SidebarResizer() {
     function onMouseDown(e: MouseEvent) {
       const startX = e.clientX;
       const startWidth = sidebar.getBoundingClientRect().width;
-      resizer.classList.add('dragging');
+      resizer.classList.add(styles.dragging);
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
 
@@ -30,7 +31,7 @@ export default function SidebarResizer() {
       }
 
       function onUp() {
-        resizer.classList.remove('dragging');
+        resizer.classList.remove(styles.dragging);
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
         document.removeEventListener('mousemove', onMove);
@@ -46,5 +47,5 @@ export default function SidebarResizer() {
     return () => resizer.removeEventListener('mousedown', onMouseDown);
   }, []);
 
-  return <div ref={resizerRef} class="sidebar-resizer"></div>;
+  return <div ref={resizerRef} class={styles.sidebarResizer}></div>;
 }

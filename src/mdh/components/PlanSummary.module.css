@@ -1,0 +1,73 @@
+.importSteps {
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.importSteps ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.importSteps strong {
+  color: var(--text-primary);
+}
+
+.importSteps code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-hover);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--text-primary);
+}
+
+/* Plan summary (shared import/export): one-line outcome + Details expander */
+
+.planSummary {
+  margin-top: 12px;
+}
+
+.planSummaryLine {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.planSummaryText {
+  flex: 1;
+}
+
+.planSummaryText code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-hover);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--text-primary);
+}
+
+.planSummaryToggle {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.planSummaryToggle:hover {
+  text-decoration: underline;
+}
+
+.planSummary .importSteps {
+  margin-top: 8px;
+}

@@ -8,6 +8,7 @@ import { usePipeline } from '../src/mdh/hooks/usePipeline.js';
 import { lookupVarName, boundVarNames } from '../src/mdh/placeholderSyntax.js';
 import { mapPlaceholdersToFields } from '../src/mdh/placeholderFields.js';
 import PlaceholderInputs from '../src/mdh/components/PlaceholderInputs.jsx';
+import placeholderInputsCss from '../src/mdh/components/PlaceholderInputs.module.css';
 
 function getPipeline(): any {
   let api: any;
@@ -118,7 +119,9 @@ describe('PlaceholderInputs label', () => {
       />,
       root,
     );
-    const labels = [...root.querySelectorAll('.placeholder-name')].map((e) => e.textContent);
+    const labels = [...root.querySelectorAll(`.${placeholderInputsCss.placeholderName}`)].map(
+      (e) => e.textContent,
+    );
     expect(labels).toEqual(['$$va', '{vb}']);
   });
 });

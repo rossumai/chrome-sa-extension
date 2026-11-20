@@ -1,4 +1,5 @@
 import { formatTime } from './relativeTime.js';
+import pnl from './components/panel.module.css';
 
 // Pure presentation logic for MDH V2 search indexes. The panel is a thin layer
 // over these; none of them makes a request.
@@ -51,11 +52,11 @@ export function statusBadge(status: any): { text: string; cls: string; title: st
   const upper = String(status).toUpperCase();
   const cls =
     upper === 'READY'
-      ? 'index-badge-ready'
+      ? pnl.indexBadgeReady
       : isTransitional(upper)
-        ? 'index-badge-pending'
+        ? pnl.indexBadgePending
         : upper === 'FAILED' || upper === 'STALE'
-          ? 'index-badge-failed'
+          ? pnl.indexBadgeFailed
           : '';
   return { text: upper.toLowerCase().replace(/_/g, ' '), cls, title: STATUS_TITLES[upper] || '' };
 }

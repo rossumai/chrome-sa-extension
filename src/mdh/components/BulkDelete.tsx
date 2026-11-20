@@ -8,6 +8,7 @@ import * as api from '../api.js';
 import { previewMatch, runBulkDelete, selectionToFilter, UNDO_LIMIT } from '../bulkOps.js';
 import type { JsonEditorHandle } from './JsonEditor.jsx';
 import ctl from '../../ui/controls.module.css';
+import bulkCss from './bulk.module.css';
 
 const PREVIEW_DEBOUNCE_MS = 400;
 
@@ -159,7 +160,7 @@ function Body({
     <ModalBody rootRef={rootRef}>
       <ModalFieldLabel>Filter:</ModalFieldLabel>
       {isSelection ? (
-        <pre class="bulk-filter-readonly-pre">{JSON.stringify(effectiveFilter, null, 2)}</pre>
+        <pre class={bulkCss.bulkFilterReadonlyPre}>{JSON.stringify(effectiveFilter, null, 2)}</pre>
       ) : (
         <JsonEditor
           value={filterJson}
@@ -171,38 +172,38 @@ function Body({
         />
       )}
 
-      <div class="bulk-preview">
-        {previewing && <div class="bulk-preview-loading">{'Previewing…'}</div>}
-        {previewError && <div class="bulk-preview-error">{previewError}</div>}
+      <div class={bulkCss.bulkPreview}>
+        {previewing && <div class={bulkCss.bulkPreviewLoading}>{'Previewing…'}</div>}
+        {previewError && <div class={bulkCss.bulkPreviewError}>{previewError}</div>}
         {!previewing && !previewError && (
-          <div data-testid="bulk-preview-count" class="bulk-preview-count">
+          <div data-testid="bulk-preview-count" class={bulkCss.bulkPreviewCount}>
             {count} record{count !== 1 ? 's' : ''} match
           </div>
         )}
         {sample.length > 0 && sample.length < (count as number) && (
-          <div class="bulk-preview-sample-note">
+          <div class={bulkCss.bulkPreviewSampleNote}>
             Preview shows a sample of the first {sample.length}{' '}
             {sample.length === 1 ? 'record' : 'records'} below — the operation will apply to all{' '}
             {count!.toLocaleString()}.
           </div>
         )}
         {sample.length > 0 && (
-          <div class="sample-cards">
+          <div class={bulkCss.sampleCards}>
             {sample.map((doc, i) => (
-              <div class="sample-card sample-card-danger">
-                <div class="sample-card-header">
+              <div class={`${bulkCss.sampleCard} ${bulkCss.sampleCardDanger}`}>
+                <div class={bulkCss.sampleCardHeader}>
                   Document {i + 1}
-                  <span class="sample-card-header-meta">Will be deleted</span>
+                  <span class={bulkCss.sampleCardHeaderMeta}>Will be deleted</span>
                 </div>
-                <pre class="sample-card-body">{JSON.stringify(doc, null, 2)}</pre>
+                <pre class={bulkCss.sampleCardBody}>{JSON.stringify(doc, null, 2)}</pre>
               </div>
             ))}
           </div>
         )}
-        <div class="bulk-undo-note">{undoNote}</div>
+        <div class={bulkCss.bulkUndoNote}>{undoNote}</div>
       </div>
 
-      {resultMsg && <div class="bulk-result">{resultMsg}</div>}
+      {resultMsg && <div class={bulkCss.bulkResult}>{resultMsg}</div>}
 
       <BulkConfirm
         count={count as number}

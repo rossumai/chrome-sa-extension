@@ -42,6 +42,8 @@ import StatsSchema from './StatsSchema.jsx';
 import StatsFieldGrid from './StatsFieldGrid.jsx';
 import ctl from '../../ui/controls.module.css';
 import seg from '../../ui/Segmented.module.css';
+import pnl from './panel.module.css';
+import ov from './OverviewPanel.module.css';
 
 export default function StatsPanel() {
   const [overview, setOverview] = useState<any>(null); // { total, fieldCount }
@@ -382,8 +384,8 @@ export default function StatsPanel() {
   const shownMode = canSample ? statsMode.value : STATS_MODE_EXACT;
 
   return (
-    <div class="panel stats-panel">
-      <div class="toolbar">
+    <div class={`${pnl.panel} stats-panel`}>
+      <div class={pnl.toolbar}>
         <span style="flex:1;font-weight:500">Collection Stats</span>
         <span class={`${seg.root} stats-mode-seg`} role="group" aria-label="Analysis mode">
           {STATS_MODES.map((m) => {
@@ -422,8 +424,8 @@ export default function StatsPanel() {
           })}
         </span>
         {(discovering || running) && (
-          <span class="stats-progress">
-            <span class="stats-progress-spinner" />
+          <span class={pnl.statsProgress}>
+            <span class={pnl.statsProgressSpinner} />
             {discovering ? 'Discovering fields' : `${doneCount} / ${totalChecks} checks`}
           </span>
         )}
@@ -444,18 +446,18 @@ export default function StatsPanel() {
       </div>
 
       {running && (
-        <div class="stats-progress-track">
+        <div class={ov.statsProgressTrack}>
           <div
-            class="stats-progress-fill"
+            class={ov.statsProgressFill}
             style={{ width: `${Math.round((doneCount / totalChecks) * 100)}%` }}
           />
         </div>
       )}
 
-      <div class="stats-scroll" style="display:flex;flex-direction:column;gap:16px">
-        {discovering && <div class="stats-empty">Discovering fields{'…'}</div>}
+      <div class={ov.statsScroll} style="display:flex;flex-direction:column;gap:16px">
+        {discovering && <div class={ov.statsEmpty}>Discovering fields{'…'}</div>}
         {fields.length === 0 && !discovering && (
-          <div class="stats-empty">No fields found in collection</div>
+          <div class={ov.statsEmpty}>No fields found in collection</div>
         )}
 
         {overview && (
@@ -478,8 +480,8 @@ export default function StatsPanel() {
         )}
 
         {running && (
-          <div class="stats-loading-bottom">
-            <span class="stats-progress-spinner" />
+          <div class={pnl.statsLoadingBottom}>
+            <span class={pnl.statsProgressSpinner} />
             {`Loading… ${doneCount} / ${totalChecks} checks complete`}
           </div>
         )}

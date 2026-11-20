@@ -25,6 +25,9 @@ import type { PaginationWindow } from '../pipelineOps.js';
 import ctl from '../../ui/controls.module.css';
 import seg from '../../ui/Segmented.module.css';
 import pg from '../../ui/Pagination.module.css';
+import styles from './RecordList.module.css';
+import pnl from './panel.module.css';
+import menuCss from './toolbarMenu.module.css';
 
 export default function RecordList({
   records,
@@ -217,21 +220,21 @@ export default function RecordList({
 
     if (skip.value > 0) {
       emptyContent = (
-        <div class="record-list-empty">
+        <div class={styles.recordListEmpty}>
           <p>No more records on this page</p>
-          <p class="record-list-empty-hint">Try going back to the previous page</p>
+          <p class={styles.recordListEmptyHint}>Try going back to the previous page</p>
         </div>
       );
     } else if (hasNonTrivialPipeline) {
       emptyContent = (
-        <div class="record-list-empty">
+        <div class={styles.recordListEmpty}>
           <p>0 records match the current query</p>
-          <p class="record-list-empty-hint">Try modifying the pipeline or click Reset</p>
+          <p class={styles.recordListEmptyHint}>Try modifying the pipeline or click Reset</p>
         </div>
       );
     } else {
       emptyContent = (
-        <div class="record-list-empty">
+        <div class={styles.recordListEmpty}>
           <p>No records</p>
         </div>
       );
@@ -248,7 +251,7 @@ export default function RecordList({
 
   return (
     <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
-      <div class="toolbar">
+      <div class={pnl.toolbar}>
         {selectionMode.value ? (
           <SelectionToolbar
             records={records}
@@ -275,7 +278,7 @@ export default function RecordList({
         )}
       </div>
       {selectionMode.value && selectedIds.value.size > 0 && selectionPipelineDirty.value && (
-        <div class="selection-mismatch-banner">
+        <div class={styles.selectionMismatchBanner}>
           {selectedIds.value.size} selected record{selectedIds.value.size !== 1 ? 's' : ''} may no
           longer match the current view.
           <button class={ctl.btnLink} onClick={onViewSelected}>
@@ -293,7 +296,7 @@ export default function RecordList({
           inspectTarget={inspectTarget.value}
         />
       ) : (
-        <div class="record-list" ref={listRef}>
+        <div class={styles.recordList} ref={listRef}>
           {emptyContent}
           {records.length > 0 && view === 'table' && (
             <RecordTable
@@ -330,7 +333,7 @@ export default function RecordList({
       {view !== 'stages' && (
         <div class={pg.root}>
           <span class="record-count">{countText}</span>
-          <span class="pagination-hint">
+          <span class={styles.paginationHint}>
             Click key to sort {'\u00b7'} Click value to filter {'\u00b7'} {ALT_KEY}+click to copy
           </span>
           <div class={pg.controls}>
@@ -399,9 +402,9 @@ function DefaultToolbar({
   const disabledAttr = recordsDisabled ? 'true' : undefined;
   return (
     <div style="display:contents">
-      <div class="toolbar-group">
+      <div class={styles.toolbarGroup}>
         <span
-          class={'toolbar-group' + (recordsDisabled ? ' toolbar-group-disabled' : '')}
+          class={styles.toolbarGroup + (recordsDisabled ? ` ${styles.toolbarGroupDisabled}` : '')}
           title={disabledTitle}
           aria-disabled={disabledAttr}
         >
@@ -416,14 +419,14 @@ function DefaultToolbar({
       </div>
       <div style="flex:1"></div>
       <div
-        class={'toolbar-group' + (recordsDisabled ? ' toolbar-group-disabled' : '')}
+        class={styles.toolbarGroup + (recordsDisabled ? ` ${styles.toolbarGroupDisabled}` : '')}
         title={disabledTitle}
         aria-disabled={disabledAttr}
       >
         <BulkSplitButton onUpdate={onBulkUpdate} onDelete={onBulkDelete} />
         {downloadState ? (
-          <span class="download-progress">
-            <span class="download-progress-text">
+          <span class={styles.downloadProgress}>
+            <span class={styles.downloadProgressText}>
               {downloadState.cancelled
                 ? 'Cancelled'
                 : downloadState.done
@@ -431,20 +434,22 @@ function DefaultToolbar({
                   : `Downloading\u2026 ${downloadState.count}${downloadState.total ? ' / ' + downloadState.total : ''} records${downloadState.filtered ? ' (filtered)' : ''}`}
             </span>
             {!downloadState.cancelled && !downloadState.done && (
-              <span class="download-bar">
+              <span class={styles.downloadBar}>
                 {downloadState.total > 0 ? (
                   <span
-                    class="download-bar-fill"
+                    class={styles.downloadBarFill}
                     style={`width:${Math.min(100, Math.round((downloadState.count / downloadState.total) * 100))}%`}
                   ></span>
                 ) : (
-                  <span class="download-bar-fill download-bar-indeterminate"></span>
+                  <span
+                    class={`${styles.downloadBarFill} ${styles.downloadBarIndeterminate}`}
+                  ></span>
                 )}
               </span>
             )}
             {!downloadState.cancelled && !downloadState.done && (
               <button
-                class="download-cancel-btn"
+                class={styles.downloadCancelBtn}
                 title="Cancel download"
                 onClick={onCancelDownload}
               >
@@ -525,9 +530,9 @@ function BulkSplitButton({ onUpdate, onDelete }: { onUpdate: () => void; onDelet
         Bulk {'\u25BE'}
       </button>
       {open && (
-        <div class="toolbar-more-menu">
+        <div class={`toolbar-more-menu ${menuCss.toolbarMoreMenu}`}>
           <button
-            class="toolbar-menu-item"
+            class={menuCss.toolbarMenuItem}
             onClick={() => {
               setOpen(false);
               onUpdate();
@@ -536,7 +541,7 @@ function BulkSplitButton({ onUpdate, onDelete }: { onUpdate: () => void; onDelet
             Update by filter
           </button>
           <button
-            class="toolbar-menu-item toolbar-menu-danger"
+            class={`${menuCss.toolbarMenuItem} ${menuCss.toolbarMenuDanger}`}
             onClick={() => {
               setOpen(false);
               onDelete();
@@ -583,7 +588,7 @@ function SelectionToolbar({
 
   return (
     <div style="display:contents">
-      <div class="toolbar-group">
+      <div class={styles.toolbarGroup}>
         <button class={`${ctl.btn} ${ctl.btnSm}`} onClick={onExit}>
           Cancel
         </button>
@@ -596,19 +601,19 @@ function SelectionToolbar({
         </button>
         <div style="position:relative">
           <span
-            class="selection-count"
+            class={styles.selectionCount}
             onClick={() => setPopoverOpen((v) => !v)}
             title="Click to review selected ids"
           >
             {total} selected
           </span>
           {popoverOpen && total > 0 && (
-            <div class="selection-popover">
+            <div class={styles.selectionPopover}>
               {[...ids.keys()].map((id) => (
-                <div class="selection-popover-row">
-                  <span class="selection-popover-id">{id}</span>
+                <div class={styles.selectionPopoverRow}>
+                  <span class={styles.selectionPopoverId}>{id}</span>
                   <button
-                    class="selection-popover-remove"
+                    class={styles.selectionPopoverRemove}
                     title="Remove from selection"
                     onClick={() => removeId(id)}
                   >
@@ -616,7 +621,7 @@ function SelectionToolbar({
                   </button>
                 </div>
               ))}
-              <div class="selection-popover-actions">
+              <div class={styles.selectionPopoverActions}>
                 <button
                   class={ctl.btnLink}
                   onClick={() => {
@@ -646,7 +651,7 @@ function SelectionToolbar({
         )}
       </div>
       <div style="flex:1"></div>
-      <div class="toolbar-group">
+      <div class={styles.toolbarGroup}>
         <button class={`${ctl.btn} ${ctl.btnSm}`} disabled={total === 0} onClick={onBulkUpdate}>
           Edit selected
         </button>

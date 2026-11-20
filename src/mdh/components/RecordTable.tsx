@@ -13,6 +13,8 @@ import { computeColumnWidths, clampAutoFit } from '../recordTableLayout.js';
 import JsonTree, { CopyButton } from './JsonTree.jsx';
 import SpecialText from './SpecialText.jsx';
 import type { SortFilterControls } from '../hooks/usePipeline.js';
+import styles from './RecordTable.module.css';
+import jv from './jsonValues.module.css';
 
 const DEFAULT_COL_WIDTH = 180;
 const MIN_COL_WIDTH = 60;
@@ -83,7 +85,7 @@ export default function RecordTable({
     const dir = sortState && sortState[col];
     if (!dir) return null;
     return (
-      <span class={'record-table-sort-badge ' + (dir === 1 ? 'asc' : 'desc')}>
+      <span class={`${styles.recordTableSortBadge} ` + (dir === 1 ? styles.asc : styles.desc)}>
         {dir === 1 ? '↑' : '↓'}
       </span>
     );
@@ -122,7 +124,7 @@ export default function RecordTable({
     const widths: Record<string, number> = freezeNonLast(th);
     const startX = e.clientX;
     const startW = widths[col] != null ? widths[col] : DEFAULT_COL_WIDTH;
-    handle.classList.add('dragging');
+    handle.classList.add(jv.dragging);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
 
@@ -132,7 +134,7 @@ export default function RecordTable({
       setColWidths(colWidthsRef.current);
     }
     function onUp() {
-      handle.classList.remove('dragging');
+      handle.classList.remove(jv.dragging);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       document.removeEventListener('mousemove', onMove);
@@ -153,7 +155,7 @@ export default function RecordTable({
   // so they're skipped.
   function measureColumnContent(table: any, colPos: any, label: any) {
     const ghost = document.createElement('table');
-    ghost.className = 'record-table';
+    ghost.className = jv.recordTable;
     ghost.style.cssText =
       'position:fixed;left:-99999px;top:0;visibility:hidden;table-layout:auto;width:auto;min-width:0;';
     const tbody = document.createElement('tbody');
@@ -166,7 +168,7 @@ export default function RecordTable({
 
     table.querySelectorAll('tbody tr').forEach((tr: any) => {
       const cell = tr.children[colPos];
-      if (!cell || cell.classList.contains('record-table-cell-expanded')) return;
+      if (!cell || cell.classList.contains(jv.recordTableCellExpanded)) return;
       const tr2 = document.createElement('tr');
       tr2.appendChild(cell.cloneNode(true));
       tbody.appendChild(tr2);
@@ -212,24 +214,24 @@ export default function RecordTable({
       return (
         <td
           key={col}
-          class={'record-table-cell-complex' + (isExp ? ' record-table-cell-expanded' : '')}
+          class={'record-table-cell-complex' + (isExp ? ` ${jv.recordTableCellExpanded}` : '')}
         >
-          <div class="record-table-cell-inner">
+          <div class={jv.recordTableCellInner}>
             <span
-              class="record-table-badge"
+              class={jv.recordTableBadge}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleExpand(key);
               }}
               title={isExp ? 'Collapse' : 'Expand'}
             >
-              <span class="record-table-caret">{isExp ? '▼' : '▶'}</span>
+              <span class={styles.recordTableCaret}>{isExp ? '▼' : '▶'}</span>
               {' ' + displayValue(value)}
             </span>
             <CopyButton getText={() => JSON.stringify(value, null, 2)} kind="json" />
           </div>
           {isExp && (
-            <div class="record-table-nested">
+            <div class={styles.recordTableNested}>
               <JsonTree
                 data={value}
                 depth={0}
@@ -251,15 +253,17 @@ export default function RecordTable({
       const formatted = formatEjsonValue(value, ejson);
       return (
         <td key={col}>
-          <div class="record-table-cell-inner">
+          <div class={jv.recordTableCellInner}>
             <span
               class={
-                'record-table-value ' + info.css + (filtered ? ' json-tree-value-filtered' : '')
+                `${jv.recordTableValue} ` +
+                info.css +
+                (filtered ? ` ${jv.jsonTreeValueFiltered}` : '')
               }
             >
               {formatted}
             </span>
-            <span class={'value-type-tag ' + info.css} title={info.label}>
+            <span class={`${jv.valueTypeTag} ` + info.css} title={info.label}>
               {info.short}
             </span>
             <CopyButton getText={() => copyTextFor(value)} kind="value" />
@@ -273,8 +277,8 @@ export default function RecordTable({
     if (!Object.prototype.hasOwnProperty.call(rec, col) || value === undefined) {
       return (
         <td key={col}>
-          <div class="record-table-cell-inner">
-            <span class="record-table-value json-tree-value-null" title="field omitted">
+          <div class={jv.recordTableCellInner}>
+            <span class={`${jv.recordTableValue} ${jv.jsonTreeValueNull}`} title="field omitted">
               {'—'}
             </span>
           </div>
@@ -289,10 +293,10 @@ export default function RecordTable({
     // yields the full value. CELL_TEXT_CAP only bounds the DOM for huge strings.
     let inner;
     if (value === null) {
-      inner = <span class="record-table-value json-tree-value-null">null</span>;
+      inner = <span class={`${jv.recordTableValue} ${jv.jsonTreeValueNull}`}>null</span>;
     } else if (value === '') {
       inner = (
-        <span class="record-table-value json-tree-value-null" title="empty string">
+        <span class={`${jv.recordTableValue} ${jv.jsonTreeValueNull}`} title="empty string">
           (empty)
         </span>
       );
@@ -300,8 +304,8 @@ export default function RecordTable({
       inner = (
         <span
           class={
-            'record-table-value json-tree-value-number' +
-            (filtered ? ' json-tree-value-filtered' : '')
+            `${jv.recordTableValue} ${jv.jsonTreeValueNumber}` +
+            (filtered ? ` ${jv.jsonTreeValueFiltered}` : '')
           }
         >
           {String(value)}
@@ -311,8 +315,8 @@ export default function RecordTable({
       inner = (
         <span
           class={
-            'record-table-value json-tree-value-bool' +
-            (filtered ? ' json-tree-value-filtered' : '')
+            `${jv.recordTableValue} ${jv.jsonTreeValueBool}` +
+            (filtered ? ` ${jv.jsonTreeValueFiltered}` : '')
           }
         >
           {String(value)}
@@ -320,13 +324,13 @@ export default function RecordTable({
       );
     } else if (typeof value === 'string') {
       inner = (
-        <span class={'record-table-value' + (filtered ? ' json-tree-value-filtered' : '')}>
+        <span class={jv.recordTableValue + (filtered ? ` ${jv.jsonTreeValueFiltered}` : '')}>
           <SpecialText value={value} quote limit={CELL_TEXT_CAP} />
         </span>
       );
     } else {
       inner = (
-        <span class={'record-table-value' + (filtered ? ' json-tree-value-filtered' : '')}>
+        <span class={jv.recordTableValue + (filtered ? ` ${jv.jsonTreeValueFiltered}` : '')}>
           {displayValue(value)}
         </span>
       );
@@ -335,11 +339,11 @@ export default function RecordTable({
     return (
       <td
         key={col}
-        class="record-table-cell-clickable"
+        class={jv.recordTableCellClickable}
         onClick={() => onFilter(col, value)}
         title={filtered ? `Filtering by ${col} — click to remove` : `Click to filter by ${col}`}
       >
-        <div class="record-table-cell-inner">
+        <div class={jv.recordTableCellInner}>
           {inner}
           <CopyButton getText={() => copyTextFor(value)} kind="value" />
         </div>
@@ -363,8 +367,8 @@ export default function RecordTable({
   }
 
   return (
-    <div class="record-table-wrap" ref={wrapRef} style="overflow:auto">
-      <table class="record-table">
+    <div class={jv.recordTableWrap} ref={wrapRef} style="overflow:auto">
+      <table class={jv.recordTable}>
         <colgroup>
           {selecting && <col style="width:36px" />}
           {columns.map((col, idx) => (
@@ -373,7 +377,7 @@ export default function RecordTable({
         </colgroup>
         <thead>
           <tr>
-            {selecting && <th class="record-table-check" aria-label="select"></th>}
+            {selecting && <th class={jv.recordTableCheck} aria-label="select"></th>}
             {columns.map((col, idx) => (
               <th
                 key={col}
@@ -385,7 +389,7 @@ export default function RecordTable({
                 {sortBadge(col)}
                 {idx !== columns.length - 1 && (
                   <span
-                    class="col-resizer"
+                    class={jv.colResizer}
                     title="Drag to resize · double-click to fit content"
                     onMouseDown={(e) => startColResize(col, e)}
                     onClick={(e) => e.stopPropagation()}
@@ -403,13 +407,13 @@ export default function RecordTable({
           {records.map((rec, i) => (
             <tr
               key={i}
-              class={selecting && isRecordSelected(rec) ? 'record-table-row-selected' : undefined}
+              class={selecting && isRecordSelected(rec) ? jv.recordTableRowSelected : undefined}
             >
               {selecting && (
-                <td class="record-table-check">
+                <td class={jv.recordTableCheck}>
                   <input
                     type="checkbox"
-                    class="record-checkbox"
+                    class={jv.recordCheckbox}
                     checked={isRecordSelected(rec)}
                     onClick={(e) => {
                       e.stopPropagation();
