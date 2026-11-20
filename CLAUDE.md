@@ -519,15 +519,6 @@ opened, because its form, log and a deploy in flight live in component state.
   it, because tsc must pass without the package. For the same reason the glue is loaded at
   run time with `import(chrome.runtime.getURL(…))`, which esbuild leaves alone in the iife
   bundle.
-
-**Help window** (`src/help/`) — A movable, resizable floating window showing in-app help for pages
-that opt in. The window itself (`HelpWindow`) is a shared component; help content is per-app.
-`HelpFigure` renders the real UI components frozen as figures with numbered pin callouts at the
-top-right corner of each target (set by `data-help` attributes on the live components). Figures
-scale to fit the window width. `tests/cib-help.test.tsx` asserts every callout target resolves; a
-missing `data-help` target renders no pin (only its note). The window's rectangle is remembered in
-`helpWindowRect` (default: 480px wide, docked right at y=48, h = vh − 48 − 12; min 360×320). Renaming
-a `data-help` attribute breaks the test, not the render.
 - **SFTP** (`src/sftp/`) — browse the SFTP servers an org imports from and exports to, behind
   `experimentalUnlocked` like the Academy and rdc. **An extension cannot open a TCP socket**
   (`chrome.sockets` is Chrome Apps only, Direct Sockets is for Isolated Web Apps, and `fetch`
@@ -577,6 +568,15 @@ a `data-help` attribute breaks the test, not the render.
   strip (`arrivals.ts`: files per day over 14 days, weekdays with none after the first
   arrival called out), the file list, and a preview pane (`preview.ts`: CSV as a table, text
   as text, binary refused). Spec: `2026-11-20-sftp-console-app-design.md`.
+
+**Help window** (`src/help/`) — A movable, resizable floating window showing in-app help for pages
+that opt in. The window itself (`HelpWindow`) is a shared component; help content is per-app.
+`HelpFigure` renders the real UI components frozen as figures with numbered pin callouts at the
+top-right corner of each target (set by `data-help` attributes on the live components). Figures
+scale to fit the window width. `tests/cib-help.test.tsx` asserts every callout target resolves; a
+missing `data-help` target renders no pin (only its note). The window's rectangle is remembered in
+`helpWindowRect` (default: 480px wide, docked right at y=48, h = vh − 48 − 12; min 360×320). Renaming
+a `data-help` attribute breaks the test, not the render.
 
 Auth: the popup (or the worker) runs `readAuthInfo` in the Rossum tab via
 `chrome.scripting.executeScript`, stages a single-use `consoleAuth_<uuid>` in
@@ -1011,6 +1011,7 @@ older ones as history. Currently authoritative per area:
 - **Release automation** — `2026-06-12-chrome-web-store-auto-release-design.md`
 - **API calls and 429s** — `2026-10-13-api-call-reduction-design.md` (the Inspector request
   scope, Galaxy's abort on 429, the popup's background checks)
+- **SFTP** — `2026-11-20-sftp-console-app-design.md`
 - **In-app help** — `2026-11-03-app-help-drawer-design.md` (the floating help window: its last section, "Delta, 2026-11-03", replaces the drawer)
 
 ## Localpages divergence
@@ -1020,7 +1021,6 @@ byte-for-byte was an explicit goal. **It is not any more.** On 2026-08-25 the ow
 the stylesheets by dropping the Prettier CSS quote override, then confirmed the divergence
 "applies to everything", the renderer included. Both landed in the commit this section arrived in.
 
-- **SFTP** — `2026-11-20-sftp-console-app-design.md`
 What that does and does not change:
 
 - **A divergence is a decision to record, not a bug to fix.** Nothing needs to be justified
