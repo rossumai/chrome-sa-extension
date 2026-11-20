@@ -152,6 +152,22 @@ const RDC_ICON = (
   </svg>
 );
 
+const SFTP_ICON = (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+    <path d="M12 10v6m-3-3 3-3 3 3" />
+  </svg>
+);
+
 export type ConsoleApp = {
   id: AppId;
   label: string;
@@ -236,6 +252,15 @@ export const APPS: readonly ConsoleApp[] = [
     label: 'rdc',
     title: 'rdc in the browser (proof of concept) — experimental',
     icon: RDC_ICON,
+    exp: true,
+    gated: true,
+  },
+  {
+    id: 'sftp',
+    description: 'Browse SFTP servers',
+    label: 'SFTP',
+    title: 'SFTP servers — experimental',
+    icon: SFTP_ICON,
     exp: true,
     gated: true,
   },

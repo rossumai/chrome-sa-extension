@@ -104,10 +104,13 @@ describe('ConsoleView — the app list', () => {
     expect(document.body.textContent).toContain('Switch app in this tab');
   });
 
-  it('adds Academy and rdc when unlocked', () => {
+  it('adds Academy, rdc and SFTP when unlocked', () => {
     mount({ unlocked: true });
-    expect(rows()).toHaveLength(9);
+    expect(rows()).toHaveLength(10);
     expect(rows()[8].textContent).toContain('Deployments between orgs');
+    expect(rows()[9].textContent).toContain('Browse SFTP servers');
+    // Keys 1-9 only: the tenth app is reached by a click.
+    expect(rows()[9].querySelector(`.${offCss.offsiteKbd}`)!.textContent).toBe('');
   });
 
   it("marks the tab's current app", () => {

@@ -17,6 +17,7 @@ import OffSite from './OffSite.jsx';
 import ConsoleView, { ConsoleHeaderActions } from './ConsoleView.jsx';
 import { UnlockNoticeText } from './NoticeLine.jsx';
 import { readConsoleTab } from '../consoleTab.js';
+import { isGatedApp, isValidApp } from '../../console/boot.js';
 import type { UnlockNotice } from '../offSite.js';
 import styles from './App.module.css';
 import card from './Card.module.css';
@@ -190,7 +191,7 @@ export default function App({ tab }: { tab?: any }) {
     const next = !storageValues.experimentalUnlocked;
     // Read before the write: the Console's own effect moves it off a gated app at once.
     const consoleApp = isConsole ? readConsoleTab(tab.id)?.app : null;
-    const fellBack = !next && (consoleApp === 'academy' || consoleApp === 'rdc');
+    const fellBack = !next && isValidApp(consoleApp) && isGatedApp(consoleApp);
     setStorageValues((prev: any) => ({ ...prev, experimentalUnlocked: next }));
     // Written straight to storage, never via the worker — same cold-start
     // race as the usage-consent write above.

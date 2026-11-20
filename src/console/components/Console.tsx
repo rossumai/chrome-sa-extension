@@ -11,6 +11,7 @@ import AcademyApp from '../../academy/components/App.jsx';
 import BuilderApp from '../../builder/components/App.jsx';
 import CibApp from '../../cib/components/App.jsx';
 import RdcApp from '../../rdc/components/App.jsx';
+import SftpApp from '../../sftp/components/App.jsx';
 import * as mdhStore from '../../mdh/store.js';
 import * as auditStore from '../../audit/store.js';
 import * as galaxyStore from '../../galaxy/store.js';
@@ -20,6 +21,7 @@ import * as academyStore from '../../academy/store.js';
 import * as builderStore from '../../builder/store.js';
 import * as cibStore from '../../cib/store.js';
 import * as rdcStore from '../../rdc/store.js';
+import * as sftpStore from '../../sftp/store.js';
 import es from '../../ui/EmptyState.module.css';
 import shell from '../../ui/AppShell.module.css';
 
@@ -61,6 +63,9 @@ export default function Console() {
   } else if (app === 'rdc') {
     const c = rdcStore.connected.value;
     view = c === null ? <Connecting /> : <RdcApp connected={c} />;
+  } else if (app === 'sftp') {
+    const c = sftpStore.connected.value;
+    view = c === null ? <Connecting /> : <SftpApp connected={c} />;
   } else if (app === 'academy') {
     const c = academyStore.connected.value;
     view = c === null ? <Connecting /> : <AcademyApp connected={c} />;

@@ -1,0 +1,395 @@
+/* One server's files: toolbar, arrival strip, file table; the preview docks on the right. */
+
+.root {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* One line. When the preview pane is wide, the filter and then the path give up their room:
+   the host name ends in an ellipsis (its button's title holds the whole address). */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* The folders after the host keep their names whole; only the host shortens. */
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.crumbs button {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 3ch;
+  border: none;
+  background: none;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font: inherit;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.crumbs button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.crumbs > :last-child,
+.crumbs > :last-child button {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.sep {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.note {
+  flex: 1 1 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.busy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+}
+
+.why {
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* What a running call covers the file list with: what it does, how long it has taken, and for a
+   transfer how far it is, with Cancel. A quiet refresh of a cached folder shows none of it. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 72px;
+  background: color-mix(in srgb, var(--bg-card) 55%, transparent);
+}
+
+.overlayCard {
+  position: sticky;
+  top: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 280px;
+  max-width: 420px;
+  padding: 20px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--glass-shadow);
+  text-align: center;
+}
+
+.bigSpinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.overlayLabel {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.overlaySub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.overlayWhy {
+  font-size: 11px;
+  color: var(--warning-fg);
+}
+
+.meter {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-hover);
+  overflow: hidden;
+}
+
+.meterFill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+/* An indeterminate bar along the top of the file list while a call runs. */
+.progress {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 3px;
+  margin-bottom: -3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  background: var(--accent);
+  animation: slide 1.2s ease-in-out infinite;
+}
+
+@keyframes slide {
+  from {
+    left: -30%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+.dimmed tbody {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .bigSpinner,
+  .progress::after {
+    animation: none;
+  }
+  .progress::after {
+    left: 0;
+    width: 100%;
+    opacity: 0.6;
+  }
+}
+
+.filter {
+  margin-left: auto;
+  flex: 0 1 220px;
+  min-width: 110px;
+}
+
+.banner {
+  margin: 0 16px 10px;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius);
+  gap: 10px;
+}
+
+.tableWrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0 16px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-card);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.table td {
+  padding: 5px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.row {
+  cursor: pointer;
+}
+
+.row:hover td {
+  background: var(--bg-hover);
+}
+
+.selected td,
+.selected:hover td {
+  background: var(--info-bg);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.table th.num {
+  text-align: right;
+}
+
+.modified {
+  color: var(--text-secondary);
+}
+
+.actionsCol {
+  width: 80px;
+}
+
+.hiddenLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dirIcon {
+  display: flex;
+  color: var(--accent);
+}
+
+.fileIcon {
+  display: flex;
+  color: var(--text-secondary);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.tagNew {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.tagNew {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.rowActions {
+  display: inline-flex;
+  gap: 2px;
+  visibility: hidden;
+}
+
+.row:hover .rowActions,
+.row:focus-within .rowActions,
+.selected .rowActions {
+  visibility: visible;
+}
+
+.deleteBtn:hover {
+  color: var(--danger);
+}
+
+.table td.empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.drop {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--accent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+  color: var(--accent);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .modified {
+    display: none;
+  }
+  .filter {
+    width: 130px;
+  }
+}

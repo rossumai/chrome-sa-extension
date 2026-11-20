@@ -2,9 +2,18 @@
 // Pure helpers for the console shell boot. Kept side-effect-free so they can be
 // unit-tested without chrome / DOM / sessionStorage.
 
-/** The nine apps on the rail. Adding one touches this, Rail.jsx and Console.jsx. */
+/** The ten apps on the rail. Adding one touches this, apps.tsx and Console.tsx. */
 export type AppId =
-  'mdh' | 'audit' | 'builder' | 'galaxy' | 'inspector' | 'fabry' | 'cib' | 'academy' | 'rdc';
+  | 'mdh'
+  | 'audit'
+  | 'builder'
+  | 'galaxy'
+  | 'inspector'
+  | 'fabry'
+  | 'cib'
+  | 'academy'
+  | 'rdc'
+  | 'sftp';
 
 export function isValidApp(v: unknown): v is AppId {
   return (
@@ -16,15 +25,16 @@ export function isValidApp(v: unknown): v is AppId {
     v === 'fabry' ||
     v === 'cib' ||
     v === 'academy' ||
-    v === 'rdc'
+    v === 'rdc' ||
+    v === 'sftp'
   );
 }
 
-// The apps behind the experimental gate (`gated: true` in Rail.tsx): the Academy and the rdc
-// proof of concept. Everything else, Mr. Fabry included, is always available.
-const GATED_APPS: readonly AppId[] = ['academy', 'rdc'];
+// The apps behind the experimental gate (`gated: true` in apps.tsx): the Academy, the rdc
+// proof of concept and SFTP. Everything else, Mr. Fabry included, is always available.
+const GATED_APPS: readonly AppId[] = ['academy', 'rdc', 'sftp'];
 
-function isGatedApp(app: AppId): boolean {
+export function isGatedApp(app: AppId): boolean {
   return GATED_APPS.includes(app);
 }
 

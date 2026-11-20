@@ -1,0 +1,175 @@
+/* The file preview pane, docked right of the file list. */
+
+.pane {
+  width: 440px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.head {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.actions a {
+  text-decoration: none;
+}
+
+.delete:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.center {
+  padding: 28px 18px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.center strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+/* An image, fitted to the pane, on a checkerboard so transparency shows. */
+.image {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  background-color: var(--bg-code);
+  background-image:
+    linear-gradient(45deg, var(--bg-hover) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--bg-hover) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--bg-hover) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--bg-hover) 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+}
+
+.image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  box-shadow: var(--shadow);
+}
+
+/* A PDF needs room for a page: the pane widens, and Chrome's viewer fills it. */
+.wide {
+  width: min(680px, 48vw);
+}
+
+.pdf {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.pad {
+  padding: 12px;
+}
+
+.text {
+  margin: 0;
+  padding: 12px 14px;
+  font: 11.5px/1.6 var(--font-mono);
+  white-space: pre;
+}
+
+.table {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-code);
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.table td:first-child,
+.table th:first-child {
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.foot {
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 980px) {
+  .pane {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(440px, 92vw);
+    box-shadow: var(--glass-shadow);
+    z-index: 5;
+  }
+}

@@ -1,5 +1,5 @@
 // The popup on a Console tab: which organization THIS tab is connected to, and its apps
-// as a numbered list in the rail's order (keys 1-9 match the rail top to bottom), which
+// as a numbered list in the rail's order (keys 1-9 match the rail top to bottom; a tenth app has no key), which
 // switches this tab. The header's token and "Rossum tab" buttons are ConsoleHeaderActions.
 // The tab's session and app are read through consoleTab.ts.
 import { h } from 'preact';
@@ -94,7 +94,7 @@ export default function ConsoleView({
                 onClick={() => pick(i)}
                 title={a.title}
               >
-                <span class={off.offsiteKbd}>{i + 1}</span>
+                <span class={off.offsiteKbd}>{i < 9 ? i + 1 : ''}</span>
                 <span class={off.consoleAppIcon}>{a.icon}</span>
                 <span class={off.consoleAppName}>{a.label}</span>
                 <span class={off.consoleAppDesc}>{a.description}</span>

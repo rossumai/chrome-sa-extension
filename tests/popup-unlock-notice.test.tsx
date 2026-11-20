@@ -79,7 +79,7 @@ describe('the unlock notice', () => {
     expect(document.body.querySelector(`.${appCss.footer} .${offCss.unlockNotice}`)).toBeNull();
     expect(document.body.querySelector(`.${offCss.offsiteNote}`)).toBeNull();
     expect(notice()!.textContent).toContain('Experimental features unlocked');
-    expect(notice()!.textContent).toContain('Academy, rdc added');
+    expect(notice()!.textContent).toContain('Academy, rdc, SFTP added');
   });
 
   it("takes the footer's left group on a Rossum tab, keeping the footer two items wide", async () => {
@@ -102,6 +102,7 @@ describe('the unlock notice', () => {
     expect(fresh.map((r) => r.querySelector(`.${offCss.consoleAppName}`)!.textContent)).toEqual([
       'Academy',
       'rdc',
+      'SFTP',
     ]);
   });
 

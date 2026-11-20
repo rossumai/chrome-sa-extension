@@ -132,11 +132,11 @@ describe('fabry is public (no gate)', () => {
   });
 });
 
-// The experimental gate hides every app marked `gated` in Rail.tsx — today the Academy and
-// the rdc proof of concept — and boot must agree with the rail on both.
-describe('gated apps (academy, rdc)', () => {
+// The experimental gate hides every app marked `gated` in apps.tsx — today the Academy, the
+// rdc proof of concept and SFTP — and boot must agree with the rail on all three.
+describe('gated apps (academy, rdc, sftp)', () => {
   it('picks a gated app on boot only when unlocked', () => {
-    for (const app of ['academy', 'rdc']) {
+    for (const app of ['academy', 'rdc', 'sftp']) {
       expect(pickInitialApp({ persistedApp: app, unlocked: true })).toBe(app);
       expect(pickInitialApp({ stagingApp: app, unlocked: true })).toBe(app);
       expect(pickInitialApp({ persistedApp: app, unlocked: false })).toBe('mdh');
@@ -150,6 +150,7 @@ describe('gated apps (academy, rdc)', () => {
     expect(appAfterGateChange('rdc', false)).toBe('mdh');
     expect(appAfterGateChange('rdc', true)).toBe('rdc');
     expect(appAfterGateChange('academy', false)).toBe('mdh');
+    expect(appAfterGateChange('sftp', false)).toBe('mdh');
     for (const app of ['mdh', 'audit', 'galaxy', 'inspector', 'fabry', 'cib'] as const)
       expect(appAfterGateChange(app, false)).toBe(app);
   });
@@ -162,6 +163,8 @@ describe('requestedApp (the popup asking a Console tab to switch app)', () => {
   it('refuses a gated app while locked, and accepts it unlocked', () => {
     expect(requestedApp('rdc', false)).toBeNull();
     expect(requestedApp('rdc', true)).toBe('rdc');
+    expect(requestedApp('sftp', false)).toBeNull();
+    expect(requestedApp('sftp', true)).toBe('sftp');
   });
   it('refuses anything else', () => {
     expect(requestedApp('nope', true)).toBeNull();

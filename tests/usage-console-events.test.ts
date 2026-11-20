@@ -57,6 +57,7 @@ describe('instrumented event names', () => {
       'sa_console_app_galaxy',
       'sa_console_app_fabry',
       'sa_console_app_rdc',
+      'sa_console_app_sftp',
       'sa_devtools_panel_open',
     ])
       expect(used.has(n)).toBe(true);

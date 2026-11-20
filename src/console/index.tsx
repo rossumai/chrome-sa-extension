@@ -51,6 +51,7 @@ import * as builderStore from '../builder/store.js';
 import { initBuilder } from '../builder/index.jsx';
 import * as cibStore from '../cib/store.js';
 import * as rdcStore from '../rdc/store.js';
+import * as sftpStore from '../sftp/store.js';
 
 const AUTH_TTL_MS = 24 * 60 * 60 * 1000;
 const TITLES = {
@@ -63,6 +64,7 @@ const TITLES = {
   cib: 'CIB deploy — Rossum SA',
   academy: 'Onboarding training — Rossum SA',
   rdc: 'rdc (experimental) — Rossum SA',
+  sftp: 'SFTP (experimental) — Rossum SA',
 };
 
 // Opt-in usage counting: which apps get opened at all. No ids, no org, no
@@ -77,6 +79,7 @@ const APP_EVENTS: Record<string, any> = {
   cib: 'sa_console_app_cib',
   academy: 'sa_console_app_academy',
   rdc: 'sa_console_app_rdc',
+  sftp: 'sa_console_app_sftp',
 };
 
 async function purgeStaleAuthEntries() {
@@ -157,7 +160,7 @@ async function boot() {
       experimentalUnlocked.value = !!changes.experimentalUnlocked.newValue;
     }
   });
-  // Re-locking the gate while a gated app (the Academy, rdc) is active falls back
+  // Re-locking the gate while a gated app (the Academy, rdc, SFTP) is active falls back
   // to Dataset Management; any other active app is unaffected. Subscribes only to the gate
   // signal (via .value) and reads activeApp with .peek() so this effect doesn't
   // re-run on every app switch — just on gate changes.
@@ -224,6 +227,7 @@ async function boot() {
     builderStore.connected.value = false;
     cibStore.connected.value = false;
     rdcStore.connected.value = false;
+    sftpStore.connected.value = false;
     render(<Console />, document.getElementById('app')!);
     return;
   }
@@ -277,6 +281,10 @@ async function boot() {
   rdcStore.domain.value = domain;
   rdcStore.token.value = token;
   rdcStore.connected.value = true;
+
+  sftpStore.domain.value = domain;
+  sftpStore.token.value = token;
+  sftpStore.connected.value = true;
 
   effect(() => {
     writeTabState('consoleActiveApp', activeApp.value);

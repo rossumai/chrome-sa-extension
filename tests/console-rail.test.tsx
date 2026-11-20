@@ -117,7 +117,7 @@ describe('Rail — academy (experimental) gate', () => {
   it('hides Academy while the gate is locked', () => {
     experimentalUnlocked.value = false;
     const root = mount();
-    expect(root.querySelectorAll('.' + styles.item).length).toBe(7); // the Academy and rdc are gated
+    expect(root.querySelectorAll('.' + styles.item).length).toBe(7); // the Academy, rdc and SFTP are gated
     expect(
       [...root.querySelectorAll('.' + styles.item)].some(
         (b) => b.getAttribute('title') === ACADEMY_TITLE,

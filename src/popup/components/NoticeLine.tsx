@@ -19,7 +19,7 @@ export default function NoticeLine({
 
 export function UnlockNoticeText({ notice, class: cls }: { notice: UnlockNotice; class?: string }) {
   const detail = notice.unlocked
-    ? 'Academy, rdc added'
+    ? 'Academy, rdc, SFTP added'
     : notice.fellBack
       ? 'switched to Data'
       : null;

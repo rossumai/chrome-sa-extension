@@ -1,0 +1,44 @@
+/* The SFTP app's connection bar: "SFTP servers" goes back to the list, then the open server. */
+
+.home {
+  border: none;
+  background: none;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.home:hover {
+  background: var(--bg-hover);
+}
+
+.homeHere {
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.homeHere:hover {
+  background: none;
+}
+
+.where {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  min-width: 0;
+}
+
+.sep {
+  color: var(--text-secondary);
+}
+
+.org {
+  margin-left: auto;
+  font-family: var(--font-sans);
+}
