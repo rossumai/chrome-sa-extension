@@ -207,7 +207,7 @@ beside it — see Ruff under Dependencies) and `console/doc-print` (`src/docs/pr
 |---|---|
 | `src/rossum/index.ts` · `src/netsuite/index.ts` · `src/coupa/index.ts` | content scripts |
 | `src/popup/popup.tsx` | extension popup (Preact) |
-| `src/console/index.tsx` | Console page — an app rail over nine apps |
+| `src/console/index.tsx` | Console page — an app rail over ten apps |
 | `src/background/index.ts` | MV3 service worker |
 | `src/devtools/devtools.ts` · `src/devtools/panel.tsx` | DevTools "Rossum" panel |
 | `src/sidepanel/index.tsx` | Chrome side panel |
@@ -298,8 +298,10 @@ the other's elements (measured 2026-11-16: a tether vanished until a refresh).
 
 ### Console apps (`src/console/`)
 
-An app-switcher rail over nine apps. Adding one touches three hardcoded switch points
-(`Rail.tsx` APPS, `Console.tsx` render switch, `boot.ts` `isValidApp`) plus `console/index.tsx`.
+An app-switcher rail over ten apps. Adding one touches three hardcoded switch points
+(`apps.tsx` APPS, `Console.tsx` render switch, `boot.ts` `isValidApp`) plus `console/index.tsx`;
+a gated one also goes in `boot.ts` `GATED_APPS`. The popup's Console view numbers the apps 1–9
+for its keys, so a tenth has no number.
 `Console.tsx` unmounts the app you leave — except CIB deploy, which stays mounted (hidden) once
 opened, because its form, log and a deploy in flight live in component state.
 
@@ -384,8 +386,8 @@ opened, because its form, log and a deploy in flight live in component state.
   (an older checkpoint without the tag resumes with the latest). `cib.ts`
   checks (read-only), then creates, patches and invokes, only on the user's Deploy click. It
   is **the one path that writes a whole configuration in one run** — not the only write path:
-  the Builder, the DevTools panel's Save, the popup's Unlock and Dataset Management write too,
-  each one object or one collection per user action. Progress is a checkpoint
+  the Builder, the DevTools panel's Save, the popup's Unlock, Dataset Management and SFTP write
+  too, each one object or one collection per user action. Progress is a checkpoint
   document in the org's `_SA_EXTENSION__cib_deploy_runs` collection (the Coupa secret only as a placeholder),
   so a re-run with the same run id resumes; a complete deploy keeps it, marked `complete`, as the
   record of what was installed (and a run id with a complete record is refused). **Upgrade**
@@ -517,6 +519,55 @@ scale to fit the window width. `tests/cib-help.test.tsx` asserts every callout t
 missing `data-help` target renders no pin (only its note). The window's rectangle is remembered in
 `helpWindowRect` (default: 480px wide, docked right at y=48, h = vh − 48 − 12; min 360×320). Renaming
 a `data-help` attribute breaks the test, not the render.
+- **SFTP** (`src/sftp/`) — browse the SFTP servers an org imports from and exports to, behind
+  `experimentalUnlocked` like the Academy and rdc. **An extension cannot open a TCP socket**
+  (`chrome.sockets` is Chrome Apps only, Direct Sockets is for Isolated Web Apps, and `fetch`
+  speaks HTTP), so every SFTP call runs in a **helper hook** in the connected org: a function
+  hook (`helperCode.ts`, Python 3.12), active, subscribed to `invocation.manual` ONLY and
+  attached to no queue, so Rossum never runs it on a document. The Console calls
+  `POST /hooks/{id}/invoke` with `{ops}`; one call is one SSH session (connect, check the
+  pinned host key, sign in, run the ops in order, close), and every change ends with a fresh
+  listing in the same call. **One hook per saved server** (`servers.ts`): `settings` hold
+  `kind: 'sa-extension-sftp'`, host, port, user, sign-in method and the pinned host key; the
+  password or private key is in `secrets`. Measured 2026-11-19: GET answers `secrets: null`,
+  PATCH MERGES secrets, and only `/invoke` hands `settings` and `secrets` to the function —
+  `/hooks/{id}/test` passes neither, so it cannot be used. Nobody can read a saved password
+  back, but anyone who can open the Console for the org can use the server. The hook runs with
+  `third_party_library_pack: 'professional_services'`, which ships `paramiko` 3.5.1 (the
+  default pack has no SSH library; measured 2026-11-20), so nothing is installed at run time;
+  each hook also carries a `description` saying what it is and how to remove it. A fresh or
+  patched function answers "Initializing" for a few seconds; `api.ts` `invoke` waits that out
+  (not a 429, which is never retried). **Rossum stops waiting for a function after its
+  `timeout_s`, 30 s**, answering "Read timeout on endpoint URL" — so the helper caps the TCP
+  connect at 10 s for ALL of the host's addresses together (`socket.create_connection` would
+  wait 10 s per address, and a host with three addresses hit exactly 30 s), and a server that
+  does not answer is reported with the helper's outbound IP, to allowlist. The helper RETURNS
+  errors as `error` rather than raising them, because a raised one reaches the Console only as
+  "Hook invocation failed". **Files of any size move in 3 MB parts** (`transfer.ts`), one call
+  each, because a Lambda request and answer are capped near 6 MB and base64 adds a third: a
+  download joins the parts in the Console; a multi-part upload writes a hidden `.<name>.part`
+  (never listed) that its last call renames over the target, so an interrupted upload leaves no
+  half-written file under the real name. Measured 2026-11-20: 3–5 s per part, so about a
+  minute for 50 MB; Cancel stops between parts. The preview reads only the first 512 KB — except
+  an image or a PDF (`mediaOf`, by extension), which it reads whole up to 10 MB and shows from a
+  blob URL: an image in an `<img>` (so an SVG's scripts never run), a PDF in Chrome's own
+  viewer in an `<iframe>` with `#navpanes=0&view=FitH`, as the DevTools panel's preview does
+  (the extension CSP's `object-src 'self'` would refuse an `<embed>` of a blob). A PDF widens
+  the pane, and both get Open in a tab. The
+  first successful call pins the host key; a helper whose code or library pack is older than
+  the build (`stale`) is PATCHed BEFORE its next call, so the call runs current code (PATCH
+  merges `config`, keeping `timeout_s` and the rest). A later key change stops every call until
+  the user clicks "Trust the new key". A running call covers the file list with a card saying
+  what it does and the elapsed seconds (a transfer adds MB done and Cancel). Every listing is
+  `depth: 1`: it brings its subfolders' listings too, kept for the visit, so opening a folder
+  seen before shows it at once and refreshes it quietly ("Refreshing…" on the toolbar, no
+  card); an answer for a folder the user has since left only fills the cache. The first view
+  lists
+  the org's servers (Add, Edit, Remove — Remove deletes the hook, never files); "SFTP servers"
+  in the bar goes back to it, and there is no disconnect. Opening a server shows the arrival
+  strip (`arrivals.ts`: files per day over 14 days, weekdays with none after the first
+  arrival called out), the file list, and a preview pane (`preview.ts`: CSV as a table, text
+  as text, binary refused). Spec: `2026-11-20-sftp-console-app-design.md`.
 
 Auth: the popup (or the worker) runs `readAuthInfo` in the Rossum tab via
 `chrome.scripting.executeScript`, stages a single-use `consoleAuth_<uuid>` in
@@ -679,7 +730,7 @@ Enforced by tests, not by convention. Do not weaken them.
   `dataset-mgmt-suggest`, `track-viewed` and `dev-mode-chip` are always on, with no toggle and
   no key.
 - **The one gate** — `experimentalUnlocked`: 5 quick clicks on the popup's version hash, hiding
-  the rail apps marked `gated` in `Rail.tsx`, mirrored live via `chrome.storage.onChanged`.
+  the rail apps marked `gated` in `apps.tsx` (Academy, rdc, SFTP), mirrored live via `chrome.storage.onChanged`.
 - **Auth staging** — `consoleAuth_<uuid>`: single-use, 24h TTL, removed on read.
 - **Global prefs** — `mdhPipelineWidth`, `mdhSidebarWidth`, `mdhUploadsColumnWidths`,
   `mdhOverviewChartsScale`, `mdhResultsView`, `mdhStages*`, `mdhStatsMode`,
@@ -698,8 +749,8 @@ Enforced by tests, not by convention. Do not weaken them.
   `usageAsked`; plus `usageSessionId` in `chrome.storage.session`.
 - The Builder persists only `builderPanelWide`; the schema it keeps for Undo after a delete is
   a signal, never storage.
-- Galaxy, CIB deploy and rdc persist nothing on the device (CIB keeps its credentials in component
-  state only; its checkpoint lives in the org; rdc's sync state lives in each org). Chat content, and Architect deliverable text, versions and
+- Galaxy, CIB deploy, rdc and SFTP persist nothing on the device (CIB keeps its credentials in component
+  state only; its checkpoint lives in the org; rdc's sync state lives in each org; SFTP's servers are hooks in the org). Chat content, and Architect deliverable text, versions and
   transcripts, never touch storage — they live in the org's own Data Storage collection.
 - **Orphaned** keys, read and written by nothing, deliberately left in existing profiles:
   `trainingUnlocked`, `trainingProgress`, `fabryArchSplitRatio`, `fabryArchConsoleHeight`, `fabrySidebarOpen`,
@@ -960,6 +1011,7 @@ byte-for-byte was an explicit goal. **It is not any more.** On 2026-08-25 the ow
 the stylesheets by dropping the Prettier CSS quote override, then confirmed the divergence
 "applies to everything", the renderer included. Both landed in the commit this section arrived in.
 
+- **SFTP** — `2026-11-20-sftp-console-app-design.md`
 What that does and does not change:
 
 - **A divergence is a decision to record, not a bug to fix.** Nothing needs to be justified
