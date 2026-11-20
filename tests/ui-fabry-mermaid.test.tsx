@@ -48,7 +48,7 @@ describe('MermaidBlock (beautiful-mermaid SVG)', () => {
     delete window.__fabryMermaidSvg;
     try {
       const root = mount({ code: 'graph TD\n  A --> B' });
-      const box = root.querySelector('.' + styles.mermaid + '.loading');
+      const box = root.querySelector('.' + styles.mermaid + '.is-loading');
       expect(box).toBeTruthy();
       expect(box!.querySelector('.' + styles.mermaidSrc)!.textContent).toContain('A --> B');
     } finally {

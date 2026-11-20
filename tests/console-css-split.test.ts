@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'fs';
 import { createRequire } from 'module';
 import { join } from 'path';
 
-// The Console's global stylesheet is built from per-area partials (CONSOLE_GLOBAL_PARTS in
+// The Console's global stylesheet is built from partials (CONSOLE_GLOBAL_PARTS in
 // build.js): consoleBaseCss() cuts each partial into segments at its `@order N` comments and
 // emits the segments of every partial by N, the original rule order of the former
 // src/console/console.css monolith. The split was proven against Chrome's CSSOM when it landed

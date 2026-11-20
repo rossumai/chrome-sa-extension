@@ -166,7 +166,7 @@
 }
 
 /* Printing an Architect specification prints the document, not the app around it (see the
-   print block in src/console/legacy/shared.css). */
+   print block in src/console/global.css). */
 @media print {
   :global(body:has(.docs-pane)) .sidebar {
     display: none !important;

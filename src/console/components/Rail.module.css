@@ -119,7 +119,7 @@
 }
 
 /* Printing an Architect specification hides the app around it (see the print block in
-   src/console/legacy/shared.css). */
+   src/console/global.css). */
 @media print {
   :global(body:has(.docs-pane)) .rail {
     display: none !important;

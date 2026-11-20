@@ -57,9 +57,10 @@ Prettier owns `src/` and `tests/`, and only `*.ts` / `*.tsx` / `*.css` there. Co
   rather than identical to it. Only the delimiter moved: shipped CSS was verified identical
   under a canonicalisation that neutralises quotes, and identical under one that does NOT
   except for the quotes themselves.
-- **The delimiter only reaches the browser for the five COPIED sheets.** `build.js` copies
-  `console.css` (the monolith), `theme.css`, `print.css`, `panel.css` and `popup.css` verbatim, so
-  their formatting ships. Every `*.module.css` goes through esbuild, which reprints quotes as
+- **The delimiter only reaches the browser for the COPIED global sheets.** `build.js` copies
+  `theme.css`, `print.css` and the popup's and DevTools' `tokens.css` verbatim, and writes the
+  Console's `tokens.css` + `global.css` segments into `console.base.css` unchanged, so their
+  formatting ships. Every `*.module.css` goes through esbuild, which reprints quotes as
   double (`content:"\2316"`, zero single quotes in the generated `dist/console/app.css`) —
   so formatting a CSS Module cannot change what ships at all.
 - **First formatting of a file may need two passes.** Prettier 3.9.6 is not idempotent on
@@ -592,12 +593,14 @@ Enforced by tests, not by convention. Do not weaken them.
   read-and-comply — grep the diff before pushing, and remember that a merged commit cannot be
   taken back out of a public history.
 - **Retiring a feature must never delete customer data** — stop reading a field, do not drop it.
-- **No bare single-letter class names in JSX.** `minify: true` shortens CSS Modules' local class
-  names to one or two characters in the emitted `console.css`, and esbuild guarantees those are
-  unique only among THEMSELVES — not against hand-written classes. A generated `.k` once painted
-  a 320px blurred hero blob across the Inspector's `class="k"` cells. What keeps it safe is that
-  no bare short class names remain, asserted against the BUILT stylesheet by
-  `tests/css-class-collision-boundary.test.ts`.
+- **Every hand-written class contains a hyphen.** `minify: true` shortens CSS Modules' local
+  class names to one or two characters in each emitted module sheet (`app.css`, `popup.css`, …),
+  and esbuild guarantees those are unique only among THEMSELVES — not against hand-written
+  classes. A generated `.k` once painted a 320px blurred hero blob across the Inspector's
+  `class="k"` cells, and a generated `.on` an empty square on every active segmented control.
+  A minified name never contains a hyphen, so a hand-written class with one cannot be hit;
+  asserted against the BUILT sheets by `tests/css-class-collision-boundary.test.ts` (see CSS
+  Architecture).
 
 ## Conventions & traps
 
@@ -706,34 +709,78 @@ Enforced by tests, not by convention. Do not weaken them.
 
 ## CSS Architecture
 
-The Console ships **two** stylesheets, linked in that order by `console.html`:
+**Every style we write is a CSS Module** (`*.module.css` beside its component, imported as
+`styles` and used as `styles.x`), on every surface: Console, popup, side panel and DevTools panel.
+The hand-written monoliths (`console.css`, `popup.css`, `panel.css`, `sidepanel.css`) are gone
+(2026-11-19, spec `2026-11-19-css-modules-everywhere-design.md`), because a hand-written global
+class could collide with a minified module name — see the hyphen invariant below.
 
-- `src/console/console.css` → **`dist/console/console.base.css`** — the legacy hand-written
-  monolith, holding the shared tokens (every colour, surface and type variable). The semantic
-  families are uneven: `--success` and `--danger` each carry the full `-hover`/`-bg`/`-fg`/
-  `-border` set; `--warning` carries `-bg`/`-fg`/`-border` but no `-hover`; `--accent` carries
-  only `-hover` — **no `--accent-bg`, `--accent-fg` or `--accent-border` exist**. The
-  accent-paired tint is a separate family, `--info-bg`/`--info-fg`/`--info-border` (no base
-  `--info`, no `--info-hover`). So an accent-coloured control on a tinted background must reach
-  for a status family or a surface token (`--bg-card`), not an accent tint — and `--info-bg`
-  itself measures under the 4.5:1 floor for `--accent` text in light mode (4.05:1, measured; see
-  `.stats-schema-more button` in `console.css`). Dark mode overrides `:root` under
-  `@media (prefers-color-scheme: dark)`. It shrinks as components move their rules into CSS
-  Modules, and is eventually retired.
-- **`dist/console/app.css`** — emitted by esbuild from imported `*.module.css` CSS Modules
-  (self-contained component styles; the design-system direction). The JS bundle and this sheet
-  are `app.*`, renamed from `console.*` because the name `console.js` set off a false-positive
-  security check; `console.html` kept its name.
+Each bundle that imports modules gets one sheet from esbuild, linked LAST by its page:
+`dist/console/app.css`, `dist/popup/popup.css`, `dist/sidepanel/sidepanel.css`,
+`dist/devtools/panel.css`. The Console's JS bundle and sheet are `app.*`, renamed from
+`console.*` because the name `console.js` set off a false-positive security check;
+`console.html` kept its name. Shared primitives (buttons, inputs, tabs, segmented controls,
+modals, banners, empty states, pagination, …) are modules under `src/ui/`; an area imports
+them and never re-declares them.
 
-Also linked, all build artifacts rather than source: `github-markdown.css` (copied from the
-`github-markdown-css` package), `hljs-github.css` (light + dark concatenated by `build.js`) and
-`doc-theme.css` (copied from `src/docs/theme.css`, the ported localpages sheet — no longer a
-superset of upstream's since **DELTA H**, 2026-08-20, pruned 38 rules whose features this port
-dropped, and since 2026-08-25 its string delimiters are Prettier's single quotes rather than
-upstream's double). Its header still describes re-porting from upstream; that is history, not a
-plan — see Localpages divergence below. These are scoped
-in practice to `.markdown-body`/`.docs-*`/`.source-*` — before adding a bare class to either
-side, check it cannot leak. The print page has its own `src/docs/print.css`.
+**What stays global, and only this:**
+
+- **Tokens** — every `:root` variable, its `@media (prefers-color-scheme: dark)` override and the
+  `html`/`body` base, one `tokens.css` per surface: `src/console/tokens.css`,
+  `src/popup/tokens.css` (the side panel links the popup's) and `src/devtools/tokens.css`. A
+  test holds each to those selectors. The Console's semantic families are uneven: `--success`
+  and `--danger` each carry the full `-hover`/`-bg`/`-fg`/`-border` set; `--warning` carries
+  `-bg`/`-fg`/`-border` but no `-hover`; `--accent` carries only `-hover` — **no `--accent-bg`,
+  `--accent-fg` or `--accent-border` exist**. The accent-paired tint is a separate family,
+  `--info-bg`/`--info-fg`/`--info-border` (no base `--info`, no `--info-hover`). So an
+  accent-coloured control on a tinted background must reach for a status family or a surface
+  token (`--bg-card`), not an accent tint — and `--info-bg` itself measures under the 4.5:1
+  floor for `--accent` text in light mode (4.05:1, measured; see `.statsSchemaMore button` in
+  `src/mdh/components/StatsSchema.module.css`).
+- **`src/console/global.css`** — the box-sizing reset, `#app`, the Architect's `.docs-section`
+  divider and its print block (`body:has(.docs-pane)`). `build.js` merges it with the Console's
+  tokens into **`dist/console/console.base.css`** (`CONSOLE_GLOBAL_PARTS`): each
+  `/* @order N */` comment starts a segment, and segments are emitted by N, the former
+  monolith's rule order. A rule's cascade position is its N, not its file.
+- **The document renderer's sheets** — `doc-theme.css` (copied from `src/docs/theme.css`, the
+  ported localpages sheet — no longer a superset of upstream's since **DELTA H**, 2026-08-20,
+  pruned 38 rules whose features this port dropped, and since 2026-08-25 its string delimiters
+  are Prettier's single quotes rather than upstream's double; its header still describes
+  re-porting from upstream, which is history, not a plan — see Localpages divergence below),
+  `github-markdown.css` (copied from the `github-markdown-css` package), `hljs-github.css`
+  (light + dark concatenated by `build.js`) and the print page's `src/docs/print.css`. They
+  style markdown-it / highlight.js output, scoped in practice to
+  `.markdown-body`/`.docs-*`/`.source-*`.
+- **Third-party DOM** (CodeMirror's `.cm-*`) is styled from the owning module with
+  `:global(.cm-…)` under a module class, never from a global sheet.
+
+Content scripts are outside all of this: they inject their styles from `init()`, so styles are
+in the DOM only while the feature is on, and all their classes are prefixed
+`rossum-sa-extension-*`.
+
+**The hyphen invariant.** esbuild's minified module names match `[A-Za-z_][A-Za-z0-9_]*` —
+never a hyphen — and are unique only among modules. So every class our code puts in the DOM
+outside `styles.x` (a class string in `src/`, or a class selector in a built global sheet) must
+contain a hyphen: `is-on`, `is-loading`, `docs-pane`. A bare `on` once drew Academy's legend
+swatch on every active segmented control, and a bare `k` a 320px blur across the Inspector.
+`tests/css-class-collision-boundary.test.ts` enforces it against the BUILT sheets plus a
+whole-statement scan of `src/`; its `ALLOWLIST` holds only the renderer's and SpecView's
+`permanent` names (`active`, `toc`, `wide`, …), which are not renamed because that would change
+rendered HTML and the docs goldens.
+
+**Every global sheet starts with a header** saying it is global on purpose: do not expand it
+unless a rule cannot live in a module (a `:root` token, a third-party or markdown-rendered DOM),
+new styles go in a `*.module.css` beside their component, and any class added must contain a
+hyphen. Tests check the header on every Console partial and every `tokens.css`.
+
+**Moving a rule between sheets changes the cascade, and jsdom cannot see it.** `app.css` loads
+after `console.base.css`, so a rule moved into a module may now win where it lost, or the
+reverse. The migration was accepted only after an independent audit per area: build `master`
+and the branch, load each `dist/` unpacked in Chrome for Testing, screenshot the same screens
+and states (hover, open menus, modals, error banners) light and dark at 1440×900, and diff
+`getComputedStyle` over the area's elements. Do the same for any change that moves rules. A
+test that needs a module class queries `'.' + styles.x` (see
+`tests/mdh-search-index-panel.test.tsx`) or a `data-*` hook.
 
 **A label and its control go in one `ModalField`, never as two `ModalBody` children.** The
 body's gap separates SECTIONS, so a bare label sits as far from its own input as from the
@@ -752,16 +799,11 @@ have ungrouped labels; see the 2026-09-07 spec.
 flexible child absorbs every appearing/disappearing block — nothing above it moves. Pair it with
 `<ModalActions footer>` (returned as a fragment sibling of the body, so the buttons are a
 card-level flex child rather than the body's last scrolling row) and, for a JSON editor inside,
-`<JsonEditor fill>`, whose `.json-editor-fill .cm-editor { min-height: 0 }` stops the editor
-growing with its document and hands overflow to CodeMirror's own scroller. Both index create
+`<JsonEditor fill>`, whose `.jsonEditorFill :global(.cm-editor) { min-height: 0 }` stops the
+editor growing with its document and hands overflow to CodeMirror's own scroller. Both index create
 modals use all three; measurements are in the regular-index spec, section 7b. The default is
 unchanged for the other 13 modal consumers — and `.overlay { align-items: center }` means any
 card that DOES grow moves its own top edge by half the delta, so growth is never local.
-
-`popup.css` has its own variable system, also dark-mode aware; the side panel links it FIRST and
-`sidepanel.css` overrides only the shell, so the shared MDH card has one source of truth. Content
-scripts inject their styles from `init()`, so styles are in the DOM only while the feature is on,
-and all their classes are prefixed `rossum-sa-extension-*`.
 
 ## Dependencies
 

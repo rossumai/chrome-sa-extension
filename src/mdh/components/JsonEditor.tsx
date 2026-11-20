@@ -299,7 +299,7 @@ export default function JsonEditor({
   editorRef?: { current: JsonEditorHandle | null };
   minHeight?: string;
   // Take the height the container gives instead of growing with the document —
-  // see .json-editor-fill in console.css. Used by modals with a stable height.
+  // see .jsonEditorFill in panel.module.css. Used by modals with a stable height.
   fill?: boolean;
   jsonLines?: boolean;
 }) {

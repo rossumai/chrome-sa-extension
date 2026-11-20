@@ -3,16 +3,15 @@ const { execSync } = require('child_process');
 const { cpSync, existsSync, rmSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
 
 // The Console's global stylesheet, dist/console/console.base.css, is assembled from these
-// partials, split per area out of the former src/console/console.css monolith. Each
-// `/* @order N */` comment in a partial starts a segment, and consoleBaseCss() emits the
-// segments of every partial by N — the monolith's original rule order — so Chrome's CSSOM is
-// rule-for-rule the monolith's (proven when the split landed, 2026-11-19). The order of this
-// list does not matter; a rule's N does. Each area's partial goes when that area moves to CSS
-// Modules; tokens.css stays.
+// partials: the tokens, and the few rules no CSS Module can hold (global.css). They are what
+// is left of the former src/console/console.css monolith once every area moved to CSS Modules.
+// Each `/* @order N */` comment in a partial starts a segment, and consoleBaseCss() emits the
+// segments of every partial by N — the monolith's original rule order. The order of this list
+// does not matter; a rule's N does. Do not add a partial: new styles go in a *.module.css.
 // Exported for tests/console-css-split.test.ts, which requires this file without building.
 const CONSOLE_GLOBAL_PARTS = [
   'src/console/tokens.css',
-  'src/console/legacy/shared.css',
+  'src/console/global.css',
 ];
 // Text before a partial's first marker (its header comment) is not emitted.
 function consoleBaseCss() {
@@ -50,18 +49,16 @@ writeFileSync('dist/manifest.json', JSON.stringify(manifest, null, 2) + '\n');
 
 cpSync('icons', 'dist/icons', { recursive: true });
 cpSync('src/popup/popup.html', 'dist/popup/popup.html');
-// The popup, side panel and DevTools pages link their GLOBAL sheets first — tokens.css, then
-// legacy.css where one is left (the rules not yet moved to CSS Modules; one partial each, so
-// copied) — and then the sheet esbuild emits beside each bundle from its imported *.module.css
-// (dist/popup/popup.css). The global sheets are deliberately NOT named after a bundle, so esbuild
-// can never write over one.
+// The popup, side panel and DevTools pages link their GLOBAL tokens.css first (copied), and
+// then the sheet esbuild emits beside each bundle from its imported *.module.css
+// (dist/popup/popup.css, …). tokens.css is deliberately NOT named after a bundle, so esbuild can
+// never write over it.
 cpSync('src/popup/tokens.css', 'dist/popup/tokens.css');
 cpSync('src/console/console.html', 'dist/console/console.html');
-// The LEGACY base stylesheet: the global partials (CONSOLE_GLOBAL_PARTS, above), merged in
-// their original rule order by consoleBaseCss().
-// esbuild emits dist/console/app.css from imported CSS Modules (self-contained design-system
-// component styles). As areas migrate their rules into CSS Modules, console.base.css shrinks
-// to the tokens. console.html links both (base first, then the modules).
+// The global base stylesheet: the partials (CONSOLE_GLOBAL_PARTS, above), merged in their
+// original rule order by consoleBaseCss(). esbuild emits dist/console/app.css from the imported
+// CSS Modules, which hold every other Console style. console.html links both (base first, then
+// the modules).
 writeFileSync('dist/console/console.base.css', consoleBaseCss());
 cpSync('src/devtools/devtools.html', 'dist/devtools/devtools.html');
 cpSync('src/devtools/panel.html', 'dist/devtools/panel.html');
@@ -98,18 +95,15 @@ const options = {
   // Modules' local class names (e.g. Academy.module.css's `.heroBlobA`) into
   // one/two-character globals emitted to dist/console/app.css. esbuild only
   // guarantees those generated names are unique AMONG THEMSELVES, not against
-  // bare hand-written classes in JSX (`<div class="k">`) or the legacy
-  // console.css/popup.css. That is not hypothetical: a generated `.k` once
-  // collided with the Inspector's `class="k"` cells and painted a 320px blurred
-  // hero blob across them.
+  // hand-written classes in JSX or a global sheet. That is not hypothetical: a
+  // generated `.k` once painted a 320px blurred hero blob across the Inspector's
+  // `class="k"` cells, and a generated `.on` a square on every active control.
   //
-  // What keeps this safe is NOT the minifier — it is that no bare single-letter
-  // class names remain to be collided with, enforced on every run by
-  // tests/css-class-collision-boundary.test.js, which asserts against the BUILT
-  // stylesheet rather than the source. Adding a bare `class="x"` to any JSX
-  // fails that test. Turning identifier minification off is the other half of
-  // the fix and costs ~575KB on app.js; either half reaches zero collisions
-  // alone, and this is the half that keeps the bundle small.
+  // What keeps this safe is NOT the minifier — it is that a generated name never
+  // contains a hyphen, and every hand-written class does, enforced on every run
+  // by tests/css-class-collision-boundary.test.ts against the BUILT sheets.
+  // Adding a hyphen-less class outside `styles.x` fails that test. Turning
+  // identifier minification off would also fix it, but costs ~774KB on app.js.
   minify: true,
   outdir: 'dist',
   format: 'iife',

@@ -6,24 +6,24 @@ import { sourceClassNames, globalSheetClassNames } from './support/classNames.js
 // CSS-module / hand-written-class collision boundary.
 //
 // esbuild's identifier minifier renames CSS Modules' local class names down to short globals in
-// dist/console/app.css (and dist/popup/popup.css), and guarantees them unique only AMONG MODULES. A hand-written class our
-// code puts in the DOM can therefore receive a module's rule whenever the two names happen to
-// coincide — which one is hit changes from build to build. Shipped twice: a generated `.k` drew a
-// 320px blob across the Inspector's `class="k"` cells, and a generated `.on` (Academy's legend
-// swatch) drew an empty square on every active segmented control.
+// each bundle's module sheet (dist/console/app.css, dist/popup/popup.css, …), and guarantees them
+// unique only AMONG MODULES. A hand-written class our code puts in the DOM can therefore receive
+// a module's rule whenever the two names happen to coincide — which one is hit changes from
+// build to build. Shipped twice: a generated `.k` drew a 320px blob across the Inspector's
+// `class="k"` cells, and a generated `.on` (Academy's legend swatch) drew an empty square on
+// every active segmented control.
 //
 // The invariant: esbuild's minified names match [A-Za-z_][A-Za-z0-9_]* — never a hyphen — so a
 // class name WITH a hyphen can never collide. Every class our code can put in the DOM (a class
 // string in src/, or a class selector in a built global sheet; see support/classNames.ts for
 // what the scanner reads) must contain one, or be on ALLOWLIST below.
 //
-// ALLOWLIST is a ratchet: it may only shrink. Each entry names the global sheet that styles it
-// ('none' when no global sheet does). The CSS Modules migration removes entries as their sheets
-// go; the stale-entry test fails when a listed name no longer occurs, so none can linger.
-// `permanent` entries are emitted by the document renderer / SpecView and styled by
-// src/docs/theme.css; renaming them would change rendered HTML and the docs goldens. For those,
-// and for every entry until it is gone, the direct check against the module sheets (app.css,
-// popup.css, …) is the protection.
+// ALLOWLIST may only shrink, and the stale-entry test fails when a listed name no longer occurs.
+// The CSS Modules migration (2026-11-19) emptied it of everything but the `permanent` entries:
+// names emitted by the document renderer / SpecView and styled by src/docs/theme.css, which are
+// not renamed because that would change rendered HTML and the docs goldens. For those, the
+// direct check against the module sheets (app.css, popup.css, …) is the protection. Do not add
+// an entry for new code: give the class a hyphen, or make it a CSS Module class.
 const ROOT = process.cwd();
 
 const GLOBAL_SHEETS = [
@@ -71,18 +71,11 @@ function reachableSources(entry: string): Set<string> {
 }
 
 const ALLOWLIST: Record<string, { sheet: string; permanent?: true }> = {
-  active: {
-    sheet: 'src/console/legacy/shared.css, src/docs/theme.css',
-    permanent: true,
-  },
+  active: { sheet: 'src/docs/theme.css', permanent: true },
   anchor: { sheet: 'src/docs/theme.css', permanent: true },
   copied: { sheet: 'src/docs/theme.css', permanent: true },
-  failed: {
-    sheet: 'src/docs/theme.css',
-    permanent: true,
-  },
+  failed: { sheet: 'src/docs/theme.css', permanent: true },
   hljs: { sheet: 'src/docs/theme.css', permanent: true },
-  loading: { sheet: 'none' },
   open: { sheet: 'src/docs/theme.css', permanent: true },
   toc: { sheet: 'src/docs/theme.css', permanent: true },
   wide: { sheet: 'src/docs/theme.css', permanent: true },

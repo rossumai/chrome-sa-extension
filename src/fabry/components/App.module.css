@@ -55,7 +55,7 @@
 }
 
 /* Printing an Architect specification unwinds the fixed-height column so the document can
-   flow across pages (see the print block in src/console/legacy/shared.css). */
+   flow across pages (see the print block in src/console/global.css). */
 @media print {
   :global(body:has(.docs-pane)) .layout,
   :global(body:has(.docs-pane)) .main {

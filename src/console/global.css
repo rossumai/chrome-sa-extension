@@ -1,9 +1,7 @@
-/* GLOBAL STYLESHEET, TEMPORARY: the Console rules that more than one area needs and that no
-   CSS Module can hold, split out of the former src/console/console.css. The shared primitives
-   (buttons, inputs, tabs, banners, …) are CSS Modules under src/ui/ now. What is left is the
-   box-sizing reset, #app, the global `spin` keyframes (MDH and Fabry rules animate with it),
-   the Architect's `.docs-section` divider and its print block, which names classes of several
-   areas; each area's Phase 2 conversion takes its selectors out of that block.
+/* GLOBAL STYLESHEET: the Console rules that no CSS Module can hold — the box-sizing reset, the
+   #app root, the Architect's `.docs-section` divider and the Architect's print block, which
+   unwinds the page around a rendered specification (`body:has(.docs-pane)`). The second part of
+   dist/console/console.base.css, after src/console/tokens.css.
 
    Global on purpose: do not expand it unless a rule genuinely cannot live in a CSS Module (a
    :root token, a third-party or markdown-rendered DOM). New styles go in a *.module.css beside
@@ -32,20 +30,6 @@
   display: flex;
   height: 100vh;
 }
-
-/* @order 14 */
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* @order 26 */
-
-/* The whole .modal-* system moved to the self-contained CSS Module
-   src/ui/Modal.module.css. Consumers compose modals with its sub-components
-   (ModalBody / ModalActions / ModalMessage / ModalFieldLabel / …). */
 
 /* @order 52 */
 

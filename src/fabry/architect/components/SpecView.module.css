@@ -169,7 +169,7 @@
 
 /* Printing the specification: the bar, the notes and the review host are app chrome, the
    column unwinds so the document flows across pages, and a sticky section header becomes a
-   band at the top of its section (see the print block in src/console/legacy/shared.css). */
+   band at the top of its section (see the print block in src/console/global.css). */
 @media print {
   :global(body:has(.docs-pane)) .specBar,
   :global(body:has(.docs-pane)) .docWarn,

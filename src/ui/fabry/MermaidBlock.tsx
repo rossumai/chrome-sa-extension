@@ -55,7 +55,7 @@ export default function MermaidBlock({ code }: { code?: string | null }) {
   }
   if (svgEl == null) {
     return (
-      <div class={styles.mermaid + ' loading'}>
+      <div class={styles.mermaid + ' is-loading'}>
         <span class={styles.lang}>mermaid</span>
         <pre class={styles.mermaidSrc}>{code}</pre>
       </div>

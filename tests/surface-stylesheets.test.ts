@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 
-// The popup, side panel and DevTools pages link their GLOBAL sheets first — tokens.css, then
-// legacy.css where one is left, both copied by build.js — and then the sheet esbuild emits beside the page's bundle
-// from its imported *.module.css. The global sheets are named so that esbuild can never write
-// over one (the emitted sheet takes the bundle's name: popup.css, sidepanel.css, panel.css).
+// The popup, side panel and DevTools pages link their GLOBAL tokens.css first (copied by
+// build.js), and then the sheet esbuild emits beside the page's bundle from its imported
+// *.module.css. tokens.css is named so that esbuild can never write over it (the emitted sheet
+// takes the bundle's name: popup.css, sidepanel.css, panel.css).
 // These assertions read the BUILT pages, since a link to a missing sheet fails silently.
 const DIST = join(process.cwd(), 'dist');
 const SRC = join(process.cwd(), 'src');

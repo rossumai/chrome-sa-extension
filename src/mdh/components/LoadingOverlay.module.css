@@ -34,8 +34,7 @@
   animation: spin 0.7s linear infinite;
 }
 
-/* A copy of the global @keyframes spin (src/console/legacy/shared.css): a CSS Module
-   localises the name it animates, so the keyframes must be local too. */
+/* A CSS Module localises the animation name it uses, so the keyframes must be local too. */
 @keyframes spin {
   to {
     transform: rotate(360deg);

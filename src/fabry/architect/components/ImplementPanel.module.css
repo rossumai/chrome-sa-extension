@@ -198,7 +198,7 @@
   margin: 4px 0 0;
 }
 
-/* Local copy of the Console's global `spin` (a module's animation names are local). */
+/* A module's animation names are local, so it carries its own `spin` keyframes. */
 @keyframes spin {
   to {
     transform: rotate(360deg);
