@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
+import { queryRun } from '../store.js';
 import * as api from '../api.js';
 import { stripWriteStages } from '../pipelineOps.js';
 
@@ -11,6 +12,10 @@ import { stripWriteStages } from '../pipelineOps.js';
 // Returns:
 //   counts: { [activeIndex]: { count, ms } | { error: { message, status }, ms } }
 //   inputInfo: { count, ms } | { error: { message, status }, ms } | null
+//   stopped: true once the Data panel's query was cancelled or failed — the
+//     in-flight count requests are aborted with it, and counts that never
+//     arrived are not coming (the panel shows them as —). The next run of the
+//     query starts the counts again.
 // Both clear (to {} / null) whenever the collection or active-stage set changes,
 // and write stages ($out/$merge) are stripped so a count probe never writes.
 export default function useStageCounts(collection: string, activeStages: any[]) {
@@ -18,6 +23,20 @@ export default function useStageCounts(collection: string, activeStages: any[]) 
   const [inputInfo, setInputInfo] = useState<any>(null);
   const stages = Array.isArray(activeStages) ? activeStages : [];
   const activeKey = JSON.stringify(stages);
+  const [stopped, setStopped] = useState(false);
+  // Bumped to restart the counts when a stopped query is run again unchanged.
+  const [generation, setGeneration] = useState(0);
+  const controllerRef = useRef<AbortController | null>(null);
+  const phase = queryRun.value.phase;
+
+  useEffect(() => {
+    if (phase === 'cancelled' || phase === 'failed') {
+      controllerRef.current?.abort();
+      setStopped(true);
+    } else if (phase === 'running' && stopped) {
+      setGeneration((g) => g + 1);
+    }
+  }, [phase]);
 
   useEffect(() => {
     if (!collection || stages.length === 0) {
@@ -27,8 +46,10 @@ export default function useStageCounts(collection: string, activeStages: any[]) 
     }
     setCounts({});
     setInputInfo(null);
+    setStopped(false);
 
     const controller = new AbortController();
+    controllerRef.current = controller;
     stages.forEach((_, i) => {
       const prefix = stages.slice(0, i + 1);
       const t0 = performance.now();
@@ -80,7 +101,7 @@ export default function useStageCounts(collection: string, activeStages: any[]) 
       });
 
     return () => controller.abort();
-  }, [collection, activeKey]);
+  }, [collection, activeKey, generation]);
 
-  return { counts, inputInfo };
+  return { counts, inputInfo, stopped };
 }

@@ -10,7 +10,9 @@ import {
   error,
   pendingPipelineLoad,
   sampledFields,
+  activePanel,
 } from '../store.js';
+import { prependSample } from '../queryStatus.js';
 import { usePipeline } from '../hooks/usePipeline.js';
 import { useQuery } from '../hooks/useQuery.js';
 import { usePagination } from '../hooks/usePagination.js';
@@ -137,6 +139,9 @@ export default function DataPanel() {
       .entries.filter((e) => !e.disabled)
       .map((e) => e.stage);
     const write = terminalWriteStage(liveStages);
+    // Placeholder field types decide how a value substitutes, so they are
+    // resolved before the aggregate — inside the query's loading window.
+    const prepareTypes = () => pipeline.ensureFieldTypes(pipeline.referencedFields(rawText));
     if (write) {
       // The query UI auto-runs on every edit. A write pipeline must NEVER run
       // automatically — it executes only via the explicit "Run write pipeline"
@@ -146,12 +151,12 @@ export default function DataPanel() {
         'Run write-stage pipeline?',
         `This pipeline ends in ${write.op} and will write results into collection "${write.target}", which may overwrite existing data. Run it?`,
         async () => {
-          await pipeline.ensureFieldTypes(pipeline.referencedFields(rawText));
           const result = await query.runQuery(
             collection,
             rawText,
             (t: string) =>
               normalizeEffectivePipelineText(pipeline.substituteWithTypes(t)) as string,
+            prepareTypes,
           );
           if (result) {
             addToHistory(
@@ -167,11 +172,11 @@ export default function DataPanel() {
       );
       return;
     }
-    await pipeline.ensureFieldTypes(pipeline.referencedFields(rawText));
     const result = await query.runQuery(
       collection,
       rawText,
       (t: string) => normalizeEffectivePipelineText(pipeline.substituteWithTypes(t)) as string,
+      prepareTypes,
     );
     if (result) {
       addToHistory(
@@ -190,6 +195,10 @@ export default function DataPanel() {
     selectedIds.value = new Map();
     selectionPipelineDirty.value = false;
     pipeline.reset();
+    // Never show the previous collection's records as this one's "previous run"
+    // while its first query loads (skeleton instead). Cached ones are this
+    // collection's own.
+    if (cache.get(collection, 'records') === null) records.value = [];
 
     sampledFields.value = [];
     api
@@ -305,6 +314,13 @@ export default function DataPanel() {
       placeholderTypes: { ...pipeline.placeholderTypes.value },
       skip: skip.value,
     });
+  }
+
+  // After a timeout: try the pipeline on a sample. One editor change, so ⌘Z
+  // takes it back; runQuery keeps the write-stage gate.
+  function handleRunOnSample() {
+    mutatePipelineText(prependSample);
+    runQuery();
   }
 
   async function invalidateAndRun() {
@@ -841,6 +857,11 @@ export default function DataPanel() {
             );
           }}
           onRefresh={handleToolbarAction}
+          onRunAgain={() => runQuery()}
+          onRunOnSample={handleRunOnSample}
+          onOpenIndexes={() => {
+            activePanel.value = 'indexes';
+          }}
           downloadState={downloadState}
           onCancelDownload={cancelDownload}
           onEnterSelectionMode={handleEnterSelectionMode}

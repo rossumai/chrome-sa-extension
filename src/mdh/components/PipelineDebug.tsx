@@ -12,8 +12,17 @@ const timeCls = (ms: number) =>
 
 // Map a stage/input count result ({count} | {error} | undefined) to the count
 // cell's text + class. Shared by the per-stage rows and the 0th input row.
-function countCell(info: any) {
-  if (!info) return { text: '…', cls: pd.pipelineDebugCount };
+function countCell(info: any, stopped: boolean): { text: any; cls: string } {
+  // Pending: a shimmer bar in the count's place. Stopped (the query was
+  // cancelled or failed): this count is not coming.
+  if (!info) {
+    return stopped
+      ? { text: '—', cls: `${pd.pipelineDebugCount} ${pd.pipelineDebugStopped}` }
+      : {
+          text: <span class={pd.pipelineDebugPending} data-pending="" aria-label="counting" />,
+          cls: pd.pipelineDebugCount,
+        };
+  }
   if (info.error) {
     return {
       text: info.error.status ? `HTTP ${info.error.status}` : 'error',
@@ -39,9 +48,14 @@ export default function PipelineDebug({
 
   const list = Array.isArray(entries) ? entries : [];
   const activeStages = list.filter((e) => !e.disabled).map((e) => e.stage);
-  const { counts: stageCounts, inputInfo } = useStageCounts(collection as string, activeStages) as {
+  const {
+    counts: stageCounts,
+    inputInfo,
+    stopped,
+  } = useStageCounts(collection as string, activeStages) as {
     counts: Record<number, any>;
     inputInfo: any;
+    stopped: boolean;
   };
 
   if (list.length === 0) return null;
@@ -57,7 +71,7 @@ export default function PipelineDebug({
     'End-to-end latency for the prefix up to this stage (network + server + contention with parallel debug requests). Cumulative — not per-stage MongoDB executor time. Data Storage does not expose explain output.';
   const inputTimingTitle =
     'End-to-end latency of the $collStats document count for the whole collection (network + server). This is a metadata count, so it is typically near-instant — not a measure of how long a full scan would take.';
-  const inputCell = countCell(inputInfo);
+  const inputCell = countCell(inputInfo, stopped);
 
   let activeIdx = -1;
   let displayNo = 0;
@@ -129,7 +143,7 @@ export default function PipelineDebug({
         const myActiveIdx = activeIdx;
         const myDisplayNo = displayNo;
         const info = stageCounts[myActiveIdx];
-        const { text: countText, cls: countCls } = countCell(info);
+        const { text: countText, cls: countCls } = countCell(info, stopped);
 
         return (
           <div class={pd.pipelineDebugStageWrap} key={entryIndex}>

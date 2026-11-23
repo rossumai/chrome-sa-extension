@@ -151,12 +151,13 @@ describe('PipelineDebug', () => {
     );
 
     const root = mount({ pipeline });
-    // Wait for the input count to commit and the stage 1 count to leave its '…' state.
+    // Wait for the input count to commit and the stage 1 count to arrive (a
+    // pending count is a shimmer with no text, so "docs" means it answered).
     await waitFor(
       () =>
         root.querySelector(`.${pd.pipelineDebugInputRow}`)?.textContent.includes('4,242') &&
         stageCountCells(root)[0] &&
-        !stageCountCells(root)[0].includes('…'),
+        stageCountCells(root)[0].includes('docs'),
       'input + stage counts rendered',
     );
 

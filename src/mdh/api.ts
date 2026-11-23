@@ -49,6 +49,12 @@ export function init(domain: string, token: string): void {
 
 const REQUEST_TIMEOUT = 30_000;
 
+// The error for the API's OWN 30 s abort, marked so a caller can tell a timeout
+// from a failure (the Data panel words it as a result, not a crash).
+function timeoutError(): Error {
+  return Object.assign(new Error('Request timed out after 30s'), { timedOut: true });
+}
+
 function combinedSignal(externalSignal?: AbortSignal | null) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
@@ -86,7 +92,7 @@ async function post(
     clearTimeout(timer);
     if ((err as Error).name === 'AbortError') {
       if (externalSignal?.aborted) throw err;
-      throw new Error('Request timed out after 30s');
+      throw timeoutError();
     }
     throw err;
   }
@@ -138,7 +144,7 @@ async function get(path: string, { signal: externalSignal }: RequestOpts = {}): 
     clearTimeout(timer);
     if ((err as Error).name === 'AbortError') {
       if (externalSignal?.aborted) throw err;
-      throw new Error('Request timed out after 30s');
+      throw timeoutError();
     }
     throw err;
   }
@@ -184,7 +190,7 @@ async function mdhRequest(
     clearTimeout(timer);
     if ((err as Error).name === 'AbortError') {
       if (externalSignal?.aborted) throw err;
-      throw new Error('Request timed out after 30s');
+      throw timeoutError();
     }
     throw err;
   }
@@ -545,7 +551,7 @@ async function dmWrite(
     clearTimeout(timer);
     if ((err as Error).name === 'AbortError') {
       if (externalSignal?.aborted) throw err;
-      throw new Error('Request timed out after 30s');
+      throw timeoutError();
     }
     throw err;
   }

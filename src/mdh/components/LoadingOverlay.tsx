@@ -1,22 +1,13 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { loading } from '../store.js';
+import { useDelayedLoading } from '../hooks/useDelayedLoading.js';
 import styles from './LoadingOverlay.module.css';
 
-const SHOW_DELAY = 300;
-
+// The global spinner for writers of store.loading (sidebar, index panels, bulk
+// ops, record edits). The Data panel's query no longer uses it: its loading is
+// shown in the results area (spec 2026-11-23-mdh-loading-states; step 2 retires
+// this overlay altogether).
 export default function LoadingOverlay() {
-  const isLoading = loading.value;
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (isLoading) {
-      const timer = setTimeout(() => setVisible(true), SHOW_DELAY);
-      return () => clearTimeout(timer);
-    }
-    setVisible(false);
-  }, [isLoading]);
-
+  const visible = useDelayedLoading();
   return (
     <div class={styles.loadingOverlay + (visible ? ` ${styles.loadingOverlayVisible}` : '')}>
       <div class={styles.spinner}></div>

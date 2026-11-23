@@ -2,6 +2,7 @@
 import { signal } from '@preact/signals';
 import { visibleCollections } from './hiddenCollections.js';
 import { STATS_MODES, STATS_MODE_SAMPLE } from './statsPipelines.js';
+import type { QueryRun } from './queryStatus.js';
 
 export const domain = signal('');
 export const token = signal('');
@@ -53,6 +54,11 @@ export const limit = signal(50);
 export const activePanel = signal<string>('data');
 export const activeView = signal<string>('collection');
 export const loading = signal(false);
+// The Data panel's query, published by useQuery only (spec 2026-11-23-mdh-loading-
+// states §3.1). The results area, its status chip and the notices derive what to
+// show from it through the pure queryStatus.ts. A query never writes `loading` or
+// `error`: those remain for the other callers and the global overlay/banner.
+export const queryRun = signal<QueryRun>({ phase: 'idle' });
 // Only `message` is ever set or read (ErrorBanner renders it, CollectionEmptyState tests
 // for presence) — the banner is a message, not a structured error.
 export const error = signal<{ message: string } | null>(null);

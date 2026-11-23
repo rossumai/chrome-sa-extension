@@ -105,6 +105,61 @@
   margin: 0;
 }
 
+.recordListStale {
+  opacity: 0.5;
+  filter: saturate(0.3);
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.recordSkeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recordSkeleton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.skeletonBar {
+  height: 10px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--bg-hover) 0%, var(--bg-code) 40%, var(--bg-hover) 80%);
+  background-size: 300% 100%;
+  animation: skeletonShimmer 1.4s linear infinite;
+}
+
+.skeletonBarFaint {
+  opacity: 0.6;
+}
+
+@keyframes skeletonShimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonBar {
+    animation: none;
+  }
+}
+
+.recordListRunAgain {
+  margin-top: 12px;
+}
+
 .recordListEmptyHint {
   font-size: 12px;
   color: var(--text-secondary);

@@ -9,7 +9,12 @@ import {
   selectionPipelineDirty,
   resultsView,
   inspectTarget,
+  queryRun,
 } from '../store.js';
+import { queryView } from '../queryStatus.js';
+import { useNow } from '../hooks/useNow.js';
+import QueryStatus from './QueryStatus.jsx';
+import QueryNotice from './QueryNotice.jsx';
 
 import RecordCard from './RecordCard.jsx';
 import RecordTable from './RecordTable.jsx';
@@ -52,6 +57,9 @@ export default function RecordList({
   onSelectPage,
   onClearSelection,
   onViewSelected,
+  onRunAgain,
+  onRunOnSample,
+  onOpenIndexes,
   filtered = false,
   pageWindow = null,
   entries,
@@ -69,6 +77,12 @@ export default function RecordList({
   onEdit: (record: any) => void;
   onDelete: (record: any, index?: number) => void;
   onRefresh: (action?: any) => void;
+  // Re-runs the editor's pipeline; offered after the user cancelled a query.
+  onRunAgain?: () => void;
+  // Prepends a $sample to the pipeline and runs it; offered after a timeout.
+  onRunOnSample?: () => void;
+  // Switches to the Indexes tab; offered when a query is slow.
+  onOpenIndexes?: () => void;
   downloadState?: any;
   onCancelDownload: () => void;
   onEnterSelectionMode: () => void;
@@ -199,8 +213,50 @@ export default function RecordList({
 
   const allExpanded = expandAll || (records.length > 0 && expandedSet.size >= records.length);
 
+  // The query's loading state (spec 2026-11-23-mdh-loading-states §3.2).
+  const run = queryRun.value;
+  const isRunning = run.phase === 'running';
+  const now = useNow(isRunning, 250);
+  const qv = queryView(run, isRunning ? now : Date.now(), records.length > 0);
+  const stale = qv.mode === 'stale';
+  const effectiveStages = (entries || []).filter((e: any) => !e.disabled).map((e: any) => e.stage);
+  const noticeKind =
+    qv.mode === 'failed' ? 'failed' : isRunning && qv.slow ? 'slow' : stale ? 'stale' : null;
+
   let emptyContent = null;
-  if (records.length === 0) {
+  if (qv.mode === 'pending' || qv.mode === 'failed') {
+    // Pending: under 300 ms nothing is said yet. Failed: the notice says it all.
+    emptyContent = null;
+  } else if (qv.mode === 'skeleton') {
+    emptyContent = (
+      <div class={styles.recordSkeletonList} aria-busy="true" aria-label="Running query">
+        {SKELETON_WIDTHS.map((w, i) => (
+          <div class={styles.recordSkeleton} data-skeleton="" key={i}>
+            <span class={styles.skeletonBar} style={`width:${w}px`} />
+            <span class={`${styles.skeletonBar} ${styles.skeletonBarFaint}`} style="width:64px" />
+          </div>
+        ))}
+      </div>
+    );
+  } else if (qv.mode === 'cancelled') {
+    emptyContent = (
+      <div class={styles.recordListEmpty}>
+        <p>Query cancelled after {qv.elapsedS} s</p>
+        <p class={styles.recordListEmptyHint}>Edit the pipeline, or run it again.</p>
+        <p class={styles.recordListEmptyHint}>
+          Data Storage may still finish the work on its side; nothing was written.
+        </p>
+        {onRunAgain && (
+          <button
+            class={`${ctl.btn} ${ctl.btnSm} ${ctl.btnPrimary} ${styles.recordListRunAgain}`}
+            onClick={onRunAgain}
+          >
+            Run again
+          </button>
+        )}
+      </div>
+    );
+  } else if (records.length === 0) {
     let hasNonTrivialPipeline =
       Object.keys(filterState).length > 0 || Object.keys(sortState).length > 0;
     if (!hasNonTrivialPipeline && pipelineText) {
@@ -247,7 +303,8 @@ export default function RecordList({
   // Pipeline Debug, so `totalCount` / `lastQueryMs` are accepted (DataPanel still
   // passes them) but no longer rendered here.
   const countText =
-    records.length > 0 ? `Showing ${s + 1}\u2013${s + records.length}` : 'No records';
+    (records.length > 0 ? `Showing ${s + 1}\u2013${s + records.length}` : 'No records') +
+    (stale ? ' \u00b7 previous run' : '');
 
   return (
     <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
@@ -286,6 +343,19 @@ export default function RecordList({
           </button>
         </div>
       )}
+      {view !== 'stages' && noticeKind && (
+        <QueryNotice
+          kind={noticeKind}
+          run={run}
+          elapsedS={qv.elapsedS}
+          collection={selectedCollection.value as string}
+          totalCount={totalCount}
+          stages={effectiveStages}
+          onOpenIndexes={onOpenIndexes}
+          onRunAgain={onRunAgain}
+          onRunOnSample={onRunOnSample}
+        />
+      )}
       {view === 'stages' ? (
         <StagesView
           collection={selectedCollection.value as string}
@@ -296,7 +366,12 @@ export default function RecordList({
           inspectTarget={inspectTarget.value}
         />
       ) : (
-        <div class={styles.recordList} ref={listRef}>
+        <div
+          class={styles.recordList + (stale ? ` ${styles.recordListStale}` : '')}
+          ref={listRef}
+          data-stale={stale ? '' : undefined}
+          aria-busy={stale ? 'true' : undefined}
+        >
           {emptyContent}
           {records.length > 0 && view === 'table' && (
             <RecordTable
@@ -367,6 +442,10 @@ export default function RecordList({
 const NO_PAGE_WINDOW_TITLE =
   'This pipeline has no trailing $skip/$limit stages to page through. Add them, or click Reset.';
 
+// Skeleton row widths: varied like real record summaries, fixed so a re-render
+// does not make them jump.
+const SKELETON_WIDTHS = [210, 170, 250, 190, 230, 160, 240, 200, 180, 220];
+
 const STAGES_DISABLED_TITLE =
   'Unavailable in the Stages view — switch to List or Table to use this.';
 
@@ -418,6 +497,7 @@ function DefaultToolbar({
         <ViewSwitch view={view} changeView={changeView} />
       </div>
       <div style="flex:1"></div>
+      <QueryStatus />
       <div
         class={styles.toolbarGroup + (recordsDisabled ? ` ${styles.toolbarGroupDisabled}` : '')}
         title={disabledTitle}

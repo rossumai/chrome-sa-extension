@@ -103,6 +103,39 @@
   font-size: 10px;
 }
 
+/* A count still on its way: a shimmer in its place, sized like "1,234 docs". */
+.pipelineDebugPending {
+  display: inline-block;
+  width: 46px;
+  height: 8px;
+  border-radius: 4px;
+  vertical-align: middle;
+  background: linear-gradient(90deg, var(--bg-hover) 0%, var(--bg-code) 40%, var(--bg-hover) 80%);
+  background-size: 300% 100%;
+  animation: pendingShimmer 1.4s linear infinite;
+}
+
+@keyframes pendingShimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pipelineDebugPending {
+    animation: none;
+  }
+}
+
+/* The query was cancelled or failed, so this count is not coming. */
+.pipelineDebugStopped {
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
 .pipelineDebugCount {
   flex-shrink: 0;
   font-weight: 600;

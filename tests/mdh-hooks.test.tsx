@@ -29,6 +29,7 @@ beforeEach(() => {
   store.records.value = [];
   store.loading.value = false;
   store.error.value = null;
+  store.queryRun.value = { phase: 'idle' };
   cache.invalidateAll();
   vi.clearAllMocks();
 });
@@ -197,7 +198,7 @@ describe('pipeline building (usePipeline)', () => {
 // ── Query execution ────────────────────────────────────────────────
 
 describe('query execution (useQuery)', () => {
-  it('runs pipeline and populates store.records', async () => {
+  it('runs pipeline, populates store.records and publishes done', async () => {
     vi.mocked(api.aggregate).mockResolvedValue({ result: [{ _id: '1', name: 'Alice' }] });
     const hook = renderHook(useQuery);
 
@@ -207,18 +208,35 @@ describe('query execution (useQuery)', () => {
       signal: expect.any(AbortSignal),
     });
     expect(store.records.value).toEqual([{ _id: '1', name: 'Alice' }]);
-    expect(res.elapsed).toBeTypeOf('number');
+    expect(res!.elapsed).toBeTypeOf('number');
+    expect(store.queryRun.value).toMatchObject({ phase: 'done', count: 1 });
     expect(store.loading.value).toBe(false);
   });
 
-  it('sets error signal on API failure', async () => {
+  it('a failure lands in queryRun, not the global banner', async () => {
     vi.mocked(api.aggregate).mockRejectedValue(new Error('Connection refused'));
+    store.records.value = [{ old: true }];
     const hook = renderHook(useQuery);
 
     await hook.runQuery('col', '[{"$match": {}}]');
 
-    expect(store.error.value).toEqual({ message: 'Connection refused' });
+    expect(store.queryRun.value).toMatchObject({
+      phase: 'failed',
+      message: 'Connection refused',
+      timedOut: false,
+    });
+    expect(store.error.value).toBeNull();
     expect(store.loading.value).toBe(false);
+    expect(store.records.value).toEqual([]);
+  });
+
+  it('marks the API timeout as timed out', async () => {
+    vi.mocked(api.aggregate).mockRejectedValue(
+      Object.assign(new Error('Request timed out after 30s'), { timedOut: true }),
+    );
+    const hook = renderHook(useQuery);
+    await hook.runQuery('col', '[{"$match": {}}]');
+    expect(store.queryRun.value).toMatchObject({ phase: 'failed', timedOut: true });
   });
 
   it('ignores stale query results when a newer query completes first', async () => {
@@ -237,11 +255,13 @@ describe('query execution (useQuery)', () => {
     const firstPromise = hook.runQuery('col', '[{"$match": {"v": 1}}]');
     await hook.runQuery('col', '[{"$match": {"v": 2}}]');
     expect(store.records.value).toEqual([{ name: 'second' }]);
+    const after = store.queryRun.value;
 
-    // Resolve the stale first query — store must not be overwritten
-    resolveFirst({ result: [{ name: 'first' }] });
+    // Resolve the stale first query — neither records nor queryRun may change
+    resolveFirst({ result: [{ name: 'first' }, { name: 'x' }] });
     await firstPromise;
     expect(store.records.value).toEqual([{ name: 'second' }]);
+    expect(store.queryRun.value).toBe(after);
   });
 
   it('caches result when setCacheNextQuery is enabled', async () => {
@@ -261,6 +281,98 @@ describe('query execution (useQuery)', () => {
     await hook.runQuery('col', '[{"$match": {}}]');
 
     expect(cache.get('col', 'records')).toBeNull();
+  });
+
+  it('is running while the prepare step runs, before the aggregate is sent', async () => {
+    vi.mocked(api.aggregate).mockResolvedValue({ result: [] });
+    let finishPrepare: any;
+    const prepare = () =>
+      new Promise<void>((r) => {
+        finishPrepare = r;
+      });
+    const hook = renderHook(useQuery);
+    const running = hook.runQuery('col', '[{"$match": {}}]', undefined, prepare);
+    expect(store.queryRun.value.phase).toBe('running');
+    expect(api.aggregate).not.toHaveBeenCalled();
+    finishPrepare();
+    await running;
+    expect(api.aggregate).toHaveBeenCalled();
+    expect(store.queryRun.value.phase).toBe('done');
+  });
+
+  it('a query started during a slow prepare supersedes it', async () => {
+    vi.mocked(api.aggregate).mockResolvedValue({ result: [{ name: 'second' }] });
+    let finishPrepare: any;
+    const slow = () =>
+      new Promise<void>((r) => {
+        finishPrepare = r;
+      });
+    const hook = renderHook(useQuery);
+    const first = hook.runQuery('col', '[{"$match": {"v": 1}}]', undefined, slow);
+    await hook.runQuery('col', '[{"$match": {"v": 2}}]');
+    finishPrepare();
+    await first;
+    expect(api.aggregate).toHaveBeenCalledTimes(1);
+    expect(store.records.value).toEqual([{ name: 'second' }]);
+    expect(store.queryRun.value.phase).toBe('done');
+  });
+
+  it('invalid text neither runs nor touches the run state, even with a prepare step', async () => {
+    const prepare = vi.fn(async () => {});
+    store.queryRun.value = { phase: 'done', count: 3, ms: 1 };
+    const hook = renderHook(useQuery);
+    await hook.runQuery('col', 'not valid json', undefined, prepare);
+    expect(prepare).not.toHaveBeenCalled();
+    expect(store.queryRun.value).toEqual({ phase: 'done', count: 3, ms: 1 });
+  });
+
+  it('cancel aborts the running query, clears the records and marks it cancelled', async () => {
+    let seenSignal: AbortSignal | undefined;
+    vi.mocked(api.aggregate).mockImplementation((_c: any, _p: any, opts: any) => {
+      seenSignal = opts.signal;
+      return new Promise(() => {}); // never answers
+    });
+    store.records.value = [{ old: true }];
+    const hook = renderHook(useQuery);
+    hook.runQuery('col', '[{"$match": {}}]');
+    await Promise.resolve();
+    const run = store.queryRun.value;
+    expect(run.phase).toBe('running');
+    if (run.phase !== 'running') return;
+    expect(run.startedAt).toBeTypeOf('number');
+    run.cancel();
+    expect(seenSignal!.aborted).toBe(true);
+    expect(store.queryRun.value.phase).toBe('cancelled');
+    expect(store.records.value).toEqual([]);
+    expect(store.loading.value).toBe(false);
+  });
+
+  it('cancel during the prepare step never sends the aggregate', async () => {
+    let finishPrepare: any;
+    const prepare = () =>
+      new Promise<void>((r) => {
+        finishPrepare = r;
+      });
+    const hook = renderHook(useQuery);
+    const running = hook.runQuery('col', '[{"$match": {}}]', undefined, prepare);
+    const run = store.queryRun.value;
+    if (run.phase === 'running') run.cancel();
+    finishPrepare();
+    await running;
+    expect(api.aggregate).not.toHaveBeenCalled();
+    expect(store.queryRun.value.phase).toBe('cancelled');
+  });
+
+  it('a stale cancel handle does nothing once a newer query runs', async () => {
+    vi.mocked(api.aggregate).mockImplementation(() => new Promise(() => {}));
+    const hook = renderHook(useQuery);
+    hook.runQuery('col', '[{"$match": {"v": 1}}]');
+    await Promise.resolve();
+    const first = store.queryRun.value;
+    hook.runQuery('col', '[{"$match": {"v": 2}}]');
+    await Promise.resolve();
+    if (first.phase === 'running') first.cancel();
+    expect(store.queryRun.value.phase).toBe('running');
   });
 
   it('skips execution for invalid pipeline text', async () => {

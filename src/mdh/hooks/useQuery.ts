@@ -1,7 +1,7 @@
 import { useRef } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import { trackOnce } from '../../usage/track.js';
-import { records as recordsSignal, loading, error } from '../store.js';
+import { records as recordsSignal, queryRun } from '../store.js';
 import * as api from '../api.js';
 import * as cache from '../cache.js';
 import JSON5 from 'json5';
@@ -29,6 +29,11 @@ export function useQuery() {
     collection: string | null | undefined,
     rawText: string | null | undefined,
     substituteFn?: (text: string) => string,
+    // Async work that must finish before the aggregate is sent (DataPanel
+    // resolves placeholder field types, which decide how a value substitutes).
+    // It runs inside this query's loading window, so a slow one shows as
+    // loading rather than as an empty result, and a newer query supersedes it.
+    prepare?: () => Promise<unknown>,
   ) {
     if (!collection || !rawText) return;
     // trackOnce, NOT track: DataPanel auto-invokes this on collection select,
@@ -40,15 +45,19 @@ export function useQuery() {
     // Unfilled variables substitute to an empty string, so there is nothing to
     // "wait for" — just run whatever resolves to a valid pipeline. (Invalid
     // JSON, e.g. a half-typed pipeline, is still skipped by the parse below.)
-    const resolvedText = substituteFn ? substituteFn(rawText) : rawText;
-
-    let pipeline: unknown;
-    try {
-      pipeline = JSON5.parse(resolvedText);
-      if (!Array.isArray(pipeline)) return;
-    } catch {
-      return;
-    }
+    const parse = (): api.PipelineStage[] | null => {
+      try {
+        const parsed = JSON5.parse(substituteFn ? substituteFn(rawText) : rawText);
+        return Array.isArray(parsed) ? parsed : null;
+      } catch {
+        return null;
+      }
+    };
+    // Gate on validity BEFORE touching any state: a half-typed pipeline must
+    // neither run nor cancel the query already in flight. Types only change how
+    // a value is quoted, never whether the text parses.
+    let pipeline = parse();
+    if (!pipeline) return;
 
     // Capture and immediately consume the one-shot cache flag so it stays
     // bound to *this* call. Without this, a slow query A could supersede,
@@ -63,26 +72,57 @@ export function useQuery() {
     const controller = new AbortController();
     state.controller = controller;
     const thisQueryId = ++state.queryId;
+    const isCurrent = () => thisQueryId === state.queryId;
+    const startedAt = Date.now();
+    const afterMs = () => Date.now() - startedAt;
+    // Abort the request and stand down. The old records belong to a different
+    // query than the editor now shows, so they go too. Aborting only stops the
+    // browser waiting; Data Storage may still finish the aggregate server-side.
+    // A stale handle (a newer query is running) does nothing.
+    const cancel = () => {
+      if (!isCurrent()) return;
+      state.queryId++;
+      controller.abort();
+      recordsSignal.value = [];
+      queryRun.value = { phase: 'cancelled', afterMs: afterMs() };
+    };
+    queryRun.value = { phase: 'running', startedAt, cancel };
 
     try {
-      loading.value = true;
-      error.value = null;
+      if (prepare) {
+        try {
+          await prepare();
+        } catch {
+          /* best-effort: run with whatever types are known */
+        }
+        if (!isCurrent()) return;
+        pipeline = parse();
+        if (!pipeline) {
+          queryRun.value = { phase: 'idle' };
+          return;
+        }
+      }
       const start = performance.now();
-      const res = await api.aggregate(collection, pipeline as any[], { signal: controller.signal });
-      if (thisQueryId !== state.queryId) return;
+      const res = await api.aggregate(collection, pipeline, { signal: controller.signal });
+      if (!isCurrent()) return;
       const elapsed = Math.round(performance.now() - start);
       state.lastQueryMs.value = elapsed;
       const result = res.result || [];
       if (shouldCache) cache.set(collection, 'records', result);
       recordsSignal.value = result;
-      loading.value = false;
+      queryRun.value = { phase: 'done', count: result.length, ms: elapsed };
       return { records: result, elapsed };
     } catch (err) {
-      if (thisQueryId !== state.queryId) return;
-      if ((err as any)?.name !== 'AbortError') {
-        error.value = { message: (err as any).message };
-      }
-      loading.value = false;
+      if (!isCurrent()) return;
+      // A query's failure belongs next to the query (the results area), not in
+      // the global banner; its records no longer match the editor either.
+      recordsSignal.value = [];
+      queryRun.value = {
+        phase: 'failed',
+        message: (err as any)?.message || String(err),
+        timedOut: (err as any)?.timedOut === true,
+        afterMs: afterMs(),
+      };
     }
   }
 

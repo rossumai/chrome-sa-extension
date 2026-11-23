@@ -5,7 +5,7 @@
 // live in the Aggregate Pipeline Debug, so they were removed here — along with the
 // >1s slow-query tint (record-count-slow), which moved to the debug timings.
 //
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 
@@ -36,6 +36,7 @@ import {
   selectionPipelineDirty,
   resultsView,
   inspectTarget,
+  queryRun,
 } from '../src/mdh/store.js';
 import seg from '../src/ui/Segmented.module.css';
 import pg from '../src/ui/Pagination.module.css';
@@ -88,6 +89,7 @@ beforeEach(() => {
   selectionPipelineDirty.value = false;
   resultsView.value = 'list';
   inspectTarget.value = null;
+  queryRun.value = { phase: 'idle' };
 });
 
 describe('RecordList view switch', () => {
@@ -239,5 +241,92 @@ describe('RecordList footer', () => {
   it('still shows "No records" when there are no records', () => {
     const root = renderList({ records: [], totalCount: 162, lastQueryMs: 277 });
     expect(root.querySelector('.record-count')!.textContent).toBe('No records');
+  });
+});
+
+// Spec 2026-11-23-mdh-loading-states §3.2: the results area's modes.
+describe('RecordList while a query runs', () => {
+  const MATCH = '[{"$match":{"a":1}}]';
+  async function mountRunning(records: any[], elapsedMs: number, props = {}) {
+    vi.useFakeTimers();
+    queryRun.value = { phase: 'running', startedAt: Date.now(), cancel: () => {} };
+    let root!: HTMLElement;
+    await act(() => {
+      root = renderList({ records, pipelineText: MATCH, ...props });
+    });
+    await act(() => {
+      vi.advanceTimersByTime(elapsedMs);
+    });
+    return root;
+  }
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('pending: nothing, and never "0 records match", before 300 ms', async () => {
+    const root = await mountRunning([], 0);
+    expect(root.textContent).not.toContain('0 records match');
+    expect(root.querySelectorAll('[data-skeleton]').length).toBe(0);
+  });
+
+  it('skeleton: placeholder rows once the query takes a while', async () => {
+    const root = await mountRunning([], 600);
+    expect(root.querySelectorAll('[data-skeleton]').length).toBe(10);
+    expect(root.textContent).not.toContain('0 records match');
+  });
+
+  it('stale: the previous answer stays, faded and marked', async () => {
+    const root = await mountRunning([{ _id: '1' }], 600);
+    expect(root.querySelector('[data-stale]')).not.toBeNull();
+    expect(root.querySelectorAll('.record-card-stub').length).toBe(1);
+    expect(root.textContent).toContain('Showing the previous run');
+    expect(root.textContent).toContain('previous run');
+  });
+
+  it('slow: the explanation replaces the stale note at 10 s', async () => {
+    const onOpenIndexes = vi.fn();
+    const root = await mountRunning([{ _id: '1' }], 10_000, { onOpenIndexes });
+    expect(root.textContent).toContain('This query is taking a while');
+    expect(root.textContent).not.toContain('Showing the previous run');
+    const btn = [...root.querySelectorAll('button')].find((b) => b.textContent === 'Open Indexes')!;
+    btn.click();
+    expect(onOpenIndexes).toHaveBeenCalledTimes(1);
+  });
+
+  it('the toolbar carries the status chip', async () => {
+    const root = await mountRunning([], 1_000);
+    expect(root.textContent).toContain('Running · 1 s');
+  });
+});
+
+describe('RecordList after the query', () => {
+  it('cancelled: says so, how long it ran, and offers to run it again', async () => {
+    queryRun.value = { phase: 'cancelled', afterMs: 14_200 };
+    const onRunAgain = vi.fn();
+    const root = renderList({ records: [], pipelineText: '[{"$match":{"a":1}}]', onRunAgain });
+    expect(root.textContent).toContain('Query cancelled after 14 s');
+    expect(root.textContent).toContain('Data Storage may still finish the work on its side');
+    expect(root.textContent).not.toContain('0 records match');
+    const btn = [...root.querySelectorAll('button')].find((b) => b.textContent === 'Run again')!;
+    await act(() => {
+      btn.click();
+    });
+    expect(onRunAgain).toHaveBeenCalledTimes(1);
+  });
+
+  it('timed out: the notice, not an empty state', () => {
+    queryRun.value = { phase: 'failed', message: 'x', timedOut: true, afterMs: 30_000 };
+    const onRunOnSample = vi.fn();
+    const root = renderList({ records: [], pipelineText: '[{"$match":{"a":1}}]', onRunOnSample });
+    expect(root.textContent).toContain('The query did not finish within 30 s');
+    expect(root.textContent).not.toContain('0 records match');
+    [...root.querySelectorAll('button')].find((b) => b.textContent === 'Run on a sample')!.click();
+    expect(onRunOnSample).toHaveBeenCalledTimes(1);
+  });
+
+  it('done with nothing: 0 records match', () => {
+    queryRun.value = { phase: 'done', count: 0, ms: 4 };
+    const root = renderList({ records: [], pipelineText: '[{"$match":{"a":1}}]' });
+    expect(root.textContent).toContain('0 records match');
   });
 });
