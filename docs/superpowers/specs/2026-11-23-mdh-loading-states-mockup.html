@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MDH loading states — proposal</title>
+<style>
+/* Product tokens: copied from src/console/tokens.css so the frames read as the real Console. */
+:root {
+  --bg-base:#f1f1f5; --bg-card:#ffffff; --bg-input:#ffffff; --bg-hover:#e8e8ee; --bg-sidebar:#f8f8fb; --bg-code:#f5f5f8;
+  --text-primary:#1a1a24; --text-secondary:#7a7a8c; --border:#dcdce4;
+  --accent:#4270db; --accent-hover:#3560c5; --danger:#cc3333; --success:#22883e; --warning:#b45309;
+  --success-bg:#d1fae5; --success-fg:#065f46; --warning-bg:#fef3c7; --warning-fg:#92400e; --warning-border:#fde68a;
+  --danger-bg:#fef2f2; --danger-fg:#991b1b; --danger-border:#fecaca;
+  --info-bg:#eaf1fd; --info-fg:#1e40af; --info-border:#c7daf8;
+  --font-sans:-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  --radius:6px;
+  --skel:#ebebf1; --skel-hi:#f6f6fa;
+  --pin:#db2777;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-base:#16161d; --bg-card:#1f1f28; --bg-input:#1a1a22; --bg-hover:#2a2a35; --bg-sidebar:#1a1a22; --bg-code:#191920;
+    --text-primary:#e6e6ee; --text-secondary:#9a9aac; --border:#33333f;
+    --success-bg:#0f2f22; --success-fg:#7ee2b0; --warning-bg:#2f240c; --warning-fg:#f6c56f; --warning-border:#5a4413;
+    --danger-bg:#341616; --danger-fg:#ffb4b4; --danger-border:#5c2626;
+    --info-bg:#18223d; --info-fg:#a9c2ff; --info-border:#2c3b66;
+    --skel:#2a2a35; --skel-hi:#33333f;
+  }
+}
+* { box-sizing:border-box; }
+html { -webkit-font-smoothing:antialiased; }
+body { margin:0; background:#0c0d16; font:13px/1.45 var(--font-sans); color:var(--text-primary); }
+button { font-family:inherit; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+
+/* ---------- mockup chrome (not product) ---------- */
+.mk { position:sticky; top:0; z-index:50; display:flex; gap:4px; align-items:center; flex-wrap:wrap; padding:8px 14px; background:#0c0d16; color:#aab; font-size:12px; border-bottom:1px solid #22243a; }
+.mk strong { color:#fff; margin-right:10px; }
+.mk button { background:transparent; color:#b8bcd4; border:1px solid #2c2f4a; border-radius:20px; padding:4px 11px; font-size:12px; cursor:pointer; }
+.mk button[aria-pressed='true'] { background:#4270db; border-color:#4270db; color:#fff; }
+.mk .sep { width:1px; height:18px; background:#2c2f4a; margin:0 6px; }
+.stage { padding:22px 0 60px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+.cap { width:1440px; color:#d6d8e6; }
+.cap h2 { margin:0 0 4px; font-size:18px; color:#fff; }
+.cap p { margin:0; color:#a7abc4; max-width:1100px; }
+.notes { width:1440px; display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+.note { background:#15172a; border:1px solid #262a45; border-radius:10px; padding:12px 14px; color:#c8cbe0; font-size:12.5px; }
+.note b { color:#fff; }
+.note .n, .pin { display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--pin); color:#fff; font:700 11px/1 var(--font-sans); margin-right:6px; vertical-align:-4px; }
+.pin { position:absolute; z-index:40; box-shadow:0 0 0 3px rgba(219,39,119,.25); margin:0; }
+.ladder { width:1440px; background:#15172a; border:1px solid #262a45; border-radius:10px; padding:14px 16px; color:#c8cbe0; }
+.ladder h3 { margin:0 0 10px; color:#fff; font-size:13px; }
+.ladder ol { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; }
+.ladder li { border-top:3px solid #4270db; padding-top:8px; font-size:12px; }
+.ladder li:nth-child(4) { border-color:#b45309; } .ladder li:nth-child(5) { border-color:#cc3333; }
+.ladder li b { display:block; color:#fff; font-size:12.5px; margin-bottom:2px; }
+
+/* ---------- product frame ---------- */
+.frame { position:relative; width:1440px; height:900px; overflow:hidden; border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,.45); background:var(--bg-base); display:flex; }
+.rail { width:72px; flex:none; background:var(--bg-sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; gap:14px; padding-top:14px; }
+.rail .app { display:flex; flex-direction:column; align-items:center; gap:4px; font-size:10.5px; color:var(--text-secondary); }
+.rail .ic { width:40px; height:40px; border-radius:10px; background:var(--bg-hover); display:grid; place-items:center; color:var(--text-secondary); font-size:17px; }
+.rail .on .ic { background:var(--accent); color:#fff; } .rail .on { color:var(--text-primary); font-weight:600; }
+
+.side { width:280px; flex:none; background:var(--bg-sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; position:relative; }
+.side-h { display:flex; align-items:center; justify-content:space-between; padding:14px 14px 8px; font:700 11px/1 var(--font-mono); letter-spacing:.08em; color:var(--accent); }
+.side-h .cnt { color:var(--text-secondary); font-weight:500; }
+.side-h .acts { display:flex; gap:10px; color:var(--text-secondary); font-size:14px; font-family:var(--font-sans); letter-spacing:0; }
+.filter { margin:0 12px 8px; height:28px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-input); color:var(--text-secondary); font-size:12px; display:flex; align-items:center; padding:0 9px; }
+.cols { flex:1; overflow:hidden; padding:2px 8px; }
+.col { font:12.5px/1 var(--font-mono); padding:8px 8px; border-radius:var(--radius); color:var(--text-primary); display:flex; justify-content:space-between; align-items:center; }
+.col.sel { background:var(--accent); color:#fff; }
+.col .meta { font-size:10.5px; color:var(--text-secondary); font-family:var(--font-sans); }
+.col.sel .meta { color:rgba(255,255,255,.8); }
+.side-f { border-top:1px solid var(--border); padding:10px 14px; color:var(--text-secondary); font-size:12px; display:flex; flex-direction:column; gap:8px; }
+
+.main { flex:1; min-width:0; display:flex; flex-direction:column; position:relative; }
+.conn { height:30px; flex:none; display:flex; align-items:center; gap:8px; padding:0 14px; border-bottom:1px solid var(--border); background:var(--bg-card); font:11.5px var(--font-mono); color:var(--text-secondary); }
+.conn .dot { width:7px; height:7px; border-radius:50%; background:var(--success); }
+.conn .r { margin-left:auto; }
+.tabs { height:38px; flex:none; display:flex; gap:4px; padding:0 10px; border-bottom:1px solid var(--border); background:var(--bg-card); }
+.tab { padding:0 12px; display:flex; align-items:center; gap:6px; color:var(--text-secondary); font-size:13px; border-bottom:2px solid transparent; }
+.tab.on { color:var(--accent); border-color:var(--accent); font-weight:500; }
+.body { flex:1; min-height:0; display:flex; }
+
+.left { width:360px; flex:none; border-right:1px solid var(--border); background:var(--bg-card); display:flex; flex-direction:column; padding:10px 12px; gap:8px; }
+.lh { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary); }
+.lh .sp { flex:1; }
+.chip { border:1px solid var(--accent); color:var(--accent); border-radius:5px; padding:2px 8px; font-size:11.5px; }
+.ask { height:28px; border:1px solid var(--border); border-radius:var(--radius); display:flex; align-items:center; padding:0 9px; color:var(--text-secondary); font-size:12px; gap:6px; }
+.code { flex:1; min-height:0; background:var(--bg-code); border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px 8px 30px; font:12px/1.55 var(--font-mono); white-space:pre; overflow:hidden; position:relative; color:var(--text-primary); }
+.code .k { color:#1f7a3e; } .code .n { color:#b45309; }
+.code .caret { display:inline-block; width:1.5px; height:14px; background:var(--accent); vertical-align:-2px; animation:blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity:0; } }
+.code .gut { position:absolute; left:8px; width:12px; height:12px; border:1px solid var(--border); border-radius:3px; background:var(--bg-card); }
+.vars { font:600 10.5px var(--font-mono); letter-spacing:.06em; color:var(--text-secondary); display:flex; justify-content:space-between; }
+.varrow { display:flex; gap:8px; align-items:center; font:12px var(--font-mono); color:var(--accent); }
+.varrow .in { flex:1; height:26px; border:1px solid var(--border); border-radius:5px; display:flex; align-items:center; padding:0 8px; color:var(--text-primary); }
+.varrow .ty { width:86px; height:26px; border:1px solid var(--border); border-radius:5px; display:flex; align-items:center; padding:0 8px; color:var(--text-primary); font-family:var(--font-sans); }
+.dbg { display:flex; flex-direction:column; gap:5px; font:11.5px var(--font-mono); }
+.dbg .row > span:nth-child(2) { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dbg .row .c, .dbg .row .t { white-space:nowrap; }
+.dbg .row { display:grid; grid-template-columns:14px minmax(0,1fr) 112px 44px; gap:6px; align-items:center; color:var(--text-primary); }
+.dbg .row .op { color:var(--accent); font-weight:600; }
+.dbg .row .c { text-align:right; color:var(--success); font-weight:600; }
+.dbg .row .t { text-align:right; color:var(--text-secondary); }
+.dbg .row .cb { width:12px; height:12px; border:1px solid var(--border); border-radius:3px; }
+.dbg .row.input .op { color:var(--text-secondary); font-style:italic; font-weight:500; }
+
+.right { flex:1; min-width:0; display:flex; flex-direction:column; position:relative; }
+.tb { height:46px; flex:none; display:flex; align-items:center; gap:6px; padding:0 12px; border-bottom:1px solid var(--border); background:var(--bg-card); position:relative; }
+.btn { height:28px; padding:0 11px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-card); color:var(--text-primary); font-size:12.5px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.btn.pri { background:var(--success); border-color:var(--success); color:#fff; }
+.btn.acc { background:var(--accent); border-color:var(--accent); color:#fff; }
+.btn.dng { background:var(--danger); border-color:var(--danger); color:#fff; }
+.btn.ghost { border-color:transparent; background:transparent; color:var(--accent); padding:0 6px; }
+.btn[disabled] { opacity:.55; }
+.seg { display:inline-flex; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.seg span { padding:0 11px; height:26px; display:flex; align-items:center; font-size:12.5px; border-right:1px solid var(--border); }
+.seg span:last-child { border-right:0; } .seg .on { background:var(--accent); color:#fff; }
+.tb .sp { flex:1; }
+.tb > * { flex:none; }
+.kbd { font:10.5px var(--font-mono); border:1px solid var(--border); border-bottom-width:2px; border-radius:4px; padding:0 4px; color:var(--text-secondary); }
+
+/* The proposed run-status slot in the results toolbar. */
+.status { white-space:nowrap; display:inline-flex; align-items:center; gap:7px; height:28px; padding:0 4px 0 10px; border-radius:14px; font-size:12px; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+.status.idle { padding-right:10px; }
+.status.run { background:var(--info-bg); color:var(--info-fg); border:1px solid var(--info-border); }
+.status.slow { background:var(--warning-bg); color:var(--warning-fg); border:1px solid var(--warning-border); }
+.status .x { height:22px; padding:0 9px; border-radius:11px; border:0; background:var(--bg-card); color:inherit; font-size:11.5px; font-weight:600; display:inline-flex; gap:5px; align-items:center; box-shadow:0 0 0 1px currentColor inset; }
+.spin { width:12px; height:12px; border-radius:50%; border:2px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex:none; opacity:.9; }
+.spin.lg { width:18px; height:18px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Region progress: a 2px indeterminate bar on the top edge of the region that is changing. */
+.bar { position:absolute; left:0; right:0; height:2px; overflow:hidden; z-index:5; }
+.bar::before { content:''; position:absolute; top:0; bottom:0; width:35%; background:var(--accent); animation:slide 1.3s ease-in-out infinite; }
+.bar.warn::before { background:var(--warning); }
+.bar.det::before { animation:none; width:var(--p, 40%); }
+@keyframes slide { from { left:-35%; } to { left:100%; } }
+
+.list { flex:1; min-height:0; overflow:hidden; padding:10px 12px; display:flex; flex-direction:column; gap:6px; position:relative; transition:opacity .2s; }
+.rec { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:9px 12px; display:flex; align-items:center; gap:10px; font:12px var(--font-mono); }
+.rec .s { color:var(--text-secondary); }
+.rec .acts { margin-left:auto; display:flex; gap:14px; font-family:var(--font-sans); color:var(--accent); }
+.rec .acts .d { color:var(--danger); }
+.rec.open { flex-direction:column; align-items:stretch; gap:4px; }
+.rec.open .kv { padding-left:14px; } .rec.open .kv .k { color:var(--accent); } .rec.open .kv .v { color:#1f7a3e; }
+.rec.busy { opacity:.55; }
+.stale .rec { filter:saturate(.3); }
+.stale { opacity:.5; pointer-events:none; }
+.skel { border-radius:4px; background:linear-gradient(90deg, var(--skel) 0%, var(--skel-hi) 40%, var(--skel) 80%); background-size:300% 100%; animation:shim 1.4s linear infinite; height:10px; display:inline-block; }
+@keyframes shim { from { background-position:100% 0; } to { background-position:-50% 0; } }
+.foot { height:44px; flex:none; border-top:1px solid var(--border); background:var(--bg-card); display:flex; align-items:center; gap:14px; padding:0 14px; font-size:12px; color:var(--text-secondary); }
+.foot .sp { flex:1; }
+
+.empty { flex:1; display:flex; flex-direction:column; align-items:center; padding-top:70px; gap:6px; color:var(--text-secondary); text-align:center; }
+.empty h4 { margin:0; font-size:15px; font-weight:500; color:var(--text-primary); }
+.empty .acts { margin-top:10px; display:flex; gap:8px; }
+
+.notice { margin:10px 12px 0; border-radius:var(--radius); padding:10px 12px; display:flex; gap:10px; align-items:flex-start; font-size:12.5px; }
+.notice.warn { background:var(--warning-bg); border:1px solid var(--warning-border); color:var(--warning-fg); }
+.notice.err { background:var(--danger-bg); border:1px solid var(--danger-border); color:var(--danger-fg); }
+.notice.info { background:var(--info-bg); border:1px solid var(--info-border); color:var(--info-fg); }
+.notice b { display:block; font-size:13px; margin-bottom:2px; }
+.notice ul { margin:4px 0 0; padding-left:16px; }
+.notice .acts { margin-left:auto; display:flex; gap:6px; flex:none; }
+.notice code { font:11.5px var(--font-mono); background:rgba(0,0,0,.05); padding:0 4px; border-radius:3px; }
+
+/* Today's global overlay, for contrast. */
+.overlay { position:absolute; inset:68px 0 0 0; background:rgba(0,0,0,.06); display:grid; place-items:center; z-index:30; }
+.overlay .spin { width:28px; height:28px; border-width:3px; color:var(--accent); }
+
+.toast { position:absolute; right:18px; bottom:60px; z-index:35; background:var(--text-primary); color:var(--bg-card); border-radius:8px; padding:10px 12px; display:flex; gap:12px; align-items:center; font-size:12.5px; box-shadow:0 8px 24px rgba(0,0,0,.25); min-width:360px; }
+.toast .pb { display:block; width:100%; height:4px; border-radius:2px; background:rgba(255,255,255,.18); overflow:hidden; }
+.toast .pb i { display:block; height:100%; width:var(--p); background:#7aa2ff; }
+.toast .a { color:#9fbaff; font-weight:600; }
+
+/* Stats */
+.stats { flex:1; overflow:hidden; padding:14px; display:grid; grid-template-columns:repeat(3, 1fr); grid-auto-rows:150px; gap:10px; position:relative; }
+.card { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:8px; }
+.card .h { display:flex; justify-content:space-between; font:600 12px var(--font-mono); }
+.card .h .t { color:var(--text-secondary); font:500 11px var(--font-sans); }
+.bars { display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--text-secondary); }
+.bars div { display:grid; grid-template-columns:70px 1fr 34px; gap:6px; align-items:center; }
+.bars i { height:8px; border-radius:2px; background:var(--accent); opacity:.8; }
+.card.wait { border-style:dashed; }
+.card .why { margin-top:auto; font-size:11px; color:var(--text-secondary); display:flex; gap:6px; align-items:center; }
+.statsbar { margin:12px 14px 0; display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-secondary); }
+.statsbar .track { flex:1; max-width:260px; height:4px; border-radius:2px; background:var(--skel); overflow:hidden; }
+.statsbar .track i { display:block; height:100%; width:58%; background:var(--accent); }
+
+.modalwrap { position:absolute; inset:0; background:rgba(20,20,30,.28); display:grid; place-items:center; z-index:30; }
+.modal { width:520px; background:var(--bg-card); border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.modal .mh { height:45px; display:flex; align-items:center; padding:0 12px 0 18px; font-size:15px; font-weight:600; border-bottom:1px solid var(--border); }
+.modal .mh span { margin-left:auto; color:var(--text-secondary); font-weight:400; }
+.modal .mb { padding:16px 18px; display:flex; flex-direction:column; gap:12px; font-size:12.5px; }
+.modal .mf { padding:12px 18px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+.prog { height:6px; border-radius:3px; background:var(--skel); overflow:hidden; } .prog i { display:block; height:100%; width:var(--p); background:var(--accent); }
+.kvline { display:flex; justify-content:space-between; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+<div class="mk" id="mk"><strong>MDH · loading states</strong></div>
+<div class="stage" id="stage"></div>
+
+<script>
+// ------------------------------------------------------------------ fixtures
+const COLS = ['_match_memory','addresses','contracts','cost_centers','currencies','gl_accounts','invoices_history','payment_terms','po_headers','po_lines','po_receipts','suppliers','supplier_aliases','tax_codes','uoms','vendors','warehouses','workflow_rules'];
+const NAMES = ['Ironbridge Freight Ltd.','Brightline Industrial','Redwood Industrial Supply','Quarry Lane Print & Pack','Redwood Electronics','Stonefield Electronics','Meadowbrook Tooling','Brightline Electronics','Stonefield Tooling Services','Copperfield Freight','Stonefield Facility Mgmt','Highpoint Facility Services','Quarry Lane Metals','Greenhill Packaging'];
+const PIPE = `[
+  {
+    <span class="k">"$match"</span>: {
+      <span class="k">"order.number"</span>: <span class="k">"{po_number}"</span>,
+      <span class="k">"order.system"</span>: <span class="k">"Acme ERP"</span>
+    }
+  },
+  {
+    <span class="k">"$group"</span>: {
+      <span class="k">"_id"</span>: { <span class="k">"number"</span>: <span class="k">"$order.number"</span> },
+      <span class="k">"first"</span>: { <span class="k">"$first"</span>: <span class="k">"$$ROOT"</span> }
+    }
+  },
+  { <span class="k">"$sort"</span>: { <span class="k">"order.line"</span>: <span class="n">1</span> } },
+  {
+    <span class="k">"$project"</span>: {
+      <span class="k">"_id"</span>: <span class="n">0</span>, <span class="k">"orderType"</span>: <span class="n">1</span>,
+      <span class="k">"order.number"</span>: <span class="n">1</span>, <span class="k">"paymentTerms"</span>: <span class="n">1</span>
+    }
+  },
+  { <span class="k">"$limit"</span>: <span class="n">50</span> }<span class="CARET"></span>
+]`;
+const STAGES = [['$match','{"order.number":"PO-1042-7",…'],['$group','{"_id":{"number":"$id.po…'],['$sort','{"order.line":1}'],['$project','{"_id":0,"orderType":1,…'],['$limit','{"$limit":50}']];
+
+// ------------------------------------------------------------------ pieces
+const rail = () => `<nav class="rail">${[['▤','Data',1],['☰','Audit'],['◈','CIB'],['⚒','Builder'],['⌕','Inspector'],['✦','Fabry'],['✺','Galaxy']].map(([i,l,on]) => `<div class="app ${on?'on':''}"><div class="ic">${i}</div>${l}</div>`).join('')}</nav>`;
+
+function sidebar(o = {}) {
+  const rows = COLS.map((c) => {
+    const sel = c === (o.sel || 'po_lines');
+    const meta = o.counting ? (sel ? '' : `<span class="skel" style="width:${22 + (c.length % 4) * 6}px;height:8px"></span>`) : '';
+    return `<div class="col ${sel ? 'sel' : ''}">${c}${meta ? `<span class="meta">${meta}</span>` : ''}</div>`;
+  }).join('');
+  return `<aside class="side">
+    ${o.refreshing ? '<div class="bar" style="top:0"></div>' : ''}
+    <div class="side-h"><span>COLLECTIONS <span class="cnt">(18)</span></span><span class="acts"><span>+</span>${o.refreshing ? '<span class="spin" style="color:var(--accent);margin-top:1px"></span>' : '<span>↻</span>'}</span></div>
+    <div class="filter">⌕&nbsp; Filter by name…</div>
+    <div class="cols" style="${o.refreshing ? '' : ''}">${rows}</div>
+    <div class="side-f"><span>▸ Extension collections (2)</span><span>⊞ Overview</span><span>▤ Operation Logs</span></div>
+  </aside>`;
+}
+
+const conn = (o = {}) => `<div class="conn"><span class="dot"></span>Connected to https://partner-sandbox.rossum.app · Acme (SAND) · org: 214757 [eu]<span class="r">${o.cache || 'cache: 7 objects · 6s ago'}</span></div>`;
+const tabs = (on = 'Data', extra = {}) => `<div class="tabs">${['Data','Indexes','Search Indexes','Stats'].map((t) => `<div class="tab ${t===on?'on':''}">${t}${extra[t]||''}</div>`).join('')}</div>`;
+
+function left(o = {}) {
+  let code = PIPE.replace('<span class="CARET"></span>', o.caret ? '<span class="caret"></span>' : '');
+  const gut = [10, 165, 290, 345, 470].map((t) => `<span class="gut" style="top:${t}px"></span>`).join('');
+  const dbg = [['input','all records (pipeline input)', o.dbg === 'skel' ? null : '52,400,000 docs', '271ms']]
+    .concat(STAGES.map(([op, s], i) => [op, s, o.dbg === 'skel' || ((o.dbg === 'partial' || o.dbg === 'stopped') && i >= 2) ? null : '1 docs', `${200 + i * 17}ms`]))
+    .map(([op, s, c, t], i) => {
+      const counting = c == null;
+      const active = counting && (o.dbg === 'partial' ? i === 3 : i === 0);
+      return `<div class="row ${op === 'input' ? 'input' : ''}">
+        ${op === 'input' ? '<span></span>' : '<span class="cb"></span>'}
+        <span><span class="op">${i ? i + '. ' : '0. '}${op}</span> <span style="color:var(--text-secondary)">${s}</span></span>
+        <span class="c">${counting ? (o.dbg === 'stopped' ? '<span style="color:var(--text-secondary);font-weight:400">—</span>' : `<span class="skel" style="width:58px"></span>`) : '→ ' + c}</span>
+        <span class="t">${counting ? (active && o.dbg !== 'stopped' ? '<span class="spin" style="color:var(--accent);width:10px;height:10px;display:inline-block"></span>' : '') : t}</span>
+      </div>`;
+    }).join('');
+  return `<section class="left">
+    <div class="lh">Aggregate Pipeline<span class="sp"></span><span>☆</span><span class="chip">Library ▾</span><span class="chip">Reset</span><span class="chip">···</span></div>
+    <div class="ask">✦ Ask Mr. Fabry — describe a query…</div>
+    <div class="code">${gut}${code}</div>
+    <div class="vars"><span>VARIABLES</span><span style="font-weight:400;letter-spacing:0;font-family:var(--font-sans)">Fill from Annotation</span></div>
+    <div class="varrow">{po_number}<span class="in">PO-1042-7</span><span class="ty">String ▾</span></div>
+    <div class="vars" style="margin-top:4px"><span>AGGREGATE PIPELINE DEBUG</span>${o.dbg && o.dbg !== 'done' && o.dbg !== 'stopped' ? '<span style="font-weight:400;letter-spacing:0;font-family:var(--font-sans);color:var(--accent)">counting stages…</span>' : ''}</div>
+    <div class="dbg">${dbg}</div>
+  </section>`;
+}
+
+function toolbar(status = '', o = {}) {
+  return `<div class="tb">
+    ${o.bar ? `<div class="bar ${o.bar}" style="bottom:-1px"></div>` : ''}
+    <span class="btn">Select</span><span class="btn">Expand All</span>
+    <span class="seg"><span class="on">List</span><span>Table</span><span>Stages</span></span>
+    <span class="sp"></span>${status}
+    <span class="btn" ${o.lock ? 'disabled' : ''}>Bulk ▾</span><span class="btn">Export</span><span class="btn pri">Import</span>
+  </div>`;
+}
+
+const S = {
+  idle: (n = 1, ms = 208) => `<span class="status idle">${n} doc${n === 1 ? '' : 's'} · ${ms} ms</span>`,
+  run: (s) => `<span class="status run"><span class="spin"></span>Running · ${s} s<button class="x" title="Cancel (Esc)">Cancel</button></span>`,
+  slow: (s) => `<span class="status slow"><span class="spin"></span>Slow · ${s} s<button class="x" title="Cancel (Esc)">Cancel</button></span>`,
+};
+
+function records(n = 9, o = {}) {
+  return NAMES.slice(0, n).map((nm, i) => i === 0 && o.open
+    ? `<div class="rec open ${o.busy === 0 ? 'busy' : ''}"><div style="display:flex">▾ <span class="s">&nbsp;orderType: "STANDARD" · +4 fields</span><span class="acts"><span>Copy</span><span>Edit</span><span class="d">Del</span></span></div>
+        <div class="kv"><span class="k">orderType</span> : <span class="v">"STANDARD"</span></div>
+        <div class="kv"><span class="k">order.number</span> : <span class="v">"PO-1042-7"</span></div>
+        <div class="kv"><span class="k">order.account</span> : <span class="v">"V-1040"</span></div>
+        <div class="kv"><span class="k">paymentTerms</span> : <span class="v">"NET45"</span></div></div>`
+    : `<div class="rec ${o.busy === i ? 'busy' : ''}">▸ <span>name: "${nm.slice(0, 22)}${nm.length > 22 ? '…' : ''}"</span><span class="s">· +8 fields</span>
+        <span class="acts">${o.busy === i ? '<span style="color:var(--text-secondary);display:flex;gap:6px;align-items:center"><span class="spin"></span>Deleting…</span>' : '<span>Copy</span><span>Edit</span><span class="d">Del</span>'}</span></div>`).join('');
+}
+const skelRecords = (n = 10) => Array.from({ length: n }, (_, i) => `<div class="rec" style="height:36px">▸ <span class="skel" style="width:${170 + (i * 37) % 120}px"></span><span class="skel" style="width:64px;opacity:.7"></span><span class="acts"><span class="skel" style="width:90px;opacity:.6"></span></span></div>`).join('');
+const foot = (t = 'Showing 1–1') => `<div class="foot"><span>${t}</span><span class="sp"></span><span>Click key to sort · Click value to filter · Option+click to copy</span><span class="sp"></span><span>← Prev &nbsp; Page 1 &nbsp; Next →</span></div>`;
+
+function frame({ side = {}, leftO = {}, right, extra = '', tabsOn = 'Data', tabsExtra, cache }) {
+  return `<div class="frame">${rail()}${sidebar(side)}<div class="main">${conn({ cache })}${tabs(tabsOn, tabsExtra)}<div class="body">${tabsOn === 'Data' ? left(leftO) : ''}${right}</div>${extra}</div></div>`;
+}
+const pin = (n, x, y) => `<span class="pin" style="left:${x}px;top:${y}px">${n}</span>`;
+const pins = (list) => `<div style="position:absolute;inset:0;pointer-events:none;z-index:45">${list.map(([n,x,y]) => pin(n,x,y)).join('')}</div>`;
+const withPins = (html, list) => html.replace(/<\/div>$/, pins(list) + '</div>');
+
+// ------------------------------------------------------------------ states
+const STATES = [
+  { id: 'today', label: '0 · Today',
+    title: 'Today — one global flag, one overlay',
+    sub: 'Ten unrelated callers (sidebar list, create/drop/rename, index panels, operation logs, record edit/delete, bulk ops, the query) share a single boolean, store.loading. Whichever is true paints the same dimmed overlay over the entire main column, blocking the editor, the tabs and the results.',
+    html: () => withPins(frame({
+      leftO: { dbg: 'done' },
+      right: `<section class="right">${toolbar()}<div class="list">${records(0)}<div class="empty"><h4>0 records match the current query</h4>Try modifying the pipeline or click Reset</div></div>${foot('No records')}</section>`,
+      extra: '<div class="overlay"><span class="spin"></span></div>',
+    }), [[1, 920, 455], [2, 680, 120], [3, 1250, 175]]),
+    notes: [
+      ['<b>Says nothing.</b> A bare spinner does not tell the user what is loading, for how long, or how to stop it. A refresh on a 50M-record collection looked like an empty dataset.'],
+      ['<b>Blocks everything.</b> The overlay covers the editor and catches clicks, so the user cannot even fix the query that is slow.'],
+      ['<b>Lies while it waits.</b> The empty state renders under the spinner — "0 records match" — before any answer arrived. Two writers to one boolean can also switch the spinner off while the query still runs.'],
+    ] },
+
+  { id: 'first', label: '1 · First load',
+    title: 'First load — skeletons shaped like the answer',
+    sub: 'Opening a collection or refreshing the page: nothing to show yet, so the results area and the debug counts show skeletons in their final shape. The editor is live from the first frame.',
+    html: () => withPins(frame({
+      side: { counting: false },
+      leftO: { dbg: 'skel', caret: true },
+      right: `<section class="right">${toolbar(S.run(1), { bar: 'x' })}<div class="list">${skelRecords(11)}</div>${foot('<span class="skel" style="width:70px"></span>')}</section>`,
+    }), [[1, 1130, 56], [2, 1408, 150], [3, 690, 735], [4, 680, 120]]),
+    notes: [
+      ['<b>Status slot.</b> The results toolbar owns one status: idle shows the last answer ("1 doc · 208 ms"), running shows spinner + elapsed + Cancel (Esc). Visible after 300 ms, never for a fast query.'],
+      ['<b>Skeleton rows, not a spinner.</b> They hold the layout, so the first answer does not jump the page. A 2px bar under the toolbar marks the region that is busy.'],
+      ['<b>Debug counts shimmer per stage</b>, with a spinner on the one being counted, instead of a row of "…". <b>(4)</b> The editor stays editable: typing supersedes the run.'],
+    ] },
+
+  { id: 'rerun', label: '2 · Re-run',
+    title: 'Re-run — keep the old answer, mark it stale',
+    sub: 'Every edit auto-runs. Blanking the list on each keystroke would flicker, so the previous results stay in place, faded and inert, until the new answer replaces them.',
+    html: () => withPins(frame({
+      leftO: { dbg: 'partial', caret: true },
+      right: `<section class="right">${toolbar(S.run(2), { bar: 'x' })}<div class="notice info" style="margin-bottom:0"><span class="spin" style="margin-top:2px"></span><div><b>Showing the previous run</b>The results below are from before your edit and will be replaced.</div></div><div class="list stale">${records(1, { open: true })}</div>${foot('Showing 1–1 · previous run')}</section>`,
+    }), [[1, 1408, 200], [2, 1130, 56], [3, 690, 735]]),
+    notes: [
+      ['<b>Stale, not gone.</b> Faded to 50% and unclickable — you cannot edit or delete a record from an answer that no longer matches the editor. The footer says "previous run" too.'],
+      ['<b>Same status slot</b> as the first load; one place to look, one Cancel.'],
+      ['<b>Debug fills in progressively</b> — stages already counted keep their numbers; the remaining ones shimmer.'],
+    ] },
+
+  { id: 'slow', label: '3 · Slow (> 10 s)',
+    title: 'Slow query — explain, estimate, offer the way out',
+    sub: 'After 10 s the status turns amber and the results area explains why it might be slow and that Data Storage gives up at 30 s — with the concrete cause when we can see it.',
+    html: () => withPins(frame({
+      leftO: { dbg: 'partial', caret: false },
+      right: `<section class="right">${toolbar(S.slow(14), { bar: 'warn' })}<div class="notice warn"><span class="spin" style="margin-top:2px"></span><div><b>This query is taking a while — 14 s</b>po_lines has 52,400,000 records and <code>order.number</code> has no index, so the first <code>$match</code> reads every record. Data Storage stops a request after 30 s.<ul><li>Add an index on <code>order.number</code> in Indexes</li><li>or narrow the <code>$match</code> before the <code>$group</code></li></ul></div><div class="acts"><span class="btn">Open Indexes</span><span class="btn dng">Cancel query</span></div></div><div class="list stale">${records(1, { open: true })}</div>${foot('Showing 1–1 · previous run')}</section>`,
+    }), [[1, 1130, 56], [2, 704, 135], [3, 1405, 172]]),
+    notes: [
+      ['<b>Timing ladder</b> (below): amber at 10 s, the time limit named up front so 30 s is not a surprise.'],
+      ['<b>Cause, not just "slow".</b> Collection size is already known (debug input count); the indexes list is already loaded, so "this field has no index" is a cheap, local check.'],
+      ['<b>Two exits.</b> Cancel is the big one; Open Indexes leads to the fix. Both work while the query runs — nothing is blocked.'],
+    ] },
+
+  { id: 'cancel', label: '4 · Cancelled',
+    title: 'Cancelled — say so, and how long it ran',
+    sub: 'The request is aborted, the stale answer is dropped, and the area states what happened. Shipped in this branch, with the elapsed time and the server caveat added.',
+    html: () => withPins(frame({
+      leftO: { dbg: 'done', caret: true },
+      right: `<section class="right">${toolbar(`<span class="status idle">Cancelled after 14 s</span>`)}<div class="list"><div class="empty"><h4>Query cancelled after 14 s</h4>Edit the pipeline, or run it again.<br><span style="font-size:11.5px">Data Storage may still finish the work on its side; nothing was written.</span><div class="acts"><span class="btn acc">Run again</span><span class="btn">Open Indexes</span></div></div></div>${foot('No records')}</section>`,
+    }), [[1, 1130, 56], [2, 1250, 170]]),
+    notes: [
+      ['<b>The status slot remembers</b> the outcome until the next run, so a glance at the toolbar explains the empty list.'],
+      ['<b>Honest about the server.</b> Cancel only stops the browser waiting; read-only queries make that harmless, and the copy says so.'],
+      ['<b>Write pipelines</b> are never auto-run and keep their own confirm; Cancel on a running $out/$merge would say "it may still complete on the server" in the warning tone.'],
+    ] },
+
+  { id: 'timeout', label: '5 · Timed out',
+    title: 'Timed out at 30 s — a result, not a crash',
+    sub: 'Today the 30 s abort surfaces as a generic top-of-page error banner. Proposed: it lands in the results area, in the query’s own words, with the same advice as the slow state.',
+    html: () => withPins(frame({
+      leftO: { dbg: 'stopped', caret: true },
+      right: `<section class="right">${toolbar(`<span class="status idle" style="color:var(--danger-fg)">Timed out · 30 s</span>`)}<div class="notice err"><span style="font-size:16px;line-height:1">⏱</span><div><b>The query did not finish within 30 s</b>Data Storage stops every request after 30 s. On a collection this size, a <code>$match</code> on an unindexed field scans all 52,400,000 records.<ul><li>Add an index on <code>order.number</code>, then run again</li><li>Try it on a sample: prefix the pipeline with <code>{"$sample": {"size": 10000}}</code></li></ul></div><div class="acts"><span class="btn">Run on a sample</span><span class="btn acc">Run again</span></div></div><div class="list"></div>${foot('No records')}</section>`,
+    }), [[1, 704, 135], [2, 1405, 172]]),
+    notes: [
+      ['<b>Scoped error.</b> The global ErrorBanner stays for connection-level failures; a query’s failure belongs next to the query.'],
+      ['<b>"Run on a sample"</b> prepends a $sample stage in the editor (one undoable edit) and runs — a way to keep working on the pipeline shape.'],
+      ['The pipeline debug keeps the counts it finished; stages it never reached go back to blank.'],
+    ] },
+
+  { id: 'write', label: '6 · Writes',
+    title: 'Writes — busy where you clicked, not everywhere',
+    sub: 'Delete, edit, bulk update and import used to flip the same global overlay. Proposed: a single-record write marks its row; a long write runs in a progress toast and the rest of the app stays usable.',
+    html: () => withPins(frame({
+      leftO: { dbg: 'done' },
+      right: `<section class="right">${toolbar(S.idle(9, 182), { lock: true })}<div class="list">${records(9, { busy: 2 })}</div>${foot('Showing 1–9')}</section>`,
+      extra: `<div class="toast"><span class="spin" style="color:#9fbaff"></span><div style="display:flex;flex-direction:column;gap:5px;flex:1"><span>Bulk update · 61,200 / 140,000 records</span><span class="pb" style="--p:44%"><i></i></span></div><span class="a">Details</span></div>`,
+    }), [[1, 704, 212], [2, 1048, 792], [3, 1250, 58]]),
+    notes: [
+      ['<b>Row-level busy.</b> The deleted record fades with "Deleting…" in place of its actions; Undo keeps working as today.'],
+      ['<b>Progress toast</b> for writes that take a while (bulk update/delete, import): counts, a determinate bar, Details opens Operation Logs. The editor, tabs and other collections stay usable.'],
+      ['<b>Only conflicting actions lock.</b> Bulk is disabled while a bulk write runs on this collection; nothing else is.'],
+    ] },
+
+  { id: 'sidebar', label: '7 · Sidebar & panels',
+    title: 'Sidebar, Indexes, Stats — each region owns its loading',
+    sub: 'The same three primitives everywhere: a 2px region bar, skeletons for first loads, and a status line with progress where the work has steps.',
+    html: () => withPins(frame({
+      side: { refreshing: true },
+      tabsOn: 'Stats',
+      tabsExtra: { Stats: ' <span class="spin" style="width:10px;height:10px;color:var(--accent)"></span>' },
+      right: `<section class="right" style="position:relative"><div class="bar" style="top:0"></div>
+        <div class="statsbar"><span class="spin" style="color:var(--accent)"></span>Profiling a 100,000-record sample · 7 of 12 checks<span class="track"><i></i></span><span class="sp"></span><span class="btn ghost">Stop</span></div>
+        <div class="stats">
+          ${['orderType','order.number','order.system','order.line','paymentTerms','order.account'].map((f, i) => i < 4 ? `<div class="card"><div class="h">${f}<span class="t">string · 100%</span></div><div class="bars">${['STANDARD','BLANKET','CONTRACT'].map((v, j) => `<div><span>${v}</span><i style="width:${[78,15,7][j]}%"></i><span>${[78,15,7][j]}%</span></div>`).join('')}</div></div>` : `<div class="card wait"><div class="h">${f}<span class="t"><span class="skel" style="width:60px"></span></span></div><div class="bars">${[0,1,2].map((j) => `<div><span class="skel" style="width:56px"></span><span class="skel" style="width:${[70,40,20][j]}%"></span><span></span></div>`).join('')}</div><div class="why"><span class="spin" style="width:10px;height:10px"></span>${i === 4 ? 'Counting distinct values…' : 'Queued'}</div></div>`).join('')}
+        </div></section>`,
+    }), [[1, 300, 10], [2, 360, 80], [3, 1015, 80]]),
+    notes: [
+      ['<b>Sidebar refresh</b>: the ↻ becomes a spinner and a bar runs across the sidebar top. The list stays clickable; nothing else dims.'],
+      ['<b>Progress with steps.</b> Stats already knows "7 of 12 checks" — show it as a determinate bar, and let finished cards render while the rest wait in dashed outline with what they are doing.'],
+      ['<b>Stop</b> keeps what was computed. The tab carries a small spinner so a user on Data sees Stats is still working.'],
+    ] },
+];
+
+// ------------------------------------------------------------------ ladder + render
+const LADDER = `<div class="ladder"><h3>Timing ladder — one rule for every region</h3><ol>
+  <li><b>0 – 300 ms</b>Nothing changes. A fast answer simply replaces the old one: no spinner flash while typing.</li>
+  <li><b>300 ms</b>Region bar + status ("Running · 1 s") + Cancel. First loads show skeletons; re-runs fade the old answer.</li>
+  <li><b>3 s</b>Elapsed seconds keep counting; Esc cancels. Debug counts fill in as each stage answers.</li>
+  <li><b>10 s</b>Amber. Explain the likely cause (size, missing index) and the 30 s limit; offer Indexes.</li>
+  <li><b>30 s</b>Data Storage aborts. Scoped error with Run again and Run on a sample.</li>
+</ol></div>`;
+
+const mk = document.getElementById('mk'), stage = document.getElementById('stage');
+STATES.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.textContent = s.label; b.dataset.id = s.id;
+  b.onclick = () => show(s.id);
+  mk.appendChild(b);
+  if (i === 0) { const sep = document.createElement('span'); sep.className = 'sep'; mk.appendChild(sep); }
+});
+function show(id) {
+  const s = STATES.find((x) => x.id === id) || STATES[1];
+  [...mk.querySelectorAll('button')].forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === s.id)));
+  stage.innerHTML = `<div class="cap"><h2>${s.title}</h2><p>${s.sub}</p></div>${s.html()}<div class="notes">${s.notes.map((n, i) => `<div class="note"><span class="n">${i + 1}</span>${n[0]}</div>`).join('')}</div>${LADDER}`;
+  history.replaceState(null, '', '#' + s.id);
+}
+show(location.hash.slice(1) || 'first');
+</script>
+</body>
+</html>

@@ -979,7 +979,9 @@ older ones as history. Currently authoritative per area:
   checks, UI; §17 removed the coach on Rossum pages), a delta on `2026-08-07-partner-onboarding-training-design.md` (gate, storage
   cap, signed receipt)
 - **Inspector** — `2026-07-03-inspector-overhaul-design.md`
-- **MDH** — `2026-09-24-mdh-provenance-lookup-fields-design.md` (the Matching provenance card:
+- **MDH** — `2026-11-23-mdh-loading-states-design.md` (the query's loading states: status chip,
+  skeleton, stale answer, slow/timeout notices, Cancel; step 2 retires `store.loading`),
+  `2026-09-24-mdh-provenance-lookup-fields-design.md` (the Matching provenance card:
   lookup fields read from their saved result, one list in schema order),
   `2026-09-23-mdh-pagination-window-design.md` (record pagination: the trailing
   `$skip`/`$limit` run is the UI's, everything before it is the user's query),
