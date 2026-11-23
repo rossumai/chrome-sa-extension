@@ -97,6 +97,12 @@ export function deriveResolvedType(
 const FIELD_TYPES_KEY = 'stats_fieldTypes'; // 10-min TTL (cache.js: key starts with 'stats')
 const RAW_TYPES_KEY = 'stats_types'; // raw $type facet cached by the Stats panel
 
+// The type probe groups a random sample, never the whole collection: DataPanel's
+// runQuery awaits it before every run, so an unbounded $group over a 50M-record
+// collection held the query back for as long as the scan took, while the panel
+// showed "0 records". A sample decides the dominant type just as well.
+export const TYPE_PROBE_SAMPLE_SIZE = 1000;
+
 // Resolve FieldTypeInfo (or null) for each requested field, reusing the Stats
 // panel's cached raw $type facet when present, else probing only the missing
 // fields with a small buildTypePipeline facet. Always returns an entry for every
@@ -121,8 +127,8 @@ export async function resolveFieldTypes(collectionName: string, fields: string[]
 
   if (missing.length) {
     try {
-      const facet =
-        (await api.aggregate(collectionName, buildTypePipeline(missing)))?.result?.[0] || {};
+      const probe = [{ $sample: { size: TYPE_PROBE_SAMPLE_SIZE } }, ...buildTypePipeline(missing)];
+      const facet = (await api.aggregate(collectionName, probe))?.result?.[0] || {};
       for (const f of missing) cached[f] = transformTypeBuckets(facet[encKey(f)] || []);
     } catch {
       for (const f of missing) cached[f] = null; // don't hammer; value-based fallback

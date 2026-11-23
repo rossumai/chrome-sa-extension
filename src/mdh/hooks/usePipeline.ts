@@ -389,13 +389,17 @@ export function usePipeline() {
   }
 
   // Unique (collection, field) pairs referenced by the pipeline (skips
-  // ambiguous names and names whose collection can't be resolved).
+  // ambiguous names, names whose collection can't be resolved, and names the
+  // user typed explicitly — their field type is never consulted, so probing it
+  // would only delay the run).
   function referencedFields(text: string) {
     const fm = mapPlaceholdersToFields(text);
+    const pt = placeholderTypes.value;
     const pairs: { collection: string; field: string }[] = [];
     const seen = new Set<string>();
-    for (const v of Object.values<any>(fm)) {
+    for (const [name, v] of Object.entries<any>(fm)) {
       if (!v || !v.field || v.ambiguous) continue;
+      if (pt[name] && pt[name] !== 'auto') continue;
       const coll = resolveCollectionName(v.collection);
       if (!coll) continue;
       const key = `${coll}::${v.field}`;

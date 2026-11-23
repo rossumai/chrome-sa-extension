@@ -5,7 +5,7 @@ vi.mock('../src/mdh/cache.js', () => ({ get: vi.fn(() => null), set: vi.fn() }))
 
 import * as api from '../src/mdh/api.js';
 import * as cache from '../src/mdh/cache.js';
-import { resolveFieldTypes } from '../src/mdh/fieldTypes.js';
+import { resolveFieldTypes, TYPE_PROBE_SAMPLE_SIZE } from '../src/mdh/fieldTypes.js';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -44,6 +44,12 @@ describe('resolveFieldTypes', () => {
     const out = await resolveFieldTypes('col', ['vendor']);
     expect(api.aggregate).not.toHaveBeenCalled();
     expect(out.vendor.dominant).toBe('string');
+  });
+  it('probes a bounded $sample, never the whole collection', async () => {
+    vi.mocked(api.aggregate).mockResolvedValue({ result: [{ code: [] }] });
+    await resolveFieldTypes('col', ['code']);
+    const pipeline = vi.mocked(api.aggregate).mock.calls[0][1];
+    expect(pipeline[0]).toEqual({ $sample: { size: TYPE_PROBE_SAMPLE_SIZE } });
   });
   it('probe failure → null (value-based fallback)', async () => {
     vi.mocked(api.aggregate).mockRejectedValue(new Error('timeout'));

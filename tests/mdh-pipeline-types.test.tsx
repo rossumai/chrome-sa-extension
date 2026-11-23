@@ -53,6 +53,13 @@ describe('usePipeline type-aware functions', () => {
     expect(p.referencedFields(M)).toEqual([{ collection: 'col', field: 'code' }]);
     expect(p.referencedFields('[{"$match":{"$or":[{"a":"{x}"},{"b":"{x}"}]}}]')).toEqual([]);
   });
+  it('referencedFields skips a placeholder whose type the user set explicitly', () => {
+    const p = getPipeline();
+    p.setPlaceholderType('code', 'string');
+    expect(p.referencedFields(M)).toEqual([]);
+    p.setPlaceholderType('code', 'auto');
+    expect(p.referencedFields(M)).toEqual([{ collection: 'col', field: 'code' }]);
+  });
   it('ensureFieldTypes merges resolver output per collection and reports change', async () => {
     const p = getPipeline();
     const fake = async () => ({ code: strInfo });
