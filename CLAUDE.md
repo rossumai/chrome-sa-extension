@@ -1002,7 +1002,8 @@ older ones as history. Currently authoritative per area:
 - **Configuration changelog** — `2026-09-29-config-changelog-in-context-design.md` (the
   DevTools version rail and diff for the open object; the pure core in `src/changelog/`)
 - **Galaxy** — `2026-06-04-galaxy-3d-org-birdview-design.md`
-- **CIB deploy** — `2026-11-16-cib-upgrade-design.md` (the install record, Upgrade, the
+- **CIB deploy** — `2026-11-24-cib-deploy-without-secret-design.md` (deploy and upgrade without
+  the Coupa client secret), a delta on `2026-11-16-cib-upgrade-design.md` (the install record, Upgrade, the
   `app.js` bundle rename), a delta on `2026-11-02-cib-deploy-auto-target-design.md` (latest
   release, session organization and region read, not chosen), itself a delta on
   `2026-10-24-cib-deploy-console-design.md`

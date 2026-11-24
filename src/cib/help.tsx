@@ -102,7 +102,8 @@ export const CIB_HELP: HelpSection[] = [
         </li>
         <li>
           A Coupa <b>OAuth client</b> (client ID and secret) with the scopes the release requires.
-          Check names a missing scope when it can test the credentials.
+          Check names a missing scope when it can test the credentials. When the customer keeps the
+          secret, you can deploy without it: their admin adds it to the hooks afterwards.
         </li>
         <li>
           An <b>active admin</b> of the organization, to own the token the CIB hooks run with.
@@ -185,10 +186,13 @@ export const CIB_HELP: HelpSection[] = [
     chip: 'Step 2',
     title: 'Step 2 · Coupa credentials',
     keywords:
-      'coupa url instance oauth2 token client id client secret memory reload placeholder checkpoint data storage',
+      'coupa url instance oauth2 token client id client secret memory reload placeholder checkpoint data storage without secret admin customer keeps hooks secrets',
     body: (
       <>
-        <p>All three fields are required.</p>
+        <p>
+          The Coupa URL and the client ID are required. The secret is too, unless you tick that the
+          organization's admin adds it.
+        </p>
         <HelpFigure
           callouts={[
             {
@@ -219,6 +223,19 @@ export const CIB_HELP: HelpSection[] = [
                 </>
               ),
             },
+            {
+              target: 'no-secret',
+              note: (
+                <>
+                  <b>Deploy without the secret</b> — for a customer who will not share it. The hooks
+                  that need it are created active but without it, so Coupa imports and exports fail
+                  until the admin pastes <code>client_secret</code> into each hook's Secrets in the
+                  Rossum UI. The Coupa login test and the first imports are skipped; the imports
+                  start on their own schedule once the secret is in. The result lists every hook,
+                  with a link to its page.
+                </>
+              ),
+            },
           ]}
         >
           <CredentialsStep
@@ -228,6 +245,8 @@ export const CIB_HELP: HelpSection[] = [
             onInput={() => noop}
             showSecret={false}
             onToggleSecret={noop}
+            noSecret={false}
+            onNoSecret={noop}
             state="current"
           />
         </HelpFigure>
