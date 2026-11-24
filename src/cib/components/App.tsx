@@ -89,6 +89,7 @@ export default function App({ connected }: { connected: boolean | null }) {
     coupaSecret: '',
     run: `cib-${new Date().toISOString().slice(0, 10)}`,
     allow: false,
+    noSecret: false,
     installed: '',
   });
   // what step 1 shows and the run uses: read, never chosen (design: 2026-11-02-cib-deploy-auto-target-design.md)
@@ -331,7 +332,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         coupa: {
           baseUrl: v.coupaUrl.trim(),
           clientId: v.coupaId.trim(),
-          clientSecret: v.coupaSecret,
+          clientSecret: v.noSecret ? '' : v.coupaSecret,
         },
         coupaFetch: coupaOk ? fetch : undefined,
         coupaProbe: probe ?? undefined,
@@ -350,6 +351,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         blockers,
         notes,
         details: JSON.stringify({ ...rest, objects: idmap && Object.keys(idmap).length }, null, 1),
+        needSecret: r.needSecret?.map((x) => ({ name: x.name, page: hookPage(x.url) })),
         stats:
           status === 'done'
             ? {
@@ -453,7 +455,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         hooksCsv: rel.hooksCsv,
         region: target!.region,
         orgId: target!.orgId,
-        coupa: { ...coupa, clientSecret: v.coupaSecret },
+        coupa: { ...coupa, clientSecret: v.noSecret ? '' : v.coupaSecret },
         tokenOwnerUsername: v.owner || undefined,
         run: `cib-upgrade-${release}`,
         apply,
@@ -468,6 +470,7 @@ export default function App({ connected }: { connected: boolean | null }) {
         notes: r.notes,
         details: JSON.stringify({ from: r.from, to: r.to, invoked: r.invoked }, null, 1),
         upgrade: r.items,
+        needSecret: r.needSecret?.map((x) => ({ name: x.name, page: hookPage(x.url) })),
       });
       setCanUpgrade(
         r.status === 'planned' &&
@@ -480,7 +483,7 @@ export default function App({ connected }: { connected: boolean | null }) {
   const shownRelease = resumeRelease ?? release;
   const ready = !!(shownRelease && target);
   const s1 = !!(ready && v.owner);
-  const s2 = !!(v.coupaUrl && v.coupaId && v.coupaSecret);
+  const s2 = !!(v.coupaUrl && v.coupaId && (v.coupaSecret || v.noSecret));
   const runView: RunView | null = mode && {
     mode,
     running: busy && !!mode,
@@ -588,6 +591,8 @@ export default function App({ connected }: { connected: boolean | null }) {
                   onInput={set}
                   showSecret={showSecret}
                   onToggleSecret={() => setShowSecret((s) => !s)}
+                  noSecret={v.noSecret}
+                  onNoSecret={set('noSecret')}
                   state={s2 ? 'complete' : s1 ? 'current' : undefined}
                 />
                 <Step

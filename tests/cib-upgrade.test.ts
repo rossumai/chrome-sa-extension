@@ -313,3 +313,61 @@ test('an upgrade that stops part-way resumes with the same run ID', async () => 
   assert.equal(r.status, 'done');
   assert.equal((await findInstall(c))!.release, 'v2.0.1');
 });
+
+// a release that adds one Coupa import hook needing the secret (the same shape as the real ones)
+const withNewSecretHook = () => {
+  const plan = structuredClone(NEW.plan);
+  const rows: string[] = NEW.hooksCsv.trim().split(/\r?\n/);
+  const head = rows[0].split(',');
+  const col = (r: string, k: string) => r.split(',')[head.indexOf(k)];
+  const row = rows.find((r) => col(r, 'patch_secret') === 'true' && col(r, 'invoke') === 'true')!;
+  const name = col(row, 'hook_name');
+  const op = plan.ops.find((o: any) => o.type === 'hooks' && o.body.name === name);
+  const added = structuredClone(op);
+  added.key = 'hooks:new-import';
+  added.match = { name: 'New import (CIB)' };
+  added.body.name = 'New import (CIB)';
+  plan.ops.push(added);
+  const hooksCsv = `${NEW.hooksCsv.trim()}\n${row.replace(name, 'New import (CIB)')}`;
+  return { plan, hooksCsv, active: op.body.active };
+};
+
+test('upgrade without the secret: a new secret hook is created active without it, not invoked, and listed', async () => {
+  const { f, c } = await setup();
+  const install = (await findInstall(c))!;
+  const { plan, hooksCsv, active } = withNewSecretHook();
+  const noSecret = { baseUrl: COUPA.baseUrl, clientId: COUPA.clientId, clientSecret: '' };
+  const check = await upgradeCib(c, opts(install, { plan, hooksCsv, coupa: noSecret }));
+  assert.equal(check.status, 'planned');
+  assert.ok(check.notes.some((n) => /creates 1 hooks that need the Coupa client secret/.test(n)));
+  const invokes = f.calls.filter((x) => x.url.endsWith('/invoke')).length;
+  const r = await upgradeCib(c, opts(install, { plan, hooksCsv, coupa: noSecret, apply: true }));
+  assert.equal(r.status, 'done');
+  const h = f.db.hooks.find((x) => x.name === 'New import (CIB)')!;
+  assert.equal(h.active, active);
+  assert.ok(!h.secrets);
+  assert.equal(f.calls.filter((x) => x.url.endsWith('/invoke')).length, invokes);
+  assert.deepEqual(r.needSecret, [{ name: 'New import (CIB)', url: h.url }]);
+  const rec = f.ds.find((d) => d.doc.run === 'up')!.doc;
+  assert.equal(rec.complete, true);
+  assert.equal(rec.secretGiven, false);
+  const v = upgradeVerdict(r);
+  assert.equal(v.tone, 'warn');
+  assert.match(v.text, /1 new hooks wait for the organization's admin to add client_secret/);
+});
+
+test('upgrade with the secret: the new secret hook gets it and its first import', async () => {
+  const { f, c } = await setup();
+  const install = (await findInstall(c))!;
+  const { plan, hooksCsv } = withNewSecretHook();
+  const r = await upgradeCib(c, opts(install, { plan, hooksCsv, apply: true }));
+  assert.equal(r.status, 'done');
+  assert.equal(r.needSecret, undefined);
+  const h = f.db.hooks.find((x) => x.name === 'New import (CIB)')!;
+  assert.equal(h.secrets?.client_secret, 'S3CRET');
+  assert.deepEqual(
+    r.invoked!.map((x) => x.key),
+    ['hooks:new-import'],
+  );
+  assert.equal(f.ds.find((d) => d.doc.run === 'up')!.doc.secretGiven, undefined);
+});

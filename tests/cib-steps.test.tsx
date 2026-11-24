@@ -93,6 +93,8 @@ describe('CredentialsStep data-help hooks', () => {
             onInput={vi.fn()}
             showSecret={false}
             onToggleSecret={vi.fn()}
+            noSecret={false}
+            onNoSecret={vi.fn()}
             state="current"
           />,
           root,
@@ -101,6 +103,40 @@ describe('CredentialsStep data-help hooks', () => {
     expect(root.querySelectorAll('[data-help="coupa-url"]').length).toBe(1);
     expect(root.querySelectorAll('[data-help="client-secret"]').length).toBe(1);
     expect(root.querySelectorAll('[data-help="secret-note"]').length).toBe(1);
+    expect(root.querySelectorAll('[data-help="no-secret"]').length).toBe(1);
+    const secret = root.querySelector('#cib-coupa-secret') as HTMLInputElement;
+    expect(secret.required).toBe(true);
+    expect(secret.disabled).toBe(false);
+  });
+
+  it('without the secret: the field is not required, is empty and says the admin adds it', () => {
+    const onNoSecret = vi.fn();
+    act(
+      () =>
+        void render(
+          <CredentialsStep
+            coupaUrl="https://example.coupahost.com"
+            coupaId="id"
+            coupaSecret="typed before"
+            onInput={vi.fn()}
+            showSecret={false}
+            onToggleSecret={vi.fn()}
+            noSecret={true}
+            onNoSecret={onNoSecret}
+            state="complete"
+          />,
+          root,
+        ),
+    );
+    const secret = root.querySelector('#cib-coupa-secret') as HTMLInputElement;
+    expect(secret.required).toBe(false);
+    expect(secret.disabled).toBe(true);
+    expect(secret.value).toBe('');
+    const box = root.querySelector('[data-help="no-secret"] input') as HTMLInputElement;
+    expect(box.checked).toBe(true);
+    expect(root.textContent).toContain("pastes client_secret into each hook's Secrets");
+    act(() => box.click());
+    expect(onNoSecret).toHaveBeenCalled();
   });
 });
 

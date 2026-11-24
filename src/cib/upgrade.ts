@@ -7,7 +7,7 @@
 // JSON, hence the `any`s.
 import { adopt, deploy } from './engine.js';
 import type { Client, Progress } from './engine.js';
-import { configurePlan, findUser, invokeImports, preflight } from './cib.js';
+import { configurePlan, findUser, hooksNeedingSecret, invokeImports, preflight } from './cib.js';
 
 export type Install = {
   release: string;
@@ -271,6 +271,8 @@ export type UpgradeResult = {
   blockers: string[];
   notes: string[];
   invoked?: { key: string; status: number }[];
+  // created without client_secret: the organization's admin adds it to each
+  needSecret?: { name: string; url: string }[];
 };
 
 // Check upgrade (apply false) reads and plans; Upgrade (apply true) also writes: creates through the
@@ -344,10 +346,10 @@ export async function upgradeCib(
     blockers.push(...pf.blockers);
     notes.push(...pf.notes.filter((n) => !/already holds CIB objects|CIB schema/.test(n)));
   }
-  const needSecret = createPatches.some((x: any) => JSON.stringify(x.body).includes('$secret:'));
-  if (needSecret && !coupa.clientSecret)
-    (apply ? blockers : notes).push(
-      'the upgrade creates hooks that need the Coupa client secret; enter it in step 2',
+  const newSecretHooks = p.secretHooks.filter((k: string) => created.has(k));
+  if (newSecretHooks.length && !coupa.clientSecret)
+    notes.push(
+      `the upgrade creates ${newSecretHooks.length} hooks that need the Coupa client secret; without it they are created active but without the secret, their first imports are not started, and the organization's admin adds client_secret to them`,
     );
   onProgress({ phase: 'checks', done: 1, total: 1 });
   if (blockers.length) return res({ status: 'blocked', items, blockers, notes });
@@ -361,6 +363,18 @@ export async function upgradeCib(
       blockers: [`run ${run} is complete; use a new run ID`],
       notes,
     });
+  // as deployCib: a resume follows the patches its checkpoint holds
+  const stored = st ? (st.patches ?? []) : createPatches;
+  if (!coupa.clientSecret && JSON.stringify(stored.slice(st?.pcursor ?? 0)).includes('$secret:'))
+    return res({
+      status: 'blocked',
+      items,
+      blockers: [
+        `run ${run} was started with the Coupa client secret; enter it in step 2 to resume`,
+      ],
+      notes,
+    });
+  const secretless = newSecretHooks.length > 0 && !JSON.stringify(stored).includes('$secret:');
   // the existing objects go into the checkpoint first, so the engine creates only the new ones
   if (!st)
     await c.ds('insert_one', {
@@ -431,7 +445,7 @@ export async function upgradeCib(
   const invoked = await invokeImports(
     c,
     full,
-    p.invoke.filter((k: string) => created.has(k)),
+    p.invoke.filter((k: string) => created.has(k) && !(secretless && newSecretHooks.includes(k))),
     { onProgress },
   );
   const order = new Map(items.map((i, n) => [i.key, n]));
@@ -446,11 +460,20 @@ export async function upgradeCib(
         patches: p.patches,
         idmap: full,
         conflicts: final.flatMap((i) => i.conflicts.map((x) => `${i.key} ${x}`)),
+        ...(secretless && { secretGiven: false }),
       },
     },
   });
   notes.push(`run ${run} is complete: it is the install record of CIB ${to} now`);
-  return res({ status: 'done', items: final, notes, invoked });
+  return res({
+    status: 'done',
+    items: final,
+    notes,
+    invoked,
+    ...(secretless && {
+      needSecret: hooksNeedingSecret({ ops: p.ops, secretHooks: newSecretHooks }, full),
+    }),
+  });
 }
 
 // one line that says how an upgrade check or run ended
@@ -471,8 +494,12 @@ export function upgradeVerdict(r: UpgradeResult): { tone: 'ok' | 'warn' | 'fail'
       text: `Upgrade plan ${r.from} -> ${r.to}: ${facts}.`,
     };
   return {
-    tone: conflicts ? 'warn' : 'ok',
-    text: `Upgraded to ${r.to}: ${facts.replace(/to update/, 'updated').replace(/to create/, 'created')}.`,
+    tone: conflicts || r.needSecret?.length ? 'warn' : 'ok',
+    text: `Upgraded to ${r.to}: ${facts.replace(/to update/, 'updated').replace(/to create/, 'created')}${
+      r.needSecret?.length
+        ? `; ${r.needSecret.length} new hooks wait for the organization's admin to add client_secret`
+        : ''
+    }.`,
   };
 }
 

@@ -15,6 +15,8 @@ type WaitOpts = {
 // (Python helpers.py: update_prd_mapping, handle_hooks). Key difference: the target Coupa values
 // go into the plan BEFORE the create, so no hook ever holds the CIB source tenant. Hooks that need
 // the Coupa secret are created inactive; one patch then sets the secret and restores their active flag.
+// Without a secret (the customer keeps it, and its admin adds it in the Rossum UI) the patch only
+// restores the active flag, and the result lists those hooks (design 2026-11-24-cib-deploy-without-secret).
 
 export const REGIONS = ['prod-eu', 'prod-eu2', 'prod-us2', 'prod-jp'];
 
@@ -90,7 +92,8 @@ export function configurePlan(
   const rows = Object.fromEntries(parseCsv(hooksCsv).map((r) => [r.hook_name, r]));
   const ops = structuredClone(plan.ops),
     patches = structuredClone(plan.patches ?? []),
-    invoke: string[] = [];
+    invoke: string[] = [],
+    secretHooks: string[] = [];
   for (const op of ops) {
     const b = op.body;
     if (op.type === 'schemas') {
@@ -112,14 +115,26 @@ export function configurePlan(
       patches.push({
         key: op.key,
         type: 'hooks',
-        body: { secrets: { client_secret: '$secret:client_secret' }, active: b.active },
+        body: coupa.clientSecret
+          ? { secrets: { client_secret: '$secret:client_secret' }, active: b.active }
+          : { active: b.active },
       });
       b.active = false;
+      secretHooks.push(op.key);
     }
     if (row.invoke === 'true') invoke.push(op.key);
   }
-  return { ...plan, ops, patches, invoke };
+  return { ...plan, ops, patches, invoke, secretHooks };
 }
+
+// the hooks that still need client_secret: the admin pastes it into each one's Secrets
+export const hooksNeedingSecret = (
+  p: { ops: any[]; secretHooks: string[] },
+  idmap: Record<string, { url: string }>,
+) =>
+  p.secretHooks
+    .filter((k) => idmap[k])
+    .map((k) => ({ name: p.ops.find((o) => o.key === k).body.name as string, url: idmap[k].url }));
 
 // Coupa puts the granted scopes only in the access_token JWT `scope` claim, not in the response body
 const jwtScopes = (token: string): Set<string> => {
@@ -583,6 +598,7 @@ export function verdict(r: {
   idmap?: Record<string, unknown>;
   invoked?: { status: number }[];
   pendingImports?: string[];
+  needSecret?: unknown[];
 }): { tone: 'ok' | 'warn' | 'fail'; text: string } {
   if (r.status === 'blocked')
     return {
@@ -595,8 +611,13 @@ export function verdict(r: {
       tone: 'warn',
       text: 'This run ID has a checkpoint: press Check and deploy to resume it.',
     };
-  const objects = Object.keys(r.idmap ?? {}).length,
-    invoked = r.invoked ?? [],
+  const objects = Object.keys(r.idmap ?? {}).length;
+  if (r.needSecret)
+    return {
+      tone: 'warn',
+      text: `Deployed without the Coupa secret: ${objects} objects. The imports and exports fail until the organization's admin adds client_secret to the ${r.needSecret.length} hooks listed below; the imports then start on their own schedule.`,
+    };
+  const invoked = r.invoked ?? [],
     started = invoked.filter((x) => x.status >= 200 && x.status < 300).length,
     pending = r.pendingImports ?? [];
   const facts = `${objects} objects, ${started} of ${invoked.length} imports started, ${
@@ -655,10 +676,28 @@ export async function deployCib(
   memorisation?: { name: string; what: string; ok: boolean }[];
   invoked?: { key: string; status: number; seeded?: boolean }[];
   pendingImports?: string[];
+  needSecret?: { name: string; url: string }[];
 }> {
   const p = configurePlan(plan, { coupa, region, hooksCsv });
   const notes: string[] = [];
   const [resumed] = await c.ds('find', { query: { kind: 'plan', run } });
+  // a resume follows its checkpoint: patches stored with the placeholder need the secret again,
+  // patches stored without it never set one, whatever step 2 holds now
+  const stored = resumed ? (resumed.patches ?? []) : p.patches,
+    left = stored.slice(resumed?.pcursor ?? 0);
+  const secretless = p.secretHooks.length > 0 && !JSON.stringify(stored).includes('$secret:');
+  if (!resumed?.complete && !coupa.clientSecret && JSON.stringify(left).includes('$secret:'))
+    return {
+      status: 'blocked',
+      blockers: [
+        `run ${run} was started with the Coupa client secret; enter it in step 2 to resume, or use a new run ID`,
+      ],
+      notes,
+    };
+  if (resumed && secretless && coupa.clientSecret)
+    notes.push(
+      `run ${run} was started without the Coupa client secret, so this run does not set it either: add it to the hooks listed below`,
+    );
   // a complete run's checkpoint stays as the record of what was installed; it is never re-run
   if (resumed?.complete)
     return {
@@ -676,12 +715,18 @@ export async function deployCib(
       detail: 'Coupa credentials and organization checks (read-only)',
     });
     const blockers: string[] = [];
-    const k = coupaProbe
-      ? await checkCoupaViaFunction(c, coupaProbe, coupa, requiredScopes, {
-          sleep: waitOpts?.sleep,
-        })
-      : coupaFetch && (await checkCoupa(coupaFetch, coupa, requiredScopes));
-    if (!k) notes.push('Coupa credentials not checked from this client');
+    const k = !coupa.clientSecret
+      ? null
+      : coupaProbe
+        ? await checkCoupaViaFunction(c, coupaProbe, coupa, requiredScopes, {
+            sleep: waitOpts?.sleep,
+          })
+        : coupaFetch && (await checkCoupa(coupaFetch, coupa, requiredScopes));
+    if (!coupa.clientSecret)
+      notes.push(
+        "Coupa credentials not checked: no client secret given. The organization's admin adds it to the hooks after the deploy",
+      );
+    else if (!k) notes.push('Coupa credentials not checked from this client');
     else {
       if (k.status === 'invalid') blockers.push(`Coupa rejected the credentials: ${k.detail}`);
       if (k.status === 'missing_scopes')
@@ -725,6 +770,19 @@ export async function deployCib(
     detail: 'memorisation collections and indexes',
   });
   const memorisation = await createMemorisation(c);
+  // without the secret the first imports would only fail: they start on their own schedule once
+  // the admin adds it. Nothing is left to resume, so the run is complete and its record says so.
+  if (secretless) {
+    await c.ds('update_one', {
+      filter: { kind: 'plan', run },
+      update: { $set: { complete: true, completed: Date.now() / 1000, secretGiven: false } },
+    });
+    notes.push(
+      `the first imports were not started: without the secret they would fail. They run on their own schedule once client_secret is in the hooks`,
+      `run ${run} is complete; its record stays in Data Storage`,
+    );
+    return { status: 'done', idmap, memorisation, notes, needSecret: hooksNeedingSecret(p, idmap) };
+  }
   const invoked = await invokeImports(c, idmap, p.invoke, { ...waitOpts, onProgress });
   const pendingImports = await waitImports(c, Object.keys(importDatasets(p)), {
     ...waitOpts,

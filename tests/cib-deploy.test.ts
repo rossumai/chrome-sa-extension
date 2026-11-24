@@ -908,3 +908,99 @@ test('deployCib keeps the release in the checkpoint; checkpointRelease reads it 
   await c.ds('insert_one', { document: { kind: 'plan', run: 'old', ops: [] } });
   assert.equal(await m.checkpointRelease(c, 'old'), null);
 });
+
+// without the client secret (the customer keeps it; its admin adds it to the hooks afterwards)
+const NO_SECRET = { ...COUPA, clientSecret: '' };
+
+test('configurePlan without the secret: the patch only restores the active flag, and the hook is listed', () => {
+  const p = configurePlan(
+    { ops: [hook('Imp'), hook('Plain')], patches: [] },
+    { coupa: NO_SECRET, region: 'prod-eu', hooksCsv: csv },
+  );
+  assert.equal(p.ops[0].body.active, false);
+  assert.deepEqual(p.patches, [{ key: 'hooks:Imp', type: 'hooks', body: { active: true } }]);
+  assert.deepEqual(p.secretHooks, ['hooks:Imp']);
+  assert.ok(!JSON.stringify(p).includes('$secret:'));
+  // with the secret, the patch is unchanged
+  assert.deepEqual(run([hook('Imp')]).patches[0].body, {
+    secrets: { client_secret: '$secret:client_secret' },
+    active: true,
+  });
+});
+
+test('hooksNeedingSecret: the secret hooks that were created, by name and API url', async () => {
+  const { hooksNeedingSecret } = await import('../src/cib/cib.js');
+  const p = run([hook('Imp'), hook('Plain')]);
+  assert.deepEqual(hooksNeedingSecret(p, { 'hooks:Imp': { url: 'u/7' } }), [
+    { name: 'Imp', url: 'u/7' },
+  ]);
+  assert.deepEqual(hooksNeedingSecret(p, {}), []);
+});
+
+test('deployCib without the secret: no Coupa check, hooks active without secrets, no imports, complete, every hook listed', async () => {
+  const { f, c, m, opts } = await full();
+  let fetched = false;
+  const r = await m.deployCib(c, {
+    ...opts,
+    coupa: NO_SECRET,
+    coupaFetch: (async () => {
+      fetched = true;
+      return new Response('{}');
+    }) as unknown as typeof fetch,
+  });
+  assert.equal(fetched, false);
+  assert.equal(r.status, 'done');
+  assert.equal(Object.keys(r.idmap!).length, CIB_V2_0_1_OBJECT_COUNT);
+  assert.ok(r.notes.some((n) => /Coupa credentials not checked: no client secret given/.test(n)));
+  assert.ok(r.notes.some((n) => /first imports were not started/.test(n)));
+  assert.equal(r.invoked, undefined);
+  assert.equal(f.calls.filter((x) => x.url.endsWith('/invoke')).length, 0);
+  assert.equal(f.collections.size, 3); // memorisation only
+  assert.equal(f.db.hooks.filter((h) => h.secrets).length, 0);
+  const names = new Set(
+    parseCsv(realCsv)
+      .filter((x) => x.patch_secret === 'true')
+      .map((x) => x.hook_name),
+  );
+  assert.equal(r.needSecret!.length, 20);
+  assert.deepEqual(new Set(r.needSecret!.map((x) => x.name)), names);
+  for (const x of r.needSecret!) {
+    const h = f.db.hooks.find((h) => h.url === x.url);
+    assert.equal(h.name, x.name);
+    // active as the release has it, so the scheduled jobs run once the secret is in
+    assert.equal(h.active, realPlan().ops.find((o: any) => o.body.name === x.name).body.active);
+  }
+  const [rec] = f.ds.filter((d) => d.doc.kind === 'plan');
+  assert.equal(rec.doc.complete, true);
+  assert.equal(rec.doc.secretGiven, false);
+  assert.ok(!JSON.stringify(rec.doc.patches).includes('secret'));
+  assert.match(m.verdict(r).text, /^Deployed without the Coupa secret: .*20 hooks listed below/);
+  assert.equal(m.verdict(r).tone, 'warn');
+});
+
+test('deployCib checkOnly without the secret: ready, with the skipped check as a note', async () => {
+  const { c, m, opts } = await full();
+  const r = await m.deployCib(c, { ...opts, coupa: NO_SECRET, checkOnly: true });
+  assert.equal(r.status, 'ready');
+  assert.ok(r.notes.some((n) => /no client secret given/.test(n)));
+});
+
+test('deployCib: a run started with the secret does not resume without it; one started without it never sets it', async () => {
+  let { f, c, m, opts } = await full();
+  f.fail.push({ method: 'POST', match: /\/rules$/, status: 500, times: 1 });
+  await assert.rejects(m.deployCib(c, opts), /failed: 500/);
+  let r = await m.deployCib(c, { ...opts, coupa: NO_SECRET });
+  assert.equal(r.status, 'blocked');
+  assert.match(r.blockers![0], /was started with the Coupa client secret/);
+  r = await m.deployCib(c, opts);
+  assert.equal(r.status, 'done');
+
+  ({ f, c, m, opts } = await full());
+  f.fail.push({ method: 'POST', match: /\/rules$/, status: 500, times: 1 });
+  await assert.rejects(m.deployCib(c, { ...opts, coupa: NO_SECRET }), /failed: 500/);
+  r = await m.deployCib(c, opts); // the secret typed in now
+  assert.equal(r.status, 'done');
+  assert.equal(r.needSecret!.length, 20);
+  assert.ok(r.notes.some((n) => /was started without the Coupa client secret/.test(n)));
+  assert.ok(!JSON.stringify(f.db.hooks).includes('S3CRET'));
+});

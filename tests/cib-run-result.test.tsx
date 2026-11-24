@@ -155,3 +155,35 @@ describe('RunResult', () => {
     expect(runTitle({ ...base, mode: 'deploy', failed: true }, 'v2.1.0')).toBe('Deploy stopped');
   });
 });
+
+describe('RunResult without the Coupa secret', () => {
+  it('lists every hook that needs client_secret, linked to its page', () => {
+    const run = done(0);
+    run.outcome!.needSecret = [
+      {
+        name: 'Coupa Master Data Import: Suppliers',
+        page: 'https://example.rossum.app/extensions/my-extensions/7',
+      },
+      {
+        name: 'Export Pipeline: Invoice',
+        page: 'https://example.rossum.app/extensions/my-extensions/8',
+      },
+    ];
+    mount(run);
+    const list = root.querySelector('[data-need-secret]')!;
+    expect(list.textContent).toContain('Add client_secret to these hooks');
+    const links = [...list.querySelectorAll('a')];
+    expect(links.map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
+      [
+        'Coupa Master Data Import: Suppliers',
+        'https://example.rossum.app/extensions/my-extensions/7',
+      ],
+      ['Export Pipeline: Invoice', 'https://example.rossum.app/extensions/my-extensions/8'],
+    ]);
+  });
+
+  it('shows no list when the secret was given', () => {
+    mount(done(0));
+    expect(root.querySelector('[data-need-secret]')).toBeNull();
+  });
+});

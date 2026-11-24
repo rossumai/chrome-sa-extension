@@ -1,5 +1,6 @@
 // src/cib/components/CredentialsStep.tsx
-// Step 2: the Coupa OAuth credentials. Every field is required; the secret never leaves this page.
+// Step 2: the Coupa OAuth credentials. URL and client ID are required; the secret is too, unless
+// the user ticks that the organization's admin adds it after the deploy. It never leaves this page.
 import { h, Fragment } from 'preact';
 import Step from './Step.jsx';
 import styles from './App.module.css';
@@ -12,6 +13,8 @@ export default function CredentialsStep({
   onInput,
   showSecret,
   onToggleSecret,
+  noSecret,
+  onNoSecret,
   state,
 }: {
   coupaUrl: string;
@@ -20,6 +23,8 @@ export default function CredentialsStep({
   onInput: (key: 'coupaUrl' | 'coupaId' | 'coupaSecret') => (e: any) => void;
   showSecret: boolean;
   onToggleSecret: () => void;
+  noSecret: boolean;
+  onNoSecret: (e: any) => void;
   state: 'complete' | 'current' | 'optional' | undefined;
 }) {
   return (
@@ -82,9 +87,10 @@ export default function CredentialsStep({
               id="cib-coupa-secret"
               class={`${inp.input} ${styles.input} ${styles.hasToggle}`}
               type={(showSecret ? 'text' : 'password') as 'text'}
-              required
+              required={!noSecret}
+              disabled={noSecret}
               autocomplete="off"
-              value={coupaSecret}
+              value={noSecret ? '' : coupaSecret}
               onInput={onInput('coupaSecret')}
             />
             <button type="button" class={styles.eye} onClick={onToggleSecret}>
@@ -93,6 +99,17 @@ export default function CredentialsStep({
           </div>
         </div>
       </div>
+      <label class={styles.checkbox} data-help="no-secret">
+        <input type="checkbox" checked={noSecret} onChange={onNoSecret} />
+        <span>
+          Deploy without the secret: the organization's admin adds it
+          <span class={styles.hint}>
+            {noSecret
+              ? "The hooks that need it are created active but without the secret, so imports and exports fail until the admin pastes client_secret into each hook's Secrets. The result lists every one, with its link. The Coupa login test and the first imports are skipped."
+              : 'For a customer who keeps the secret. The result then lists the hooks to paste it into.'}
+          </span>
+        </span>
+      </label>
     </Step>
   );
 }

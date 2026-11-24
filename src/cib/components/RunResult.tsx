@@ -28,6 +28,8 @@ export type RunView = {
     stats?: { objects: number; started: number; invoked: number; pending: number };
     // an upgrade's objects, in plan order
     upgrade?: UpgradeItem[];
+    // hooks deployed without client_secret, with their page in the Rossum UI
+    needSecret?: { name: string; page: string }[];
   } | null;
   log: string;
   // a Coupa check function is still in the org
@@ -170,6 +172,24 @@ export default function RunResult({ run }: { run: RunView }) {
         </div>
       )}
       {o?.upgrade && <UpgradeList items={o.upgrade} />}
+      {!!o?.needSecret?.length && (
+        <div class={styles.issues} data-need-secret>
+          <div class={styles.groupHead}>
+            Add client_secret to these hooks <span class={styles.count}>{o.needSecret.length}</span>
+          </div>
+          {o.needSecret.map((x) => (
+            <div class={`${styles.issue} ${styles.issueNote}`}>
+              <span>!</span>
+              <span>
+                <a href={x.page} target="_blank" rel="noreferrer">
+                  {x.name}
+                </a>{' '}
+                · Secrets: <code>client_secret</code>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
       {!!o?.blockers?.length && (
         <div class={styles.issues}>
           <div class={styles.groupHead}>
