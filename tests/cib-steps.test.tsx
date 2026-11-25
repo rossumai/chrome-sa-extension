@@ -109,7 +109,7 @@ describe('CredentialsStep data-help hooks', () => {
     expect(secret.disabled).toBe(false);
   });
 
-  it('without the secret: the field is not required, is empty and says the admin adds it', () => {
+  it('without the secret: its field is hidden, the client ID is still required, and it says the admin adds it', () => {
     const onNoSecret = vi.fn();
     act(
       () =>
@@ -128,10 +128,8 @@ describe('CredentialsStep data-help hooks', () => {
           root,
         ),
     );
-    const secret = root.querySelector('#cib-coupa-secret') as HTMLInputElement;
-    expect(secret.required).toBe(false);
-    expect(secret.disabled).toBe(true);
-    expect(secret.value).toBe('');
+    expect(root.querySelector('#cib-coupa-secret')).toBeNull();
+    expect((root.querySelector('#cib-coupa-id') as HTMLInputElement).required).toBe(true);
     const box = root.querySelector('[data-help="no-secret"] input') as HTMLInputElement;
     expect(box.checked).toBe(true);
     expect(root.textContent).toContain("pastes client_secret into each hook's Secrets");

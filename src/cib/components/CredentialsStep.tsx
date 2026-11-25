@@ -1,6 +1,7 @@
 // src/cib/components/CredentialsStep.tsx
-// Step 2: the Coupa OAuth credentials. URL and client ID are required; the secret is too, unless
-// the user ticks that the organization's admin adds it after the deploy. It never leaves this page.
+// Step 2: the Coupa OAuth credentials. URL and client ID are always required; the secret is too,
+// unless the user ticks that the organization's admin adds it after the deploy, which hides its
+// field. It never leaves this page.
 import { h, Fragment } from 'preact';
 import Step from './Step.jsx';
 import styles from './App.module.css';
@@ -64,7 +65,7 @@ export default function CredentialsStep({
           onInput={onInput('coupaUrl')}
         />
       </div>
-      <div class={styles.g2}>
+      <div class={noSecret ? undefined : styles.g2}>
         <div class={styles.field}>
           <label class={styles.label} for="cib-coupa-id">
             Client ID
@@ -78,26 +79,27 @@ export default function CredentialsStep({
             onInput={onInput('coupaId')}
           />
         </div>
-        <div class={styles.field} data-help="client-secret">
-          <label class={styles.label} for="cib-coupa-secret">
-            Client secret
-          </label>
-          <div class={styles.inputWrap}>
-            <input
-              id="cib-coupa-secret"
-              class={`${inp.input} ${styles.input} ${styles.hasToggle}`}
-              type={(showSecret ? 'text' : 'password') as 'text'}
-              required={!noSecret}
-              disabled={noSecret}
-              autocomplete="off"
-              value={noSecret ? '' : coupaSecret}
-              onInput={onInput('coupaSecret')}
-            />
-            <button type="button" class={styles.eye} onClick={onToggleSecret}>
-              {showSecret ? 'Hide' : 'Show'}
-            </button>
+        {!noSecret && (
+          <div class={styles.field} data-help="client-secret">
+            <label class={styles.label} for="cib-coupa-secret">
+              Client secret
+            </label>
+            <div class={styles.inputWrap}>
+              <input
+                id="cib-coupa-secret"
+                class={`${inp.input} ${styles.input} ${styles.hasToggle}`}
+                type={(showSecret ? 'text' : 'password') as 'text'}
+                required
+                autocomplete="off"
+                value={coupaSecret}
+                onInput={onInput('coupaSecret')}
+              />
+              <button type="button" class={styles.eye} onClick={onToggleSecret}>
+                {showSecret ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <label class={styles.checkbox} data-help="no-secret">
         <input type="checkbox" checked={noSecret} onChange={onNoSecret} />
